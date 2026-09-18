@@ -28,7 +28,7 @@ function useBreakpoint() {
 }
 
 export default function AICommandCenter() {
-  const { isMobile, isDesktop } = useBreakpoint();
+  const { isDesktop } = useBreakpoint();
 
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -54,7 +54,7 @@ export default function AICommandCenter() {
   // When user selects a session on mobile, jump to chat
   const handleSelectSession = (id) => {
     setSelectedSessionId(id);
-    if (isMobile) setMobileTab('chat');
+    if (!isDesktop) setMobileTab('chat');
   };
 
   const bumpRefresh = () => setRefreshKey((k) => k + 1);
@@ -94,7 +94,7 @@ export default function AICommandCenter() {
             onSessionDeleted={() => {
               setSelectedSessionId(null);
               setSelectedSession(null);
-              if (isMobile) setMobileTab('sessions');
+              if (!isDesktop) setMobileTab('sessions');
             }}
           />
         </div>

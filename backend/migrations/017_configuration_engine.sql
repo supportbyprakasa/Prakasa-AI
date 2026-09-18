@@ -210,6 +210,7 @@ CREATE TABLE IF NOT EXISTS form_fields (
   depends_on_value VARCHAR(190) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL,
   UNIQUE KEY uq_form_field_key (form_id, field_key),
   INDEX idx_form_fields_order (form_id, order_index),
   CONSTRAINT fk_form_fields_form FOREIGN KEY (form_id)

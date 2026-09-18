@@ -15,6 +15,9 @@ const body = z.object({
   requiresAiPrecheck: z.boolean().optional(),
   allowDelegation: z.boolean().optional(),
   autoGenerateVerificationCode: z.boolean().optional(),
+  qrRequired: z.boolean().optional(),
+  checksumAlgorithm: z.enum(['sha256','sha512']).optional(),
+  precheckModule: z.string().min(1).max(80).optional(),
   archiveFolderDriveId: z.string().max(190).nullable().optional(),
   isActive: z.boolean().optional(),
 });

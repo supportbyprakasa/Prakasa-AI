@@ -12,9 +12,12 @@ router.get('/',
   requireEntityScope,
   requirePermission('dashboard_layout.manage'),
   ctrl.list);
+router.get('/mine',
+  requireEntityScope,
+  ctrl.mine);
 router.get('/role/:roleId',
   requireEntityScope,
-  ctrl.getForRole);                     // read allowed to see own layout
+  ctrl.getForRole);
 router.post('/',
   requireEntityScope,
   requirePermission('dashboard_layout.manage'),

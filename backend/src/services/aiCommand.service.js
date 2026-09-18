@@ -129,7 +129,8 @@ async function createSession({
     throw error;
   }
 
-  const safeTitle = String(title || 'Percakapan Baru').trim().slice(0, 255);
+  const normalizedTitle = String(title || 'Percakapan Baru').trim().slice(0, 255);
+  const safeTitle = normalizedTitle || 'Percakapan Baru';
   const safeSessionType = String(sessionType || 'general').trim().slice(0, 60);
   const safeSystemContext =
     systemContext == null ? null : String(systemContext).slice(0, 8000);
@@ -326,14 +327,30 @@ function assertNotGenerating(session) {
 
 async function archiveSession({ session, user }) {
   aiAccess.assertSessionAccess({ user, session, action: 'manage' });
-  assertNotGenerating(session);
 
-  await pool.query(
+  const [result] = await pool.query(
     `UPDATE ai_sessions
         SET status='archived', archived_at=NOW()
-      WHERE id=? AND deleted_at IS NULL`,
+      WHERE id=?
+        AND deleted_at IS NULL
+        AND generation_status='idle'`,
     [session.id]
   );
+
+  if (!result.affectedRows) {
+    const current = await getSessionById(session.id);
+    if (current?.generation_status === 'generating') {
+      const error = new Error('Session sedang memproses pesan');
+      error.status = 409;
+      error.code = 'SESSION_BUSY';
+      throw error;
+    }
+
+    const error = new Error('Session tidak ditemukan');
+    error.status = 404;
+    error.code = 'NOT_FOUND';
+    throw error;
+  }
 
   await activityLog({
     entityId: session.entity_id,
@@ -348,14 +365,30 @@ async function archiveSession({ session, user }) {
 
 async function deleteSession({ session, user }) {
   aiAccess.assertSessionAccess({ user, session, action: 'manage' });
-  assertNotGenerating(session);
 
-  await pool.query(
+  const [result] = await pool.query(
     `UPDATE ai_sessions
         SET deleted_at=NOW()
-      WHERE id=? AND deleted_at IS NULL`,
+      WHERE id=?
+        AND deleted_at IS NULL
+        AND generation_status='idle'`,
     [session.id]
   );
+
+  if (!result.affectedRows) {
+    const current = await getSessionById(session.id);
+    if (current?.generation_status === 'generating') {
+      const error = new Error('Session sedang memproses pesan');
+      error.status = 409;
+      error.code = 'SESSION_BUSY';
+      throw error;
+    }
+
+    const error = new Error('Session tidak ditemukan');
+    error.status = 404;
+    error.code = 'NOT_FOUND';
+    throw error;
+  }
 
   await activityLog({
     entityId: session.entity_id,

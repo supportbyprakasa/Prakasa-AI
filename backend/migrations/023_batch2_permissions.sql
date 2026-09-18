@@ -9,6 +9,7 @@ INSERT IGNORE INTO permissions (code, description) VALUES
 ('approval_reminder.manage','Kelola dan jalankan reminder/escalation approval'),
 ('signature_precheck.view','Lihat log AI precheck tanda tangan'),
 ('signature_precheck.run','Jalankan AI precheck tanda tangan'),
+('signature_precheck.override','Override hasil AI precheck yang memblokir'),
 ('signature_qr.view','Lihat QR verifikasi dokumen'),
 ('signature_qr.generate','Generate QR verifikasi dokumen');
 
@@ -19,7 +20,7 @@ JOIN permissions p ON p.code IN (
   'approval_matrix.view','approval_matrix.manage',
   'approval_delegation.view','approval_delegation.manage',
   'approval_reminder.manage',
-  'signature_precheck.view','signature_precheck.run',
+  'signature_precheck.view','signature_precheck.run','signature_precheck.override',
   'signature_qr.view','signature_qr.generate'
 )
 WHERE LOWER(r.name) IN ('super admin','superadmin','administrator')

@@ -11,7 +11,8 @@
     "setup:local": "npm run migrate && npm run bootstrap:admin",
     "check:batch1": "node src/scripts/checkBatch1.js",
     "job:approval-reminders": "node src/jobs/approvalReminders.js",
-    "check:batch2": "node src/scripts/checkBatch2.js"
+    "check:batch2": "node src/scripts/checkBatch2.js",
+    "check:batch3": "node src/scripts/checkBatch3.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

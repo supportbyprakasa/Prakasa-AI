@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { RefreshCw, Activity, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { RefreshCw, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import api from '../../api/client';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-import Input from '../../components/Input';
 import DataTable from '../../components/DataTable';
 import Badge from '../../components/Badge';
 import FilterBar from '../../components/FilterBar';
@@ -210,16 +209,16 @@ export default function IntegrationLogs() {
               detail.status === 'success' ? 'success'
               : detail.status === 'failed' ? 'error' : 'default'
             }>{detail.status}</Badge></div>
-            <div><b>Duration:</b> {detail.duration_ms || 0} ms</div>
-            <div><b>Entity:</b> {detail.entity_id || '—'}</div>
-            <div><b>User:</b> {detail.user_id || '—'}</div>
-            <div><b>Subject:</b> {detail.subject_type || '—'} #{detail.subject_id || '—'}</div>
-            {detail.error_message && (
+            <div><b>Duration:</b> {detail.durationMs || 0} ms</div>
+            <div><b>Entity:</b> {detail.entityId || '—'}</div>
+            <div><b>User:</b> {detail.userId || '—'}</div>
+            <div><b>Subject:</b> {detail.subjectType || '—'} #{detail.subjectId || '—'}</div>
+            {detail.errorMessage && (
               <div style={{ color: 'var(--color-error)' }}>
                 <b>Error:</b> {detail.error_message}
               </div>
             )}
-            {detail.request_meta && (
+            {detail.requestMeta && (
               <div style={{ marginTop: 8 }}>
                 <b>Request Meta:</b>
                 <pre style={{
@@ -228,7 +227,7 @@ export default function IntegrationLogs() {
                 }}>{JSON.stringify(typeof detail.request_meta === 'string' ? JSON.parse(detail.request_meta) : detail.request_meta, null, 2)}</pre>
               </div>
             )}
-            {detail.response_meta && (
+            {detail.responseMeta && (
               <div style={{ marginTop: 8 }}>
                 <b>Response Meta:</b>
                 <pre style={{

@@ -37,9 +37,11 @@ async function generate(req, res, next) {
 
     const [signedRows] = await conn.query(
       `SELECT sd.id, sd.signature_request_id AS signatureRequestId,
-              sd.document_hash AS documentHash, sd.signed_at AS signedAt
+              sd.document_hash AS documentHash, sd.signed_at AS signedAt,
+              COALESCE(rule.checksum_algorithm, 'sha256') AS hashAlgorithm
          FROM signed_documents sd
          JOIN signature_requests sr ON sr.id=sd.signature_request_id
+         LEFT JOIN signature_rules rule ON rule.id=sr.signature_rule_id
         WHERE ${signedWhere.join(' AND ')}
           AND sr.entity_id=?
         ORDER BY sd.id DESC
@@ -72,8 +74,14 @@ async function generate(req, res, next) {
         `INSERT INTO document_verifications
          (document_id, verification_code, document_hash,
           signed_document_id, hash_algorithm)
-         VALUES (?, ?, ?, ?, 'sha256')`,
-        [documentId, verificationCode, signed.documentHash, signed.id]
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          documentId,
+          verificationCode,
+          signed.documentHash,
+          signed.id,
+          signed.hashAlgorithm || 'sha256',
+        ]
       );
 
       const [createdRows] = await conn.query(

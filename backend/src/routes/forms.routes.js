@@ -51,6 +51,10 @@ const createFormBody = z.object({
 
 router.use(requireAuth);
 
+// User form catalog
+router.get('/catalog', requireEntityScope, ctrl.catalog);
+router.get('/catalog/:id', requireEntityScope, ctrl.catalogDetail);
+
 // Forms CRUD
 router.get('/', requireEntityScope, requirePermission('form.view'), ctrl.list);
 router.get('/:id', requireEntityScope, requirePermission('form.view'), ctrl.detail);
@@ -81,7 +85,6 @@ router.get('/submissions/:id',
   subCtrl.detail);
 router.post('/submit',
   requireEntityScope,
-  requirePermission('form.submit'),
   validate(z.object({
     formId: z.number().int().positive(),
     values: z.record(z.any()),
@@ -91,17 +94,14 @@ router.post('/submit',
   })),
   subCtrl.submit);
 router.patch('/submissions/:id/draft',
-  requirePermission('form.submit'),
   validate(z.object({
     values: z.record(z.any()).default({}),
     notes: z.string().nullable().optional(),
   })),
   subCtrl.updateDraft);
 router.post('/submissions/:id/finalize',
-  requirePermission('form.submit'),
   subCtrl.finalize);
 router.post('/submissions/:id/upload-field',
-  requirePermission('form.submit'),
   upload.single('file'),
   validate(z.object({
     fieldId: z.coerce.number().int().positive().optional(),

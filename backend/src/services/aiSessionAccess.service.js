@@ -2,12 +2,27 @@ function hasPerm(user, code) {
   return Boolean(user && (user.permissions || []).includes(code));
 }
 
-function isOwner(user, session) {
+function ownsSessionRecord(user, session) {
   return Boolean(
     user &&
     session &&
     Number(session.owner_user_id) === Number(user.sub)
   );
+}
+
+function isOwner(user, session) {
+  if (!ownsSessionRecord(user, session)) return false;
+
+  // Session data remains owned by its entity. If a user is later moved to a
+  // different entity, ownership alone must not bypass the entity boundary.
+  if (
+    user.entityId != null &&
+    Number(session.entity_id) === Number(user.entityId)
+  ) {
+    return true;
+  }
+
+  return hasPerm(user, 'entity.cross_access');
 }
 
 function sameEntity(user, session) {
@@ -144,8 +159,20 @@ function buildVisibilityFilter(user, alias = 's') {
     return { sql: '1=0', args: [] };
   }
 
-  const conditions = [`${alias}.owner_user_id = ?`];
-  const args = [user.sub];
+  const conditions = [];
+  const args = [];
+
+  if (user.entityId != null) {
+    if (hasPerm(user, 'entity.cross_access')) {
+      conditions.push(`${alias}.owner_user_id = ?`);
+      args.push(user.sub);
+    } else {
+      conditions.push(
+        `(${alias}.owner_user_id = ? AND ${alias}.entity_id = ?)`
+      );
+      args.push(user.sub, user.entityId);
+    }
+  }
 
   if (hasPerm(user, 'ai_command.private_audit') && user.entityId) {
     conditions.push(
@@ -175,6 +202,10 @@ function buildVisibilityFilter(user, alias = 's') {
       conditions.push(`(${alias}.visibility='entity' AND ${alias}.entity_id<>?)`);
       args.push(user.entityId);
     }
+  }
+
+  if (!conditions.length) {
+    return { sql: '1=0', args: [] };
   }
 
   return {

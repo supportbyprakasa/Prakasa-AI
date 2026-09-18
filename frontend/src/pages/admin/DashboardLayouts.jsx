@@ -45,7 +45,7 @@ export default function DashboardLayouts() {
       if (r.data.data) {
         setLayout(r.data.data.layout || []);
         setName(r.data.data.name || '');
-        setIsDefault(!!r.data.data.is_default);
+        setIsDefault(!!r.data.data.isDefault);
       } else {
         setLayout([]);
         setName(`${role.name} default`);
@@ -110,7 +110,7 @@ export default function DashboardLayouts() {
     }
   };
 
-  const availableWidgets = widgets.filter((w) => !w.isActive === false);
+  const availableWidgets = widgets.filter((w) => w.isActive !== false);
 
   return (
     <div>

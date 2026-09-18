@@ -223,7 +223,7 @@ CREATE TABLE IF NOT EXISTS form_submissions (
   entity_id INT UNSIGNED NOT NULL,
   department_id INT UNSIGNED NULL,
   submission_number VARCHAR(80) NOT NULL UNIQUE,
-  status VARCHAR(40) NOT NULL DEFAULT 'draft',
+  status VARCHAR(80) NOT NULL DEFAULT 'draft',
   title VARCHAR(255) NULL,
   notes TEXT NULL,
   submitted_by INT UNSIGNED NOT NULL,

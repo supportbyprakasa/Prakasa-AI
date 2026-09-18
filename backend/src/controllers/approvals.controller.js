@@ -193,7 +193,28 @@ async function list(req, res, next) {
 async function detail(req, res, next) {
   try {
     const [rows] = await pool.query(
-      `SELECT a.*, u.name AS requesterName
+      `SELECT a.id, a.entity_id AS entityId,
+              a.department_id AS departmentId,
+              a.document_id AS documentId,
+              a.subject_type AS subjectType,
+              a.subject_id AS subjectId,
+              a.request_type AS requestType,
+              a.document_type_id AS documentTypeId,
+              a.title, a.description,
+              a.approval_type AS approvalType,
+              a.current_level AS currentLevel,
+              a.status,
+              a.flow_type AS flowType,
+              a.matrix_key AS matrixKey,
+              a.matrix_rule_ids AS matrixRuleIds,
+              a.amount, a.currency,
+              a.requested_by AS requestedBy,
+              u.name AS requesterName,
+              a.decided_by AS decidedBy,
+              a.decided_at AS decidedAt,
+              a.decision_note AS decisionNote,
+              a.created_at AS createdAt,
+              a.updated_at AS updatedAt
          FROM approval_requests a
          JOIN users u ON u.id=a.requested_by
         WHERE a.id=? AND a.entity_id=?

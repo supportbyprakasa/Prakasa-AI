@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Upload, Paperclip, Check } from 'lucide-react';
 import api from '../../api/client';
 import Card from '../../components/Card';
@@ -9,9 +9,39 @@ import Badge from '../../components/Badge';
 import { SkeletonCard } from '../../components/Skeleton';
 import { toast } from '../../components/Toast';
 
+function decodeSubmissionValue(row, field) {
+  if (!row) return undefined;
+  if (field.fieldType === 'number' || field.fieldType === 'currency') {
+    return row.valueNumber ?? '';
+  }
+  if (field.fieldType === 'date') {
+    return row.valueDate ? new Date(row.valueDate).toISOString().slice(0, 10) : '';
+  }
+  if (field.fieldType === 'datetime') {
+    return row.valueDate ? new Date(row.valueDate).toISOString().slice(0, 16) : '';
+  }
+  if (field.fieldType === 'user_selector') return row.valueUserId ?? '';
+  if (field.fieldType === 'document_link' || field.fieldType === 'file') {
+    return row.valueDocumentId ?? '';
+  }
+  if (field.fieldType === 'multi_select' || field.fieldType === 'checkbox') {
+    let parsed = row.valueJson;
+    if (typeof parsed === 'string') {
+      try { parsed = JSON.parse(parsed); } catch { parsed = []; }
+    }
+    if (field.fieldType === 'checkbox' && !(field.options || []).length) {
+      return Array.isArray(parsed) ? parsed[0] === true : parsed === true;
+    }
+    return Array.isArray(parsed) ? parsed : [];
+  }
+  return row.valueText ?? '';
+}
+
 export default function FormRenderer() {
   const { slug } = useParams();
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
+  const draftId = searchParams.get('draft');
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [values, setValues] = useState({});
@@ -21,25 +51,73 @@ export default function FormRenderer() {
   const [uploads, setUploads] = useState({}); // fieldKey → { name, webViewLink, loading }
 
   useEffect(() => {
-    setLoading(true);
-    api.get(`/forms/${slug}`)
-      .then((r) => {
-        setForm(r.data.data);
-        // apply default values
+    let active = true;
+
+    async function load() {
+      setLoading(true);
+      try {
+        const formResponse = await api.get(`/forms/catalog/${slug}`);
+        const nextForm = formResponse.data.data;
+        if (!active) return;
+
         const init = {};
-        (r.data.data.fields || []).forEach((f) => {
-          if (f.defaultValue !== null && f.defaultValue !== undefined && f.defaultValue !== '') {
-            init[f.fieldKey] = f.defaultValue;
+        (nextForm.fields || []).forEach((field) => {
+          if (
+            field.defaultValue !== null &&
+            field.defaultValue !== undefined &&
+            field.defaultValue !== ''
+          ) {
+            init[field.fieldKey] = field.defaultValue;
           }
         });
+
+        if (draftId) {
+          const draftResponse = await api.get(`/forms/submissions/${draftId}`);
+          const draft = draftResponse.data.data;
+          if (
+            draft.status !== 'draft' ||
+            Number(draft.form_id) !== Number(nextForm.id)
+          ) {
+            throw new Error('Draft tidak sesuai dengan formulir ini');
+          }
+
+          const valueByFieldId = new Map(
+            (draft.values || []).map((row) => [Number(row.fieldId), row])
+          );
+          for (const field of nextForm.fields || []) {
+            const row = valueByFieldId.get(Number(field.id));
+            const decoded = decodeSubmissionValue(row, field);
+            if (decoded !== undefined) init[field.fieldKey] = decoded;
+          }
+
+          const nextUploads = {};
+          for (const attachment of draft.attachments || []) {
+            nextUploads[attachment.fieldKey] = {
+              loading: false,
+              name: attachment.name,
+              webViewLink: attachment.webViewLink,
+              driveFileId: attachment.driveFileId,
+              documentId: attachment.documentId,
+            };
+            init[attachment.fieldKey] = attachment.documentId || attachment.driveFileId;
+          }
+          setUploads(nextUploads);
+          setSubmissionId(Number(draftId));
+        }
+
+        setForm(nextForm);
         setValues(init);
-      })
-      .catch((e) => {
-        toast(e.response?.data?.error?.message || 'Form tidak ditemukan', 'error');
+      } catch (e) {
+        toast(e.response?.data?.error?.message || e.message || 'Form tidak ditemukan', 'error');
         nav('/forms');
-      })
-      .finally(() => setLoading(false));
-  }, [slug, nav]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    load();
+    return () => { active = false; };
+  }, [slug, draftId, nav]);
 
   const sections = useMemo(() => {
     if (!form) return [];
@@ -83,22 +161,27 @@ export default function FormRenderer() {
     return Object.keys(errs).length === 0;
   };
 
-  const ensureDraft = async () => {
-    if (submissionId) return submissionId;
-    const r = await api.post('/forms/submit', {
-      formId: form.id,
-      values,
-      submit: false,
-    });
-    setSubmissionId(r.data.data.id);
-    return r.data.data.id;
+  const persistDraft = async () => {
+    let id = submissionId;
+    if (!id) {
+      const created = await api.post('/forms/submit', {
+        formId: form.id,
+        values,
+        submit: false,
+      });
+      id = created.data.data.id;
+      setSubmissionId(id);
+    }
+
+    await api.patch(`/forms/submissions/${id}/draft`, { values });
+    return id;
   };
 
   const uploadFile = async (field, file) => {
     if (!file) return;
     try {
       setUploads((prev) => ({ ...prev, [field.fieldKey]: { loading: true, name: file.name } }));
-      const id = await ensureDraft();
+      const id = await persistDraft();
       const fd = new FormData();
       fd.append('file', file);
       fd.append('fieldId', String(field.id));
@@ -132,23 +215,21 @@ export default function FormRenderer() {
       toast('Masih ada field yang belum valid', 'error');
       return;
     }
+
     setSubmitting(true);
     try {
-      const payload = { formId: form.id, values, submit: !asDraft };
-      let r;
-      if (submissionId) {
-        // update via re-submit draft → submit creates a new row in existing implementation.
-        // Simpler & consistent: create fresh submission on submit.
-        r = await api.post('/forms/submit', payload);
+      const id = await persistDraft();
+
+      if (asDraft) {
+        toast('Draft disimpan', 'success');
       } else {
-        r = await api.post('/forms/submit', payload);
+        const response = await api.post(`/forms/submissions/${id}/finalize`);
+        toast(
+          `Terkirim: ${response.data.data.submissionNumber || id}`,
+          'success'
+        );
       }
-      toast(
-        asDraft
-          ? 'Draft disimpan'
-          : `Terkirim: ${r.data.data.submissionNumber}`,
-        'success'
-      );
+
       nav('/forms/submissions');
     } catch (e) {
       toast(e.response?.data?.error?.message || 'Gagal menyimpan', 'error');
@@ -405,8 +486,18 @@ function FieldRenderer({ field, value, error, upload, onChange, onUpload }) {
           placeholder="Department ID" style={inputStyle} />
       );
 
-    case 'file':
     case 'document_link':
+      return wrap(
+        <input
+          type="number"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={field.placeholder || 'Document ID'}
+          style={inputStyle}
+        />
+      );
+
+    case 'file':
       return wrap(
         <div>
           {upload ? (

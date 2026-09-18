@@ -43,4 +43,5 @@ router.use('/approval-matrix', require('./approvalMatrix.routes'));
 router.use('/approval-delegations', require('./approvalDelegations.routes'));
 router.use('/signature-precheck', require('./signaturePrecheck.routes'));
 router.use('/signature-qr', require('./signatureQr.routes'));
+router.use('/ai-command', require('./aiCommand.routes'));
 module.exports = router;

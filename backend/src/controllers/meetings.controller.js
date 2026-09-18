@@ -58,6 +58,11 @@ async function create(req, res, next) {
         startTime, endTime, timezone,
         attendees: attendeeList,
         withMeet,
+      }, {
+        entityId,
+        userId: req.user.sub,
+        subjectType: 'meeting',
+        subjectId: null,
       });
       meetLink = eventData.hangoutLink || eventData.conferenceData?.entryPoints?.[0]?.uri || null;
     } catch (calErr) {
@@ -226,6 +231,11 @@ async function update(req, res, next) {
           startTime, endTime,
           timezone: timezone || meeting.timezone,
           status: status === 'cancelled' ? 'cancelled' : undefined,
+        }, {
+          entityId: meeting.entity_id,
+          userId: req.user.sub,
+          subjectType: 'meeting',
+          subjectId: meeting.id,
         });
       } catch (calErr) {
         console.error('[meetings.update] Calendar error:', calErr.message);
@@ -269,6 +279,11 @@ async function cancel(req, res, next) {
         await calSvc.deleteEvent({
           organizerEmail: meeting.organizerEmail,
           eventId: meeting.google_event_id,
+        }, {
+          entityId: meeting.entity_id,
+          userId: req.user.sub,
+          subjectType: 'meeting',
+          subjectId: meeting.id,
         });
       } catch (calErr) {
         console.error('[meetings.cancel] Calendar error:', calErr.message);

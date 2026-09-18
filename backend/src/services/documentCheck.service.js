@@ -63,7 +63,12 @@ Periksa kelengkapan dokumen di atas.`;
 
   let aiResult = null;
   try {
-    aiResult = await runModule('document_check', prompt);
+    aiResult = await runModule('document_check', prompt, {
+      entityId,
+      userId,
+      subjectType,
+      subjectId,
+    });
   } catch (e) {
     // AI gagal → tetap kembalikan hasil rule-based
     console.error('[documentCheck] AI error:', e.message);

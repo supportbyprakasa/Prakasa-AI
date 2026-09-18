@@ -6,9 +6,9 @@ const { runModule } = require('./ai/provider');
  * Kirim laporan tidak terstruktur ke AI, minta JSON terstruktur.
  * AI tidak menyimpan apa pun; pemanggil yang menentukan apa yang dibuat.
  */
-async function parseFieldReport(userText) {
+async function parseFieldReport(userText, ctx = {}) {
   const prompt = `Laporan sales lapangan:\n"""${userText}"""\n\nBalas hanya JSON sesuai skema.`;
-  const result = await runModule('field_sales_bot', prompt);
+  const result = await runModule('field_sales_bot', prompt, ctx);
   let parsed;
   try {
     // buang code fences kalau ada

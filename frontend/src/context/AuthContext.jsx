@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import api from '../api/client';
 
 const AuthContext = createContext(null);
@@ -7,19 +7,45 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const refreshUser = useCallback(async () => {
     const token = localStorage.getItem('prakasa.token');
-    if (!token) { setLoading(false); return; }
-    api.get('/auth/me')
-      .then((r) => setUser(r.data.data))
-      .catch(() => localStorage.removeItem('prakasa.token'))
-      .finally(() => setLoading(false));
+    if (!token) {
+      setUser(null);
+      return null;
+    }
+
+    try {
+      const response = await api.get('/auth/me');
+      setUser(response.data.data);
+      return response.data.data;
+    } catch (error) {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        localStorage.removeItem('prakasa.token');
+        setUser(null);
+      }
+      throw error;
+    }
   }, []);
+
+  useEffect(() => {
+    refreshUser()
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [refreshUser]);
+
+  useEffect(() => {
+    const onFocus = () => {
+      if (localStorage.getItem('prakasa.token')) {
+        refreshUser().catch(() => {});
+      }
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [refreshUser]);
 
   const loginWithToken = async (token) => {
     localStorage.setItem('prakasa.token', token);
-    const r = await api.get('/auth/me');
-    setUser(r.data.data);
+    return refreshUser();
   };
 
   const logout = () => {
@@ -29,7 +55,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginWithToken, logout }}>
+    <AuthContext.Provider value={{ user, loading, refreshUser, loginWithToken, logout }}>
       {children}
     </AuthContext.Provider>
   );

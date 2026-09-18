@@ -8,7 +8,13 @@ const { runModule } = require('../services/ai/provider');
  */
 async function generate(req, res, next) {
   try {
-    const entityId = req.body.entityId || req.user.entityId;
+    const entityId = Number(req.body.entityId || req.user.entityId);
+    if (
+      Number(req.user.entityId) !== entityId &&
+      !(req.user.permissions || []).includes('entity.cross_access')
+    ) {
+      return fail(res, 'FORBIDDEN', 'Tidak punya akses lintas entity', 403);
+    }
     const briefType = req.body.briefType || 'daily';
     const briefDate = req.body.briefDate || new Date().toISOString().slice(0, 10);
     if (!entityId) return fail(res, 'VALIDATION_ERROR', 'entityId wajib', 400);
@@ -80,7 +86,12 @@ ${approvalList.map((a) => `- #${a.id} ${a.title}`).join('\n') || '(tidak ada)'}
 
     const prompt = `Data operasional:\n${dataBlock}\n\nBuat ringkasan ${briefType} untuk manajemen.`;
 
-    const result = await runModule('daily_brief', prompt);
+    const result = await runModule('daily_brief', prompt, {
+      entityId,
+      userId: req.user.sub,
+      subjectType: 'entity',
+      subjectId: entityId,
+    });
 
     const [ins] = await pool.query(
       `INSERT INTO ai_summaries
@@ -119,7 +130,13 @@ ${approvalList.map((a) => `- #${a.id} ${a.title}`).join('\n') || '(tidak ada)'}
 
 async function list(req, res, next) {
   try {
-    const entityId = req.query.entityId ? Number(req.query.entityId) : req.user.entityId;
+    const entityId = req.query.entityId ? Number(req.query.entityId) : Number(req.user.entityId);
+    if (
+      Number(req.user.entityId) !== entityId &&
+      !(req.user.permissions || []).includes('entity.cross_access')
+    ) {
+      return fail(res, 'FORBIDDEN', 'Tidak punya akses lintas entity', 403);
+    }
     const where = ['entity_id=?'];
     const args = [entityId];
     if (req.query.briefType) { where.push('brief_type=?'); args.push(req.query.briefType); }

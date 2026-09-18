@@ -32,14 +32,19 @@ async function documentAssistant(req, res, next) {
     if (!doc) return fail(res, 'NOT_FOUND', 'Dokumen tidak ditemukan', 404);
 
     // isolasi entity (user hanya boleh akses entity-nya)
-    if (req.user.entityId && req.user.entityId !== doc.entityId && !req.user.permissions?.includes('entity.manage')) {
+    if (req.user.entityId && req.user.entityId !== doc.entityId && !req.user.permissions?.includes('entity.cross_access')) {
       return fail(res, 'FORBIDDEN', 'Tidak punya akses ke entity dokumen ini', 403);
     }
 
     // Siapkan teks sumber
     let sourceText = '';
     if (doc.mimeType === 'application/vnd.google-apps.document' && doc.driveFileId) {
-      sourceText = await getDocPlainText(doc.driveFileId);
+      sourceText = await getDocPlainText(doc.driveFileId, {
+        entityId: doc.entityId,
+        userId: req.user.sub,
+        subjectType: 'document',
+        subjectId: doc.id,
+      });
     } else {
       // Fase ini hanya mendukung Google Docs untuk ekstraksi teks.
       // File non-Docs: kirim metadata + judul saja.
@@ -54,7 +59,12 @@ async function documentAssistant(req, res, next) {
 
     const prompt = `${instruction}\n\n---\n${sourceText}\n---`;
 
-    const result = await runModule('document_assistant', prompt);
+    const result = await runModule('document_assistant', prompt, {
+      entityId: doc.entityId,
+      userId: req.user.sub,
+      subjectType: 'document',
+      subjectId: doc.id,
+    });
 
     const promptHash = crypto.createHash('sha256').update(prompt).digest('hex');
 
@@ -86,19 +96,35 @@ async function documentAssistant(req, res, next) {
 
 async function listSummaries(req, res, next) {
   try {
-    const where = ['1=1'];
-    const args = [];
+    const permissions = req.user.permissions || [];
+    const requestedEntityId = req.query.entityId ? Number(req.query.entityId) : null;
+    const ownEntityId = req.user.entityId ? Number(req.user.entityId) : null;
+    let entityId = ownEntityId;
+
+    if (requestedEntityId && requestedEntityId !== ownEntityId) {
+      if (!permissions.includes('entity.cross_access')) {
+        return fail(res, 'FORBIDDEN', 'Tidak punya akses lintas entity', 403);
+      }
+      entityId = requestedEntityId;
+    }
+
+    if (!entityId) return fail(res, 'VALIDATION_ERROR', 'entityId wajib', 400);
+
+    const where = ['entity_id = ?'];
+    const args = [entityId];
     if (req.query.subjectType) { where.push('subject_type = ?'); args.push(req.query.subjectType); }
     if (req.query.subjectId) { where.push('subject_id = ?'); args.push(req.query.subjectId); }
     if (req.query.module) { where.push('module = ?'); args.push(req.query.module); }
 
     const [rows] = await pool.query(
-      `SELECT id, module, subject_type AS subjectType, subject_id AS subjectId,
-              provider, model, content, tokens_in AS tokensIn, tokens_out AS tokensOut,
-              created_at AS createdAt
+      `SELECT id, entity_id AS entityId, module,
+              subject_type AS subjectType, subject_id AS subjectId,
+              provider, model, content, tokens_in AS tokensIn,
+              tokens_out AS tokensOut, created_at AS createdAt
          FROM ai_summaries
         WHERE ${where.join(' AND ')}
-        ORDER BY id DESC LIMIT 50`, args
+        ORDER BY id DESC LIMIT 50`,
+      args
     );
     return ok(res, rows);
   } catch (e) { next(e); }
@@ -155,7 +181,7 @@ async function meetingSummary(req, res, next) {
     if (!meeting) return fail(res, 'NOT_FOUND', 'Meeting tidak ditemukan', 404);
 
     if (req.user.entityId && req.user.entityId !== meeting.entity_id &&
-        !req.user.permissions?.includes('entity.manage')) {
+        !req.user.permissions?.includes('entity.cross_access')) {
       return fail(res, 'FORBIDDEN', 'Tidak punya akses ke meeting ini', 403);
     }
 
@@ -168,7 +194,12 @@ async function meetingSummary(req, res, next) {
       `Transcript/notes:\n"""${sourceText}"""\n\n` +
       `Berikan ringkasan, keputusan, dan action items dalam format JSON sesuai instruksi sistem.`;
 
-    const result = await runModule('meeting_summary', prompt);
+    const result = await runModule('meeting_summary', prompt, {
+      entityId: meeting.entity_id,
+      userId: req.user.sub,
+      subjectType: 'meeting',
+      subjectId: meeting.id,
+    });
 
     const promptHash = crypto.createHash('sha256').update(prompt).digest('hex');
     const [ins] = await pool.query(

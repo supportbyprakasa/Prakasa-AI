@@ -48,6 +48,18 @@ import BriefView from './pages/advanced/BriefView';
 import Timeline from './pages/advanced/Timeline';
 import DataClassification from './pages/advanced/DataClassification';
 import CrossDivisionWorkspace from './pages/advanced/CrossDivisionWorkspace';
+import FormCatalog from './pages/forms/FormCatalog';
+import FormRenderer from './pages/forms/FormRenderer';
+import MySubmissions from './pages/forms/MySubmissions';
+import SubmissionDetail from './pages/forms/SubmissionDetail';
+import FormAdminList from './pages/admin/FormAdminList';
+import FormBuilder from './pages/admin/FormBuilder';
+import WorkflowDefinitions from './pages/admin/WorkflowDefinitions';
+import WorkflowEditor from './pages/admin/WorkflowEditor';
+import DocumentTypes from './pages/admin/DocumentTypes';
+import SignatureRules from './pages/admin/SignatureRules';
+import DashboardLayouts from './pages/admin/DashboardLayouts';
+import IntegrationLogs from './pages/admin/IntegrationLogs';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -107,6 +119,20 @@ export default function App() {
         <Route path="brief" element={<BriefView />} />
         <Route path="timeline" element={<Timeline />} />
         <Route path="data-classification" element={<DataClassification />} />
+        <Route path="forms" element={<FormCatalog />} />
+        <Route path="forms/submissions" element={<MySubmissions />} />
+        <Route path="forms/submissions/:id" element={<SubmissionDetail />} />
+        <Route path="forms/:slug" element={<FormRenderer />} />
+        <Route path="admin/forms" element={<FormAdminList />} />
+        <Route path="admin/forms/new" element={<FormBuilder />} />
+        <Route path="admin/forms/:id" element={<FormBuilder />} />
+        <Route path="admin/workflows" element={<WorkflowDefinitions />} />
+        <Route path="admin/workflows/new" element={<WorkflowEditor />} />
+        <Route path="admin/workflows/:id" element={<WorkflowEditor />} />
+        <Route path="admin/document-types" element={<DocumentTypes />} />
+        <Route path="admin/signature-rules" element={<SignatureRules />} />
+        <Route path="admin/dashboard-layouts" element={<DashboardLayouts />} />
+        <Route path="admin/integration-logs" element={<IntegrationLogs />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

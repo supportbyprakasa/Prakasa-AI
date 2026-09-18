@@ -78,6 +78,10 @@ async function list({ task, user }) {
 
 async function add({ task, user, predecessorTaskId, successorTaskId, dependencyType = 'blocks' }) {
   assertTaskAccess({ user, task, action: 'manage' });
+  if (!['blocks', 'related'].includes(dependencyType)) {
+    throw error('dependencyType tidak valid');
+  }
+
   const pred = Number(predecessorTaskId);
   const succ = Number(successorTaskId);
   if (!Number.isInteger(pred) || pred <= 0 || !Number.isInteger(succ) || succ <= 0) {

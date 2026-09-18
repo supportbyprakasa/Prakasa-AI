@@ -54,6 +54,8 @@ export default function WorkflowEditor() {
             requiresComment: !!t.requiresComment,
             orderIndex: t.orderIndex ?? 0,
             _existingId: t.id,
+            _originalFromCode: t.fromCode,
+            _originalToCode: t.toCode,
           })),
         });
       })
@@ -108,7 +110,13 @@ export default function WorkflowEditor() {
     if (!form.slug) return toast('Slug wajib', 'error');
     if (!/^[a-z0-9-]+$/.test(form.slug)) return toast('Slug tidak valid', 'error');
     if (form.statuses.length < 2) return toast('Minimal 2 status', 'error');
-    if (!form.statuses.some((s) => s.isInitial)) return toast('Harus ada 1 status initial', 'error');
+    const initialCount = form.statuses.filter((s) => s.isInitial).length;
+    if (initialCount !== 1) return toast('Harus ada tepat 1 status initial', 'error');
+    if (!form.statuses.some((s) => s.isFinal)) return toast('Harus ada minimal 1 status final', 'error');
+    const statusCodes = form.statuses.map((s) => s.code);
+    if (new Set(statusCodes).size !== statusCodes.length) {
+      return toast('Code status tidak boleh duplikat', 'error');
+    }
 
     for (const s of form.statuses) {
       if (!s.code) return toast('Semua status harus punya code', 'error');
@@ -119,6 +127,12 @@ export default function WorkflowEditor() {
       if (!t.actionLabel) return toast('Setiap transisi harus punya action label', 'error');
       if (!t.fromStatusCode || !t.toStatusCode) {
         return toast('Setiap transisi harus punya from & to status', 'error');
+      }
+      if (!statusCodes.includes(t.fromStatusCode) || !statusCodes.includes(t.toStatusCode)) {
+        return toast('Transisi mengacu ke status yang tidak tersedia', 'error');
+      }
+      if (t.fromStatusCode === t.toStatusCode) {
+        return toast('Status asal dan tujuan transisi tidak boleh sama', 'error');
       }
     }
 
@@ -156,45 +170,68 @@ export default function WorkflowEditor() {
           isActive: payload.isActive,
         });
 
-        // Replace statuses & transitions
-        // strategy: delete removed ones, create new ones.
-        const existingStatuses = (form.statuses || []).filter((s) => s._existingId);
-        const existingTransitions = (form.transitions || []).filter((t) => t._existingId);
+        const current = (await api.get(`/workflows/${id}`)).data.data;
+        const originalStatuses = current.statuses || [];
+        const originalTransitions = current.transitions || [];
 
-        const originalStatuses = (await api.get(`/workflows/${id}`)).data.data.statuses || [];
-        const keepStatusIds = new Set(existingStatuses.map((s) => s._existingId));
-        for (const orig of originalStatuses) {
-          if (!keepStatusIds.has(orig.id)) {
-            try { await api.delete(`/workflows/${id}/statuses/${orig.id}`); } catch { /* may be in use */ }
+        const keepTransitionIds = new Set(
+          form.transitions.filter((t) => t._existingId).map((t) => t._existingId)
+        );
+        for (const original of originalTransitions) {
+          if (!keepTransitionIds.has(original.id)) {
+            await api.delete(`/workflows/${id}/transitions/${original.id}`);
           }
         }
 
-        const originalTransitions = (await api.get(`/workflows/${id}`)).data.data.transitions || [];
-        const keepTransIds = new Set(existingTransitions.map((t) => t._existingId));
-        for (const orig of originalTransitions) {
-          if (!keepTransIds.has(orig.id)) {
-            try { await api.delete(`/workflows/${id}/transitions/${orig.id}`); } catch { /* may be in use */ }
+        const keepStatusIds = new Set(
+          form.statuses.filter((s) => s._existingId).map((s) => s._existingId)
+        );
+        for (const original of originalStatuses) {
+          if (!keepStatusIds.has(original.id)) {
+            await api.delete(`/workflows/${id}/statuses/${original.id}`);
           }
         }
 
-        for (const s of form.statuses) {
+        // Set the desired initial status first. This avoids temporarily leaving
+        // the workflow without an initial state when the initial state changes.
+        const orderedStatuses = [...form.statuses].sort(
+          (a, b) => Number(Boolean(b.isInitial)) - Number(Boolean(a.isInitial))
+        );
+        for (const s of orderedStatuses) {
+          const orderIndex = form.statuses.indexOf(s);
           if (s._existingId) {
             await api.patch(`/workflows/${id}/statuses/${s._existingId}`, {
-              label: s.label, color: s.color,
-              isInitial: !!s.isInitial, isFinal: !!s.isFinal,
-              orderIndex: s.orderIndex,
+              label: s.label,
+              color: s.color,
+              isInitial: !!s.isInitial,
+              isFinal: !!s.isFinal,
+              orderIndex,
             });
           } else {
-            const r = await api.post(`/workflows/${id}/statuses`, {
-              code: s.code, label: s.label, color: s.color,
-              isInitial: !!s.isInitial, isFinal: !!s.isFinal,
-              orderIndex: s.orderIndex,
+            const response = await api.post(`/workflows/${id}/statuses`, {
+              code: s.code,
+              label: s.label,
+              color: s.color,
+              isInitial: !!s.isInitial,
+              isFinal: !!s.isFinal,
+              orderIndex,
             });
-            s._existingId = r.data.data.id;
+            s._existingId = response.data.data.id;
           }
         }
 
-        for (const t of form.transitions) {
+        for (let index = 0; index < form.transitions.length; index++) {
+          const t = form.transitions[index];
+          const endpointChanged = t._existingId && (
+            t.fromStatusCode !== t._originalFromCode ||
+            t.toStatusCode !== t._originalToCode
+          );
+
+          if (endpointChanged) {
+            await api.delete(`/workflows/${id}/transitions/${t._existingId}`);
+            t._existingId = null;
+          }
+
           if (t._existingId) {
             await api.patch(`/workflows/${id}/transitions/${t._existingId}`, {
               actionLabel: t.actionLabel,
@@ -202,10 +239,10 @@ export default function WorkflowEditor() {
               requiresApproval: !!t.requiresApproval,
               requiresSignature: !!t.requiresSignature,
               requiresComment: !!t.requiresComment,
-              orderIndex: t.orderIndex,
+              orderIndex: index,
             });
           } else {
-            await api.post(`/workflows/${id}/transitions`, {
+            const response = await api.post(`/workflows/${id}/transitions`, {
               fromStatusCode: t.fromStatusCode,
               toStatusCode: t.toStatusCode,
               actionLabel: t.actionLabel,
@@ -213,8 +250,11 @@ export default function WorkflowEditor() {
               requiresApproval: !!t.requiresApproval,
               requiresSignature: !!t.requiresSignature,
               requiresComment: !!t.requiresComment,
-              orderIndex: t.orderIndex,
+              orderIndex: index,
             });
+            t._existingId = response.data.data.id;
+            t._originalFromCode = t.fromStatusCode;
+            t._originalToCode = t.toStatusCode;
           }
         }
 

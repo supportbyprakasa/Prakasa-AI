@@ -277,6 +277,7 @@ async function convertMessageToTask(req, res, next) {
     }
 
     let resolvedBoardId = boardId || null;
+    let taskDepartmentId = message.departmentId || null;
     let board = null;
     if (resolvedBoardId) {
       const [boards] = await conn.query(
@@ -291,10 +292,12 @@ async function convertMessageToTask(req, res, next) {
         throw serviceError('Board tidak valid');
       }
 
-      if (
-        message.departmentId != null &&
+      if (taskDepartmentId == null && board.departmentId != null) {
+        taskDepartmentId = Number(board.departmentId);
+      } else if (
+        taskDepartmentId != null &&
         board.departmentId != null &&
-        Number(message.departmentId) !== Number(board.departmentId)
+        Number(taskDepartmentId) !== Number(board.departmentId)
       ) {
         throw serviceError('Board berada di department berbeda dari room');
       }
@@ -303,7 +306,8 @@ async function convertMessageToTask(req, res, next) {
     if (columnId) {
       const args = [columnId, message.entityId];
       let sql =
-        `SELECT bc.id, bc.board_id AS boardId
+        `SELECT bc.id, bc.board_id AS boardId,
+                b.department_id AS departmentId
            FROM board_columns bc
            JOIN boards b ON b.id=bc.board_id
           WHERE bc.id=?
@@ -325,6 +329,15 @@ async function convertMessageToTask(req, res, next) {
         );
       }
       if (!resolvedBoardId) resolvedBoardId = Number(columns[0].boardId);
+      if (taskDepartmentId == null && columns[0].departmentId != null) {
+        taskDepartmentId = Number(columns[0].departmentId);
+      } else if (
+        taskDepartmentId != null &&
+        columns[0].departmentId != null &&
+        Number(taskDepartmentId) !== Number(columns[0].departmentId)
+      ) {
+        throw serviceError('Column berada pada board department berbeda dari room');
+      }
     }
 
     if (assigneeId) {
@@ -348,7 +361,7 @@ async function convertMessageToTask(req, res, next) {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'chat', ?)`,
       [
         message.entityId,
-        message.departmentId,
+        taskDepartmentId,
         resolvedBoardId,
         columnId || null,
         String(message.body).slice(0, 200),

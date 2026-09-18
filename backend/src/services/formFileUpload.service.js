@@ -29,6 +29,10 @@ async function uploadFieldFile({ submission, field, file, user }) {
     throw new Error('Field ini bukan field file');
   }
 
+  if (Number(field.form_id) !== Number(submission.form_id)) {
+    throw new Error('Field tidak berasal dari form submission ini');
+  }
+
   const parentId = await resolveDestinationFolder(submission, pool);
   if (!parentId) {
     throw new Error(

@@ -31,7 +31,7 @@ async function list(req, res, next) {
               f.workflow_definition_id AS workflowDefinitionId,
               f.approval_matrix_id AS approvalMatrixId,
               f.document_type_id AS documentTypeId,
-              (SELECT COUNT(*) FROM form_fields ff WHERE ff.form_id = f.id) AS fieldCount,
+              (SELECT COUNT(*) FROM form_fields ff WHERE ff.form_id = f.id AND ff.deleted_at IS NULL) AS fieldCount,
               (SELECT COUNT(*) FROM form_submissions fs
                 WHERE fs.form_id = f.id AND fs.deleted_at IS NULL) AS submissionCount,
               f.created_at AS createdAt
@@ -218,27 +218,60 @@ async function update(req, res, next) {
     );
 
     if (Array.isArray(fields)) {
-      await conn.query(`DELETE FROM form_fields WHERE form_id = ?`, [id]);
+      const [existingFields] = await conn.query(
+        `SELECT id, field_key AS fieldKey
+           FROM form_fields
+          WHERE form_id = ?`,
+        [id]
+      );
+      const existingByKey = new Map(existingFields.map((field) => [field.fieldKey, field]));
+
+      // Preserve historical submission values by soft-deleting removed field definitions.
+      await conn.query(
+        `UPDATE form_fields SET deleted_at = NOW() WHERE form_id = ?`,
+        [id]
+      );
+
       for (let i = 0; i < fields.length; i++) {
-        const f = fields[i];
-        await conn.query(
-          `INSERT INTO form_fields
-           (form_id, field_key, label, field_type, placeholder, help_text,
-            is_required, default_value, options_json, validation_json,
-            section_name, order_index, reference_type,
-            depends_on_field_key, depends_on_value)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            id, f.fieldKey, f.label, f.fieldType,
-            f.placeholder || null, f.helpText || null,
-            f.isRequired ? 1 : 0, f.defaultValue || null,
-            f.options ? JSON.stringify(f.options) : null,
-            f.validation ? JSON.stringify(f.validation) : null,
-            f.sectionName || null, Number.isInteger(f.orderIndex) ? f.orderIndex : i,
-            f.referenceType || null,
-            f.dependsOnFieldKey || null, f.dependsOnValue || null,
-          ]
-        );
+        const field = fields[i];
+        const existingField = existingByKey.get(field.fieldKey);
+        const values = [
+          field.label,
+          field.fieldType,
+          field.placeholder ?? null,
+          field.helpText ?? null,
+          field.isRequired ? 1 : 0,
+          field.defaultValue ?? null,
+          field.options ? JSON.stringify(field.options) : null,
+          field.validation ? JSON.stringify(field.validation) : null,
+          field.sectionName ?? null,
+          Number.isInteger(field.orderIndex) ? field.orderIndex : i,
+          field.referenceType ?? null,
+          field.dependsOnFieldKey ?? null,
+          field.dependsOnValue ?? null,
+        ];
+
+        if (existingField) {
+          await conn.query(
+            `UPDATE form_fields SET
+               label = ?, field_type = ?, placeholder = ?, help_text = ?,
+               is_required = ?, default_value = ?, options_json = ?, validation_json = ?,
+               section_name = ?, order_index = ?, reference_type = ?,
+               depends_on_field_key = ?, depends_on_value = ?, deleted_at = NULL
+             WHERE id = ? AND form_id = ?`,
+            [...values, existingField.id, id]
+          );
+        } else {
+          await conn.query(
+            `INSERT INTO form_fields
+             (form_id, field_key, label, field_type, placeholder, help_text,
+              is_required, default_value, options_json, validation_json,
+              section_name, order_index, reference_type,
+              depends_on_field_key, depends_on_value)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [id, field.fieldKey, ...values]
+          );
+        }
       }
     }
 

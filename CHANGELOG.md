@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.1] - 2026-09-18
+### Added
+- Development-only default Super Admin credential for local setup.
+- `npm run setup:local` to run migrations and bootstrap the local Super Admin in one command.
+- Production bootstrap still requires explicit `BOOTSTRAP_ADMIN_*` credentials.
+
 ## [0.9.0] - 2026-09-18
 ### Changed
 - Manual email/password authentication is now the primary login flow.

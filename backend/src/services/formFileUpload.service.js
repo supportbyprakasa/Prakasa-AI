@@ -45,33 +45,19 @@ async function uploadFieldFile({ submission, field, file, user }) {
     .update(file.buffer)
     .digest('hex');
 
-  const uploaded = await integrationLog.wrap(
+  const uploaded = await drive.uploadFile(
     {
-      entityId: submission.entity_id,
-      userId: user?.sub || null,
-      provider: 'google_drive',
-      operation: 'form_submission.upload_field',
-      subjectType: 'form_submission',
-      subjectId: submission.id,
-      requestMeta: {
-        name: file.originalname,
-        mimeType: file.mimetype,
-        size: file.size,
-        driveFolderId: parentId,
-      },
-      responseMeta: (result) => ({
-        driveFileId: result.id,
-        name: result.name,
-        mimeType: result.mimeType,
-        size: result.size,
-      }),
-    },
-    () => drive.uploadFile({
       name: file.originalname,
       mimeType: file.mimetype,
       buffer: file.buffer,
       parentId,
-    })
+    },
+    {
+      entityId: submission.entity_id,
+      userId: user?.sub || null,
+      subjectType: 'form_submission',
+      subjectId: submission.id,
+    }
   );
 
   const conn = await pool.getConnection();

@@ -836,8 +836,8 @@ async function sign(req, res, next) {
       const [signedResult] = await conn.query(
         `INSERT INTO signed_documents
          (signature_request_id, document_id, drive_file_id, drive_folder_id,
-          web_view_link, document_hash, signed_by)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          web_view_link, document_hash, hash_algorithm, hash_source, signed_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           requestId,
           locked.document_id,
@@ -845,6 +845,8 @@ async function sign(req, res, next) {
           folderId || null,
           uploaded.webViewLink || null,
           sourceHash.hash,
+          algorithm,
+          sourceHash.source,
           req.user.sub,
         ]
       );

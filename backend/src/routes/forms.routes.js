@@ -79,7 +79,6 @@ router.get('/submissions/list',
   requirePermission('form_submission.view'),
   subCtrl.list);
 router.get('/submissions/mine',
-  requirePermission('form.submit'),
   subCtrl.mine);
 router.get('/submissions/:id',
   subCtrl.detail);

@@ -5,7 +5,7 @@ import {
   PenTool, Bell, MonitorSmartphone, AppWindow, CalendarDays,
   Users2, Package, Bot, Warehouse, Wallet, UserPlus, UserMinus,
   Briefcase, Search, BookOpen, Zap, ScrollText, TrendingUp,
-  ListChecks, CalendarRange, Network, ShieldCheck, LayoutGrid, UserCheck,
+  ListChecks, CalendarRange, Network, ShieldCheck, LayoutGrid, UserCheck, Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -19,6 +19,12 @@ function useNavConfig() {
         { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
         { to: '/search', label: 'Search', icon: Search, permission: 'search.global' },
         { to: '/notifications', label: 'Notifikasi', icon: Bell },
+      ].filter((i) => has(i.permission)),
+    },
+    {
+      title: 'AI Workspace',
+      items: [
+        { to: '/ai-command', label: 'AI Command Center', icon: Sparkles, permission: 'ai_command.session.view' },
       ].filter((i) => has(i.permission)),
     },
     {
@@ -100,6 +106,7 @@ function useNavConfig() {
         { to: '/admin/approval-matrix', label: 'Approval Matrix', icon: LayoutGrid, permission: 'approval_matrix.view' },
         { to: '/admin/approval-delegations', label: 'Approval Delegations', icon: UserCheck, permission: 'approval_delegation.view' },
         { to: '/admin/signature-precheck', label: 'Signature Precheck', icon: ShieldCheck, permission: 'signature_precheck.view' },
+        { to: '/admin/ai-usage', label: 'AI Usage', icon: Activity, permission: 'ai_command.usage.view' },
         { to: '/activity-logs', label: 'Activity Log', icon: Activity, permission: 'activity_log.view' },
       ].filter((i) => has(i.permission)),
     },

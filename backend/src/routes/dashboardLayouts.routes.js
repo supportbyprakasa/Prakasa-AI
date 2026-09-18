@@ -12,6 +12,10 @@ router.get('/',
   requireEntityScope,
   requirePermission('dashboard_layout.manage'),
   ctrl.list);
+router.get('/roles',
+  requireEntityScope,
+  requirePermission('dashboard_layout.manage'),
+  ctrl.roles);
 router.get('/mine',
   requireEntityScope,
   ctrl.mine);

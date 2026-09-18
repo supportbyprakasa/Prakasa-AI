@@ -21,6 +21,44 @@ function safeParse(value) {
   try { return JSON.parse(value); } catch { return null; }
 }
 
+function containsSensitiveKey(value, depth = 0) {
+  if (depth > 8 || value == null || typeof value !== 'object') return false;
+
+  const sensitive = [
+    'password',
+    'passwd',
+    'pwd',
+    'secret',
+    'token',
+    'accesstoken',
+    'refreshtoken',
+    'idtoken',
+    'apikey',
+    'privatekey',
+    'clientsecret',
+    'authorization',
+    'jwt',
+  ];
+
+  if (Array.isArray(value)) {
+    return value.some((item) => containsSensitiveKey(item, depth + 1));
+  }
+
+  for (const [key, nested] of Object.entries(value)) {
+    const normalized = String(key)
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
+
+    if (sensitive.some((needle) => normalized.includes(needle))) {
+      return true;
+    }
+    if (containsSensitiveKey(nested, depth + 1)) return true;
+  }
+
+  return false;
+}
+
+
 function assertProposalEntityAccess(user, proposal) {
   if (Number(proposal.entity_id) === Number(user.entityId)) return;
   if (
@@ -70,6 +108,13 @@ async function createProposal({
 
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     const error = new Error('payload wajib objek');
+    error.status = 400;
+    error.code = 'VALIDATION_ERROR';
+    throw error;
+  }
+
+  if (containsSensitiveKey(payload)) {
+    const error = new Error('Payload action tidak boleh berisi credential, token, atau secret');
     error.status = 400;
     error.code = 'VALIDATION_ERROR';
     throw error;

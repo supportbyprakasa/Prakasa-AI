@@ -51,7 +51,7 @@ export default function SignatureRules() {
       allowDelegation: fd.get('allowDelegation') === 'on',
       autoGenerateVerificationCode: fd.get('autoGenerateVerificationCode') === 'on',
       archiveFolderDriveId: fd.get('archiveFolderDriveId') || null,
-      isActive: fd.get('isActive') !== 'off',
+      isActive: fd.get('isActive') === 'on',
     };
 
     try {
@@ -166,6 +166,11 @@ export default function SignatureRules() {
 
           <div style={{ display: 'flex', gap: 16, marginTop: 12, marginBottom: 12, flexWrap: 'wrap' }}>
             <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
+              <input type="checkbox" name="isActive"
+                defaultChecked={editing ? !!editing.isActive : true} />
+              Aktif
+            </label>
+            <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
               <input type="checkbox" name="requiresAiPrecheck"
                 defaultChecked={editing ? !!editing.requiresAiPrecheck : true} />
               AI precheck
@@ -192,8 +197,8 @@ export default function SignatureRules() {
       <ConfirmDialog
         open={!!del}
         title="Hapus signature rule?"
-        message="Rule ini akan dihapus permanen."
-        confirmLabel="Ya, hapus"
+        message="Rule ini akan dinonaktifkan dan di-soft-delete."
+        confirmLabel="Ya, nonaktifkan"
         onConfirm={doDelete}
         onClose={() => setDel(null)}
       />

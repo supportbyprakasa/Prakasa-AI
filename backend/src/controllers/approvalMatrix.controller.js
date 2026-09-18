@@ -533,28 +533,18 @@ async function updateRule(req, res, next) {
     await validateRuleReferences(conn, entityId, merged);
 
     const map = {
-      matrixName: 'matrix_name',
-      departmentId: 'department_id',
-      documentType: 'document_type',
-      documentTypeId: 'document_type_id',
-      requestType: 'request_type',
       level: 'level',
       orderIndex: 'order_index',
       approverRoleId: 'approver_role_id',
       approverUserId: 'approver_user_id',
       signerUserId: 'signer_user_id',
       signerRoleId: 'signer_role_id',
-      amountMin: 'amount_min',
-      amountMax: 'amount_max',
-      currency: 'currency',
       parallelGroup: 'parallel_group',
       isOptional: 'is_optional',
-      priority: 'priority',
       escalationUserId: 'escalation_user_id',
       escalationRoleId: 'escalation_role_id',
       reminderAfterHours: 'reminder_after_hours',
       escalateAfterHours: 'escalate_after_hours',
-      isActive: 'is_active',
     };
 
     const fields = [];
@@ -570,20 +560,6 @@ async function updateRule(req, res, next) {
     if (Object.prototype.hasOwnProperty.call(req.body, 'isOptional')) {
       fields.push('is_required=?');
       values.push(req.body.isOptional ? 0 : 1);
-    }
-
-    if (
-      Object.prototype.hasOwnProperty.call(req.body, 'amountMin') ||
-      Object.prototype.hasOwnProperty.call(req.body, 'amountMax')
-    ) {
-      const min = Object.prototype.hasOwnProperty.call(req.body, 'amountMin')
-        ? req.body.amountMin : existing.amount_min;
-      const max = Object.prototype.hasOwnProperty.call(req.body, 'amountMax')
-        ? req.body.amountMax : existing.amount_max;
-      if (min !== null && max !== null && Number(min) > Number(max)) {
-        await conn.rollback();
-        return fail(res, 'VALIDATION_ERROR', 'amountMin tidak boleh lebih besar dari amountMax', 400);
-      }
     }
 
     if (fields.length) {
@@ -622,6 +598,179 @@ async function updateRule(req, res, next) {
     });
 
     return ok(res, { id: Number(req.params.id) });
+  } catch (error) {
+    try { await conn.rollback(); } catch { /* noop */ }
+    if (error.status) {
+      return fail(res, error.code || 'VALIDATION_ERROR', error.message, error.status);
+    }
+    next(error);
+  } finally {
+    conn.release();
+  }
+}
+
+async function updateMatrix(req, res, next) {
+  const conn = await pool.getConnection();
+  try {
+    const entityId = req.entityScope.entityId;
+    const matrixKey = req.params.matrixKey;
+
+    await conn.beginTransaction();
+
+    const [rows] = await conn.query(
+      `SELECT * FROM approval_matrix
+        WHERE entity_id=? AND matrix_key=? AND deleted_at IS NULL
+        ORDER BY order_index ASC, id ASC
+        FOR UPDATE`,
+      [entityId, matrixKey]
+    );
+    if (!rows.length) {
+      await conn.rollback();
+      return fail(res, 'NOT_FOUND', 'Approval matrix tidak ditemukan', 404);
+    }
+
+    const first = rows[0];
+    const has = (key) => Object.prototype.hasOwnProperty.call(req.body, key);
+    const next = {
+      matrixName: has('matrixName') ? req.body.matrixName : first.matrix_name,
+      departmentId: has('departmentId') ? req.body.departmentId : first.department_id,
+      documentType: has('documentType') ? req.body.documentType : first.document_type,
+      documentTypeId: has('documentTypeId') ? req.body.documentTypeId : first.document_type_id,
+      requestType: has('requestType') ? req.body.requestType : first.request_type,
+      amountMin: has('amountMin') ? req.body.amountMin : first.amount_min,
+      amountMax: has('amountMax') ? req.body.amountMax : first.amount_max,
+      currency: has('currency') ? req.body.currency : first.currency,
+      flowType: has('flowType') ? req.body.flowType : first.flow_type,
+      priority: has('priority') ? req.body.priority : first.priority,
+      isActive: has('isActive') ? req.body.isActive : Boolean(first.is_active),
+    };
+
+    if (
+      next.amountMin !== null && next.amountMin !== undefined &&
+      next.amountMax !== null && next.amountMax !== undefined &&
+      Number(next.amountMin) > Number(next.amountMax)
+    ) {
+      await conn.rollback();
+      return fail(res, 'VALIDATION_ERROR', 'amountMin tidak boleh lebih besar dari amountMax', 400);
+    }
+
+    await assertReference(conn, {
+      entityId,
+      table: 'departments',
+      id: next.departmentId,
+      label: 'Department',
+      extra: 'deleted_at IS NULL',
+    });
+    await assertReference(conn, {
+      entityId,
+      table: 'document_types',
+      id: next.documentTypeId,
+      label: 'Document type',
+      extra: 'deleted_at IS NULL',
+    });
+
+    const legacyDocumentType = await resolveLegacyDocumentType(conn, {
+      entityId,
+      documentType: next.documentType,
+      documentTypeId: next.documentTypeId,
+      requestType: next.requestType,
+    });
+
+    if (next.flowType === 'parallel') {
+      for (const row of rows) {
+        if (!row.parallel_group) {
+          await conn.rollback();
+          return fail(
+            res,
+            'VALIDATION_ERROR',
+            'Semua rule harus punya parallelGroup sebelum matrix diubah menjadi parallel',
+            400
+          );
+        }
+      }
+
+      const groupOrder = new Map();
+      for (const row of rows) {
+        const order = Number(row.order_index);
+        if (!groupOrder.has(row.parallel_group)) {
+          groupOrder.set(row.parallel_group, order);
+        } else if (groupOrder.get(row.parallel_group) !== order) {
+          await conn.rollback();
+          return fail(
+            res,
+            'VALIDATION_ERROR',
+            `parallelGroup '${row.parallel_group}' memiliki orderIndex berbeda`,
+            400
+          );
+        }
+      }
+    }
+
+    await conn.query(
+      `UPDATE approval_matrix
+          SET matrix_name=?,
+              department_id=?,
+              document_type=?,
+              document_type_id=?,
+              request_type=?,
+              amount_min=?,
+              amount_max=?,
+              currency=?,
+              flow_type=?,
+              priority=?,
+              is_active=?,
+              parallel_group=CASE WHEN ?='sequential' THEN NULL ELSE parallel_group END
+        WHERE entity_id=? AND matrix_key=? AND deleted_at IS NULL`,
+      [
+        next.matrixName,
+        next.departmentId ?? null,
+        legacyDocumentType,
+        next.documentTypeId ?? null,
+        next.requestType ?? null,
+        next.amountMin ?? null,
+        next.amountMax ?? null,
+        next.currency || 'IDR',
+        next.flowType,
+        next.priority ?? 100,
+        next.isActive ? 1 : 0,
+        next.flowType,
+        entityId,
+        matrixKey,
+      ]
+    );
+
+    const [afterRows] = await conn.query(
+      `SELECT * FROM approval_matrix
+        WHERE entity_id=? AND matrix_key=? AND deleted_at IS NULL
+        ORDER BY order_index ASC, id ASC`,
+      [entityId, matrixKey]
+    );
+
+    await approvalAudit.log({
+      entityId,
+      actorUserId: req.user.sub,
+      entityType: 'matrix',
+      entityIdRef: rows[0].id,
+      action: 'update_group',
+      before: rows.map(normalizeRow),
+      after: afterRows.map(normalizeRow),
+    }, conn);
+
+    await conn.commit();
+
+    await activityLog({
+      entityId,
+      userId: req.user.sub,
+      action: 'approval_matrix.update_group',
+      subjectType: 'approval_matrix',
+      subjectId: rows[0].id,
+      metadata: { matrixKey, ...req.body },
+    });
+
+    return ok(res, {
+      matrixKey,
+      affected: afterRows.length,
+    });
   } catch (error) {
     try { await conn.rollback(); } catch { /* noop */ }
     if (error.status) {
@@ -748,6 +897,7 @@ module.exports = {
   matrixKeys,
   detail,
   createMatrix,
+  updateMatrix,
   updateRule,
   removeRule,
   removeMatrix,

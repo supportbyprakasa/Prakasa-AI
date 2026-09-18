@@ -752,6 +752,7 @@ async function updateMatrix(req, res, next) {
       }
 
       const groupOrder = new Map();
+      const orderGroup = new Map();
       for (const row of rows) {
         const order = Number(row.order_index);
         if (!groupOrder.has(row.parallel_group)) {
@@ -765,6 +766,29 @@ async function updateMatrix(req, res, next) {
             400
           );
         }
+
+        if (!orderGroup.has(order)) {
+          orderGroup.set(order, row.parallel_group);
+        } else if (orderGroup.get(order) !== row.parallel_group) {
+          await conn.rollback();
+          return fail(
+            res,
+            'VALIDATION_ERROR',
+            `orderIndex ${order} dipakai oleh dua parallelGroup berbeda`,
+            400
+          );
+        }
+      }
+    } else {
+      const orders = rows.map((row) => Number(row.order_index));
+      if (new Set(orders).size !== orders.length) {
+        await conn.rollback();
+        return fail(
+          res,
+          'VALIDATION_ERROR',
+          'Matrix tidak bisa diubah ke sequential selama ada orderIndex duplikat',
+          400
+        );
       }
     }
 

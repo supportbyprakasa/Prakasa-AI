@@ -44,6 +44,7 @@ async function createApprovalRequest(context, conn) {
     description = null,
     requestType = null,
     documentTypeId = null,
+    legacyDocumentType = null,
     amount = null,
     currency = 'IDR',
     approvalType = 'level_1',
@@ -55,6 +56,7 @@ async function createApprovalRequest(context, conn) {
     departmentId,
     documentTypeId,
     requestType,
+    legacyDocumentType,
     amount,
     currency,
   }, conn);
@@ -70,6 +72,9 @@ async function createApprovalRequest(context, conn) {
     : FLOW.LEGACY;
   const matrixKey = useMatrix ? chain[0].matrixKey : null;
   const matrixRuleIds = useMatrix ? chain.map((rule) => rule.id) : [];
+  const initialOrder = useMatrix
+    ? Math.min(...chain.map((rule) => Number(rule.orderIndex ?? rule.level ?? 1)))
+    : 1;
 
   const [result] = await conn.query(
     `INSERT INTO approval_requests
@@ -77,7 +82,7 @@ async function createApprovalRequest(context, conn) {
       request_type, document_type_id, amount, currency,
       title, description, approval_type, current_level, status,
       requested_by, flow_type, matrix_key, matrix_rule_ids)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'pending', ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
     [
       entityId,
       departmentId,
@@ -91,6 +96,7 @@ async function createApprovalRequest(context, conn) {
       title,
       description,
       approvalType,
+      initialOrder,
       requestedBy,
       flowType,
       matrixKey,

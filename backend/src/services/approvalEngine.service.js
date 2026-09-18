@@ -291,10 +291,11 @@ async function canDecide({
     return true;
   }
 
-  // Legacy requests can contain an unassigned step. Only matrix admins may
-  // administratively decide those; generic approval.decide is not enough.
-  if (!step.approver_user_id && !step.approver_role_id) {
-    return userPermissions.includes('approval_matrix.manage');
+  // Legacy Phase-3 requests can contain an unassigned fallback step.
+  // The route already requires approval.decide; preserve that legacy behavior
+  // only for this unassigned fallback. Matrix-backed steps must stay assigned.
+  if (!step.matrix_rule_id && !step.approver_user_id && !step.approver_role_id) {
+    return userPermissions.includes('approval.decide');
   }
 
   return false;

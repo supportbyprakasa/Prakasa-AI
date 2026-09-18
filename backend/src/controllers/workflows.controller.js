@@ -22,8 +22,7 @@ async function detail(req, res, next) {
     const { id } = req.params;
     const def = await workflowSvc.getDefinitionDetail(id);
     if (!def) return fail(res, 'NOT_FOUND', 'Workflow definition tidak ditemukan', 404);
-    if (def.entity_id !== req.entityScope.entityId &&
-        !(req.user.permissions || []).includes('entity.manage')) {
+    if (Number(def.entity_id) !== Number(req.entityScope.entityId)) {
       return fail(res, 'FORBIDDEN', 'Tidak punya akses', 403);
     }
     return ok(res, def);
@@ -40,8 +39,19 @@ async function create(req, res, next) {
       return fail(res, 'VALIDATION_ERROR', 'Slug hanya huruf kecil, angka, dan dash', 400);
     }
     if (!statuses.length) return fail(res, 'VALIDATION_ERROR', 'Minimal 1 status', 400);
-    if (!statuses.some((s) => s.isInitial)) {
-      return fail(res, 'VALIDATION_ERROR', 'Harus ada 1 status initial', 400);
+    const initialCount = statuses.filter((s) => s.isInitial).length;
+    if (initialCount !== 1) {
+      return fail(res, 'VALIDATION_ERROR', 'Workflow harus punya tepat 1 status initial', 400);
+    }
+    if (!statuses.some((s) => s.isFinal)) {
+      return fail(res, 'VALIDATION_ERROR', 'Workflow harus punya minimal 1 status final', 400);
+    }
+    const codes = statuses.map((s) => s.code);
+    if (new Set(codes).size !== codes.length) {
+      return fail(res, 'VALIDATION_ERROR', 'Code status tidak boleh duplikat', 400);
+    }
+    if (codes.some((code) => !/^[a-z0-9_-]+$/.test(code))) {
+      return fail(res, 'VALIDATION_ERROR', 'Code status hanya huruf kecil, angka, dash, underscore', 400);
     }
 
     await conn.beginTransaction();
@@ -73,7 +83,7 @@ async function create(req, res, next) {
       const fromId = codeToId[t.fromStatusCode];
       const toId = codeToId[t.toStatusCode];
       if (!fromId || !toId) {
-        throw new Error(`Transition reference tidak valid: ${t.fromStatusCoge} → ${t.toStatusCode}`);
+        throw new Error(`Transition reference tidak valid: ${t.fromStatusCode} → ${t.toStatusCode}`);
       }
       await conn.query(
         `INSERT INTO workflow_transitions

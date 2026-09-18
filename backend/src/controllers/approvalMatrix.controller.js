@@ -532,6 +532,40 @@ async function updateRule(req, res, next) {
 
     await validateRuleReferences(conn, entityId, merged);
 
+    if (existing.flow_type === 'parallel') {
+      const proposedGroup = Object.prototype.hasOwnProperty.call(req.body, 'parallelGroup')
+        ? req.body.parallelGroup
+        : existing.parallel_group;
+      const proposedOrder = Object.prototype.hasOwnProperty.call(req.body, 'orderIndex')
+        ? Number(req.body.orderIndex)
+        : Number(existing.order_index);
+
+      if (!proposedGroup) {
+        await conn.rollback();
+        return fail(res, 'VALIDATION_ERROR', 'parallelGroup wajib untuk matrix parallel', 400);
+      }
+
+      const [sameGroup] = await conn.query(
+        `SELECT id, order_index
+           FROM approval_matrix
+          WHERE entity_id=?
+            AND matrix_key=?
+            AND parallel_group=?
+            AND id<>?
+            AND deleted_at IS NULL`,
+        [entityId, existing.matrix_key, proposedGroup, req.params.id]
+      );
+      if (sameGroup.some((row) => Number(row.order_index) !== proposedOrder)) {
+        await conn.rollback();
+        return fail(
+          res,
+          'VALIDATION_ERROR',
+          'Semua rule dalam parallelGroup yang sama harus punya orderIndex sama',
+          400
+        );
+      }
+    }
+
     const map = {
       level: 'level',
       orderIndex: 'order_index',

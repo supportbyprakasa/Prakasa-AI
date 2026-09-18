@@ -25,6 +25,36 @@ SET @s := IF(@c=0,
   'SELECT 1');
 PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+-- Keep designated signer separate from the actual signer recorded in signed_by.
+SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='signature_requests' AND COLUMN_NAME='signature_rule_id');
+SET @s := IF(@c=0,
+  'ALTER TABLE signature_requests ADD COLUMN signature_rule_id INT UNSIGNED NULL AFTER approval_request_id',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='signature_requests' AND COLUMN_NAME='designated_signer_user_id');
+SET @s := IF(@c=0,
+  'ALTER TABLE signature_requests ADD COLUMN designated_signer_user_id INT UNSIGNED NULL AFTER signature_type',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='signature_requests' AND COLUMN_NAME='designated_signer_role_id');
+SET @s := IF(@c=0,
+  'ALTER TABLE signature_requests ADD COLUMN designated_signer_role_id INT UNSIGNED NULL AFTER designated_signer_user_id',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Backfill legacy pending requests that used signed_by as the designated signer.
+UPDATE signature_requests
+SET designated_signer_user_id = signed_by,
+    signed_by = NULL
+WHERE status = 'pending'
+  AND signed_by IS NOT NULL
+  AND designated_signer_user_id IS NULL;
+
 SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS
   WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='document_verifications' AND COLUMN_NAME='verification_url');
 SET @s := IF(@c=0,

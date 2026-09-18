@@ -69,6 +69,7 @@ const COLUMNS = {
     'payload_json',
     'status',
     'confirmed_by',
+    'decision_note',
     'executed_by',
     'execution_result_json',
   ],

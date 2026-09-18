@@ -13,18 +13,23 @@ import ActivityLogs from './pages/ActivityLogs';
 import DocumentCenter from './pages/documents/DocumentCenter';
 import TemplateCenter from './pages/documents/TemplateCenter';
 import TaskBoard from './pages/tasks/TaskBoard';
+import TaskDetail from './pages/tasks/TaskDetail';
 import ChatRoom from './pages/chat/ChatRoom';
 import ApprovalInbox from './pages/approvals/ApprovalInbox';
 import SignatureInbox from './pages/signatures/SignatureInbox';
+import SignatureAsset from './pages/signatures/SignatureAsset';
 import NotificationCenter from './pages/notifications/NotificationCenter';
 import SalesPipeline from './pages/sales/SalesPipeline';
 import SalesCustomers from './pages/sales/SalesCustomers';
+import SalesCustomerDetail from './pages/sales/SalesCustomerDetail';
 import SampleRequests from './pages/sales/SampleRequests';
 import FieldBotChat from './pages/sales/FieldBotChat';
 import WarehouseDashboard from './pages/warehouse/WarehouseDashboard';
 import ItDashboard from './pages/it/ItDashboard';
 import Devices from './pages/it/Devices';
+import DeviceDetail from './pages/it/DeviceDetail';
 import SoftwareSubscriptions from './pages/it/SoftwareSubscriptions';
+import SubscriptionDetail from './pages/it/SubscriptionDetail';
 import Meetings from './pages/meetings/Meetings';
 import MeetingDetail from './pages/meetings/MeetingDetail';
 import PaymentRequests from './pages/finance/PaymentRequests';
@@ -32,6 +37,7 @@ import PaymentRequestDetail from './pages/finance/PaymentRequestDetail';
 import OnboardingBoard from './pages/hrga/OnboardingBoard';
 import OffboardingBoard from './pages/hrga/OffboardingBoard';
 import HrgaWorkflowDetail from './pages/hrga/HrgaWorkflowDetail';
+import ChecklistTemplates from './pages/hrga/ChecklistTemplates';
 import Workspaces from './pages/advanced/Workspaces';
 import GlobalSearch from './pages/advanced/GlobalSearch';
 import KnowledgeBase from './pages/advanced/KnowledgeBase';
@@ -39,6 +45,9 @@ import AutomationBuilder from './pages/advanced/AutomationBuilder';
 import DecisionLog from './pages/advanced/DecisionLog';
 import ManagementDashboard from './pages/advanced/ManagementDashboard';
 import BriefView from './pages/advanced/BriefView';
+import Timeline from './pages/advanced/Timeline';
+import DataClassification from './pages/advanced/DataClassification';
+import CrossDivisionWorkspace from './pages/advanced/CrossDivisionWorkspace';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -63,18 +72,23 @@ export default function App() {
         <Route path="documents" element={<DocumentCenter />} />
         <Route path="templates" element={<TemplateCenter />} />
         <Route path="tasks" element={<TaskBoard />} />
+        <Route path="tasks/:id" element={<TaskDetail />} />
         <Route path="chat" element={<ChatRoom />} />
         <Route path="approvals" element={<ApprovalInbox />} />
         <Route path="signatures" element={<SignatureInbox />} />
+        <Route path="signatures/asset" element={<SignatureAsset />} />
         <Route path="notifications" element={<NotificationCenter />} />
         <Route path="sales/pipeline" element={<SalesPipeline />} />
         <Route path="sales/customers" element={<SalesCustomers />} />
+        <Route path="sales/customers/:id" element={<SalesCustomerDetail />} />
         <Route path="sales/sample-requests" element={<SampleRequests />} />
         <Route path="sales/field-bot" element={<FieldBotChat />} />
         <Route path="warehouse" element={<WarehouseDashboard />} />
         <Route path="it/dashboard" element={<ItDashboard />} />
         <Route path="it/devices" element={<Devices />} />
+        <Route path="it/devices/:id" element={<DeviceDetail />} />
         <Route path="it/subscriptions" element={<SoftwareSubscriptions />} />
+        <Route path="it/subscriptions/:id" element={<SubscriptionDetail />} />
         <Route path="meetings" element={<Meetings />} />
         <Route path="meetings/:id" element={<MeetingDetail />} />
         <Route path="finance/payment-requests" element={<PaymentRequests />} />
@@ -82,13 +96,17 @@ export default function App() {
         <Route path="hrga/onboarding" element={<OnboardingBoard />} />
         <Route path="hrga/offboarding" element={<OffboardingBoard />} />
         <Route path="hrga/workflows/:id" element={<HrgaWorkflowDetail />} />
+        <Route path="hrga/checklist-templates" element={<ChecklistTemplates />} />
         <Route path="workspaces" element={<Workspaces />} />
+        <Route path="workspaces-cross" element={<CrossDivisionWorkspace />} />
         <Route path="search" element={<GlobalSearch />} />
         <Route path="kb" element={<KnowledgeBase />} />
         <Route path="automation" element={<AutomationBuilder />} />
         <Route path="decision-log" element={<DecisionLog />} />
         <Route path="management" element={<ManagementDashboard />} />
         <Route path="brief" element={<BriefView />} />
+        <Route path="timeline" element={<Timeline />} />
+        <Route path="data-classification" element={<DataClassification />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

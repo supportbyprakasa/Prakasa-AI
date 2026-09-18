@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../api/client';
 import DataTable from '../../components/DataTable';
 import Button from '../../components/Button';
@@ -82,7 +83,11 @@ export default function Devices() {
         loading={loading}
         rows={rows}
         columns={[
-          { key: 'assetCode', title: 'Kode' },
+          {
+            key: 'assetCode',
+            title: 'Kode',
+            render: (r) => <Link to={`/it/devices/${r.id}`}>{r.assetCode || r.asset_code}</Link>,
+          },
           { key: 'deviceType', title: 'Tipe' },
           { key: 'brand', title: 'Brand' },
           { key: 'model', title: 'Model' },

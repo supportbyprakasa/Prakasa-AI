@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../api/client';
 import DataTable from '../../components/DataTable';
 import Button from '../../components/Button';
@@ -61,7 +62,11 @@ export default function SoftwareSubscriptions() {
         loading={loading}
         rows={rows}
         columns={[
-          { key: 'productName', title: 'Produk' },
+          {
+            key: 'productName',
+            title: 'Produk',
+            render: (r) => <Link to={`/it/subscriptions/${r.id}`}>{r.productName || r.product_name}</Link>,
+          },
           { key: 'planName', title: 'Plan' },
           { key: 'totalSeats', title: 'Seats' },
           { key: 'assignedSeats', title: 'Terpakai' },

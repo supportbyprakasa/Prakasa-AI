@@ -1,0 +1,334 @@
+/* ============================================================
+   Prakasa Layout — YouTube-style
+   Navbar 56px, Sidebar 240px expanded / 72px collapsed
+   ============================================================ */
+
+:root {
+  --navbar-height: 56px;
+  --sidebar-width: 240px;
+  --sidebar-mini-width: 72px;
+  --sidebar-transition: width 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --sidebar-bg: #ffffff;
+  --sidebar-hover: #f2f2f2;
+  --sidebar-active: #e5e5e5;
+  --sidebar-text: #0f0f0f;
+  --navbar-bg: #ffffff;
+  --navbar-border: #e5e5e5;
+}
+
+.prakasa-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--color-background);
+}
+
+.prakasa-layout__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.prakasa-layout__main {
+  flex: 1;
+  min-width: 0;
+  padding: 24px;
+  transition: margin-left 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.prakasa-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: var(--navbar-height);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  background: var(--navbar-bg);
+  border-bottom: 1px solid var(--navbar-border);
+}
+
+.prakasa-navbar__left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.prakasa-navbar__center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.prakasa-navbar__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.prakasa-navbar__icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--sidebar-text);
+  transition: background-color 150ms ease;
+}
+.prakasa-navbar__icon-btn:hover {
+  background: var(--sidebar-hover);
+}
+.prakasa-navbar__icon-btn:active {
+  background: var(--sidebar-active);
+}
+
+.prakasa-navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.3px;
+  color: var(--sidebar-text);
+  text-decoration: none;
+  user-select: none;
+}
+
+.prakasa-navbar__brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.prakasa-search {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 640px;
+  height: 40px;
+  border: 1px solid var(--navbar-border);
+  border-radius: 20px;
+  overflow: hidden;
+  background: #fff;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.prakasa-search:focus-within {
+  border-color: #1c62b9;
+  box-shadow: 0 0 0 1px #1c62b9 inset;
+}
+.prakasa-search__input {
+  flex: 1;
+  height: 100%;
+  border: none;
+  outline: none;
+  padding: 0 16px;
+  font-size: 15px;
+  background: transparent;
+  color: var(--sidebar-text);
+}
+.prakasa-search__btn {
+  width: 64px;
+  height: 100%;
+  border: none;
+  border-left: 1px solid var(--navbar-border);
+  background: #f8f8f8;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f0f0f;
+  transition: background-color 150ms ease;
+}
+.prakasa-search__btn:hover {
+  background: #f0f0f0;
+}
+
+.prakasa-navbar__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--navbar-border);
+}
+
+.prakasa-sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: var(--sidebar-transition);
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.prakasa-sidebar:hover {
+  scrollbar-color: #c1c1c1 transparent;
+}
+.prakasa-sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+.prakasa-sidebar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+}
+.prakasa-sidebar:hover::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+}
+
+.prakasa-sidebar--collapsed {
+  width: var(--sidebar-mini-width);
+}
+
+.prakasa-sidebar__section {
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid var(--navbar-border);
+}
+.prakasa-sidebar--collapsed .prakasa-sidebar__section {
+  padding: 12px 4px 8px;
+}
+.prakasa-sidebar__section:last-child {
+  border-bottom: none;
+}
+
+.prakasa-sidebar__section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f0f0f;
+  padding: 6px 12px;
+  margin: 0;
+  transition: opacity 150ms ease;
+}
+.prakasa-sidebar--collapsed .prakasa-sidebar__section-title {
+  opacity: 0;
+  height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.prakasa-sidebar__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 12px;
+  height: 40px;
+  border-radius: 10px;
+  color: var(--sidebar-text);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 400;
+  white-space: nowrap;
+  transition: background-color 150ms ease;
+  margin-bottom: 2px;
+}
+.prakasa-sidebar__item:hover {
+  background: var(--sidebar-hover);
+}
+.prakasa-sidebar__item--active {
+  background: var(--sidebar-active);
+  font-weight: 500;
+}
+.prakasa-sidebar__item--active:hover {
+  background: #d9d9d9;
+}
+
+.prakasa-sidebar__item-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.prakasa-sidebar__item-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 150ms ease;
+}
+
+.prakasa-sidebar--collapsed .prakasa-sidebar__item {
+  flex-direction: column;
+  gap: 6px;
+  height: auto;
+  padding: 16px 0 14px;
+  border-radius: 10px;
+  justify-content: center;
+}
+.prakasa-sidebar--collapsed .prakasa-sidebar__item-label {
+  font-size: 10px;
+  line-height: 1.2;
+  flex: initial;
+  text-align: center;
+  max-width: 100%;
+  padding: 0 4px;
+}
+
+.prakasa-sidebar__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+.prakasa-sidebar__backdrop--open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (max-width: 900px) {
+  .prakasa-sidebar {
+    position: fixed;
+    top: var(--navbar-height);
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.15);
+    width: var(--sidebar-width);
+  }
+  .prakasa-sidebar--open-mobile {
+    transform: translateX(0);
+  }
+  .prakasa-sidebar--collapsed {
+    width: var(--sidebar-width);
+  }
+  .prakasa-sidebar--collapsed .prakasa-sidebar__item {
+    flex-direction: row;
+    gap: 24px;
+    height: 40px;
+    padding: 0 12px;
+  }
+  .prakasa-sidebar--collapsed .prakasa-sidebar__item-label {
+    font-size: 14px;
+    text-align: left;
+    flex: 1;
+  }
+  .prakasa-sidebar--collapsed .prakasa-sidebar__section-title {
+    opacity: 1;
+    height: auto;
+    padding: 6px 12px;
+  }
+  .prakasa-navbar__center {
+    display: none;
+  }
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../api/client';
 import DataTable from '../../components/DataTable';
 import Button from '../../components/Button';
@@ -66,7 +67,11 @@ export default function SalesCustomers() {
         loading={loading}
         rows={rows}
         columns={[
-          { key: 'name', title: 'Nama' },
+          {
+            key: 'name',
+            title: 'Nama',
+            render: (r) => <Link to={`/sales/customers/${r.id}`}>{r.name}</Link>,
+          },
           { key: 'contactPerson', title: 'Kontak' },
           { key: 'phone', title: 'Telepon' },
           { key: 'city', title: 'Kota' },

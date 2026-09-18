@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import App from './App';
 import ToastHost from './components/Toast';
+import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './context/AuthContext';
 import './styles/tokens.css';
 
@@ -15,8 +16,10 @@ const app = (
     }}
   >
     <AuthProvider>
-      <App />
-      <ToastHost />
+      <ErrorBoundary>
+        <App />
+        <ToastHost />
+      </ErrorBoundary>
     </AuthProvider>
   </BrowserRouter>
 );

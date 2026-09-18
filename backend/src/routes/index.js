@@ -39,4 +39,8 @@ router.use('/signature-rules', require('./signatureRules.routes'));
 router.use('/dashboard-widgets', require('./dashboardWidgets.routes'));
 router.use('/dashboard-layouts', require('./dashboardLayouts.routes'));
 router.use('/integration-logs', require('./integrationLogs.routes'));
+router.use('/approval-matrix', require('./approvalMatrix.routes'));
+router.use('/approval-delegations', require('./approvalDelegations.routes'));
+router.use('/signature-precheck', require('./signaturePrecheck.routes'));
+router.use('/signature-qr', require('./signatureQr.routes'));
 module.exports = router;

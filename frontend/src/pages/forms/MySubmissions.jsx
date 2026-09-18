@@ -7,7 +7,6 @@ import Button from '../../components/Button';
 import Badge from '../../components/Badge';
 import FilterBar from '../../components/FilterBar';
 import { toast } from '../../components/Toast';
-import { useAuth } from '../../context/AuthContext';
 
 const statusTone = (s) => ({
   draft: 'default',
@@ -22,7 +21,6 @@ const statusTone = (s) => ({
 
 export default function MySubmissions() {
   const nav = useNavigate();
-  const { user } = useAuth();
   const [rows, setRows] = useState([]);
   const [meta, setMeta] = useState({ page: 1, total: 0 });
   const [loading, setLoading] = useState(true);
@@ -31,10 +29,10 @@ export default function MySubmissions() {
   const load = async (page = 1) => {
     setLoading(true);
     try {
-      const params = { page, limit: 20, submittedBy: user?.id };
+      const params = { page, limit: 20 };
       if (filters.status) params.status = filters.status;
       if (filters.formId) params.formId = filters.formId;
-      const r = await api.get('/forms/submissions/list', { params });
+      const r = await api.get('/forms/submissions/mine', { params });
       setRows(r.data.data || []);
       setMeta(r.data.meta || { page, total: r.data.data?.length || 0 });
     } catch (e) {

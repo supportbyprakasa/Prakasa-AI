@@ -53,7 +53,7 @@ export default function DocumentTypes() {
       defaultFolderId: fd.get('defaultFolderId') || null,
       requiresSignature: fd.get('requiresSignature') === 'on',
       requiresAiPrecheck: fd.get('requiresAiPrecheck') === 'on',
-      isActive: fd.get('isActive') !== 'off',
+      isActive: fd.get('isActive') === 'on',
     };
 
     try {
@@ -151,7 +151,12 @@ export default function DocumentTypes() {
           </div>
           <Input label="Default Drive Folder ID" name="defaultFolderId"
             defaultValue={editing?.defaultFolderId || ''} />
-          <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
+          <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
+            <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
+              <input type="checkbox" name="isActive"
+                defaultChecked={editing ? !!editing.isActive : true} />
+              Aktif
+            </label>
             <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
               <input type="checkbox" name="requiresSignature"
                 defaultChecked={!!editing?.requiresSignature} />

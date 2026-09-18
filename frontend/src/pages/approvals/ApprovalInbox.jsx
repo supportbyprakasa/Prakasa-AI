@@ -354,7 +354,10 @@ function ApprovalDetail({
                 const active =
                   step.status === 'pending' && Boolean(step.activatedAt);
                 const actionable =
-                  canDecide && active && pendingIds.has(Number(step.id));
+                  canDecide &&
+                  approval.status === 'pending' &&
+                  active &&
+                  pendingIds.has(Number(step.id));
 
                 return (
                   <div

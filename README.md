@@ -6,7 +6,7 @@ Full MVP project assembled from the Fase 1–8 implementation specification.
 - Frontend: React + Vite
 - Backend: Node.js + Express
 - Database: MySQL/MariaDB (`mysql2/promise`)
-- Auth: Google OAuth -> JWT
+- Auth: manual email/password -> JWT (primary), Google OAuth optional (secondary)
 - AI providers: OpenAI, Gemini, Claude
 - Hosting target: GoDaddy shared cPanel / Passenger
 - Scheduler: cPanel Cron Jobs (no Redis/queue required)
@@ -21,27 +21,77 @@ Full MVP project assembled from the Fase 1–8 implementation specification.
 - Fase 7 — Finance & HRGA Workflow Layer
 - Fase 8 — Advanced Cross-Division & Automation
 
+## Authentication model
+
+Manual login is the primary login flow. Accounts are provisioned and controlled by a Super Admin.
+
+Super Admin can:
+- create login accounts,
+- assign entity/department/roles,
+- enable or disable accounts,
+- reset passwords.
+
+Passwords are stored as bcrypt hashes. Google login is optional and never auto-provisions a new user; the account must already exist.
+
 ## Local setup
+
+### Backend
 ```bash
 cd backend
 cp .env.example .env
 npm install
 npm run migrate
-npm run dev
+```
 
+Configure the one-time bootstrap variables in `backend/.env`:
+
+```env
+BOOTSTRAP_ADMIN_NAME=Super Admin
+BOOTSTRAP_ADMIN_EMAIL=admin@prakasagroup.com
+BOOTSTRAP_ADMIN_PASSWORD=replace_with_a_strong_password
+BOOTSTRAP_ADMIN_ENTITY_ID=1
+```
+
+Then create/update the first Super Admin:
+
+```bash
+npm run bootstrap:admin
+```
+
+After the bootstrap succeeds, remove `BOOTSTRAP_ADMIN_PASSWORD` from `.env`.
+
+Start the API:
+
+```bash
+npm run dev
+```
+
+Backend health check: `GET /api/health`.
+
+### Frontend
+
+```bash
 cd ../frontend
 cp .env.example .env
 npm install
 npm run dev
 ```
 
-Backend health check: `GET /api/health`.
+Default frontend authentication:
+
+```env
+VITE_API_URL=http://localhost:3000/api/v1
+VITE_ENABLE_GOOGLE_LOGIN=false
+VITE_GOOGLE_CLIENT_ID=
+```
+
+Set `VITE_ENABLE_GOOGLE_LOGIN=true` only if Google should also be shown as a secondary login option.
 
 ## Database
-Run `npm run migrate` in `backend/`. The migration runner executes every `.sql` file in `backend/migrations/` in filename order.
+Run `npm run migrate` in `backend/`. The migration runner executes every `.sql` file in `backend/migrations/` in filename order, including `016_manual_primary_auth.sql`.
 
 ## Deployment
 See `docs/deployment.md`.
 
 ## Important
-This archive is an assembled implementation package based on the supplied project specification/code iterations. Configure Google credentials, database credentials, AI API keys and cPanel paths before production use. Run the QA checklist before go-live.
+Never commit `.env` files or real credentials. Configure database credentials, JWT secret, optional Google credentials, AI API keys, service-account credentials and cPanel paths outside Git.

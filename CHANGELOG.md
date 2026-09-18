@@ -1,4 +1,20 @@
 # Changelog
+
+## [0.9.0] - 2026-09-18
+### Changed
+- Manual email/password authentication is now the primary login flow.
+- Google OAuth is now optional/secondary and no longer auto-provisions accounts.
+- Login accounts are provisioned and controlled by users with `user.manage` (Super Admin by default).
+
+### Added
+- Migration `016_manual_primary_auth.sql`: `password_hash`, `must_change_password`, and `last_login_at`.
+- bcrypt password hashing.
+- `POST /api/v1/auth/login` manual-login endpoint.
+- `POST /api/v1/users/:id/reset-password` admin password-reset endpoint.
+- One-time `npm run bootstrap:admin` command to create/update the first Super Admin without hardcoding credentials.
+- Users admin UI for creating accounts, assigning roles, resetting passwords, and enabling/disabling accounts.
+- `VITE_ENABLE_GOOGLE_LOGIN` flag; defaults to `false`.
+
 ## [0.8.1] - 2026-09-18
 ### Fixed
 - Sidebar module visibility now follows JWT permissions, matching the bootstrap flow where a newly auto-provisioned user has no module access until roles are assigned.

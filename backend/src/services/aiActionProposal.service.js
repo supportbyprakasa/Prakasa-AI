@@ -239,7 +239,7 @@ async function executeCreateTask({ proposal, conn, user }) {
     }
   }
 
-  const boardId = payload.boardId ? Number(payload.boardId) : null;
+  let boardId = payload.boardId ? Number(payload.boardId) : null;
   const columnId = payload.columnId ? Number(payload.columnId) : null;
 
   let board = null;
@@ -299,6 +299,7 @@ async function executeCreateTask({ proposal, conn, user }) {
       error.code = 'VALIDATION_ERROR';
       throw error;
     }
+    if (!boardId) boardId = Number(columns[0].boardId);
   }
 
   const assigneeId = payload.assigneeId
@@ -339,6 +340,16 @@ async function executeCreateTask({ proposal, conn, user }) {
     ? payload.priority
     : 'normal';
 
+  const dueDate = payload.dueDate == null || payload.dueDate === ''
+    ? null
+    : String(payload.dueDate);
+  if (dueDate && !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
+    const error = new Error('dueDate harus berformat YYYY-MM-DD');
+    error.status = 400;
+    error.code = 'VALIDATION_ERROR';
+    throw error;
+  }
+
   const [task] = await conn.query(
     `INSERT INTO tasks
      (entity_id, department_id, board_id, column_id, title, description,
@@ -354,7 +365,7 @@ async function executeCreateTask({ proposal, conn, user }) {
       priority,
       assigneeId,
       user.sub,
-      payload.dueDate || null,
+      dueDate,
       proposal.id,
     ]
   );

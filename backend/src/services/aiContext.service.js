@@ -23,6 +23,30 @@ function assertUnderlyingPermission(user, codes) {
   return true;
 }
 
+function isSensitiveFieldKey(key) {
+  const normalized = String(key || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
+  return [
+    'password',
+    'passwd',
+    'pwd',
+    'secret',
+    'token',
+    'accesstoken',
+    'refreshtoken',
+    'idtoken',
+    'apikey',
+    'privatekey',
+    'clientsecret',
+    'authorization',
+    'jwt',
+    'signature',
+  ].some((needle) => normalized.includes(needle));
+}
+
+
 function canAccessScopedRow(user, row) {
   const rowEntityId = Number(row.entity_id ?? row.entityId);
   const rowDepartmentId = row.department_id ?? row.departmentId ?? null;
@@ -256,6 +280,10 @@ const RESOLVERS = {
     );
 
     const valueLines = values.map((value) => {
+      if (isSensitiveFieldKey(value.fieldKey)) {
+        return `${value.fieldKey}: [REDACTED]`;
+      }
+
       let rendered =
         value.valueText ??
         value.valueNumber ??

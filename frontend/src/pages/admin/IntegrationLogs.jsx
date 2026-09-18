@@ -12,7 +12,7 @@ import { toast } from '../../components/Toast';
 const PROVIDERS = [
   'google_drive','google_docs','google_sheets','google_slides',
   'google_calendar','google_meet','google_chat','gmail','google_tasks',
-  'openai','gemini','claude','jurnal','kantorku','internal',
+  'openai','gemini','claude','n8n','jurnal','kantorku','internal',
 ];
 
 export default function IntegrationLogs() {

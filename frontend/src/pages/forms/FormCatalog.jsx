@@ -18,7 +18,7 @@ export default function FormCatalog() {
 
   useEffect(() => {
     setLoading(true);
-    api.get('/forms', { params: { activeOnly: '1' } })
+    api.get('/forms/catalog')
       .then((r) => setForms(r.data.data || []))
       .catch((e) => toast(e.response?.data?.error?.message || 'Gagal memuat form', 'error'))
       .finally(() => setLoading(false));

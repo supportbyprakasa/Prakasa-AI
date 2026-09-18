@@ -120,6 +120,17 @@ async function detail(req, res, next) {
     let workflowInstance = null;
     if (sub.workflow_instance_id) {
       workflowInstance = await workflowSvc.getInstance(sub.workflow_instance_id);
+      if (workflowInstance) {
+        const permissions = req.user.permissions || [];
+        workflowInstance = {
+          ...workflowInstance,
+          availableTransitions: (workflowInstance.availableTransitions || []).filter(
+            (transition) =>
+              !transition.requiredPermissionCode ||
+              permissions.includes(transition.requiredPermissionCode)
+          ),
+        };
+      }
     }
 
     return ok(res, { ...sub, values, attachments, workflowInstance });

@@ -53,6 +53,35 @@ SET @s := IF(@c=0,
   'SELECT 1');
 PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+-- Snapshot the resolved signature rule / signer assignment on each request.
+SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='signature_requests' AND COLUMN_NAME='signature_rule_id');
+SET @s := IF(@c=0,
+  'ALTER TABLE signature_requests ADD COLUMN signature_rule_id INT UNSIGNED NULL AFTER approval_request_id',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='signature_requests' AND COLUMN_NAME='assigned_signer_user_id');
+SET @s := IF(@c=0,
+  'ALTER TABLE signature_requests ADD COLUMN assigned_signer_user_id INT UNSIGNED NULL AFTER signature_rule_id',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='signature_requests' AND COLUMN_NAME='assigned_signer_role_id');
+SET @s := IF(@c=0,
+  'ALTER TABLE signature_requests ADD COLUMN assigned_signer_role_id INT UNSIGNED NULL AFTER assigned_signer_user_id',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.STATISTICS
+  WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='signature_requests' AND INDEX_NAME='idx_sig_assigned_user');
+SET @s := IF(@c=0,
+  'CREATE INDEX idx_sig_assigned_user ON signature_requests (assigned_signer_user_id, status)',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
 CREATE TABLE IF NOT EXISTS signature_precheck_logs (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   entity_id INT UNSIGNED NOT NULL,

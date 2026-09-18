@@ -26,6 +26,20 @@ SET @s := IF(@c=0,
 PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='signed_documents' AND COLUMN_NAME='hash_algorithm');
+SET @s := IF(@c=0,
+  "ALTER TABLE signed_documents ADD COLUMN hash_algorithm VARCHAR(10) NOT NULL DEFAULT 'sha256' AFTER document_hash",
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='signed_documents' AND COLUMN_NAME='hash_source');
+SET @s := IF(@c=0,
+  'ALTER TABLE signed_documents ADD COLUMN hash_source VARCHAR(40) NULL AFTER hash_algorithm',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS
   WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='document_verifications' AND COLUMN_NAME='verification_url');
 SET @s := IF(@c=0,
   'ALTER TABLE document_verifications ADD COLUMN verification_url VARCHAR(500) NULL AFTER verification_code',

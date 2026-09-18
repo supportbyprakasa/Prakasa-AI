@@ -202,12 +202,77 @@ async function findInstanceBySubject({
   return rows[0]?.id || null;
 }
 
+async function resolveTransitionGuards(instance, transition, conn) {
+  let approvalSatisfied = !transition.requires_approval;
+  let signatureSatisfied = !transition.requires_signature;
+
+  if (transition.requires_approval) {
+    const [rows] = await conn.query(
+      `SELECT 1
+         FROM approval_requests ar
+        WHERE ar.entity_id = ?
+          AND (
+            (ar.subject_type = ? AND ar.subject_id = ?)
+            OR (
+              ? = 'form_submission'
+              AND ar.id = (
+                SELECT fs.approval_request_id
+                  FROM form_submissions fs
+                 WHERE fs.id = ? LIMIT 1
+              )
+            )
+          )
+          AND ar.status = 'approved'
+        LIMIT 1`,
+      [
+        instance.entity_id,
+        instance.subject_type,
+        instance.subject_id,
+        instance.subject_type,
+        instance.subject_id,
+      ]
+    );
+    approvalSatisfied = Boolean(rows[0]);
+  }
+
+  if (transition.requires_signature) {
+    const [rows] = await conn.query(
+      `SELECT 1
+         FROM signature_requests sr
+         JOIN approval_requests ar ON ar.id = sr.approval_request_id
+        WHERE ar.entity_id = ?
+          AND (
+            (ar.subject_type = ? AND ar.subject_id = ?)
+            OR (
+              ? = 'form_submission'
+              AND ar.id = (
+                SELECT fs.approval_request_id
+                  FROM form_submissions fs
+                 WHERE fs.id = ? LIMIT 1
+              )
+            )
+          )
+          AND sr.status = 'signed'
+        LIMIT 1`,
+      [
+        instance.entity_id,
+        instance.subject_type,
+        instance.subject_id,
+        instance.subject_type,
+        instance.subject_id,
+      ]
+    );
+    signatureSatisfied = Boolean(rows[0]);
+  }
+
+  return { approvalSatisfied, signatureSatisfied };
+}
+
 async function validateTransition({
   instance,
   transitionId,
   user,
   comment,
-  guards = {},
   conn = pool,
 }) {
   if (!instance) {
@@ -268,6 +333,8 @@ async function validateTransition({
     throw error;
   }
 
+  const guards = await resolveTransitionGuards(instance, transition, conn);
+
   if (transition.requires_approval && guards.approvalSatisfied !== true) {
     const error = new Error('Approval wajib dipenuhi sebelum transisi ini');
     error.status = 409;
@@ -291,7 +358,6 @@ async function transition({
   user,
   comment,
   metadata,
-  guards = {},
 }) {
   const conn = await pool.getConnection();
   let committed = false;
@@ -328,7 +394,6 @@ async function transition({
       transitionId,
       user,
       comment,
-      guards,
       conn,
     });
 
@@ -339,6 +404,15 @@ async function transition({
         WHERE id = ?`,
       [target.to_status_id, target.toIsFinal ? 1 : 0, instanceId]
     );
+
+    if (instance.subject_type === 'form_submission') {
+      await conn.query(
+        `UPDATE form_submissions
+            SET status = ?
+          WHERE id = ? AND entity_id = ? AND deleted_at IS NULL`,
+        [target.toCode, instance.subject_id, instance.entity_id]
+      );
+    }
 
     await conn.query(
       `INSERT INTO workflow_instance_history

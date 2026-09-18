@@ -143,11 +143,13 @@ async function submit(req, res, next) {
     const form = forms[0];
     if (!form) return fail(res, 'NOT_FOUND', 'Form tidak ditemukan / tidak aktif', 404);
 
-    // Permission check for non-public forms
-    if (!form.is_public && form.submit_permission_code) {
+    // Public forms are available to any authenticated user.
+    // Non-public forms require the configured permission or generic form.submit.
+    if (!form.is_public) {
+      const requiredPermission = form.submit_permission_code || 'form.submit';
       const perms = req.user.permissions || [];
-      if (!perms.includes(form.submit_permission_code)) {
-        return fail(res, 'FORBIDDEN', `Butuh permission: ${form.submit_permission_code}`, 403);
+      if (!perms.includes(requiredPermission)) {
+        return fail(res, 'FORBIDDEN', `Butuh permission: ${requiredPermission}`, 403);
       }
     }
 

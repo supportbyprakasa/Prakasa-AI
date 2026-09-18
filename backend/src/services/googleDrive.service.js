@@ -141,4 +141,62 @@ async function getFileMeta(fileId, ctx = {}) {
   });
 }
 
-module.exports = { ensureFolder, uploadFile, copyFile, getFileMeta, driveClient };
+async function downloadFileBuffer(fileId, ctx = {}) {
+  return integrationLog.wrap({
+    entityId: ctx.entityId || null,
+    userId: ctx.userId || null,
+    provider: 'google_drive',
+    operation: 'downloadFileBuffer',
+    subjectType: ctx.subjectType || null,
+    subjectId: ctx.subjectId || null,
+    requestMeta: { fileId },
+    responseMeta: (result) => ({
+      mimeType: result?.mimeType,
+      size: result?.buffer?.length || 0,
+    }),
+  }, async () => {
+    const drive = driveClient();
+    const meta = await drive.files.get({
+      fileId,
+      fields: 'id,name,mimeType',
+      supportsAllDrives: true,
+    });
+    const mimeType = meta.data.mimeType || 'application/octet-stream';
+
+    const exportable = new Set([
+      'application/vnd.google-apps.document',
+      'application/vnd.google-apps.spreadsheet',
+      'application/vnd.google-apps.presentation',
+      'application/vnd.google-apps.drawing',
+    ]);
+
+    if (exportable.has(mimeType)) {
+      const response = await drive.files.export(
+        { fileId, mimeType: 'application/pdf' },
+        { responseType: 'arraybuffer' }
+      );
+      return {
+        buffer: Buffer.from(response.data),
+        mimeType: 'application/pdf',
+      };
+    }
+
+    const response = await drive.files.get(
+      { fileId, alt: 'media', supportsAllDrives: true },
+      { responseType: 'arraybuffer' }
+    );
+    return {
+      buffer: Buffer.from(response.data),
+      mimeType,
+    };
+  });
+}
+
+module.exports = {
+  ensureFolder,
+  uploadFile,
+  copyFile,
+  getFileMeta,
+  downloadFileBuffer,
+  driveClient,
+};

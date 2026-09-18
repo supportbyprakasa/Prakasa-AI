@@ -299,41 +299,6 @@ async function create(req, res, next) {
     const documentTypeId = await resolveDocumentTypeId(entityId, document);
     const rule = await resolveRule({ entityId, documentTypeId }, conn);
 
-    const assignedUserId = rule?.requiredSignerUserId || signerUserId || null;
-    const assignedRoleId = rule?.requiredSignerRoleId || signerRoleId || null;
-
-    if (rule?.requiredSignerUserId && signerUserId &&
-        Number(rule.requiredSignerUserId) !== Number(signerUserId)) {
-      return fail(res, 'VALIDATION_ERROR', 'Signer user tidak sesuai signature rule', 400);
-    }
-    if (rule?.requiredSignerRoleId && signerRoleId &&
-        Number(rule.requiredSignerRoleId) !== Number(signerRoleId)) {
-      return fail(res, 'VALIDATION_ERROR', 'Signer role tidak sesuai signature rule', 400);
-    }
-    if (!assignedUserId && !assignedRoleId) {
-      return fail(res, 'VALIDATION_ERROR', 'Signer user/role belum dikonfigurasi', 400);
-    }
-    if (assignedUserId && assignedRoleId) {
-      return fail(res, 'VALIDATION_ERROR', 'Pilih signer user atau signer role, bukan keduanya', 400);
-    }
-
-    if (assignedUserId) {
-      const [users] = await conn.query(
-        `SELECT id FROM users
-          WHERE id=? AND entity_id=? AND status='active' AND deleted_at IS NULL`,
-        [assignedUserId, entityId]
-      );
-      if (!users[0]) return fail(res, 'VALIDATION_ERROR', 'Signer user tidak valid', 400);
-    }
-    if (assignedRoleId) {
-      const [roles] = await conn.query(
-        `SELECT id FROM roles
-          WHERE id=? AND entity_id=? AND deleted_at IS NULL`,
-        [assignedRoleId, entityId]
-      );
-      if (!roles[0]) return fail(res, 'VALIDATION_ERROR', 'Signer role tidak valid', 400);
-    }
-
     await conn.beginTransaction();
 
     const [approvals] = await conn.query(
@@ -347,20 +312,121 @@ async function create(req, res, next) {
       await conn.rollback();
       return fail(res, 'CONFLICT', 'Approval belum approved', 409);
     }
+
     const approvalTargetsDocument =
       Number(approval.document_id) === Number(documentId) ||
       (
         approval.subject_type === 'document' &&
         Number(approval.subject_id) === Number(documentId)
       );
-
     if (!approvalTargetsDocument) {
       await conn.rollback();
       return fail(res, 'VALIDATION_ERROR', 'Approval tidak terkait dokumen ini', 400);
     }
+
     if (!(await approvalMeetsRule(approvalRequestId, entityId, rule, conn))) {
       await conn.rollback();
       return fail(res, 'CONFLICT', 'Approval belum memenuhi minimum signature rule', 409);
+    }
+
+    // Resolve signer from the exact matrix rules used by this approval.
+    let matrixSignerUserId = null;
+    let matrixSignerRoleId = null;
+    if (approval.matrix_rule_ids) {
+      let ruleIds = approval.matrix_rule_ids;
+      if (typeof ruleIds === 'string') {
+        try { ruleIds = JSON.parse(ruleIds); } catch { ruleIds = []; }
+      }
+      if (Array.isArray(ruleIds) && ruleIds.length) {
+        const [matrixRows] = await conn.query(
+          `SELECT signer_user_id AS signerUserId,
+                  signer_role_id AS signerRoleId
+             FROM approval_matrix
+            WHERE id IN (?)
+              AND entity_id=?
+            ORDER BY order_index ASC, id ASC`,
+          [ruleIds, entityId]
+        );
+
+        const assignments = new Map();
+        for (const row of matrixRows) {
+          if (!row.signerUserId && !row.signerRoleId) continue;
+          const key = `${row.signerUserId || 0}:${row.signerRoleId || 0}`;
+          assignments.set(key, row);
+        }
+        if (assignments.size > 1) {
+          await conn.rollback();
+          return fail(
+            res,
+            'CONFLICT',
+            'Approval matrix memiliki lebih dari satu signer assignment',
+            409
+          );
+        }
+        if (assignments.size === 1) {
+          const assignment = [...assignments.values()][0];
+          matrixSignerUserId = assignment.signerUserId || null;
+          matrixSignerRoleId = assignment.signerRoleId || null;
+        }
+      }
+    }
+
+    const authoritativeUserId =
+      rule?.requiredSignerUserId || matrixSignerUserId || null;
+    const authoritativeRoleId =
+      rule?.requiredSignerRoleId || matrixSignerRoleId || null;
+
+    if (
+      authoritativeUserId &&
+      signerUserId &&
+      Number(authoritativeUserId) !== Number(signerUserId)
+    ) {
+      await conn.rollback();
+      return fail(res, 'VALIDATION_ERROR', 'Signer user tidak sesuai konfigurasi', 400);
+    }
+    if (
+      authoritativeRoleId &&
+      signerRoleId &&
+      Number(authoritativeRoleId) !== Number(signerRoleId)
+    ) {
+      await conn.rollback();
+      return fail(res, 'VALIDATION_ERROR', 'Signer role tidak sesuai konfigurasi', 400);
+    }
+
+    const assignedUserId = authoritativeUserId || signerUserId || null;
+    const assignedRoleId = authoritativeRoleId || signerRoleId || null;
+
+    if (!assignedUserId && !assignedRoleId) {
+      await conn.rollback();
+      return fail(res, 'VALIDATION_ERROR', 'Signer user/role belum dikonfigurasi', 400);
+    }
+    if (assignedUserId && assignedRoleId) {
+      await conn.rollback();
+      return fail(res, 'VALIDATION_ERROR', 'Pilih signer user atau signer role, bukan keduanya', 400);
+    }
+
+    if (assignedUserId) {
+      const [users] = await conn.query(
+        `SELECT id FROM users
+          WHERE id=? AND entity_id=? AND status='active' AND deleted_at IS NULL`,
+        [assignedUserId, entityId]
+      );
+      if (!users[0]) {
+        await conn.rollback();
+        return fail(res, 'VALIDATION_ERROR', 'Signer user tidak valid', 400);
+      }
+    }
+
+    if (assignedRoleId) {
+      const [roles] = await conn.query(
+        `SELECT id FROM roles
+          WHERE id=? AND entity_id=? AND deleted_at IS NULL`,
+        [assignedRoleId, entityId]
+      );
+      if (!roles[0]) {
+        await conn.rollback();
+        return fail(res, 'VALIDATION_ERROR', 'Signer role tidak valid', 400);
+      }
     }
 
     const [existing] = await conn.query(
@@ -412,6 +478,7 @@ async function create(req, res, next) {
         documentId,
         approvalRequestId,
         signatureRuleId: rule?.id || null,
+        matrixKey: approval.matrix_key || null,
         assignedUserId,
         assignedRoleId,
       },

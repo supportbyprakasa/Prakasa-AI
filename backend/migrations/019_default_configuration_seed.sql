@@ -23,47 +23,34 @@ INSERT IGNORE INTO dashboard_widgets
 INSERT IGNORE INTO workflow_definitions
 (entity_id, name, slug, description, applies_to, is_active)
 SELECT id, 'Simple Approval', 'simple-approval',
-       'Workflow dasar form: draft -> submitted -> under_review -> approved/rejected',
+       'Workflow dasar form setelah submit: submitted -> under_review -> approved/rejected',
        'form', 1
 FROM entities
 WHERE deleted_at IS NULL;
 
 INSERT IGNORE INTO workflow_statuses
 (workflow_definition_id, code, label, color, is_initial, is_final, order_index)
-SELECT id, 'draft', 'Draft', '#64748b', 1, 0, 1
+SELECT id, 'submitted', 'Submitted', '#0ea5e9', 1, 0, 1
 FROM workflow_definitions WHERE slug='simple-approval' AND deleted_at IS NULL;
 
 INSERT IGNORE INTO workflow_statuses
 (workflow_definition_id, code, label, color, is_initial, is_final, order_index)
-SELECT id, 'submitted', 'Submitted', '#0ea5e9', 0, 0, 2
+SELECT id, 'under_review', 'Under Review', '#f59e0b', 0, 0, 2
 FROM workflow_definitions WHERE slug='simple-approval' AND deleted_at IS NULL;
 
 INSERT IGNORE INTO workflow_statuses
 (workflow_definition_id, code, label, color, is_initial, is_final, order_index)
-SELECT id, 'under_review', 'Under Review', '#f59e0b', 0, 0, 3
+SELECT id, 'approved', 'Approved', '#16a34a', 0, 1, 3
 FROM workflow_definitions WHERE slug='simple-approval' AND deleted_at IS NULL;
 
 INSERT IGNORE INTO workflow_statuses
 (workflow_definition_id, code, label, color, is_initial, is_final, order_index)
-SELECT id, 'approved', 'Approved', '#16a34a', 0, 1, 4
-FROM workflow_definitions WHERE slug='simple-approval' AND deleted_at IS NULL;
-
-INSERT IGNORE INTO workflow_statuses
-(workflow_definition_id, code, label, color, is_initial, is_final, order_index)
-SELECT id, 'rejected', 'Rejected', '#dc2626', 0, 1, 5
+SELECT id, 'rejected', 'Rejected', '#dc2626', 0, 1, 4
 FROM workflow_definitions WHERE slug='simple-approval' AND deleted_at IS NULL;
 
 INSERT IGNORE INTO workflow_transitions
 (workflow_definition_id, from_status_id, to_status_id, action_label, required_permission_code, order_index)
-SELECT wd.id, s1.id, s2.id, 'Submit', 'form.submit', 1
-FROM workflow_definitions wd
-JOIN workflow_statuses s1 ON s1.workflow_definition_id=wd.id AND s1.code='draft'
-JOIN workflow_statuses s2 ON s2.workflow_definition_id=wd.id AND s2.code='submitted'
-WHERE wd.slug='simple-approval' AND wd.deleted_at IS NULL;
-
-INSERT IGNORE INTO workflow_transitions
-(workflow_definition_id, from_status_id, to_status_id, action_label, required_permission_code, order_index)
-SELECT wd.id, s1.id, s2.id, 'Mulai Review', 'form_submission.manage', 2
+SELECT wd.id, s1.id, s2.id, 'Mulai Review', 'form_submission.manage', 1
 FROM workflow_definitions wd
 JOIN workflow_statuses s1 ON s1.workflow_definition_id=wd.id AND s1.code='submitted'
 JOIN workflow_statuses s2 ON s2.workflow_definition_id=wd.id AND s2.code='under_review'
@@ -71,7 +58,7 @@ WHERE wd.slug='simple-approval' AND wd.deleted_at IS NULL;
 
 INSERT IGNORE INTO workflow_transitions
 (workflow_definition_id, from_status_id, to_status_id, action_label, required_permission_code, requires_comment, order_index)
-SELECT wd.id, s1.id, s2.id, 'Setujui', 'form_submission.manage', 0, 3
+SELECT wd.id, s1.id, s2.id, 'Setujui', 'form_submission.manage', 0, 2
 FROM workflow_definitions wd
 JOIN workflow_statuses s1 ON s1.workflow_definition_id=wd.id AND s1.code='under_review'
 JOIN workflow_statuses s2 ON s2.workflow_definition_id=wd.id AND s2.code='approved'
@@ -79,7 +66,7 @@ WHERE wd.slug='simple-approval' AND wd.deleted_at IS NULL;
 
 INSERT IGNORE INTO workflow_transitions
 (workflow_definition_id, from_status_id, to_status_id, action_label, required_permission_code, requires_comment, order_index)
-SELECT wd.id, s1.id, s2.id, 'Tolak', 'form_submission.manage', 1, 4
+SELECT wd.id, s1.id, s2.id, 'Tolak', 'form_submission.manage', 1, 3
 FROM workflow_definitions wd
 JOIN workflow_statuses s1 ON s1.workflow_definition_id=wd.id AND s1.code='under_review'
 JOIN workflow_statuses s2 ON s2.workflow_definition_id=wd.id AND s2.code='rejected'

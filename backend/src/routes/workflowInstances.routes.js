@@ -13,6 +13,7 @@ router.get('/',
   requirePermission('workflow_instance.view'),
   ctrl.listByEntity);
 router.get('/by-subject',
+  requireEntityScope,
   requirePermission('workflow_instance.view'),
   ctrl.listBySubject);
 router.get('/:id',

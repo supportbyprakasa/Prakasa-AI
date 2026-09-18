@@ -55,6 +55,9 @@ router.use(requireAuth);
 router.get('/catalog', requireEntityScope, ctrl.catalog);
 router.get('/catalog/:id', requireEntityScope, ctrl.catalogDetail);
 
+// Current user's submissions alias (must be declared before /:id).
+router.get('/submissions', subCtrl.mine);
+
 // Forms CRUD
 router.get('/', requireEntityScope, requirePermission('form.view'), ctrl.list);
 router.get('/:id', requireEntityScope, requirePermission('form.view'), ctrl.detail);

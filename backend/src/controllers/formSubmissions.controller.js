@@ -82,6 +82,12 @@ async function detail(req, res, next) {
     const sub = rows[0];
     if (!sub) return fail(res, 'NOT_FOUND', 'Submission tidak ditemukan', 404);
     assertEntityAccess(req, sub);
+    const canView = (req.user.permissions || []).includes('form_submission.view')
+      || (req.user.permissions || []).includes('form_submission.manage')
+      || Number(sub.submitted_by) === Number(req.user.sub);
+    if (!canView) {
+      return fail(res, 'FORBIDDEN', 'Tidak punya izin melihat submission ini', 403);
+    }
 
     const [values] = await pool.query(
       `SELECT v.id, v.field_id AS fieldId, v.field_key AS fieldKey,
@@ -356,6 +362,9 @@ async function uploadField(req, res, next) {
     const sub = subs[0];
     if (!sub) return fail(res, 'NOT_FOUND', 'Submission tidak ditemukan', 404);
     assertEntityAccess(req, sub);
+    if (!canEditDraft(req, sub)) {
+      return fail(res, 'FORBIDDEN', 'Hanya pemilik draft atau admin yang bisa upload', 403);
+    }
     if (sub.status !== 'draft') {
       return fail(res, 'CONFLICT', 'Hanya draft yang boleh upload lampiran', 409);
     }

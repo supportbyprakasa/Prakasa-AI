@@ -68,7 +68,7 @@ function formatBlock(type, id, title, body) {
 }
 
 const RESOLVERS = {
-  async document({ entityId, contextId, user }) {
+  async document({ entityId, contextId, user, includeContent = true }) {
     if (!assertUnderlyingPermission(user, ['document.view'])) return null;
 
     const [rows] = await pool.query(
@@ -88,6 +88,7 @@ const RESOLVERS = {
 
     let extracted = '';
     if (
+      includeContent &&
       row.drive_file_id &&
       row.mimeType === 'application/vnd.google-apps.document'
     ) {
@@ -392,13 +393,20 @@ const RESOLVERS = {
 
 const SUPPORTED_CONTEXT_TYPES = Object.freeze(Object.keys(RESOLVERS));
 
-async function resolveOne({ session, contextType, contextId, user }) {
+async function resolveOne({
+  session,
+  contextType,
+  contextId,
+  user,
+  includeContent = true,
+}) {
   const resolver = RESOLVERS[contextType];
   if (!resolver) return null;
   return resolver({
     entityId: session.entity_id,
     contextId,
     user,
+    includeContent,
   });
 }
 
@@ -421,6 +429,7 @@ async function attachContext({
     contextType,
     contextId,
     user,
+    includeContent: false,
   });
 
   if (!resolved) {
@@ -525,6 +534,7 @@ async function listContexts({ session, user }) {
       contextType: link.contextType,
       contextId: link.contextId,
       user,
+      includeContent: false,
     }).catch(() => null);
 
     if (!resolved) continue;

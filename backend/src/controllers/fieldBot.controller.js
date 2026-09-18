@@ -48,7 +48,12 @@ async function sendMessage(req, res, next) {
 
     await botSvc.appendMessage({ sessionId: id, role: 'user', content: text });
 
-    const { raw, parsed } = await botSvc.parseFieldReport(text);
+    const { raw, parsed } = await botSvc.parseFieldReport(text, {
+      entityId: session.entity_id,
+      userId: req.user.sub,
+      subjectType: 'field_bot_session',
+      subjectId: session.id,
+    });
 
     const promptHash = crypto.createHash('sha256').update(text).digest('hex');
     const [aiIns] = await pool.query(

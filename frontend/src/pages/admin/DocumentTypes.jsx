@@ -21,7 +21,7 @@ export default function DocumentTypes() {
     setLoading(true);
     Promise.all([
       api.get('/document-types'),
-      api.get('/workflows', { params: { activeOnly: '1' } }),
+      api.get('/workflows', { params: { activeOnly: '1' } }).catch(() => ({ data: { data: [] } })),
     ])
       .then(([r1, r2]) => {
         setRows(r1.data.data || []);

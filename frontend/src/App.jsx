@@ -60,6 +60,11 @@ import DocumentTypes from './pages/admin/DocumentTypes';
 import SignatureRules from './pages/admin/SignatureRules';
 import DashboardLayouts from './pages/admin/DashboardLayouts';
 import IntegrationLogs from './pages/admin/IntegrationLogs';
+import ApprovalMatrix from './pages/admin/ApprovalMatrix';
+import ApprovalDelegations from './pages/admin/ApprovalDelegations';
+import SignaturePrecheckLogs from './pages/admin/SignaturePrecheckLogs';
+import SignatureDetail from './pages/signatures/SignatureDetail';
+import VerifyDocument from './pages/public/VerifyDocument';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -72,6 +77,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/verify/:code" element={<VerifyDocument />} />
       <Route element={<RequireAuth><Layout /></RequireAuth>}>
         <Route index element={<Dashboard />} />
         <Route path="admin/users" element={<Users />} />
@@ -89,6 +95,7 @@ export default function App() {
         <Route path="approvals" element={<ApprovalInbox />} />
         <Route path="signatures" element={<SignatureInbox />} />
         <Route path="signatures/asset" element={<SignatureAsset />} />
+        <Route path="signatures/:id" element={<SignatureDetail />} />
         <Route path="notifications" element={<NotificationCenter />} />
         <Route path="sales/pipeline" element={<SalesPipeline />} />
         <Route path="sales/customers" element={<SalesCustomers />} />
@@ -133,6 +140,9 @@ export default function App() {
         <Route path="admin/signature-rules" element={<SignatureRules />} />
         <Route path="admin/dashboard-layouts" element={<DashboardLayouts />} />
         <Route path="admin/integration-logs" element={<IntegrationLogs />} />
+        <Route path="admin/approval-matrix" element={<ApprovalMatrix />} />
+        <Route path="admin/approval-delegations" element={<ApprovalDelegations />} />
+        <Route path="admin/signature-precheck" element={<SignaturePrecheckLogs />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

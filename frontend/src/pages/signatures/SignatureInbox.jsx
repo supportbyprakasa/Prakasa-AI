@@ -1,68 +1,142 @@
+import { Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
-import DataTable from '../../components/DataTable';
+import Badge from '../../components/Badge';
 import Button from '../../components/Button';
-import Modal from '../../components/Modal';
-import Input from '../../components/Input';
+import DataTable from '../../components/DataTable';
+import FilterBar from '../../components/FilterBar';
 import { toast } from '../../components/Toast';
 
+const STATUS_TONE = {
+  pending: 'warning',
+  approved: 'info',
+  rejected: 'error',
+  signed: 'success',
+  cancelled: 'default',
+};
+
 export default function SignatureInbox() {
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
+  const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(null);
 
-  const load = () => {
+  const load = async () => {
     setLoading(true);
-    api.get('/signatures').then((r) => setRows(r.data.data)).finally(() => setLoading(false));
-  };
-  useEffect(load, []);
-
-  const sign = async () => {
     try {
-      const r = await api.post(`/signatures/${selected.id}/sign`);
-      toast(`Dokumen ditandatangani. Kode verifikasi: ${r.data.data.verificationCode}`, 'success');
-      if (r.data.data.webViewLink) window.open(r.data.data.webViewLink, '_blank');
-      setSelected(null); load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
+      const response = await api.get('/signatures', {
+        params: { status: status || undefined },
+      });
+      setRows(response.data.data || []);
+    } catch (error) {
+      toast(error.response?.data?.error?.message || 'Gagal memuat signature request', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    load();
+  }, [status]);
+
   return (
     <div>
-      <h2>Signature Inbox</h2>
+      <div style={{ marginBottom: 12 }}>
+        <h2 style={{ margin: 0 }}>Signature Inbox</h2>
+        <div
+          style={{
+            marginTop: 4,
+            fontSize: 13,
+            color: 'var(--color-text-muted)',
+          }}
+        >
+          Signature request menampilkan signer yang ditunjuk terpisah dari user
+          yang benar-benar sudah menandatangani.
+        </div>
+      </div>
+
+      <FilterBar
+        filters={[
+          {
+            name: 'status',
+            label: 'Status',
+            type: 'select',
+            options: [
+              { value: 'pending', label: 'Pending' },
+              { value: 'approved', label: 'Approved' },
+              { value: 'rejected', label: 'Rejected' },
+              { value: 'signed', label: 'Signed' },
+              { value: 'cancelled', label: 'Cancelled' },
+            ],
+          },
+        ]}
+        values={{ status }}
+        onChange={(next) => setStatus(next.status || '')}
+        onReset={() => setStatus('')}
+      />
+
       <DataTable
         loading={loading}
         rows={rows}
+        empty="Belum ada signature request"
         columns={[
           { key: 'id', title: 'ID' },
           { key: 'documentTitle', title: 'Dokumen' },
-          { key: 'signatureType', title: 'Level' },
-          { key: 'status', title: 'Status' },
-          { key: 'signedAt', title: 'Ditandatangani' },
           {
-            key: 'actions', title: 'Aksi',
-            render: (r) => r.status === 'pending'
-              ? <Button onClick={() => setSelected(r)}>Tanda Tangan</Button>
-              : <span style={{ color: 'var(--color-text-muted)' }}>—</span>,
+            key: 'assignedSigner',
+            title: 'Signer Ditunjuk',
+            render: (row) =>
+              row.assignedSignerUserName ||
+              row.assignedSignerRoleName ||
+              (row.assignedSignerUserId
+                ? `User #${row.assignedSignerUserId}`
+                : row.assignedSignerRoleId
+                  ? `Role #${row.assignedSignerRoleId}`
+                  : '—'),
+          },
+          {
+            key: 'signedBy',
+            title: 'Signed By',
+            render: (row) =>
+              row.signedByName ||
+              (row.signedBy ? `User #${row.signedBy}` : '—'),
+          },
+          {
+            key: 'signatureType',
+            title: 'Level',
+            render: (row) => row.signatureType || '—',
+          },
+          {
+            key: 'status',
+            title: 'Status',
+            render: (row) => (
+              <Badge tone={STATUS_TONE[row.status] || 'default'}>{row.status}</Badge>
+            ),
+          },
+          {
+            key: 'signedAt',
+            title: 'Ditandatangani',
+            render: (row) =>
+              row.signedAt
+                ? new Date(row.signedAt).toLocaleString('id-ID')
+                : '—',
+          },
+          {
+            key: 'actions',
+            title: 'Aksi',
+            render: (row) => (
+              <Button
+                variant="secondary"
+                onClick={() => navigate(`/signatures/${row.id}`)}
+              >
+                <Eye size={14} />
+                Detail
+              </Button>
+            ),
           },
         ]}
       />
-
-      <Modal open={!!selected} onClose={() => setSelected(null)} title={`Tanda tangan: ${selected?.documentTitle || ''}`}>
-        {selected && (
-          <>
-            <p style={{ fontSize: 14 }}>
-              Dokumen akan ditandatangani secara elektronik. Tindakan ini tercatat di audit log
-              dan tidak dapat dibatalkan.
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <Button variant="secondary" onClick={() => setSelected(null)}>Batal</Button>
-              <Button onClick={sign}>Konfirmasi & Tanda Tangan</Button>
-            </div>
-          </>
-        )}
-      </Modal>
     </div>
   );
 }

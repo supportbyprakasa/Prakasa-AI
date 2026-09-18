@@ -1,4 +1,4 @@
-export default function Modal({ open, onClose, title, children, footer }) {
+export default function Modal({ open, onClose, title, children, footer, maxWidth = 640, minWidth = 420 }) {
   if (!open) return null;
   return (
     <div onClick={onClose} style={{
@@ -6,8 +6,8 @@ export default function Modal({ open, onClose, title, children, footer }) {
       display: 'grid', placeItems: 'center', zIndex: 100,
     }}>
       <div onClick={(e) => e.stopPropagation()} style={{
-        background: 'var(--color-surface)', borderRadius: 12, minWidth: 420,
-        maxWidth: 640, width: '90%', padding: 24,
+        background: 'var(--color-surface)', borderRadius: 12, minWidth,
+        maxWidth, width: '90%', padding: 24, maxHeight: '90vh', overflowY: 'auto',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
           <h3 style={{ margin: 0, fontSize: 18 }}>{title}</h3>

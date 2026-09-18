@@ -15,7 +15,10 @@ api.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem('prakasa.token');
-      if (!location.pathname.startsWith('/login')) location.href = '/login';
+      const isPublicRoute =
+        location.pathname.startsWith('/login') ||
+        location.pathname.startsWith('/verify/');
+      if (!isPublicRoute) location.href = '/login';
     }
     return Promise.reject(err);
   }

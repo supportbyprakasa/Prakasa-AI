@@ -57,9 +57,7 @@ app.get('/api/health', (req, res) =>
   res.json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() })
 );
 
-const signaturesModule = require('./routes/signatures.routes');
-app.use('/api/v1/signatures', signaturesModule.publicRouter);
-
+app.use('/verify', require('./routes/publicVerify.routes'));
 app.use('/api/v1', routes);
 
 app.use(errorHandler);

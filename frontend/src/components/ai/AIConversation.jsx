@@ -70,7 +70,7 @@ export default function AIConversation({ sessionId, onSessionUpdated, onSessionD
       setMessageMeta(response.data.meta || {
         page: nextPage,
         limit: messageMeta.limit || 50,
-        total: messageMeta.total || current.length + older.length,
+        total: messageMeta.total || messages.length + older.length,
       });
     } catch (e) {
       toast(e.response?.data?.error?.message || 'Gagal memuat pesan lama', 'error');

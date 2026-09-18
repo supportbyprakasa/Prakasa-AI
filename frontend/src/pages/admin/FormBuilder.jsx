@@ -7,7 +7,6 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Badge from '../../components/Badge';
 import Modal from '../../components/Modal';
-import { useAuth } from '../../context/AuthContext';
 import { toast } from '../../components/Toast';
 
 const FIELD_TYPES = [
@@ -37,7 +36,6 @@ const blankField = (orderIndex) => ({
 export default function FormBuilder() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { user } = useAuth();
   const isEdit = !!id;
 
   const [form, setForm] = useState({
@@ -70,10 +68,10 @@ export default function FormBuilder() {
           description: d.description || '', category: d.category || '',
           icon: d.icon || '', color: d.color || '',
           isActive: !!d.isActive, isPublic: !!d.isPublic,
-          submitPermissionCode: d.submit_permission_code || 'form.submit',
-          viewPermissionCode: d.view_permission_code || 'form.view',
-          workflowDefinitionId: d.workflow_definition_id || null,
-          documentTypeId: d.document_type_id || null,
+          submitPermissionCode: d.submitPermissionCode || 'form.submit',
+          viewPermissionCode: d.viewPermissionCode || 'form.view',
+          workflowDefinitionId: d.workflowDefinitionId || null,
+          documentTypeId: d.documentTypeId || null,
           fields: (d.fields || []).map((f) => ({
             fieldKey: f.fieldKey || '',
             label: f.label || '',

@@ -6,6 +6,11 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- n8n is an opt-in provider. Existing provider values remain valid.
+-- tasks.source_id already references BIGINT chat messages and now AI proposals.
+-- Widen it so source references cannot overflow INT UNSIGNED.
+ALTER TABLE tasks
+  MODIFY COLUMN source_id BIGINT UNSIGNED NULL;
+
 ALTER TABLE ai_module_contexts
   MODIFY COLUMN provider ENUM('openai','gemini','claude','n8n') NOT NULL;
 

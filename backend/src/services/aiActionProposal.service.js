@@ -149,6 +149,7 @@ async function listProposals({ session, status }) {
             action_type AS actionType, payload_json AS payloadJson,
             status, proposed_by_ai_module AS proposedByAiModule,
             confirmed_by AS confirmedBy, confirmed_at AS confirmedAt,
+            decision_note AS decisionNote,
             executed_by AS executedBy, executed_at AS executedAt,
             execution_result_json AS executionResultJson,
             failure_message AS failureMessage, expires_at AS expiresAt,
@@ -600,7 +601,7 @@ async function rejectProposal({ proposalId, user, reason }) {
           SET status='rejected',
               confirmed_by=?,
               confirmed_at=NOW(),
-              failure_message=?
+              decision_note=?
         WHERE id=?`,
       [
         user.sub,

@@ -164,6 +164,12 @@ SET @s := IF(@c=0,
 PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- Backfill legacy rows as deterministic grouped sequential matrices.
+-- Existing rows receive DEFAULT 1 when order_index is added, so copy level
+-- before assigning matrix_key to preserve their original ordering.
+UPDATE approval_matrix
+SET order_index = level
+WHERE matrix_key IS NULL;
+
 UPDATE approval_matrix
 SET matrix_key = COALESCE(
       matrix_key,
@@ -174,12 +180,8 @@ SET matrix_key = COALESCE(
       )
     ),
     matrix_name = COALESCE(matrix_name, CONCAT('Legacy ', document_type)),
-    order_index = CASE
-      WHEN order_index IS NULL OR order_index < 1 THEN level
-      ELSE order_index
-    END,
     flow_type = COALESCE(NULLIF(flow_type, ''), 'sequential')
-WHERE matrix_key IS NULL OR matrix_name IS NULL OR order_index IS NULL;
+WHERE matrix_key IS NULL OR matrix_name IS NULL;
 
 -- Advanced lookup index.
 SET @c := (SELECT COUNT(*) FROM information_schema.STATISTICS
@@ -306,7 +308,7 @@ PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 UPDATE approval_steps s
 JOIN approval_requests ar ON ar.id=s.approval_request_id
 SET s.order_index = CASE
-      WHEN s.order_index IS NULL OR s.order_index < 1 THEN s.level
+      WHEN s.matrix_rule_id IS NULL THEN s.level
       ELSE s.order_index
     END,
     s.activated_at = CASE

@@ -5,7 +5,7 @@ import {
   PenTool, Bell, MonitorSmartphone, AppWindow, CalendarDays,
   Users2, Package, Bot, Warehouse, Wallet, UserPlus, UserMinus,
   Briefcase, Search, BookOpen, Zap, ScrollText, TrendingUp,
-  ListChecks, CalendarRange, Network, ShieldCheck,
+  ListChecks, CalendarRange, Network, ShieldCheck, LayoutGrid, UserCheck,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -97,6 +97,9 @@ function useNavConfig() {
         { to: '/admin/signature-rules', label: 'Signature Rules', icon: PenTool, permission: 'signature_rule.view' },
         { to: '/admin/dashboard-layouts', label: 'Dashboard Layouts', icon: LayoutDashboard, permission: 'dashboard_layout.manage' },
         { to: '/admin/integration-logs', label: 'Integration Logs', icon: Activity, permission: 'integration_log.view' },
+        { to: '/admin/approval-matrix', label: 'Approval Matrix', icon: LayoutGrid, permission: 'approval_matrix.view' },
+        { to: '/admin/approval-delegations', label: 'Approval Delegations', icon: UserCheck, permission: 'approval_delegation.view' },
+        { to: '/admin/signature-precheck', label: 'Signature Precheck', icon: ShieldCheck, permission: 'signature_precheck.view' },
         { to: '/activity-logs', label: 'Activity Log', icon: Activity, permission: 'activity_log.view' },
       ].filter((i) => has(i.permission)),
     },

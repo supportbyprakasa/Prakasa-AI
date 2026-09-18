@@ -389,17 +389,21 @@ async function convertMessageToTask(req, res, next) {
       // Task + chat conversion are already committed.
     }
 
-    await log({
-      entityId: message.entityId,
-      userId: req.user.sub,
-      action: 'chat.convert_to_task',
-      subjectType: 'task',
-      subjectId: created.id,
-      metadata: {
-        messageId: message.id,
-        roomId: message.room_id,
-      },
-    });
+    try {
+      await log({
+        entityId: message.entityId,
+        userId: req.user.sub,
+        action: 'chat.convert_to_task',
+        subjectType: 'task',
+        subjectId: created.id,
+        metadata: {
+          messageId: message.id,
+          roomId: message.room_id,
+        },
+      });
+    } catch {
+      // Chat conversion is already committed.
+    }
 
     return ok(res, { taskId: created.id }, undefined, 201);
   } catch (error) {

@@ -35,6 +35,13 @@ function useNavConfig() {
       ].filter((i) => has(i.permission)),
     },
     {
+      title: 'Formulir & Workflow',
+      items: [
+        { to: '/forms', label: 'Formulir', icon: FileText },
+        { to: '/forms/submissions', label: 'Submission Saya', icon: ListChecks },
+      ],
+    },
+    {
       title: 'Sales & Warehouse',
       items: [
         { to: '/sales/pipeline', label: 'Sales Pipeline', icon: Kanban, permission: 'sales.pipeline.view' },
@@ -84,6 +91,12 @@ function useNavConfig() {
         { to: '/admin/roles', label: 'Roles', icon: Shield, permission: 'role.manage' },
         { to: '/admin/permissions', label: 'Permissions', icon: KeyRound, permission: 'permission.manage' },
         { to: '/admin/folder-rules', label: 'Folder Rules', icon: FolderTree, permission: 'folder_rule.manage' },
+        { to: '/admin/forms', label: 'Form Builder', icon: FileText, permission: 'form.manage' },
+        { to: '/admin/workflows', label: 'Workflows', icon: Network, permission: 'workflow_definition.manage' },
+        { to: '/admin/document-types', label: 'Document Types', icon: LayoutTemplate, permission: 'document_type.view' },
+        { to: '/admin/signature-rules', label: 'Signature Rules', icon: PenTool, permission: 'signature_rule.view' },
+        { to: '/admin/dashboard-layouts', label: 'Dashboard Layouts', icon: LayoutDashboard, permission: 'dashboard_layout.manage' },
+        { to: '/admin/integration-logs', label: 'Integration Logs', icon: Activity, permission: 'integration_log.view' },
         { to: '/activity-logs', label: 'Activity Log', icon: Activity, permission: 'activity_log.view' },
       ].filter((i) => has(i.permission)),
     },

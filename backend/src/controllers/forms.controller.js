@@ -116,6 +116,8 @@ function normalizeForm(row) {
     createdBy: row.created_by,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    fieldCount: row.field_count !== undefined ? Number(row.field_count) : undefined,
+    submissionCount: row.submission_count !== undefined ? Number(row.submission_count) : undefined,
   };
 }
 
@@ -162,7 +164,11 @@ async function catalog(req, res, next) {
               icon, color, is_active, is_public, submit_permission_code,
               view_permission_code, workflow_definition_id,
               approval_matrix_id, document_type_id, folder_mapping_rule_id,
-              created_by, created_at, updated_at
+              created_by, created_at, updated_at,
+              (SELECT COUNT(*) FROM form_fields ff
+                WHERE ff.form_id=forms.id AND ff.deleted_at IS NULL) AS field_count,
+              (SELECT COUNT(*) FROM form_submissions fs
+                WHERE fs.form_id=forms.id AND fs.deleted_at IS NULL) AS submission_count
          FROM forms
         WHERE entity_id=? AND is_active=1 AND deleted_at IS NULL
         ORDER BY category ASC, name ASC`,

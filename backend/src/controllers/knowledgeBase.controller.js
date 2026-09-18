@@ -6,9 +6,17 @@ const kbSvc = require('../services/knowledgeBase.service');
 
 async function listDocs(req, res, next) {
   try {
-    const where = ['deleted_at IS NULL', 'is_active=1'];
-    const args = [];
-    if (req.query.entityId) { where.push('entity_id=?'); args.push(req.query.entityId); }
+    const requestedEntityId = req.query.entityId ? Number(req.query.entityId) : Number(req.user.entityId);
+    if (!requestedEntityId) return fail(res, 'VALIDATION_ERROR', 'entityId wajib', 400);
+    if (
+      Number(req.user.entityId) !== requestedEntityId &&
+      !(req.user.permissions || []).includes('entity.cross_access')
+    ) {
+      return fail(res, 'FORBIDDEN', 'Tidak punya akses lintas entity', 403);
+    }
+
+    const where = ['deleted_at IS NULL', 'is_active=1', 'entity_id=?'];
+    const args = [requestedEntityId];
     if (req.query.category) { where.push('category=?'); args.push(req.query.category); }
     const [rows] = await pool.query(
       `SELECT id, entity_id AS entityId, department_id AS departmentId,
@@ -26,6 +34,13 @@ async function createDoc(req, res, next) {
       entityId, departmentId, title, category, sourceDocumentId,
       driveFileId, extractedText, visibility = 'entity', allowedRoleIds,
     } = req.body;
+
+    if (
+      Number(req.user.entityId) !== Number(entityId) &&
+      !(req.user.permissions || []).includes('entity.cross_access')
+    ) {
+      return fail(res, 'FORBIDDEN', 'Tidak punya akses lintas entity', 403);
+    }
 
     const [r] = await pool.query(
       `INSERT INTO kb_documents
@@ -66,8 +81,14 @@ async function removeDoc(req, res, next) {
 async function query(req, res, next) {
   try {
     const { question, entityId, topK = 5 } = req.body;
-    const useEntityId = entityId || req.user.entityId;
+    const useEntityId = Number(entityId || req.user.entityId);
     if (!useEntityId) return fail(res, 'VALIDATION_ERROR', 'entityId wajib', 400);
+    if (
+      Number(req.user.entityId) !== useEntityId &&
+      !(req.user.permissions || []).includes('entity.cross_access')
+    ) {
+      return fail(res, 'FORBIDDEN', 'Tidak punya akses lintas entity', 403);
+    }
 
     // Ambil role user untuk filter visibility
     const [roles] = await pool.query(
@@ -96,7 +117,12 @@ async function query(req, res, next) {
     ).join('\n\n');
 
     const prompt = `Pertanyaan user:\n${question}\n\nKonteks dokumen:\n${contextText}`;
-    const result = await runModule('knowledge_base', prompt);
+    const result = await runModule('knowledge_base', prompt, {
+      entityId: useEntityId,
+      userId: req.user.sub,
+      subjectType: 'kb_query',
+      subjectId: docs[0]?.id || null,
+    });
 
     // Simpan ringkasan & query log
     const [ins] = await pool.query(

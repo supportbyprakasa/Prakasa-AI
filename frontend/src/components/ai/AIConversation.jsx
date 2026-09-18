@@ -145,8 +145,11 @@ export default function AIConversation({ sessionId, onSessionUpdated, onSessionD
       } else if (errCode === 'SESSION_NOT_ACTIVE') {
         setInput(text);
         toast('Percakapan sudah diarsipkan.', 'error');
+      } else if (status === 400 || status === 403) {
+        setInput(text);
+        toast(e.response?.data?.error?.message || 'Pesan tidak dapat dikirim', 'error');
       } else if (errCode === 'AI_PROVIDER_ERROR' || status === 502 || status === 503 || status === 504) {
-        toast('Layanan AI sedang tidak dapat dijangkau. Coba lagi.', 'error');
+        toast('Layanan AI sedang tidak dapat dijangkau. Pesan Anda tetap tersimpan di riwayat.', 'error');
       } else {
         toast(e.response?.data?.error?.message || 'Gagal mengirim pesan', 'error');
       }

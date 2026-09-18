@@ -82,6 +82,15 @@ SET @s := IF(@c=0,
   'SELECT 1');
 PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+-- Backfill Phase-3 pending requests where signed_by was used as the assigned signer.
+UPDATE signature_requests
+SET assigned_signer_user_id = signed_by,
+    signed_by = NULL
+WHERE status = 'pending'
+  AND assigned_signer_user_id IS NULL
+  AND assigned_signer_role_id IS NULL
+  AND signed_by IS NOT NULL;
+
 CREATE TABLE IF NOT EXISTS signature_precheck_logs (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   entity_id INT UNSIGNED NOT NULL,

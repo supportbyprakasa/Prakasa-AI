@@ -480,6 +480,264 @@ async function remove(req, res, next) {
   } catch (e) { next(e); }
 }
 
+
+async function mine(req, res, next) {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, parseInt(req.query.limit) || 20);
+    const offset = (page - 1) * limit;
+    const entityId = Number(req.user.entityId);
+
+    const where = [
+      'fs.deleted_at IS NULL',
+      'fs.entity_id = ?',
+      'fs.submitted_by = ?',
+    ];
+    const args = [entityId, req.user.sub];
+    if (req.query.status) { where.push('fs.status = ?'); args.push(req.query.status); }
+    if (req.query.formId) { where.push('fs.form_id = ?'); args.push(req.query.formId); }
+
+    const [rows] = await pool.query(
+      `SELECT fs.id, fs.form_id AS formId, f.name AS formName, f.slug AS formSlug,
+              fs.submission_number AS submissionNumber, fs.title, fs.status,
+              fs.workflow_instance_id AS workflowInstanceId,
+              fs.submitted_at AS submittedAt, fs.created_at AS createdAt,
+              fs.updated_at AS updatedAt
+         FROM form_submissions fs
+         JOIN forms f ON f.id = fs.form_id
+        WHERE ${where.join(' AND ')}
+        ORDER BY fs.id DESC
+        LIMIT ? OFFSET ?`,
+      [...args, limit, offset]
+    );
+    const [[{ total }]] = await pool.query(
+      `SELECT COUNT(*) AS total FROM form_submissions fs
+        WHERE ${where.join(' AND ')}`,
+      args
+    );
+    return ok(res, rows, { page, limit, total });
+  } catch (e) { next(e); }
+}
+
+function canEditDraft(req, sub) {
+  return (req.user.permissions || []).includes('form_submission.manage')
+    || (sub.status === 'draft' && Number(sub.submitted_by) === Number(req.user.sub));
+}
+
+async function upsertDraftValue(conn, submissionId, field, value) {
+  if (field.field_type === 'file') return;
+
+  if ((field.field_type === 'number' || field.field_type === 'currency') &&
+      value !== null && value !== '' && !Number.isFinite(Number(value))) {
+    const e = new Error(`${field.label}: harus angka`);
+    e.status = 400; e.code = 'VALIDATION_ERROR'; throw e;
+  }
+  if (field.field_type === 'email' && value &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value))) {
+    const e = new Error(`${field.label}: format email tidak valid`);
+    e.status = 400; e.code = 'VALIDATION_ERROR'; throw e;
+  }
+  if ((field.field_type === 'select' || field.field_type === 'radio') && value !== null && value !== '') {
+    const opts = parseJson(field.options_json) || [];
+    if (opts.length && !opts.some((o) => String(o.value) === String(value))) {
+      const e = new Error(`${field.label}: nilai tidak ada di opsi`);
+      e.status = 400; e.code = 'VALIDATION_ERROR'; throw e;
+    }
+  }
+
+  const payload = buildValuePayload(field, value);
+  await conn.query(
+    `INSERT INTO form_submission_values
+     (submission_id, field_id, field_key, value_text, value_number,
+      value_date, value_json, value_user_id, value_document_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE
+       value_text=VALUES(value_text),
+       value_number=VALUES(value_number),
+       value_date=VALUES(value_date),
+       value_json=VALUES(value_json),
+       value_user_id=VALUES(value_user_id),
+       value_document_id=VALUES(value_document_id),
+       updated_at=CURRENT_TIMESTAMP`,
+    [
+      submissionId, field.id, field.field_key,
+      payload.text, payload.number, payload.date, payload.json,
+      payload.userId, payload.documentId,
+    ]
+  );
+}
+
+async function updateDraft(req, res, next) {
+  const conn = await pool.getConnection();
+  try {
+    const [subs] = await conn.query(
+      `SELECT * FROM form_submissions
+        WHERE id=? AND deleted_at IS NULL`,
+      [req.params.id]
+    );
+    const sub = subs[0];
+    if (!sub) return fail(res, 'NOT_FOUND', 'Submission tidak ditemukan', 404);
+    assertEntityAccess(req, sub);
+    if (!canEditDraft(req, sub)) {
+      return fail(res, 'FORBIDDEN', 'Hanya pemilik draft atau admin yang bisa mengubah', 403);
+    }
+    if (sub.status !== 'draft') {
+      return fail(res, 'CONFLICT', 'Submission bukan draft', 409);
+    }
+
+    const [fields] = await conn.query(
+      `SELECT * FROM form_fields
+        WHERE form_id=? AND deleted_at IS NULL
+        ORDER BY order_index ASC`,
+      [sub.form_id]
+    );
+    const byKey = new Map(fields.map((field) => [field.field_key, field]));
+
+    await conn.beginTransaction();
+    for (const [key, value] of Object.entries(req.body.values || {})) {
+      if (key.startsWith('_')) continue;
+      const field = byKey.get(key);
+      if (!field) continue;
+      await upsertDraftValue(conn, sub.id, field, value);
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'notes')) {
+      await conn.query(
+        `UPDATE form_submissions SET notes=? WHERE id=?`,
+        [req.body.notes ?? null, sub.id]
+      );
+    }
+    await conn.commit();
+
+    await activityLog({
+      entityId: sub.entity_id, userId: req.user.sub,
+      action: 'form_submission.draft_update',
+      subjectType: 'form_submission', subjectId: sub.id,
+    });
+    return ok(res, { id: sub.id, status: 'draft' });
+  } catch (e) {
+    try { await conn.rollback(); } catch { /* noop */ }
+    if (e.status) return fail(res, e.code || 'VALIDATION_ERROR', e.message, e.status);
+    next(e);
+  } finally {
+    conn.release();
+  }
+}
+
+async function finalize(req, res, next) {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [subs] = await conn.query(
+      `SELECT fs.*, f.workflow_definition_id, f.slug AS form_slug
+         FROM form_submissions fs
+         JOIN forms f ON f.id=fs.form_id
+        WHERE fs.id=? AND fs.deleted_at IS NULL
+        FOR UPDATE`,
+      [req.params.id]
+    );
+    const sub = subs[0];
+    if (!sub) {
+      await conn.rollback();
+      return fail(res, 'NOT_FOUND', 'Submission tidak ditemukan', 404);
+    }
+    assertEntityAccess(req, sub);
+    if (!canEditDraft(req, sub) || sub.status !== 'draft') {
+      await conn.rollback();
+      return fail(res, 'FORBIDDEN', 'Hanya draft milik sendiri atau admin yang bisa disubmit', 403);
+    }
+
+    const [fields] = await conn.query(
+      `SELECT * FROM form_fields
+        WHERE form_id=? AND deleted_at IS NULL
+        ORDER BY order_index ASC`,
+      [sub.form_id]
+    );
+    const [values] = await conn.query(
+      `SELECT field_id, value_text, value_number, value_date, value_json,
+              value_user_id, value_document_id
+         FROM form_submission_values
+        WHERE submission_id=?`,
+      [sub.id]
+    );
+    const byField = new Map(values.map((row) => [Number(row.field_id), row]));
+    const missing = [];
+    for (const field of fields) {
+      if (!field.is_required) continue;
+      const row = byField.get(Number(field.id));
+      let present = false;
+      if (row) {
+        if (field.field_type === 'file' || field.field_type === 'document_link') {
+          present = Boolean(row.value_document_id);
+        } else if (field.field_type === 'user_selector') {
+          present = Boolean(row.value_user_id);
+        } else if (field.field_type === 'number' || field.field_type === 'currency') {
+          present = row.value_number !== null && row.value_number !== undefined;
+        } else if (field.field_type === 'date' || field.field_type === 'datetime') {
+          present = Boolean(row.value_date);
+        } else if (field.field_type === 'multi_select' || field.field_type === 'checkbox') {
+          const parsed = parseJson(row.value_json);
+          present = Array.isArray(parsed) ? parsed.length > 0 : parsed !== null && parsed !== undefined;
+        } else {
+          present = row.value_text !== null && String(row.value_text).trim() !== '';
+        }
+      }
+      if (!present) missing.push(field.label);
+    }
+    if (missing.length) {
+      await conn.rollback();
+      return fail(
+        res,
+        'VALIDATION_ERROR',
+        `Field wajib belum diisi: ${missing.join(', ')}`,
+        400
+      );
+    }
+
+    let workflowInstanceId = null;
+    let status = 'submitted';
+    if (sub.workflow_definition_id) {
+      const [initial] = await conn.query(
+        `SELECT code FROM workflow_statuses
+          WHERE workflow_definition_id=? AND is_initial=1
+          ORDER BY order_index ASC, id ASC LIMIT 1`,
+        [sub.workflow_definition_id]
+      );
+      if (!initial[0]) throw new Error('Workflow tidak punya status initial');
+      status = initial[0].code;
+      workflowInstanceId = await workflowSvc.createInstance({
+        workflowDefinitionId: sub.workflow_definition_id,
+        entityId: sub.entity_id,
+        departmentId: sub.department_id,
+        subjectType: 'form_submission',
+        subjectId: sub.id,
+        createdBy: req.user.sub,
+      }, conn);
+    }
+
+    await conn.query(
+      `UPDATE form_submissions
+          SET status=?, submitted_at=NOW(), workflow_instance_id=?
+        WHERE id=?`,
+      [status, workflowInstanceId, sub.id]
+    );
+    await conn.commit();
+
+    await activityLog({
+      entityId: sub.entity_id, userId: req.user.sub,
+      action: 'form_submission.submit',
+      subjectType: 'form_submission', subjectId: sub.id,
+      metadata: { formSlug: sub.form_slug, workflowInstanceId },
+    });
+    return ok(res, { id: sub.id, status, workflowInstanceId });
+  } catch (e) {
+    try { await conn.rollback(); } catch { /* noop */ }
+    next(e);
+  } finally {
+    conn.release();
+  }
+}
+
 module.exports = {
-  list, detail, submit, uploadField, updateStatus, remove,
+  list, mine, detail, submit, updateDraft, finalize,
+  uploadField, updateStatus, remove,
 };

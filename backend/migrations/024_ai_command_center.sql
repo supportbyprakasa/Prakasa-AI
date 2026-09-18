@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS ai_action_proposals (
   proposed_by_ai_module VARCHAR(80) NULL,
   confirmed_by INT UNSIGNED NULL,
   confirmed_at TIMESTAMP NULL,
+  decision_note VARCHAR(500) NULL,
   executed_by INT UNSIGNED NULL,
   executed_at TIMESTAMP NULL,
   execution_result_json JSON NULL,

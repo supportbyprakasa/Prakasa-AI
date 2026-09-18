@@ -150,8 +150,8 @@ async function tableExists(name) {
     const [workflows] = await pool.query(
       `SELECT wd.id, wd.entity_id AS entityId, wd.is_active AS isActive,
               wd.deleted_at AS deletedAt,
-              SUM(ws.is_initial=1) AS initialCount,
-              SUM(ws.is_final=1) AS finalCount,
+              COUNT(DISTINCT CASE WHEN ws.is_initial=1 THEN ws.id END) AS initialCount,
+              COUNT(DISTINCT CASE WHEN ws.is_final=1 THEN ws.id END) AS finalCount,
               COUNT(DISTINCT ws.id) AS statusCount,
               COUNT(DISTINCT wt.id) AS transitionCount
          FROM workflow_definitions wd

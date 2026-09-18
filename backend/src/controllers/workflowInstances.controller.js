@@ -27,7 +27,11 @@ async function listBySubject(req, res, next) {
     if (!subjectType || !subjectId) {
       return fail(res, 'VALIDATION_ERROR', 'subjectType & subjectId wajib', 400);
     }
-    const instanceId = await workflowSvc.findInstanceBySubject(subjectType, Number(subjectId));
+    const instanceId = await workflowSvc.findInstanceBySubject({
+      entityId: req.entityScope.entityId,
+      subjectType,
+      subjectId: Number(subjectId),
+    });
     if (!instanceId) return ok(res, null);
     const instance = await workflowSvc.getInstance(instanceId);
     if (!instance) return ok(res, null);

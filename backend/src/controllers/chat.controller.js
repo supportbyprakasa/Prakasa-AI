@@ -276,14 +276,15 @@ async function convertMessageToTask(req, res, next) {
       );
     }
 
+    let resolvedBoardId = boardId || null;
     let board = null;
-    if (boardId) {
+    if (resolvedBoardId) {
       const [boards] = await conn.query(
         `SELECT id, department_id AS departmentId
            FROM boards
           WHERE id=? AND entity_id=? AND deleted_at IS NULL
           LIMIT 1`,
-        [boardId, message.entityId]
+        [resolvedBoardId, message.entityId]
       );
       board = boards[0] || null;
       if (!board) {
@@ -309,20 +310,21 @@ async function convertMessageToTask(req, res, next) {
             AND b.entity_id=?
             AND b.deleted_at IS NULL`;
 
-      if (boardId) {
+      if (resolvedBoardId) {
         sql += ' AND bc.board_id=?';
-        args.push(boardId);
+        args.push(resolvedBoardId);
       }
       sql += ' LIMIT 1';
 
       const [columns] = await conn.query(sql, args);
       if (!columns[0]) {
         throw serviceError(
-          boardId
+          resolvedBoardId
             ? 'Column tidak berada pada board yang dipilih'
             : 'Column tidak valid'
         );
       }
+      if (!resolvedBoardId) resolvedBoardId = Number(columns[0].boardId);
     }
 
     if (assigneeId) {
@@ -347,7 +349,7 @@ async function convertMessageToTask(req, res, next) {
       [
         message.entityId,
         message.departmentId,
-        boardId || null,
+        resolvedBoardId,
         columnId || null,
         String(message.body).slice(0, 200),
         message.body,

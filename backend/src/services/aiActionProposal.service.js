@@ -259,7 +259,9 @@ async function executeCreateTask({ proposal, conn, user }) {
       throw error;
     }
 
-    if (
+    if (departmentId == null && board.departmentId != null) {
+      departmentId = Number(board.departmentId);
+    } else if (
       board.departmentId != null &&
       departmentId != null &&
       Number(board.departmentId) !== Number(departmentId)
@@ -274,7 +276,8 @@ async function executeCreateTask({ proposal, conn, user }) {
   if (columnId) {
     const args = [columnId, entityId];
     let sql =
-      `SELECT bc.id, bc.board_id AS boardId
+      `SELECT bc.id, bc.board_id AS boardId,
+              b.department_id AS departmentId
          FROM board_columns bc
          JOIN boards b ON b.id=bc.board_id
         WHERE bc.id=?
@@ -300,6 +303,19 @@ async function executeCreateTask({ proposal, conn, user }) {
       throw error;
     }
     if (!boardId) boardId = Number(columns[0].boardId);
+
+    if (departmentId == null && columns[0].departmentId != null) {
+      departmentId = Number(columns[0].departmentId);
+    } else if (
+      columns[0].departmentId != null &&
+      departmentId != null &&
+      Number(columns[0].departmentId) !== Number(departmentId)
+    ) {
+      const error = new Error('Column berada pada board department berbeda');
+      error.status = 400;
+      error.code = 'VALIDATION_ERROR';
+      throw error;
+    }
   }
 
   const assigneeId = payload.assigneeId

@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS ai_sessions (
   system_context MEDIUMTEXT NULL,
   generation_status ENUM('idle','generating') NOT NULL DEFAULT 'idle',
   generation_started_at TIMESTAMP NULL,
+  generation_token VARCHAR(64) NULL,
   last_message_at TIMESTAMP NULL,
   created_by INT UNSIGNED NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

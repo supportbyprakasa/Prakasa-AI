@@ -199,4 +199,17 @@ async function remove(req, res, next) {
   } catch (error) { next(error); }
 }
 
-module.exports = { list, getForRole, mine, upsert, remove };
+async function roles(req, res, next) {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, entity_id AS entityId, name
+         FROM roles
+        WHERE entity_id=? AND deleted_at IS NULL
+        ORDER BY name ASC`,
+      [req.entityScope.entityId]
+    );
+    return ok(res, rows);
+  } catch (error) { next(error); }
+}
+
+module.exports = { list, roles, getForRole, mine, upsert, remove };

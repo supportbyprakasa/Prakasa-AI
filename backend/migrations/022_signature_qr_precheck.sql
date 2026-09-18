@@ -141,4 +141,37 @@ CREATE TABLE IF NOT EXISTS signature_precheck_logs (
     REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Batch 2 foreign keys / indexes for signature request snapshots.
+SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='signature_requests'
+    AND CONSTRAINT_NAME='fk_sigreq_rule_b2');
+SET @s := IF(@c=0,
+  'ALTER TABLE signature_requests ADD CONSTRAINT fk_sigreq_rule_b2 FOREIGN KEY (signature_rule_id) REFERENCES signature_rules(id) ON DELETE SET NULL',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='signature_requests'
+    AND CONSTRAINT_NAME='fk_sigreq_assigned_user_b2');
+SET @s := IF(@c=0,
+  'ALTER TABLE signature_requests ADD CONSTRAINT fk_sigreq_assigned_user_b2 FOREIGN KEY (assigned_signer_user_id) REFERENCES users(id) ON DELETE SET NULL',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='signature_requests'
+    AND CONSTRAINT_NAME='fk_sigreq_assigned_role_b2');
+SET @s := IF(@c=0,
+  'ALTER TABLE signature_requests ADD CONSTRAINT fk_sigreq_assigned_role_b2 FOREIGN KEY (assigned_signer_role_id) REFERENCES roles(id) ON DELETE SET NULL',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.STATISTICS
+  WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='signature_requests'
+    AND INDEX_NAME='idx_sig_assigned_role');
+SET @s := IF(@c=0,
+  'CREATE INDEX idx_sig_assigned_role ON signature_requests (assigned_signer_role_id, status)',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
 SET FOREIGN_KEY_CHECKS = 1;

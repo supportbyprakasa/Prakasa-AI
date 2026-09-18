@@ -11,16 +11,6 @@ Full MVP project assembled from the Fase 1–8 implementation specification.
 - Hosting target: GoDaddy shared cPanel / Passenger
 - Scheduler: cPanel Cron Jobs (no Redis/queue required)
 
-## Modules
-- Fase 1 — Foundation & Flexible Core
-- Fase 2 — Document, Template & AI Core
-- Fase 3 — Task, Chat, Approval & Signature
-- Fase 4 — Sales & Warehouse MVP
-- Fase 5 — IT Governance MVP
-- Fase 6 — Calendar, Meet & Meeting AI
-- Fase 7 — Finance & HRGA Workflow Layer
-- Fase 8 — Advanced Cross-Division & Automation
-
 ## Authentication model
 
 Manual login is the primary login flow. Accounts are provisioned and controlled by a Super Admin.
@@ -36,35 +26,32 @@ Passwords are stored as bcrypt hashes. Google login is optional and never auto-p
 ## Local setup
 
 ### Backend
+
 ```bash
 cd backend
 cp .env.example .env
 npm install
-npm run migrate
+npm run setup:local
+npm run dev
 ```
 
-Configure the one-time bootstrap variables in `backend/.env`:
+When `NODE_ENV` is not `production`, `npm run setup:local` automatically creates or updates this local Super Admin:
+
+```text
+Email    : admin@prakasagroup.com
+Password : Prakasa@2026-Admin!7xQ
+```
+
+You can override the local defaults with:
 
 ```env
 BOOTSTRAP_ADMIN_NAME=Super Admin
-BOOTSTRAP_ADMIN_EMAIL=admin@prakasagroup.com
-BOOTSTRAP_ADMIN_PASSWORD=replace_with_a_strong_password
+BOOTSTRAP_ADMIN_EMAIL=your-admin@prakasagroup.com
+BOOTSTRAP_ADMIN_PASSWORD=your-strong-password
 BOOTSTRAP_ADMIN_ENTITY_ID=1
 ```
 
-Then create/update the first Super Admin:
-
-```bash
-npm run bootstrap:admin
-```
-
-After the bootstrap succeeds, remove `BOOTSTRAP_ADMIN_PASSWORD` from `.env`.
-
-Start the API:
-
-```bash
-npm run dev
-```
+Production never falls back to the local default credential; production bootstrap requires explicit `BOOTSTRAP_ADMIN_*` values.
 
 Backend health check: `GET /api/health`.
 
@@ -88,10 +75,10 @@ VITE_GOOGLE_CLIENT_ID=
 Set `VITE_ENABLE_GOOGLE_LOGIN=true` only if Google should also be shown as a secondary login option.
 
 ## Database
-Run `npm run migrate` in `backend/`. The migration runner executes every `.sql` file in `backend/migrations/` in filename order, including `016_manual_primary_auth.sql`.
+Run `npm run migrate` in `backend/`. The migration runner executes every `.sql` file in filename order, including `016_manual_primary_auth.sql`.
 
 ## Deployment
 See `docs/deployment.md`.
 
 ## Important
-Never commit `.env` files or real credentials. Configure database credentials, JWT secret, optional Google credentials, AI API keys, service-account credentials and cPanel paths outside Git.
+Never commit `.env` files or production credentials. The built-in local credential is development-only and must never be used for production.

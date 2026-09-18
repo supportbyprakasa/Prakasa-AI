@@ -346,7 +346,7 @@ function CreateActionModal({ sessionId, onClose, onCreated }) {
   };
 
   return (
-    <Modal open={true} onClose={onClose} title="Action Proposal Baru" width={520}>
+    <Modal open={true} onClose={onClose} title="Action Proposal Baru" maxWidth={520}>
       <div style={{
         padding: 10, marginBottom: 12,
         background: '#f8fafc', border: '1px solid var(--color-border)',

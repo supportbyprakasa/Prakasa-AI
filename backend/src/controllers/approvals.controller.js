@@ -537,6 +537,7 @@ async function myPendingSteps(req, res, next) {
     );
     const approval = requests[0];
     if (!approval) return fail(res, 'NOT_FOUND', 'Approval tidak ditemukan', 404);
+    if (approval.status !== 'pending') return ok(res, []);
 
     const roles = await userRoleIds(req.user.sub, approval.entity_id);
     const permissions = req.user.permissions || [];

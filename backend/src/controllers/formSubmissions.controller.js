@@ -696,9 +696,17 @@ async function finalize(req, res, next) {
           present = row.value_number !== null && row.value_number !== undefined;
         } else if (field.field_type === 'date' || field.field_type === 'datetime') {
           present = Boolean(row.value_date);
-        } else if (field.field_type === 'multi_select' || field.field_type === 'checkbox') {
+        } else if (field.field_type === 'multi_select') {
           const parsed = parseJson(row.value_json);
-          present = Array.isArray(parsed) ? parsed.length > 0 : parsed !== null && parsed !== undefined;
+          present = Array.isArray(parsed) && parsed.length > 0;
+        } else if (field.field_type === 'checkbox') {
+          const parsed = parseJson(row.value_json);
+          const options = parseJson(field.options_json) || [];
+          if (options.length) {
+            present = Array.isArray(parsed) && parsed.length > 0;
+          } else {
+            present = Array.isArray(parsed) ? parsed[0] === true : parsed === true;
+          }
         } else {
           present = row.value_text !== null && String(row.value_text).trim() !== '';
         }
@@ -750,7 +758,12 @@ async function finalize(req, res, next) {
       subjectType: 'form_submission', subjectId: sub.id,
       metadata: { formSlug: sub.form_slug, workflowInstanceId },
     });
-    return ok(res, { id: sub.id, status, workflowInstanceId });
+    return ok(res, {
+      id: sub.id,
+      submissionNumber: sub.submission_number,
+      status,
+      workflowInstanceId,
+    });
   } catch (e) {
     try { await conn.rollback(); } catch { /* noop */ }
     next(e);

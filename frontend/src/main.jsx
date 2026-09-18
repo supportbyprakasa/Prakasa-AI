@@ -8,7 +8,12 @@ import { AuthProvider } from './context/AuthContext';
 import './styles/tokens.css';
 
 const app = (
-  <BrowserRouter>
+  <BrowserRouter
+    future={{
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    }}
+  >
     <AuthProvider>
       <App />
       <ToastHost />

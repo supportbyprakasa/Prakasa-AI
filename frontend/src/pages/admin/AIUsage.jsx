@@ -26,7 +26,16 @@ export default function AIUsage() {
     setLoading(true);
     try {
       const params = { page, limit: 20 };
-      Object.entries(filters).forEach(([k, v]) => { if (v) params[k] = v; });
+      Object.entries(filters).forEach(([key, value]) => {
+        if (!value) return;
+        if (key === 'from' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          params[key] = `${value} 00:00:00`;
+        } else if (key === 'to' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          params[key] = `${value} 23:59:59`;
+        } else {
+          params[key] = value;
+        }
+      });
       const r = await api.get('/ai-command/usage', { params });
       setRows(r.data.data || []);
       setMeta(r.data.meta || { page, limit: 20, total: r.data.data?.length || 0 });
@@ -46,7 +55,7 @@ export default function AIUsage() {
           <h2 style={{ margin: 0 }}>{isAdmin ? 'AI Usage' : 'AI Usage Saya'}</h2>
           <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>
             {isAdmin
-              ? 'Riwayat penggunaan AI lintas modul.'
+              ? 'Riwayat penggunaan AI. Gunakan filter Entity ID untuk scope admin yang lebih luas.'
               : 'Riwayat penggunaan AI Anda.'}
           </div>
         </div>

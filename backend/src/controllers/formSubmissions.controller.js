@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const pool = require('../db/pool');
 const { ok, fail } = require('../utils/response');
 const { log: activityLog } = require('../services/activityLog.service');
@@ -6,15 +7,11 @@ const workflowSvc = require('../services/workflow.service');
 const uploadSvc = require('../services/formFileUpload.service');
 const { assertEntityAccess } = require('../middleware/entityScope');
 
-async function generateSubmissionNumber(conn, entityId) {
+function generateSubmissionNumber(entityId) {
   const now = new Date();
   const ym = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const [[{ c }]] = await conn.query(
-    `SELECT COUNT(*) AS c FROM form_submissions
-      WHERE entity_id = ? AND submission_number LIKE ?`,
-    [entityId, `FRM-${ym}-%`]
-  );
-  return `FRM-${ym}-${String(Number(c || 0) + 1).padStart(4, '0')}`;
+  const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase();
+  return `FRM-${entityId}-${ym}-${suffix}`;
 }
 
 /* ============================================================
@@ -149,7 +146,7 @@ async function submit(req, res, next) {
     }
 
     const [fields] = await conn.query(
-      `SELECT * FROM form_fields WHERE form_id = ? ORDER BY order_index ASC`,
+      `SELECT * FROM form_fields WHERE form_id = ? AND deleted_at IS NULL ORDER BY order_index ASC`,
       [formId]
     );
 
@@ -220,7 +217,7 @@ async function submit(req, res, next) {
 
     await conn.beginTransaction();
 
-    const submissionNumber = await generateSubmissionNumber(conn, form.entity_id);
+    const submissionNumber = generateSubmissionNumber(form.entity_id);
 
     const titleField = fields.find((f) =>
       /judul|title|nama|name|subject/i.test(f.field_key)
@@ -328,8 +325,7 @@ function buildValuePayload(field, value) {
       out.documentId = Number(value) || null;
       break;
     case 'file':
-      // File upload handled separately via uploadFieldFile
-      out.text = value ? String(value) : null;
+      // File upload is handled separately via uploadFieldFile.
       break;
     default:
       out.text = value === null || value === undefined ? null : String(value);
@@ -366,12 +362,13 @@ async function uploadField(req, res, next) {
 
     const [fields] = await pool.query(
       `SELECT * FROM form_fields
-        WHERE form_id = ? AND (id = ? OR field_key = ?) LIMIT 1`,
+        WHERE form_id = ? AND deleted_at IS NULL
+          AND (id = ? OR field_key = ?) LIMIT 1`,
       [sub.form_id, fieldId || 0, fieldKey || '']
     );
     const field = fields[0];
     if (!field) return fail(res, 'NOT_FOUND', 'Field tidak ditemukan', 404);
-    if (field.field_type !== 'file' && field.field_type !== 'document_link') {
+    if (field.field_type !== 'file') {
       return fail(res, 'VALIDATION_ERROR', 'Field ini bukan tipe file', 400);
     }
 
@@ -466,8 +463,9 @@ async function remove(req, res, next) {
     assertEntityAccess(req, sub);
 
     const canManage = (req.user.permissions || []).includes('form_submission.manage');
-    if (sub.status !== 'draft' && sub.submitted_by !== req.user.sub && !canManage) {
-      return fail(res, 'FORBIDDEN', 'Hanya draft atau admin bisa hapus', 403);
+    const ownsDraft = sub.status === 'draft' && Number(sub.submitted_by) === Number(req.user.sub);
+    if (!canManage && !ownsDraft) {
+      return fail(res, 'FORBIDDEN', 'Hanya draft milik sendiri atau admin yang bisa hapus', 403);
     }
 
     await pool.query(

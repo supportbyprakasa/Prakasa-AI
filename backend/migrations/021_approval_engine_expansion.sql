@@ -398,4 +398,93 @@ CREATE TABLE IF NOT EXISTS approval_audit_log (
     REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Batch 2 foreign keys for additive columns.
+SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='approval_matrix'
+    AND CONSTRAINT_NAME='fk_am_document_type_b2');
+SET @s := IF(@c=0,
+  'ALTER TABLE approval_matrix ADD CONSTRAINT fk_am_document_type_b2 FOREIGN KEY (document_type_id) REFERENCES document_types(id) ON DELETE SET NULL',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='approval_matrix'
+    AND CONSTRAINT_NAME='fk_am_signer_user_b2');
+SET @s := IF(@c=0,
+  'ALTER TABLE approval_matrix ADD CONSTRAINT fk_am_signer_user_b2 FOREIGN KEY (signer_user_id) REFERENCES users(id) ON DELETE SET NULL',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='approval_matrix'
+    AND CONSTRAINT_NAME='fk_am_signer_role_b2');
+SET @s := IF(@c=0,
+  'ALTER TABLE approval_matrix ADD CONSTRAINT fk_am_signer_role_b2 FOREIGN KEY (signer_role_id) REFERENCES roles(id) ON DELETE SET NULL',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='approval_matrix'
+    AND CONSTRAINT_NAME='fk_am_escalation_user_b2');
+SET @s := IF(@c=0,
+  'ALTER TABLE approval_matrix ADD CONSTRAINT fk_am_escalation_user_b2 FOREIGN KEY (escalation_user_id) REFERENCES users(id) ON DELETE SET NULL',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='approval_matrix'
+    AND CONSTRAINT_NAME='fk_am_escalation_role_b2');
+SET @s := IF(@c=0,
+  'ALTER TABLE approval_matrix ADD CONSTRAINT fk_am_escalation_role_b2 FOREIGN KEY (escalation_role_id) REFERENCES roles(id) ON DELETE SET NULL',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='approval_matrix'
+    AND CONSTRAINT_NAME='fk_am_created_by_b2');
+SET @s := IF(@c=0,
+  'ALTER TABLE approval_matrix ADD CONSTRAINT fk_am_created_by_b2 FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='approval_requests'
+    AND CONSTRAINT_NAME='fk_ar_document_type_b2');
+SET @s := IF(@c=0,
+  'ALTER TABLE approval_requests ADD CONSTRAINT fk_ar_document_type_b2 FOREIGN KEY (document_type_id) REFERENCES document_types(id) ON DELETE SET NULL',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='approval_steps'
+    AND CONSTRAINT_NAME='fk_step_matrix_rule_b2');
+SET @s := IF(@c=0,
+  'ALTER TABLE approval_steps ADD CONSTRAINT fk_step_matrix_rule_b2 FOREIGN KEY (matrix_rule_id) REFERENCES approval_matrix(id) ON DELETE SET NULL',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='approval_steps'
+    AND CONSTRAINT_NAME='fk_step_delegated_from_b2');
+SET @s := IF(@c=0,
+  'ALTER TABLE approval_steps ADD CONSTRAINT fk_step_delegated_from_b2 FOREIGN KEY (delegated_from_user_id) REFERENCES users(id) ON DELETE SET NULL',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='approval_steps'
+    AND CONSTRAINT_NAME='fk_step_escalated_user_b2');
+SET @s := IF(@c=0,
+  'ALTER TABLE approval_steps ADD CONSTRAINT fk_step_escalated_user_b2 FOREIGN KEY (escalated_to_user_id) REFERENCES users(id) ON DELETE SET NULL',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @c := (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
+  WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='approval_steps'
+    AND CONSTRAINT_NAME='fk_step_escalated_role_b2');
+SET @s := IF(@c=0,
+  'ALTER TABLE approval_steps ADD CONSTRAINT fk_step_escalated_role_b2 FOREIGN KEY (escalated_to_role_id) REFERENCES roles(id) ON DELETE SET NULL',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
 SET FOREIGN_KEY_CHECKS = 1;

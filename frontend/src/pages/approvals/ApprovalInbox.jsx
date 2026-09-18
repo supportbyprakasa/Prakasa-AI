@@ -303,20 +303,20 @@ function ApprovalDetail({
           </Badge>
         </Summary>
         <Summary label="Flow">
-          <Badge tone={approval.flow_type === 'parallel' ? 'warning' : 'info'}>
-            {approval.flow_type || 'legacy'}
+          <Badge tone={approval.flowType === 'parallel' ? 'warning' : 'info'}>
+            {approval.flowType || 'legacy'}
           </Badge>
         </Summary>
         <Summary label="Matrix">
-          {approval.matrix_key ? <code>{approval.matrix_key}</code> : '—'}
+          {approval.matrixKey ? <code>{approval.matrixKey}</code> : '—'}
         </Summary>
-        <Summary label="Request Type">{approval.request_type || '—'}</Summary>
+        <Summary label="Request Type">{approval.requestType || '—'}</Summary>
         <Summary label="Amount">
           {approval.amount == null
             ? '—'
             : `${approval.currency || 'IDR'} ${Number(approval.amount).toLocaleString('id-ID')}`}
         </Summary>
-        <Summary label="Current Stage">{approval.current_level || '—'}</Summary>
+        <Summary label="Current Stage">{approval.currentLevel || '—'}</Summary>
       </div>
 
       <Card title="Approval Steps">

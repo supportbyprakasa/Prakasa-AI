@@ -90,7 +90,17 @@ export default function SubmissionDetail() {
               <> · {new Date(sub.submitted_at).toLocaleString('id-ID')}</>
             )}
           </div>
-        </div>        <Badge tone={statusTone(sub.status)}>{sub.status}</Badge>
+        </div>        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {sub.status === 'draft' && (
+            <Button
+              variant="secondary"
+              onClick={() => nav(`/forms/${sub.formSlug}?draft=${sub.id}`)}
+            >
+              Lanjutkan Draft
+            </Button>
+          )}
+          <Badge tone={statusTone(sub.status)}>{sub.status}</Badge>
+        </div>
       </div>
 
       {wf && (

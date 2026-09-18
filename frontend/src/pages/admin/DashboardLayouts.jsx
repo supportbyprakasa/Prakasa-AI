@@ -25,7 +25,7 @@ export default function DashboardLayouts() {
     setLoading(true);
     Promise.all([
       api.get('/dashboard-widgets'),
-      api.get('/roles').catch(() => ({ data: { data: [] } })),
+      api.get('/dashboard-layouts/roles'),
       api.get('/dashboard-layouts'),
     ])
       .then(([r1, r2, r3]) => {

@@ -107,11 +107,13 @@ async function createBoard({ user, input }) {
 
     await conn.commit();
 
-    await activityLog({
-      entityId, userId: user.sub, action: 'board.create',
-      subjectType: 'board', subjectId: r.insertId,
-      metadata: { name },
-    });
+    try {
+      await activityLog({
+        entityId, userId: user.sub, action: 'board.create',
+        subjectType: 'board', subjectId: r.insertId,
+        metadata: { name },
+      });
+    } catch { /* board is already committed */ }
     return { id: r.insertId };
   } catch (e) {
     try { await conn.rollback(); } catch { /* noop */ }
@@ -127,10 +129,12 @@ async function deleteBoard({ boardId, user }) {
   taskAccess.assertBoardAccess({ user, board, action: 'manage' });
 
   await pool.query(`UPDATE boards SET deleted_at = NOW() WHERE id = ?`, [boardId]);
-  await activityLog({
-    entityId: board.entity_id, userId: user.sub, action: 'board.delete',
-    subjectType: 'board', subjectId: boardId,
-  });
+  try {
+    await activityLog({
+      entityId: board.entity_id, userId: user.sub, action: 'board.delete',
+      subjectType: 'board', subjectId: boardId,
+    });
+  } catch { /* board deletion is already committed */ }
   return { id: boardId };
 }
 

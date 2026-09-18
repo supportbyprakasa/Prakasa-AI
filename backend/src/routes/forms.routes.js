@@ -74,8 +74,10 @@ router.get('/submissions/list',
   requireEntityScope,
   requirePermission('form_submission.view'),
   subCtrl.list);
+router.get('/submissions/mine',
+  requirePermission('form.submit'),
+  subCtrl.mine);
 router.get('/submissions/:id',
-  requirePermission('form_submission.view'),
   subCtrl.detail);
 router.post('/submit',
   requireEntityScope,
@@ -88,6 +90,16 @@ router.post('/submit',
     submit: z.boolean().optional(),
   })),
   subCtrl.submit);
+router.patch('/submissions/:id/draft',
+  requirePermission('form.submit'),
+  validate(z.object({
+    values: z.record(z.any()).default({}),
+    notes: z.string().nullable().optional(),
+  })),
+  subCtrl.updateDraft);
+router.post('/submissions/:id/finalize',
+  requirePermission('form.submit'),
+  subCtrl.finalize);
 router.post('/submissions/:id/upload-field',
   requirePermission('form.submit'),
   upload.single('file'),
@@ -105,7 +117,6 @@ router.patch('/submissions/:id/status',
   })),
   subCtrl.updateStatus);
 router.delete('/submissions/:id',
-  requirePermission('form_submission.manage'),
   subCtrl.remove);
 
 module.exports = router;

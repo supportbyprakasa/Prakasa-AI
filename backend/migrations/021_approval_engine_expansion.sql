@@ -8,6 +8,12 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- Helper pattern: add columns only when missing.
 
 -- approval_matrix: matrix identity / grouping
+
+-- Legacy column was NOT NULL in migration 004. Batch 2 matrices may target
+-- request_type/document_type_id without a legacy document_type string.
+ALTER TABLE approval_matrix
+  MODIFY COLUMN document_type VARCHAR(80) NULL;
+
 SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS
   WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='approval_matrix' AND COLUMN_NAME='matrix_key');
 SET @s := IF(@c=0,

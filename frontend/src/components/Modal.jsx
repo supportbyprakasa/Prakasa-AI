@@ -1,4 +1,4 @@
-export default function Modal({ open, onClose, title, children, footer, maxWidth = 640, minWidth = 420 }) {
+export default function Modal({ open, onClose, title, children, footer, maxWidth = 640, minWidth = 0 }) {
   if (!open) return null;
   return (
     <div onClick={onClose} style={{

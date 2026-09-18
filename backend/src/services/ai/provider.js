@@ -5,6 +5,7 @@ const providers = {
   openai: require('./openai'),
   gemini: require('./gemini'),
   claude: require('./claude'),
+  n8n: require('./n8n'),
 };
 
 async function getModuleContext(module) {
@@ -39,6 +40,12 @@ async function runModule(module, prompt, ctx = {}) {
       params: typeof moduleContext.params === 'string'
         ? JSON.parse(moduleContext.params)
         : moduleContext.params,
+      context: {
+        entityId: ctx.entityId || null,
+        userId: ctx.userId || null,
+        subjectType: ctx.subjectType || null,
+        subjectId: ctx.subjectId || null,
+      },
     });
 
     await integrationLog.log({

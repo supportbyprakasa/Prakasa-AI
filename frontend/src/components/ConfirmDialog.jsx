@@ -37,7 +37,7 @@ export default function ConfirmDialog({
         style={{
           background: 'var(--color-surface)',
           borderRadius: 12,
-          minWidth: 380,
+          minWidth: 0,
           maxWidth: 480,
           width: '90%',
           padding: 24,

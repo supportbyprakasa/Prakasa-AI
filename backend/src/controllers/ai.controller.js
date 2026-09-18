@@ -143,20 +143,60 @@ async function getModuleConfig(req, res, next) {
 async function updateModuleConfig(req, res, next) {
   try {
     const { module } = req.params;
-    const { provider, model, systemPrompt, params, isActive } = req.body;
-    const [r] = await pool.query(
+    const updates = [];
+    const args = [];
+
+    if (req.body.provider !== undefined) {
+      updates.push('provider=?');
+      args.push(req.body.provider);
+    }
+    if (req.body.model !== undefined) {
+      updates.push('model=?');
+      args.push(req.body.model);
+    }
+    if (req.body.systemPrompt !== undefined) {
+      updates.push('system_prompt=?');
+      args.push(req.body.systemPrompt || null);
+    }
+    if (req.body.params !== undefined) {
+      updates.push('params=?');
+      args.push(req.body.params ? JSON.stringify(req.body.params) : null);
+    }
+    if (req.body.isActive !== undefined) {
+      updates.push('is_active=?');
+      args.push(req.body.isActive ? 1 : 0);
+    }
+
+    if (!updates.length) {
+      return fail(res, 'VALIDATION_ERROR', 'Tidak ada field yang diubah', 400);
+    }
+
+    args.push(module);
+    const [result] = await pool.query(
       `UPDATE ai_module_contexts
-          SET provider=?, model=?, system_prompt=?, params=?, is_active=?
+          SET ${updates.join(', ')}
         WHERE module=?`,
-      [provider, model, systemPrompt || null,
-       params ? JSON.stringify(params) : null, isActive ? 1 : 0, module]
+      args
     );
-    if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'Module tidak ditemukan', 404);
+
+    if (!result.affectedRows) {
+      return fail(res, 'NOT_FOUND', 'Module tidak ditemukan', 404);
+    }
+
     await log({
-      entityId: null, userId: req.user.sub,
-      action: 'ai.module_config.update', subjectType: 'ai_module_context',
-      subjectId: null, metadata: { module, provider, model },
+      entityId: null,
+      userId: req.user.sub,
+      action: 'ai.module_config.update',
+      subjectType: 'ai_module_context',
+      subjectId: null,
+      metadata: {
+        module,
+        provider: req.body.provider,
+        model: req.body.model,
+        fields: Object.keys(req.body),
+      },
     });
+
     return ok(res, { module });
   } catch (e) { next(e); }
 }

@@ -11,7 +11,7 @@ const docAssistantBody = z.object({
 });
 
 const moduleBody = z.object({
-  provider: z.enum(['openai', 'gemini', 'claude']),
+  provider: z.enum(['openai', 'gemini', 'claude', 'n8n']),
   model: z.string().min(1).max(120),
   systemPrompt: z.string().max(8000).nullable().optional(),
   params: z.record(z.any()).nullable().optional(),

@@ -451,17 +451,21 @@ async function confirmProposal({ proposalId, user }) {
       // Proposal/task are already committed; notification/log side effects are best effort.
     }
 
-    await activityLog({
-      entityId: proposal.entity_id,
-      userId: user.sub,
-      action: 'ai_action.execute',
-      subjectType: 'ai_action_proposal',
-      subjectId: proposalId,
-      metadata: {
-        actionType: proposal.action_type,
-        taskId: executionResult.taskId,
-      },
-    });
+    try {
+      await activityLog({
+        entityId: proposal.entity_id,
+        userId: user.sub,
+        action: 'ai_action.execute',
+        subjectType: 'ai_action_proposal',
+        subjectId: proposalId,
+        metadata: {
+          actionType: proposal.action_type,
+          taskId: executionResult.taskId,
+        },
+      });
+    } catch {
+      // Proposal/task execution is already committed.
+    }
 
     return {
       id: proposalId,

@@ -69,6 +69,9 @@ async function list(req, res, next) {
               sr.requires_ai_precheck AS requiresAiPrecheck,
               sr.allow_delegation AS allowDelegation,
               sr.auto_generate_verification_code AS autoGenerateVerificationCode,
+              sr.qr_required AS qrRequired,
+              sr.checksum_algorithm AS checksumAlgorithm,
+              sr.precheck_module AS precheckModule,
               sr.archive_folder_drive_id AS archiveFolderDriveId,
               sr.is_active AS isActive,
               sr.created_at AS createdAt
@@ -96,9 +99,10 @@ async function create(req, res, next) {
        (entity_id, document_type_id, applies_to_form_id, min_approval_level,
         required_signer_role_id, required_signer_user_id,
         requires_ai_precheck, allow_delegation,
-        auto_generate_verification_code, archive_folder_drive_id,
+        auto_generate_verification_code, qr_required,
+        checksum_algorithm, precheck_module, archive_folder_drive_id,
         is_active, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         entityId,
         req.body.documentTypeId ?? null,
@@ -109,6 +113,9 @@ async function create(req, res, next) {
         req.body.requiresAiPrecheck === false ? 0 : 1,
         req.body.allowDelegation === false ? 0 : 1,
         req.body.autoGenerateVerificationCode === false ? 0 : 1,
+        req.body.qrRequired === false ? 0 : 1,
+        req.body.checksumAlgorithm || 'sha256',
+        req.body.precheckModule || 'signature_precheck',
         req.body.archiveFolderDriveId ?? null,
         req.body.isActive === false ? 0 : 1,
         req.user.sub,
@@ -151,6 +158,9 @@ async function update(req, res, next) {
       requiresAiPrecheck: 'requires_ai_precheck',
       allowDelegation: 'allow_delegation',
       autoGenerateVerificationCode: 'auto_generate_verification_code',
+      qrRequired: 'qr_required',
+      checksumAlgorithm: 'checksum_algorithm',
+      precheckModule: 'precheck_module',
       archiveFolderDriveId: 'archive_folder_drive_id',
       isActive: 'is_active',
     };
@@ -161,7 +171,7 @@ async function update(req, res, next) {
       if (!Object.prototype.hasOwnProperty.call(req.body, key)) continue;
       fields.push(`${column}=?`);
       let value = req.body[key];
-      if (['requiresAiPrecheck','allowDelegation','autoGenerateVerificationCode','isActive'].includes(key)) {
+      if (['requiresAiPrecheck','allowDelegation','autoGenerateVerificationCode','qrRequired','isActive'].includes(key)) {
         value = value ? 1 : 0;
       }
       values.push(value ?? null);
@@ -209,6 +219,27 @@ async function remove(req, res, next) {
   } catch (error) { next(error); }
 }
 
+function normalizeRule(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    entityId: row.entity_id,
+    documentTypeId: row.document_type_id,
+    appliesToFormId: row.applies_to_form_id,
+    minApprovalLevel: row.min_approval_level,
+    requiredSignerRoleId: row.required_signer_role_id,
+    requiredSignerUserId: row.required_signer_user_id,
+    requiresAiPrecheck: Boolean(row.requires_ai_precheck),
+    allowDelegation: Boolean(row.allow_delegation),
+    autoGenerateVerificationCode: Boolean(row.auto_generate_verification_code),
+    qrRequired: Boolean(row.qr_required),
+    checksumAlgorithm: row.checksum_algorithm || 'sha256',
+    precheckModule: row.precheck_module || 'signature_precheck',
+    archiveFolderDriveId: row.archive_folder_drive_id,
+    isActive: Boolean(row.is_active),
+  };
+}
+
 async function resolveRule({ entityId, documentTypeId, formId }) {
   if (formId) {
     const [rows] = await pool.query(
@@ -218,7 +249,7 @@ async function resolveRule({ entityId, documentTypeId, formId }) {
         ORDER BY id DESC LIMIT 1`,
       [entityId, formId]
     );
-    if (rows[0]) return rows[0];
+    if (rows[0]) return normalizeRule(rows[0]);
   }
 
   if (documentTypeId) {
@@ -229,7 +260,7 @@ async function resolveRule({ entityId, documentTypeId, formId }) {
         ORDER BY id DESC LIMIT 1`,
       [entityId, documentTypeId]
     );
-    if (rows[0]) return rows[0];
+    if (rows[0]) return normalizeRule(rows[0]);
   }
 
   return null;

@@ -1,0 +1,18 @@
+INSERT IGNORE INTO permissions (code, description) VALUES
+('board.view','Lihat board'),
+('board.manage','Kelola board & kolom'),
+('task.view','Lihat task'),
+('task.create','Buat task'),
+('task.update','Ubah task'),
+('task.delete','Hapus task'),
+('chat.view','Lihat chat room'),
+('chat.send','Kirim pesan chat'),
+('approval.view','Lihat approval request'),
+('approval.request','Buat approval request'),
+('approval.decide','Approve/reject/request revision'),
+('signature.view','Lihat signature request'),
+('signature.request','Buat signature request'),
+('signature.sign','Tanda tangan dokumen'),
+('signature.manage_asset','Kelola asset tanda tangan sendiri'),
+('notification.view','Lihat notifikasi'),
+('notification.manage_rule','Kelola notification rules');

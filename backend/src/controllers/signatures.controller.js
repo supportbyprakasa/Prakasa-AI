@@ -272,6 +272,30 @@ async function create(req, res, next) {
     const document = documents[0];
     if (!document) return fail(res, 'NOT_FOUND', 'Dokumen tidak ditemukan', 404);
 
+    if (
+      departmentId &&
+      document.department_id &&
+      Number(departmentId) !== Number(document.department_id)
+    ) {
+      return fail(
+        res,
+        'VALIDATION_ERROR',
+        'departmentId tidak sesuai department dokumen',
+        400
+      );
+    }
+    if (departmentId && !document.department_id) {
+      const [departments] = await conn.query(
+        `SELECT id FROM departments
+          WHERE id=? AND entity_id=? AND deleted_at IS NULL
+          LIMIT 1`,
+        [departmentId, entityId]
+      );
+      if (!departments[0]) {
+        return fail(res, 'VALIDATION_ERROR', 'Department tidak valid untuk entity ini', 400);
+      }
+    }
+
     const documentTypeId = await resolveDocumentTypeId(entityId, document);
     const rule = await resolveRule({ entityId, documentTypeId }, conn);
 
@@ -323,8 +347,14 @@ async function create(req, res, next) {
       await conn.rollback();
       return fail(res, 'CONFLICT', 'Approval belum approved', 409);
     }
-    if (approval.document_id &&
-        Number(approval.document_id) !== Number(documentId)) {
+    const approvalTargetsDocument =
+      Number(approval.document_id) === Number(documentId) ||
+      (
+        approval.subject_type === 'document' &&
+        Number(approval.subject_id) === Number(documentId)
+      );
+
+    if (!approvalTargetsDocument) {
       await conn.rollback();
       return fail(res, 'VALIDATION_ERROR', 'Approval tidak terkait dokumen ini', 400);
     }
@@ -412,18 +442,35 @@ async function create(req, res, next) {
 async function runPrecheck(req, res, next) {
   try {
     const [rows] = await pool.query(
-      `SELECT * FROM signature_requests
-        WHERE id=? AND entity_id=?
+      `SELECT sr.*, d.document_type
+         FROM signature_requests sr
+         JOIN documents d ON d.id=sr.document_id
+        WHERE sr.id=? AND sr.entity_id=?
         LIMIT 1`,
       [req.params.id, req.entityScope.entityId]
     );
     const request = rows[0];
     if (!request) return fail(res, 'NOT_FOUND', 'Signature request tidak ditemukan', 404);
 
+    const documentTypeId = await resolveDocumentTypeId(
+      request.entity_id,
+      { document_type: request.document_type }
+    );
+    const rule = await resolveRule({
+      entityId: request.entity_id,
+      documentTypeId,
+      ruleId: request.signature_rule_id,
+    });
+
+    if (request.signature_rule_id && !rule) {
+      return fail(res, 'CONFLICT', 'Signature rule request sudah tidak aktif', 409);
+    }
+
     const result = await precheckSvc.runPrecheck({
       documentId: request.document_id,
       signatureRequestId: request.id,
       approvalRequestId: request.approval_request_id,
+      module: rule?.precheckModule || 'signature_precheck',
       user: req.user,
     });
     return ok(res, result);
@@ -466,6 +513,15 @@ async function sign(req, res, next) {
       documentTypeId,
       ruleId: initial.signature_rule_id,
     });
+
+    if (initial.signature_rule_id && !rule) {
+      return fail(
+        res,
+        'CONFLICT',
+        'Signature rule yang terikat ke request ini sudah tidak aktif',
+        409
+      );
+    }
 
     const allowed = await validateAssignedSigner({
       entityId,

@@ -198,6 +198,22 @@ function validateMatrixShape({
     }
   }
 
+  if (flowType === 'sequential') {
+    const seenOrders = new Set();
+    for (const rule of rules) {
+      const order = Number(rule.orderIndex ?? rule.level ?? 1);
+      if (seenOrders.has(order)) {
+        const error = new Error(
+          `orderIndex ${order} duplikat pada matrix sequential`
+        );
+        error.status = 400;
+        error.code = 'VALIDATION_ERROR';
+        throw error;
+      }
+      seenOrders.add(order);
+    }
+  }
+
   if (flowType === 'parallel') {
     const groupOrder = new Map();
     for (const rule of rules) {

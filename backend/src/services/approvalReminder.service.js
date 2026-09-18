@@ -210,9 +210,14 @@ async function runOnce() {
             await pool.query(
               `UPDATE approval_steps
                   SET escalated_at=NOW(),
-                      escalated_to_user_id=?
+                      escalated_to_user_id=?,
+                      escalated_to_role_id=?
                 WHERE id=? AND escalated_at IS NULL`,
-              [firstTarget, candidate.stepId]
+              [
+                candidate.escalationUserId || firstTarget,
+                candidate.escalationRoleId || null,
+                candidate.stepId,
+              ]
             );
           }
         }

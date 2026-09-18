@@ -717,12 +717,87 @@ async function sign(req, res, next) {
         return fail(res, 'CONFLICT', 'Approval tidak dalam status approved', 409);
       }
 
+      const approvalStillTargetsDocument =
+        Number(approval.document_id) === Number(locked.document_id) ||
+        (
+          approval.subject_type === 'document' &&
+          Number(approval.subject_id) === Number(locked.document_id)
+        );
+      if (!approvalStillTargetsDocument) {
+        await conn.rollback();
+        return fail(res, 'CONFLICT', 'Approval tidak lagi terkait dokumen ini', 409);
+      }
+
+      const [currentDocs] = await conn.query(
+        `SELECT drive_file_id, current_version_id, updated_at
+           FROM documents
+          WHERE id=? AND entity_id=? AND deleted_at IS NULL
+          LIMIT 1 FOR UPDATE`,
+        [locked.document_id, entityId]
+      );
+      const currentDoc = currentDocs[0];
+      if (!currentDoc) {
+        await conn.rollback();
+        return fail(res, 'CONFLICT', 'Dokumen sudah tidak tersedia', 409);
+      }
+
+      const sameNullableNumber = (a, b) =>
+        (a === null || a === undefined) && (b === null || b === undefined)
+          ? true
+          : Number(a) === Number(b);
+      const documentChanged =
+        String(currentDoc.drive_file_id || '') !== String(initial.drive_file_id || '') ||
+        !sameNullableNumber(currentDoc.current_version_id, initial.current_version_id) ||
+        new Date(currentDoc.updated_at).getTime() !== new Date(initial.updated_at).getTime();
+
+      if (documentChanged) {
+        await conn.rollback();
+        return fail(
+          res,
+          'CONFLICT',
+          'Dokumen berubah saat proses tanda tangan. Jalankan ulang precheck/sign.',
+          409
+        );
+      }
+
+      const lockedRule = await resolveRule({
+        entityId,
+        documentTypeId: approval.document_type_id || documentTypeId,
+        ruleId: locked.signature_rule_id,
+      }, conn);
+
+      if (locked.signature_rule_id && !lockedRule) {
+        await conn.rollback();
+        return fail(res, 'CONFLICT', 'Signature rule sudah tidak aktif', 409);
+      }
+
+      if (rule && lockedRule) {
+        const policyChanged =
+          rule.checksumAlgorithm !== lockedRule.checksumAlgorithm ||
+          rule.qrRequired !== lockedRule.qrRequired ||
+          rule.requiresAiPrecheck !== lockedRule.requiresAiPrecheck ||
+          rule.precheckModule !== lockedRule.precheckModule ||
+          rule.allowDelegation !== lockedRule.allowDelegation ||
+          rule.minApprovalLevel !== lockedRule.minApprovalLevel;
+        if (policyChanged) {
+          await conn.rollback();
+          return fail(
+            res,
+            'CONFLICT',
+            'Signature rule berubah saat proses. Jalankan ulang precheck/sign.',
+            409
+          );
+        }
+      }
+
+      const effectiveRule = lockedRule || rule;
+
       const signerStillAllowed = await validateAssignedSigner({
         entityId,
         userId: req.user.sub,
         assignedUserId: locked.assigned_signer_user_id,
         assignedRoleId: locked.assigned_signer_role_id,
-        allowDelegation: rule?.allowDelegation ?? false,
+        allowDelegation: effectiveRule?.allowDelegation ?? false,
         requestType: approval.request_type,
         documentTypeId: approval.document_type_id || documentTypeId,
         conn,
@@ -732,12 +807,12 @@ async function sign(req, res, next) {
         return fail(res, 'FORBIDDEN', 'Assignment signer/delegation sudah tidak valid', 403);
       }
 
-      if (!(await approvalMeetsRule(approval.id, entityId, rule, conn))) {
+      if (!(await approvalMeetsRule(approval.id, entityId, effectiveRule, conn))) {
         await conn.rollback();
         return fail(res, 'CONFLICT', 'Approval tidak lagi memenuhi signature rule', 409);
       }
 
-      const folderId = rule?.archiveFolderDriveId || await resolveFolder({
+      const folderId = effectiveRule?.archiveFolderDriveId || await resolveFolder({
         entityId,
         departmentId: locked.department_id || initial.documentDepartmentId,
         documentType: initial.document_type,

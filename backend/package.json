@@ -12,7 +12,9 @@
     "check:batch1": "node src/scripts/checkBatch1.js",
     "job:approval-reminders": "node src/jobs/approvalReminders.js",
     "check:batch2": "node src/scripts/checkBatch2.js",
-    "check:batch3": "node src/scripts/checkBatch3.js"
+    "check:batch3": "node src/scripts/checkBatch3.js",
+    "check:batch4": "node src/scripts/checkBatch4.js",
+    "task:due-reminders": "node src/scripts/taskDueReminder.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

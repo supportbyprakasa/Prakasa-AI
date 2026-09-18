@@ -216,6 +216,7 @@ function validateMatrixShape({
 
   if (flowType === 'parallel') {
     const groupOrder = new Map();
+    const orderGroup = new Map();
     for (const rule of rules) {
       const order = Number(rule.orderIndex ?? rule.level ?? 1);
       if (!groupOrder.has(rule.parallelGroup)) {
@@ -223,6 +224,17 @@ function validateMatrixShape({
       } else if (groupOrder.get(rule.parallelGroup) !== order) {
         const error = new Error(
           `Semua rule dalam parallelGroup '${rule.parallelGroup}' harus punya orderIndex sama`
+        );
+        error.status = 400;
+        error.code = 'VALIDATION_ERROR';
+        throw error;
+      }
+
+      if (!orderGroup.has(order)) {
+        orderGroup.set(order, rule.parallelGroup);
+      } else if (orderGroup.get(order) !== rule.parallelGroup) {
+        const error = new Error(
+          `orderIndex ${order} tidak boleh dipakai oleh dua parallelGroup berbeda`
         );
         error.status = 400;
         error.code = 'VALIDATION_ERROR';

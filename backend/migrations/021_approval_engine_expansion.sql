@@ -305,6 +305,13 @@ SET @s := IF(@c=0,
   'SELECT 1');
 PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+SET @c := (SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='approval_steps' AND COLUMN_NAME='escalated_to_role_id');
+SET @s := IF(@c=0,
+  'ALTER TABLE approval_steps ADD COLUMN escalated_to_role_id INT UNSIGNED NULL AFTER escalated_to_user_id',
+  'SELECT 1');
+PREPARE stmt FROM @s; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
 UPDATE approval_steps s
 JOIN approval_requests ar ON ar.id=s.approval_request_id
 SET s.order_index = CASE

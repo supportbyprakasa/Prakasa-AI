@@ -24,6 +24,7 @@ async function resolveChain({
   departmentId = null,
   documentTypeId = null,
   requestType = null,
+  legacyDocumentType = null,
   amount = null,
   currency = 'IDR',
 }, conn = pool) {
@@ -56,6 +57,16 @@ async function resolveChain({
     args.push(requestType);
   } else {
     conditions.push('am.request_type IS NULL');
+  }
+
+  // Phase-3 legacy matrices used approval_matrix.document_type as their
+  // discriminator. Never let an unrelated legacy chain become a generic
+  // fallback for another request type.
+  if (legacyDocumentType) {
+    conditions.push("(am.matrix_key NOT LIKE 'legacy:%' OR am.document_type = ?)");
+    args.push(legacyDocumentType);
+  } else {
+    conditions.push("am.matrix_key NOT LIKE 'legacy:%'");
   }
 
   conditions.push('(am.currency IS NULL OR am.currency = ?)');
@@ -110,6 +121,7 @@ async function resolveChain({
     departmentId,
     documentTypeId,
     requestType,
+    legacyDocumentType,
     amount: normalizedAmount,
     currency,
   };

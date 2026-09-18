@@ -208,7 +208,7 @@ export default function WorkflowEditor() {
               orderIndex,
             });
           } else {
-            const response = await api.post(`/workflows/${id}/statuses`, {
+            await api.post(`/workflows/${id}/statuses`, {
               code: s.code,
               label: s.label,
               color: s.color,
@@ -216,7 +216,6 @@ export default function WorkflowEditor() {
               isFinal: !!s.isFinal,
               orderIndex,
             });
-            s._existingId = response.data.data.id;
           }
         }
 
@@ -226,14 +225,15 @@ export default function WorkflowEditor() {
             t.fromStatusCode !== t._originalFromCode ||
             t.toStatusCode !== t._originalToCode
           );
+          let transitionId = t._existingId || null;
 
           if (endpointChanged) {
-            await api.delete(`/workflows/${id}/transitions/${t._existingId}`);
-            t._existingId = null;
+            await api.delete(`/workflows/${id}/transitions/${transitionId}`);
+            transitionId = null;
           }
 
-          if (t._existingId) {
-            await api.patch(`/workflows/${id}/transitions/${t._existingId}`, {
+          if (transitionId) {
+            await api.patch(`/workflows/${id}/transitions/${transitionId}`, {
               actionLabel: t.actionLabel,
               requiredPermissionCode: t.requiredPermissionCode || null,
               requiresApproval: !!t.requiresApproval,
@@ -242,7 +242,7 @@ export default function WorkflowEditor() {
               orderIndex: index,
             });
           } else {
-            const response = await api.post(`/workflows/${id}/transitions`, {
+            await api.post(`/workflows/${id}/transitions`, {
               fromStatusCode: t.fromStatusCode,
               toStatusCode: t.toStatusCode,
               actionLabel: t.actionLabel,
@@ -252,11 +252,39 @@ export default function WorkflowEditor() {
               requiresComment: !!t.requiresComment,
               orderIndex: index,
             });
-            t._existingId = response.data.data.id;
-            t._originalFromCode = t.fromStatusCode;
-            t._originalToCode = t.toStatusCode;
           }
         }
+
+        const refreshed = (await api.get(`/workflows/${id}`)).data.data;
+        setForm({
+          name: refreshed.name,
+          slug: refreshed.slug,
+          description: refreshed.description || '',
+          appliesTo: refreshed.applies_to || '',
+          isActive: !!refreshed.is_active,
+          statuses: (refreshed.statuses || []).map((s) => ({
+            code: s.code,
+            label: s.label,
+            color: s.color || '#64748b',
+            isInitial: !!s.isInitial,
+            isFinal: !!s.isFinal,
+            orderIndex: s.orderIndex ?? 0,
+            _existingId: s.id,
+          })),
+          transitions: (refreshed.transitions || []).map((t) => ({
+            fromStatusCode: t.fromCode,
+            toStatusCode: t.toCode,
+            actionLabel: t.actionLabel,
+            requiredPermissionCode: t.requiredPermissionCode || '',
+            requiresApproval: !!t.requiresApproval,
+            requiresSignature: !!t.requiresSignature,
+            requiresComment: !!t.requiresComment,
+            orderIndex: t.orderIndex ?? 0,
+            _existingId: t.id,
+            _originalFromCode: t.fromCode,
+            _originalToCode: t.toCode,
+          })),
+        });
 
         toast('Workflow diperbarui', 'success');
       } else {

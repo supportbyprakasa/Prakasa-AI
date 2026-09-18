@@ -261,6 +261,7 @@ async function create(req, res, next) {
       subjectId: req.body.subjectId || req.body.documentId || null,
       requestType: req.body.requestType || req.body.subjectType || 'document',
       documentTypeId: reference.documentTypeId,
+      legacyDocumentType: req.body.subjectType || 'document',
       title: req.body.title,
       description: req.body.description || null,
       amount: req.body.amount ?? null,

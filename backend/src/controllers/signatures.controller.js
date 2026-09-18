@@ -1002,10 +1002,24 @@ async function list(req, res, next) {
 async function detail(req, res, next) {
   try {
     const [rows] = await pool.query(
-      `SELECT s.*, d.title AS documentTitle,
+      `SELECT s.id, s.entity_id AS entityId,
+              s.department_id AS departmentId,
+              s.document_id AS documentId,
+              d.title AS documentTitle,
+              s.approval_request_id AS approvalRequestId,
+              s.signature_rule_id AS signatureRuleId,
+              s.assigned_signer_user_id AS assignedSignerUserId,
               au.name AS assignedSignerUserName,
+              s.assigned_signer_role_id AS assignedSignerRoleId,
               ar.name AS assignedSignerRoleName,
-              su.name AS signedByName
+              s.signature_type AS signatureType,
+              s.status,
+              s.requested_by AS requestedBy,
+              s.signed_by AS signedBy,
+              su.name AS signedByName,
+              s.signed_at AS signedAt,
+              s.created_at AS createdAt,
+              s.updated_at AS updatedAt
          FROM signature_requests s
          JOIN documents d ON d.id=s.document_id
          LEFT JOIN users au ON au.id=s.assigned_signer_user_id
@@ -1019,7 +1033,9 @@ async function detail(req, res, next) {
 
     const [prechecks] = await pool.query(
       `SELECT id, status, summary, findings_json AS findingsJson,
-              provider, model, created_at AS createdAt
+              provider, model, tokens_in AS tokensIn,
+              tokens_out AS tokensOut, duration_ms AS durationMs,
+              created_at AS createdAt
          FROM signature_precheck_logs
         WHERE signature_request_id=?
         ORDER BY id DESC LIMIT 10`,
@@ -1033,7 +1049,8 @@ async function detail(req, res, next) {
               v.hash_algorithm AS hashAlgorithm,
               v.valid_until AS validUntil,
               v.qr_generated_at AS qrGeneratedAt,
-              v.created_at AS createdAt
+              v.created_at AS createdAt,
+              sd.signed_at AS signedAt
          FROM document_verifications v
          JOIN signed_documents sd ON sd.id=v.signed_document_id
         WHERE sd.signature_request_id=?

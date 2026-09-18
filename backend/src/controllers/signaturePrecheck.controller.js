@@ -27,14 +27,17 @@ async function run(req, res, next) {
     );
     if (!docs[0]) return fail(res, 'NOT_FOUND', 'Dokumen tidak ditemukan', 404);
 
+    let signatureRequest = null;
     if (signatureRequestId) {
       const [rows] = await pool.query(
-        `SELECT id FROM signature_requests
+        `SELECT id, approval_request_id AS approvalRequestId
+           FROM signature_requests
           WHERE id=? AND entity_id=? AND document_id=?
           LIMIT 1`,
         [signatureRequestId, entityId, documentId]
       );
-      if (!rows[0]) {
+      signatureRequest = rows[0] || null;
+      if (!signatureRequest) {
         return fail(res, 'VALIDATION_ERROR', 'Signature request tidak sesuai dokumen', 400);
       }
     }
@@ -43,12 +46,28 @@ async function run(req, res, next) {
       const [rows] = await pool.query(
         `SELECT id FROM approval_requests
           WHERE id=? AND entity_id=?
-            AND (document_id=? OR subject_id=?)
+            AND (
+              document_id=?
+              OR (subject_type='document' AND subject_id=?)
+            )
           LIMIT 1`,
         [approvalRequestId, entityId, documentId, documentId]
       );
       if (!rows[0]) {
         return fail(res, 'VALIDATION_ERROR', 'Approval request tidak sesuai dokumen', 400);
+      }
+
+      if (
+        signatureRequest &&
+        signatureRequest.approvalRequestId &&
+        Number(signatureRequest.approvalRequestId) !== Number(approvalRequestId)
+      ) {
+        return fail(
+          res,
+          'VALIDATION_ERROR',
+          'Approval request tidak sesuai signature request',
+          400
+        );
       }
     }
 

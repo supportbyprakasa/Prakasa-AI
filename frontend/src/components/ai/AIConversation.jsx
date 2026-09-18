@@ -325,8 +325,14 @@ export default function AIConversation({ sessionId, onSessionUpdated, onSessionD
         <AISessionSettings
           session={session}
           onClose={() => setSettingsOpen(false)}
-          onUpdated={loadSession}
-          onArchived={() => onSessionUpdated?.()}
+          onUpdated={async () => {
+            await loadSession();
+            onSessionUpdated?.();
+          }}
+          onArchived={async () => {
+            await loadSession();
+            onSessionUpdated?.();
+          }}
           onDeleted={() => {
             onSessionDeleted?.(session.id);
             onSessionUpdated?.();

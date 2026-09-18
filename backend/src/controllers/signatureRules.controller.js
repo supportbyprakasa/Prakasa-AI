@@ -45,8 +45,16 @@ function validateRuleShape(rule) {
     const error = new Error('Minimal documentTypeId atau appliesToFormId wajib');
     error.status = 400; error.code = 'VALIDATION_ERROR'; throw error;
   }
+  if (rule.documentTypeId && rule.appliesToFormId) {
+    const error = new Error('Pilih documentTypeId atau appliesToFormId, bukan keduanya');
+    error.status = 400; error.code = 'VALIDATION_ERROR'; throw error;
+  }
   if (!rule.requiredSignerRoleId && !rule.requiredSignerUserId) {
     const error = new Error('Minimal requiredSignerRoleId atau requiredSignerUserId wajib');
+    error.status = 400; error.code = 'VALIDATION_ERROR'; throw error;
+  }
+  if (rule.requiredSignerRoleId && rule.requiredSignerUserId) {
+    const error = new Error('Pilih signer role atau signer user, bukan keduanya');
     error.status = 400; error.code = 'VALIDATION_ERROR'; throw error;
   }
 }

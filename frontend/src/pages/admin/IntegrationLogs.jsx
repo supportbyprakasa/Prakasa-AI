@@ -215,7 +215,7 @@ export default function IntegrationLogs() {
             <div><b>Subject:</b> {detail.subjectType || '—'} #{detail.subjectId || '—'}</div>
             {detail.errorMessage && (
               <div style={{ color: 'var(--color-error)' }}>
-                <b>Error:</b> {detail.error_message}
+                <b>Error:</b> {detail.errorMessage}
               </div>
             )}
             {detail.requestMeta && (
@@ -224,7 +224,7 @@ export default function IntegrationLogs() {
                 <pre style={{
                   background: '#f8fafc', padding: 8, borderRadius: 6,
                   fontSize: 11, overflowX: 'auto', maxHeight: 200,
-                }}>{JSON.stringify(typeof detail.request_meta === 'string' ? JSON.parse(detail.request_meta) : detail.request_meta, null, 2)}</pre>
+                }}>{JSON.stringify(typeof detail.requestMeta === 'string' ? JSON.parse(detail.requestMeta) : detail.requestMeta, null, 2)}</pre>
               </div>
             )}
             {detail.responseMeta && (
@@ -233,7 +233,7 @@ export default function IntegrationLogs() {
                 <pre style={{
                   background: '#f8fafc', padding: 8, borderRadius: 6,
                   fontSize: 11, overflowX: 'auto', maxHeight: 200,
-                }}>{JSON.stringify(typeof detail.response_meta === 'string' ? JSON.parse(detail.response_meta) : detail.response_meta, null, 2)}</pre>
+                }}>{JSON.stringify(typeof detail.responseMeta === 'string' ? JSON.parse(detail.responseMeta) : detail.responseMeta, null, 2)}</pre>
               </div>
             )}
           </div>

@@ -353,49 +353,55 @@ async function convertMessageToTask(req, res, next) {
       }
     }
 
-    const [task] = await conn.query(
-      `INSERT INTO tasks
-       (entity_id, department_id, board_id, column_id,
-        title, description, priority, assignee_id,
-        reporter_id, due_date, source_type, source_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'chat', ?)`,
-      [
-        message.entityId,
-        taskDepartmentId,
-        resolvedBoardId,
-        columnId || null,
-        String(message.body).slice(0, 200),
-        message.body,
-        priority,
-        assigneeId || null,
-        req.user.sub,
-        dueDate || null,
-        message.id,
-      ]
-    );
+    const taskSvc = require('../services/task.service');
+    const created = await taskSvc.createTask({
+      input: {
+        entityId: message.entityId,
+        departmentId: taskDepartmentId,
+        boardId: resolvedBoardId,
+        columnId: columnId || null,
+        title: String(message.body).slice(0, 200),
+        description: message.body,
+        priority: priority || 'normal',
+        assigneeId: assigneeId || null,
+        dueDate: dueDate || null,
+      },
+      user: req.user,
+      trustedSource: { type: 'chat', id: message.id },
+      conn,
+    });
 
     await conn.query(
       `UPDATE chat_messages
           SET converted_task_id=?
         WHERE id=? AND converted_task_id IS NULL`,
-      [task.insertId, message.id]
+      [created.id, message.id]
     );
 
     await conn.commit();
+
+    try {
+      await taskSvc.finalizeCreatedTask({
+        taskId: created.id,
+        actorUserId: req.user.sub,
+      });
+    } catch {
+      // Task + chat conversion are already committed.
+    }
 
     await log({
       entityId: message.entityId,
       userId: req.user.sub,
       action: 'chat.convert_to_task',
       subjectType: 'task',
-      subjectId: task.insertId,
+      subjectId: created.id,
       metadata: {
         messageId: message.id,
         roomId: message.room_id,
       },
     });
 
-    return ok(res, { taskId: task.insertId }, undefined, 201);
+    return ok(res, { taskId: created.id }, undefined, 201);
   } catch (error) {
     try { await conn.rollback(); } catch { /* noop */ }
 

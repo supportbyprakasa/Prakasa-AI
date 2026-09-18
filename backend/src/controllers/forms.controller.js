@@ -14,8 +14,8 @@ function canUseForm(req, form) {
   const permissions = req.user?.permissions || [];
   if (permissions.includes('form.manage')) return true;
   if (form.is_public) return true;
-  if (!form.submit_permission_code) return true;
-  return permissions.includes(form.submit_permission_code);
+  const code = form.submit_permission_code || 'form.submit';
+  return permissions.includes(code);
 }
 
 async function validateReference(conn, table, id, entityId, extra = '1=1') {

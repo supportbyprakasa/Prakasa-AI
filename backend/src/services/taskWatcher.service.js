@@ -64,6 +64,10 @@ async function remove({ task, user, targetUserId, conn = pool }) {
     const e = new Error('Butuh permission task.watch.manage');
     e.status = 403; e.code = 'FORBIDDEN'; throw e;
   }
+  if (isSelf && !hasPerm(user, 'task.watch')) {
+    const e = new Error('Butuh permission task.watch');
+    e.status = 403; e.code = 'FORBIDDEN'; throw e;
+  }
 
   const [r] = await conn.query(
     `DELETE FROM task_watchers WHERE task_id = ? AND user_id = ?`,

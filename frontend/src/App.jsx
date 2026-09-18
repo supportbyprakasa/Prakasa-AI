@@ -65,6 +65,8 @@ import ApprovalDelegations from './pages/admin/ApprovalDelegations';
 import SignaturePrecheckLogs from './pages/admin/SignaturePrecheckLogs';
 import SignatureDetail from './pages/signatures/SignatureDetail';
 import VerifyDocument from './pages/public/VerifyDocument';
+import AICommandCenter from './pages/ai/AICommandCenter';
+import AIUsage from './pages/admin/AIUsage';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -143,6 +145,8 @@ export default function App() {
         <Route path="admin/approval-matrix" element={<ApprovalMatrix />} />
         <Route path="admin/approval-delegations" element={<ApprovalDelegations />} />
         <Route path="admin/signature-precheck" element={<SignaturePrecheckLogs />} />
+        <Route path="ai-command" element={<AICommandCenter />} />
+        <Route path="admin/ai-usage" element={<AIUsage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

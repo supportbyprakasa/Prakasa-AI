@@ -7,17 +7,17 @@ const { requireEntityScope } = require('../middleware/entityScope');
 const ctrl = require('../controllers/workflows.controller');
 
 const statusSchema = z.object({
-  code: z.string().min(1).max(80),
+  code: z.string().min(1).max(80).regex(/^[a-z0-9_-]+$/, 'Code hanya huruf kecil, angka, dash, underscore'),
   label: z.string().min(1).max(120),
-  color: z.string().max(20).optional(),
+  color: z.string().max(20).regex(/^#[0-9a-fA-F]{3,8}$/, 'Format warna hex tidak valid').optional(),
   isInitial: z.boolean().optional(),
   isFinal: z.boolean().optional(),
   orderIndex: z.number().int().optional(),
 });
 
 const transitionSchema = z.object({
-  fromStatusCode: z.string().min(1).max(80),
-  toStatusCode: z.string().min(1).max(80),
+  fromStatusCode: z.string().min(1).max(80).regex(/^[a-z0-9_-]+$/),
+  toStatusCode: z.string().min(1).max(80).regex(/^[a-z0-9_-]+$/),
   actionLabel: z.string().min(1).max(120),
   requiredPermissionCode: z.string().max(100).nullable().optional(),
   requiresApproval: z.boolean().optional(),

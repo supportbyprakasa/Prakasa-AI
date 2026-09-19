@@ -8,6 +8,7 @@ import {
   ListChecks, CalendarRange, Network, ShieldCheck, LayoutGrid, UserCheck, Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useNotificationCount } from '../context/NotificationContext';
 
 function useNavConfig() {
   const { user } = useAuth();
@@ -18,7 +19,7 @@ function useNavConfig() {
       items: [
         { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
         { to: '/search', label: 'Search', icon: Search, permission: 'search.global' },
-        { to: '/notifications', label: 'Notifikasi', icon: Bell },
+        { to: '/notifications', label: 'Notifikasi', icon: Bell, showUnreadBadge: true },
       ].filter((i) => has(i.permission)),
     },
     {
@@ -115,6 +116,7 @@ function useNavConfig() {
 
 export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
   const sections = useNavConfig();
+  const { unreadCount } = useNotificationCount();
 
   return (
     <aside
@@ -142,10 +144,59 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
                   `prakasa-sidebar__item ${isActive ? 'prakasa-sidebar__item--active' : ''}`
                 }
               >
-                <span className="prakasa-sidebar__item-icon">
+                <span className="prakasa-sidebar__item-icon" style={{ position: 'relative' }}>
                   <Icon size={24} strokeWidth={1.8} />
+                  {item.showUnreadBadge && unreadCount > 0 && collapsed && (
+                    <span
+                      aria-label={`${unreadCount} notifikasi belum dibaca`}
+                      style={{
+                        position: 'absolute',
+                        top: -4,
+                        right: -4,
+                        minWidth: 16,
+                        height: 16,
+                        padding: '0 4px',
+                        borderRadius: 999,
+                        background: 'var(--color-error, #dc2626)',
+                        color: '#fff',
+                        fontSize: 10,
+                        fontWeight: 700,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxSizing: 'border-box',
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
                 </span>
-                <span className="prakasa-sidebar__item-label">{item.label}</span>
+                <span className="prakasa-sidebar__item-label">
+                  {item.label}
+                  {item.showUnreadBadge && unreadCount > 0 && !collapsed && (
+                    <span
+                      aria-label={`${unreadCount} notifikasi belum dibaca`}
+                      style={{
+                        marginLeft: 8,
+                        minWidth: 20,
+                        padding: '1px 7px',
+                        borderRadius: 999,
+                        background: 'var(--color-error, #dc2626)',
+                        color: '#fff',
+                        fontSize: 10,
+                        fontWeight: 700,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        verticalAlign: 'middle',
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </span>
               </NavLink>
             );
           })}

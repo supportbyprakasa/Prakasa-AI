@@ -57,13 +57,28 @@ export default function NotificationCenter() {
     await refreshUnreadCount();
   };
 
-  const markRead = async (id) => {
+  const markRead = async (id, { silent = false } = {}) => {
     try {
       await api.patch(`/notifications/${id}/read`);
-      await load(page);
+      if (silent) {
+        setRows((current) =>
+          current.map((item) =>
+            Number(item.id) === Number(id)
+              ? { ...item, isRead: true, readAt: item.readAt || new Date().toISOString() }
+              : item
+          )
+        );
+        setMeta((current) => ({
+          ...current,
+          unreadCount: Math.max(0, Number(current.unreadCount || 0) - 1),
+        }));
+      } else {
+        await load(page);
+      }
       await afterMutation();
     } catch (e) {
       toast(e.response?.data?.error?.message || 'Gagal', 'error');
+      throw e;
     }
   };
 

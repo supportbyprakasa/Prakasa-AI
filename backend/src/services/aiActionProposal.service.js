@@ -232,7 +232,6 @@ async function executeCreateTask({ proposal, conn, user }) {
 
   const payload = safeParse(proposal.payload_json) || {};
   const title = String(payload.title || '').trim();
-
   if (!title) {
     const error = new Error('payload.title wajib untuk create_task');
     error.status = 400;
@@ -241,15 +240,17 @@ async function executeCreateTask({ proposal, conn, user }) {
   }
 
   const entityId = Number(proposal.entity_id);
-  const requestedEntityId = Number(payload.entityId || entityId);
-  if (requestedEntityId !== entityId) {
+  if (
+    payload.entityId != null &&
+    Number(payload.entityId) !== entityId
+  ) {
     const error = new Error('Task tidak boleh dibuat di entity berbeda dari proposal');
     error.status = 403;
     error.code = 'FORBIDDEN';
     throw error;
   }
 
-  let departmentId =
+  const departmentId =
     payload.departmentId != null
       ? Number(payload.departmentId)
       : proposal.department_id != null
@@ -270,169 +271,27 @@ async function executeCreateTask({ proposal, conn, user }) {
     throw error;
   }
 
-  if (departmentId != null) {
-    const [departments] = await conn.query(
-      `SELECT id FROM departments
-        WHERE id=? AND entity_id=? AND deleted_at IS NULL
-        LIMIT 1`,
-      [departmentId, entityId]
-    );
-    if (!departments[0]) {
-      const error = new Error('Department tidak valid');
-      error.status = 400;
-      error.code = 'VALIDATION_ERROR';
-      throw error;
-    }
-  }
-
-  let boardId = payload.boardId ? Number(payload.boardId) : null;
-  const columnId = payload.columnId ? Number(payload.columnId) : null;
-
-  let board = null;
-  if (boardId) {
-    const [boards] = await conn.query(
-      `SELECT id, department_id AS departmentId
-         FROM boards
-        WHERE id=? AND entity_id=? AND deleted_at IS NULL
-        LIMIT 1`,
-      [boardId, entityId]
-    );
-    board = boards[0] || null;
-    if (!board) {
-      const error = new Error('Board tidak valid');
-      error.status = 400;
-      error.code = 'VALIDATION_ERROR';
-      throw error;
-    }
-
-    if (departmentId == null && board.departmentId != null) {
-      departmentId = Number(board.departmentId);
-    } else if (
-      board.departmentId != null &&
-      departmentId != null &&
-      Number(board.departmentId) !== Number(departmentId)
-    ) {
-      const error = new Error('Board tidak sesuai department task');
-      error.status = 400;
-      error.code = 'VALIDATION_ERROR';
-      throw error;
-    }
-  }
-
-  if (columnId) {
-    const args = [columnId, entityId];
-    let sql =
-      `SELECT bc.id, bc.board_id AS boardId,
-              b.department_id AS departmentId
-         FROM board_columns bc
-         JOIN boards b ON b.id=bc.board_id
-        WHERE bc.id=?
-          AND b.entity_id=?
-          AND b.deleted_at IS NULL`;
-
-    if (boardId) {
-      sql += ' AND bc.board_id=?';
-      args.push(boardId);
-    }
-
-    sql += ' LIMIT 1';
-
-    const [columns] = await conn.query(sql, args);
-    if (!columns[0]) {
-      const error = new Error(
-        boardId
-          ? 'Column tidak berada pada board yang dipilih'
-          : 'Column tidak valid'
-      );
-      error.status = 400;
-      error.code = 'VALIDATION_ERROR';
-      throw error;
-    }
-    if (!boardId) boardId = Number(columns[0].boardId);
-
-    if (departmentId == null && columns[0].departmentId != null) {
-      departmentId = Number(columns[0].departmentId);
-    } else if (
-      columns[0].departmentId != null &&
-      departmentId != null &&
-      Number(columns[0].departmentId) !== Number(departmentId)
-    ) {
-      const error = new Error('Column berada pada board department berbeda');
-      error.status = 400;
-      error.code = 'VALIDATION_ERROR';
-      throw error;
-    }
-  }
-
-  const assigneeId = payload.assigneeId
-    ? Number(payload.assigneeId)
-    : null;
-
-  if (assigneeId) {
-    const [users] = await conn.query(
-      `SELECT id, department_id AS departmentId
-         FROM users
-        WHERE id=? AND entity_id=?
-          AND status='active' AND deleted_at IS NULL
-        LIMIT 1`,
-      [assigneeId, entityId]
-    );
-    const assignee = users[0];
-    if (!assignee) {
-      const error = new Error('Assignee tidak valid');
-      error.status = 400;
-      error.code = 'VALIDATION_ERROR';
-      throw error;
-    }
-
-    if (
-      departmentId != null &&
-      assignee.departmentId != null &&
-      Number(assignee.departmentId) !== Number(departmentId) &&
-      !hasPerm(user, 'ai_command.admin.view')
-    ) {
-      const error = new Error('Assignee berada di department lain');
-      error.status = 403;
-      error.code = 'FORBIDDEN';
-      throw error;
-    }
-  }
-
-  const priority = ['low', 'normal', 'high', 'urgent'].includes(payload.priority)
-    ? payload.priority
-    : 'normal';
-
-  const dueDate = payload.dueDate == null || payload.dueDate === ''
-    ? null
-    : String(payload.dueDate);
-  if (dueDate && !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
-    const error = new Error('dueDate harus berformat YYYY-MM-DD');
-    error.status = 400;
-    error.code = 'VALIDATION_ERROR';
-    throw error;
-  }
-
-  const [task] = await conn.query(
-    `INSERT INTO tasks
-     (entity_id, department_id, board_id, column_id, title, description,
-      priority, assignee_id, reporter_id, due_date, source_type, source_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ai_action', ?)`,
-    [
+  const taskSvc = require('./task.service');
+  const created = await taskSvc.createTask({
+    input: {
       entityId,
       departmentId,
-      boardId,
-      columnId,
-      title.slice(0, 255),
-      payload.description ? String(payload.description).slice(0, 10000) : null,
-      priority,
-      assigneeId,
-      user.sub,
-      dueDate,
-      proposal.id,
-    ]
-  );
+      boardId: payload.boardId != null ? Number(payload.boardId) : null,
+      columnId: payload.columnId != null ? Number(payload.columnId) : null,
+      title,
+      description: payload.description || null,
+      priority: payload.priority || 'normal',
+      assigneeId: payload.assigneeId != null ? Number(payload.assigneeId) : null,
+      startDate: payload.startDate || null,
+      dueDate: payload.dueDate || null,
+      progressPercent: payload.progressPercent,
+    },
+    user,
+    trustedSource: { type: 'ai_action', id: proposal.id },
+    conn,
+  });
 
-  return { taskId: task.insertId };
+  return { taskId: created.id };
 }
 
 async function confirmProposal({ proposalId, user }) {
@@ -582,17 +441,31 @@ async function confirmProposal({ proposalId, user }) {
 
     await conn.commit();
 
-    await activityLog({
-      entityId: proposal.entity_id,
-      userId: user.sub,
-      action: 'ai_action.execute',
-      subjectType: 'ai_action_proposal',
-      subjectId: proposalId,
-      metadata: {
-        actionType: proposal.action_type,
+    try {
+      const taskSvc = require('./task.service');
+      await taskSvc.finalizeCreatedTask({
         taskId: executionResult.taskId,
-      },
-    });
+        actorUserId: user.sub,
+      });
+    } catch {
+      // Proposal/task are already committed; notification/log side effects are best effort.
+    }
+
+    try {
+      await activityLog({
+        entityId: proposal.entity_id,
+        userId: user.sub,
+        action: 'ai_action.execute',
+        subjectType: 'ai_action_proposal',
+        subjectId: proposalId,
+        metadata: {
+          actionType: proposal.action_type,
+          taskId: executionResult.taskId,
+        },
+      });
+    } catch {
+      // Proposal/task execution is already committed.
+    }
 
     return {
       id: proposalId,

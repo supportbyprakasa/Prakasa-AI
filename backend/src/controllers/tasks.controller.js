@@ -1,162 +1,237 @@
-const pool = require('../db/pool');
+const taskSvc = require('../services/task.service');
+const checklistSvc = require('../services/taskChecklist.service');
+const watcherSvc = require('../services/taskWatcher.service');
+const dependencySvc = require('../services/taskDependency.service');
+const taskActivity = require('../services/taskActivity.service');
+const taskAccess = require('../services/taskAccess.service');
 const { ok, fail } = require('../utils/response');
-const { log } = require('../services/activityLog.service');
-const notif = require('../services/notification.service');
+
+function svcError(e, res, next) {
+  if ([400, 403, 404, 409].includes(e.status)) {
+    const fallback =
+      e.status === 403 ? 'FORBIDDEN' :
+      e.status === 404 ? 'NOT_FOUND' :
+      e.status === 409 ? 'CONFLICT' :
+      'VALIDATION_ERROR';
+    return fail(res, e.code || fallback, e.message, e.status);
+  }
+  return next(e);
+}
+
+/* ============================================================
+   Task CRUD
+   ============================================================ */
 
 async function listByBoard(req, res, next) {
   try {
-    const { id } = req.params; // board id
-    const where = ['t.deleted_at IS NULL', 't.board_id = ?'];
-    const args = [id];
-    if (req.query.assigneeId) { where.push('t.assignee_id = ?'); args.push(req.query.assigneeId); }
-    if (req.query.priority) { where.push('t.priority = ?'); args.push(req.query.priority); }
-
-    const [rows] = await pool.query(
-      `SELECT t.id, t.board_id AS boardId, t.column_id AS columnId,
-              t.title, t.description, t.status, t.priority,
-              t.assignee_id AS assigneeId, u.name AS assigneeName,
-              t.reporter_id AS reporterId, t.due_date AS dueDate,
-              t.position, t.created_at AS createdAt
-         FROM tasks t
-         LEFT JOIN users u ON u.id = t.assignee_id
-        WHERE ${where.join(' AND ')}
-        ORDER BY t.column_id ASC, t.position ASC, t.id ASC`, args
-    );
+    const rows = await taskSvc.listTasksByBoard({
+      boardId: Number(req.params.id),
+      user: req.user,
+      filters: {
+        assigneeId: req.query.assigneeId ? Number(req.query.assigneeId) : undefined,
+        priority: req.query.priority,
+        status: req.query.status,
+      },
+    });
     return ok(res, rows);
-  } catch (e) { next(e); }
+  } catch (e) { return svcError(e, res, next); }
 }
 
 async function detail(req, res, next) {
   try {
-    const { id } = req.params;
-    const [rows] = await pool.query(
-      `SELECT t.*, u.name AS assigneeName FROM tasks t
-         LEFT JOIN users u ON u.id=t.assignee_id
-        WHERE t.id=? AND t.deleted_at IS NULL`, [id]
-    );
-    if (!rows[0]) return fail(res, 'NOT_FOUND', 'Task tidak ditemukan', 404);
-    const [comments] = await pool.query(
-      `SELECT c.id, c.body, c.user_id AS userId, u.name AS userName, c.created_at AS createdAt
-         FROM task_comments c JOIN users u ON u.id=c.user_id
-        WHERE c.task_id=? ORDER BY c.id ASC`, [id]
-    );
-    const [attachments] = await pool.query(
-      `SELECT id, drive_file_id AS driveFileId, name, mime_type AS mimeType,
-              web_view_link AS webViewLink, created_at AS createdAt
-         FROM task_attachments WHERE task_id=? ORDER BY id DESC`, [id]
-    );
-    return ok(res, { ...rows[0], comments, attachments });
-  } catch (e) { next(e); }
+    const data = await taskSvc.getTaskDetail({
+      taskId: Number(req.params.id), user: req.user,
+    });
+    return ok(res, data);
+  } catch (e) { return svcError(e, res, next); }
 }
 
 async function create(req, res, next) {
   try {
-    const {
-      entityId, departmentId, boardId, columnId, title, description,
-      priority = 'normal', assigneeId, dueDate, sourceType, sourceId,
-    } = req.body;
-    const [r] = await pool.query(
-      `INSERT INTO tasks
-       (entity_id, department_id, board_id, column_id, title, description,
-        priority, assignee_id, reporter_id, due_date, source_type, source_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [entityId, departmentId || null, boardId || null, columnId || null,
-       title, description || null, priority, assigneeId || null, req.user.sub,
-       dueDate || null, sourceType || null, sourceId || null]
-    );
-    await log({
-      entityId, userId: req.user.sub,
-      action: 'task.create', subjectType: 'task', subjectId: r.insertId,
-      metadata: { title, assigneeId, boardId, sourceType, sourceId },
+    // Public POST: entityId allowed but validated by service.
+    // sourceType from body is IGNORED (forced to 'manual').
+    const r = await taskSvc.createTask({
+      input: req.body,
+      user: req.user,
+      trustedSource: null,
     });
-    if (assigneeId && assigneeId !== req.user.sub) {
-      await notif.create({
-        userId: assigneeId, entityId,
-        title: 'Task baru untuk Anda',
-        body: title,
-        event: 'task.assigned',
-        subjectType: 'task', subjectId: r.insertId,
-        actionUrl: `/tasks/${r.insertId}`,
-      });
-    }
-    return ok(res, { id: r.insertId }, undefined, 201);
-  } catch (e) { next(e); }
+    return ok(res, { id: r.id }, undefined, 201);
+  } catch (e) { return svcError(e, res, next); }
 }
 
 async function update(req, res, next) {
   try {
-    const { id } = req.params;
-    const {
-      title, description, columnId, status, priority, assigneeId, dueDate, position,
-    } = req.body;
-
-    const [prev] = await pool.query(`SELECT * FROM tasks WHERE id=? AND deleted_at IS NULL`, [id]);
-    if (!prev[0]) return fail(res, 'NOT_FOUND', 'Task tidak ditemukan', 404);
-
-    await pool.query(
-      `UPDATE tasks SET
-         title=COALESCE(?,title), description=COALESCE(?,description),
-         column_id=COALESCE(?,column_id), status=COALESCE(?,status),
-         priority=COALESCE(?,priority), assignee_id=COALESCE(?,assignee_id),
-         due_date=COALESCE(?,due_date), position=COALESCE(?,position),
-         completed_at = CASE WHEN ? = 'done' AND completed_at IS NULL THEN NOW()
-                             WHEN ? <> 'done' THEN NULL ELSE completed_at END
-       WHERE id=?`,
-      [title || null, description || null, columnId ?? null, status || null,
-       priority || null, assigneeId ?? null, dueDate || null, position ?? null,
-       status || '', status || '', id]
-    );
-
-    await log({
-      entityId: prev[0].entity_id, userId: req.user.sub,
-      action: 'task.update', subjectType: 'task', subjectId: Number(id),
-      metadata: req.body,
+    const r = await taskSvc.updateTask({
+      taskId: Number(req.params.id),
+      patch: req.body,
+      user: req.user,
     });
-
-    if (assigneeId && assigneeId !== prev[0].assignee_id) {
-      await notif.create({
-        userId: assigneeId, entityId: prev[0].entity_id,
-        title: 'Anda ditugaskan ke task',
-        body: prev[0].title,
-        event: 'task.assigned',
-        subjectType: 'task', subjectId: Number(id),
-        actionUrl: `/tasks/${id}`,
-      });
-    }
-
-    return ok(res, { id: Number(id) });
-  } catch (e) { next(e); }
+    return ok(res, r);
+  } catch (e) { return svcError(e, res, next); }
 }
 
 async function remove(req, res, next) {
   try {
-    const { id } = req.params;
-    const [r] = await pool.query(
-      `UPDATE tasks SET deleted_at=NOW() WHERE id=? AND deleted_at IS NULL`, [id]
-    );
-    if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'Task tidak ditemukan', 404);
-    await log({
-      entityId: null, userId: req.user.sub,
-      action: 'task.delete', subjectType: 'task', subjectId: Number(id),
+    const r = await taskSvc.deleteTask({
+      taskId: Number(req.params.id), user: req.user,
     });
-    return ok(res, { id: Number(id) });
-  } catch (e) { next(e); }
+    return ok(res, r);
+  } catch (e) { return svcError(e, res, next); }
 }
 
 async function addComment(req, res, next) {
   try {
-    const { id } = req.params;
-    const { body } = req.body;
-    const [r] = await pool.query(
-      `INSERT INTO task_comments (task_id, user_id, body) VALUES (?, ?, ?)`,
-      [id, req.user.sub, body]
-    );
-    await log({
-      entityId: null, userId: req.user.sub,
-      action: 'task.comment', subjectType: 'task', subjectId: Number(id),
+    const r = await taskSvc.addComment({
+      taskId: Number(req.params.id), user: req.user, body: req.body.body,
     });
-    return ok(res, { id: r.insertId }, undefined, 201);
-  } catch (e) { next(e); }
+    return ok(res, r, undefined, 201);
+  } catch (e) { return svcError(e, res, next); }
 }
 
-module.exports = { listByBoard, detail, create, update, remove, addComment };
+/* ============================================================
+   Activity
+   ============================================================ */
+
+async function listActivity(req, res, next) {
+  try {
+    const task = await taskAccess.loadTask(Number(req.params.id));
+    if (!task) return fail(res, 'NOT_FOUND', 'Task tidak ditemukan', 404);
+    taskAccess.assertTaskAccess({ user: req.user, task, action: 'view' });
+    const r = await taskActivity.list({
+      taskId: task.id,
+      page: Math.max(1, parseInt(req.query.page) || 1),
+      limit: Math.min(200, parseInt(req.query.limit) || 50),
+    });
+    return ok(res, r.rows, { page: r.page, limit: r.limit, total: r.total });
+  } catch (e) { return svcError(e, res, next); }
+}
+
+/* ============================================================
+   Watchers
+   ============================================================ */
+
+async function listWatchers(req, res, next) {
+  try {
+    const task = await taskAccess.loadTask(Number(req.params.id));
+    const r = await watcherSvc.list({ task, user: req.user });
+    return ok(res, r);
+  } catch (e) { return svcError(e, res, next); }
+}
+
+async function addWatcher(req, res, next) {
+  try {
+    const task = await taskAccess.loadTask(Number(req.params.id));
+    const userId = req.body.userId ? Number(req.body.userId) : req.user.sub;
+    const r = await watcherSvc.add({ task, user: req.user, targetUserId: userId });
+    return ok(res, r, undefined, 201);
+  } catch (e) { return svcError(e, res, next); }
+}
+
+async function removeWatcher(req, res, next) {
+  try {
+    const task = await taskAccess.loadTask(Number(req.params.id));
+    const r = await watcherSvc.remove({
+      task, user: req.user, targetUserId: Number(req.params.userId),
+    });
+    return ok(res, r);
+  } catch (e) { return svcError(e, res, next); }
+}
+
+/* ============================================================
+   Checklist
+   ============================================================ */
+
+async function listChecklist(req, res, next) {
+  try {
+    const task = await taskAccess.loadTask(Number(req.params.id));
+    const r = await checklistSvc.list({ task, user: req.user });
+    return ok(res, r);
+  } catch (e) { return svcError(e, res, next); }
+}
+
+async function addChecklistItem(req, res, next) {
+  try {
+    const task = await taskAccess.loadTask(Number(req.params.id));
+    const r = await checklistSvc.create({
+      task, user: req.user, title: req.body.title, position: req.body.position,
+    });
+    return ok(res, r, undefined, 201);
+  } catch (e) { return svcError(e, res, next); }
+}
+
+async function patchChecklistItem(req, res, next) {
+  try {
+    const task = await taskAccess.loadTask(Number(req.params.id));
+    const r = await checklistSvc.patch({
+      task,
+      user: req.user,
+      itemId: Number(req.params.itemId),
+      changes: req.body,
+    });
+    return ok(res, r);
+  } catch (e) { return svcError(e, res, next); }
+}
+
+async function removeChecklistItem(req, res, next) {
+  try {
+    const task = await taskAccess.loadTask(Number(req.params.id));
+    const r = await checklistSvc.remove({
+      task, user: req.user, itemId: Number(req.params.itemId),
+    });
+    return ok(res, r);
+  } catch (e) { return svcError(e, res, next); }
+}
+
+async function reorderChecklist(req, res, next) {
+  try {
+    const task = await taskAccess.loadTask(Number(req.params.id));
+    const r = await checklistSvc.reorder({
+      task, user: req.user, orderedIds: req.body.orderedIds,
+    });
+    return ok(res, r);
+  } catch (e) { return svcError(e, res, next); }
+}
+
+/* ============================================================
+   Dependencies
+   ============================================================ */
+
+async function listDependencies(req, res, next) {
+  try {
+    const task = await taskAccess.loadTask(Number(req.params.id));
+    const r = await dependencySvc.list({ task, user: req.user });
+    return ok(res, r);
+  } catch (e) { return svcError(e, res, next); }
+}
+
+async function addDependency(req, res, next) {
+  try {
+    const task = await taskAccess.loadTask(Number(req.params.id));
+    const r = await dependencySvc.add({
+      task, user: req.user,
+      predecessorTaskId: req.body.predecessorTaskId,
+      successorTaskId: req.body.successorTaskId,
+      dependencyType: req.body.dependencyType,
+    });
+    return ok(res, r, undefined, 201);
+  } catch (e) { return svcError(e, res, next); }
+}
+
+async function removeDependency(req, res, next) {
+  try {
+    const task = await taskAccess.loadTask(Number(req.params.id));
+    const r = await dependencySvc.remove({
+      task, user: req.user, dependencyId: Number(req.params.dependencyId),
+    });
+    return ok(res, r);
+  } catch (e) { return svcError(e, res, next); }
+}
+
+module.exports = {
+  listByBoard, detail, create, update, remove, addComment,
+  listActivity,
+  listWatchers, addWatcher, removeWatcher,
+  listChecklist, addChecklistItem, patchChecklistItem,
+  removeChecklistItem, reorderChecklist,
+  listDependencies, addDependency, removeDependency,
+};

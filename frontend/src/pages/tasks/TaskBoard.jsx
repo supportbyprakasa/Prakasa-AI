@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, RefreshCw, ArrowLeft, Layers, AlertTriangle, Lock } from 'lucide-react';
+import { Plus, RefreshCw, ArrowLeft, Layers } from 'lucide-react';
 import api from '../../api/client';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
@@ -39,11 +39,11 @@ function isDueToday(task) {
 }
 
 export default function TaskBoard() {
-  const nav = useNavigate();
   const { user } = useAuth();
   const [boards, setBoards] = useState([]);
   const [boardsLoading, setBoardsLoading] = useState(true);
   const [selectedBoardId, setSelectedBoardId] = useState(null);
+  const [createBoardOpen, setCreateBoardOpen] = useState(false);
 
   const canManageBoard = (user?.permissions || []).includes('board.manage');
   const canCreateTask = (user?.permissions || []).includes('task.create');
@@ -89,7 +89,7 @@ export default function TaskBoard() {
             <RefreshCw size={14} />
           </Button>
           {canManageBoard && (
-            <Button onClick={openCreateBoard}>
+            <Button onClick={() => setCreateBoardOpen(true)}>
               <Plus size={14} /> Board
             </Button>
           )}
@@ -152,26 +152,16 @@ export default function TaskBoard() {
         </div>
       )}
 
-      <CreateBoardModalHost onCreated={(id) => { loadBoards(); setSelectedBoardId(id); }} />
+      <CreateBoardModal
+        open={createBoardOpen}
+        onClose={() => setCreateBoardOpen(false)}
+        onCreated={(id) => {
+          setCreateBoardOpen(false);
+          loadBoards();
+          setSelectedBoardId(id);
+        }}
+      />
     </div>
-  );
-}
-
-/* ============================================================
-   Small helper to open the create-board modal from the header button
-   without adding an extra state hook at the top level.
-   ============================================================ */
-let _openCreateBoard = null;
-function openCreateBoard() { if (_openCreateBoard) _openCreateBoard(); }
-function CreateBoardModalHost({ onCreated }) {
-  const [open, setOpen] = useState(false);
-  useEffect(() => { _openCreateBoard = () => setOpen(true); return () => { _openCreateBoard = null; }; }, []);
-  return (
-    <CreateBoardModal
-      open={open}
-      onClose={() => setOpen(false)}
-      onCreated={(id) => { setOpen(false); onCreated?.(id); }}
-    />
   );
 }
 
@@ -473,9 +463,26 @@ function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoar
             <option value="urgent">Urgent</option>
           </select>
         </div>
+        <div style={{ minWidth: 140 }}>
+          <select
+            value={filters.status}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+            style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+          >
+            <option value="">Semua status</option>
+            <option value="open">Open</option>
+            <option value="in_progress">In Progress</option>
+            <option value="review">Review</option>
+            <option value="done">Done</option>
+            <option value="closed">Closed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
         <Input
           placeholder="Assignee ID"
           type="number"
+          min="1"
           value={filters.assigneeId}
           onChange={(e) => setFilters({ ...filters, assigneeId: e.target.value })}
           style={{ width: 140, margin: 0 }}
@@ -493,7 +500,8 @@ function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoar
       }}>
         {board.columns.map((col) => {
           const colTasks = filteredTasks.filter((t) => Number(t.columnId) === Number(col.id));
-          const nonFinal = colTasks.filter((t) => !FINAL_STATUSES.has(t.status)).length;
+          const allColumnTasks = tasks.filter((t) => Number(t.columnId) === Number(col.id));
+          const nonFinal = allColumnTasks.filter((t) => !FINAL_STATUSES.has(t.status)).length;
           const wipExceeded = col.wipLimit != null && nonFinal >= Number(col.wipLimit);
 
           return (
@@ -536,6 +544,7 @@ function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoar
                     dragging={dragging?.id === t.id}
                     canDrag={canUpdateTask && !board.isArchived}
                     onDragStart={onDragStart}
+                    onDragEnd={() => setDragging(null)}
                     onClick={() => nav(`/tasks/${t.id}`)}
                   />
                 ))}
@@ -577,7 +586,7 @@ function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoar
    Task card
    ============================================================ */
 
-function TaskCard({ task, dragging, canDrag, onDragStart, onClick }) {
+function TaskCard({ task, dragging, canDrag, onDragStart, onDragEnd, onClick }) {
   const overdue = isOverdue(task);
   const dueToday = isDueToday(task);
   const done = FINAL_STATUSES.has(task.status);
@@ -586,7 +595,7 @@ function TaskCard({ task, dragging, canDrag, onDragStart, onClick }) {
     <div
       draggable={canDrag}
       onDragStart={(e) => onDragStart(e, task)}
-      onDragEnd={() => {}}
+      onDragEnd={onDragEnd}
       onClick={onClick}
       style={{
         background: 'var(--color-surface)',
@@ -713,7 +722,7 @@ function CreateTaskModal({ open, onClose, board, onCreated }) {
         />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
         <div>
           <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Kolom</label>
           <select
@@ -741,7 +750,7 @@ function CreateTaskModal({ open, onClose, board, onCreated }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
         <Input
           label="Assignee ID (opsional)"
           type="number"

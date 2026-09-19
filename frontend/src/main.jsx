@@ -17,12 +17,12 @@ const app = (
     }}
   >
     <AuthProvider>
-      <NotificationProvider>
-        <ErrorBoundary>
+      <ErrorBoundary>
+        <NotificationProvider>
           <App />
           <ToastHost />
-        </ErrorBoundary>
-      </NotificationProvider>
+        </NotificationProvider>
+      </ErrorBoundary>
     </AuthProvider>
   </BrowserRouter>
 );

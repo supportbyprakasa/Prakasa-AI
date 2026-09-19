@@ -236,11 +236,13 @@ function CreateBoardModal({ open, onClose, onCreated }) {
       <Input
         label="Nama Board *"
         value={form.name}
+        maxLength={190}
         onChange={(e) => setForm({ ...form, name: e.target.value })}
       />
       <Input
         label="Deskripsi"
         value={form.description}
+        maxLength={500}
         onChange={(e) => setForm({ ...form, description: e.target.value })}
       />
       <Input
@@ -269,6 +271,7 @@ function CreateBoardModal({ open, onClose, onCreated }) {
           <Input
             label={idx === 0 ? 'Nama' : ''}
             value={c.name}
+            maxLength={190}
             onChange={(e) => setCol(idx, 'name', e.target.value)}
             style={{ margin: 0 }}
           />
@@ -318,11 +321,7 @@ function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoar
     try {
       const [b, t] = await Promise.all([
         api.get(`/boards/${boardId}`),
-        api.get(`/boards/${boardId}/tasks`, {
-          params: Object.fromEntries(
-            Object.entries(filters).filter(([, v]) => v !== '')
-          ),
-        }),
+        api.get(`/boards/${boardId}/tasks`),
       ]);
       setBoard(b.data.data);
       setTasks(t.data.data || []);
@@ -342,13 +341,18 @@ function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoar
     }
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [boardId, filters.assigneeId, filters.priority, filters.status]);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [boardId]);
 
   const filteredTasks = useMemo(() => {
-    if (!localSearch.trim()) return tasks;
-    const q = localSearch.toLowerCase();
-    return tasks.filter((t) => (t.title || '').toLowerCase().includes(q));
-  }, [tasks, localSearch]);
+    const q = localSearch.trim().toLowerCase();
+    return tasks.filter((task) => {
+      if (q && !(task.title || '').toLowerCase().includes(q)) return false;
+      if (filters.priority && task.priority !== filters.priority) return false;
+      if (filters.status && task.status !== filters.status) return false;
+      if (filters.assigneeId && Number(task.assigneeId) !== Number(filters.assigneeId)) return false;
+      return true;
+    });
+  }, [tasks, localSearch, filters.priority, filters.status, filters.assigneeId]);
 
   const onDragStart = (e, task) => {
     if (!canUpdateTask || board?.isArchived) {
@@ -735,12 +739,14 @@ function CreateTaskModal({ open, onClose, board, onCreated }) {
       <Input
         label="Judul *"
         value={form.title}
+        maxLength={255}
         onChange={(e) => setForm({ ...form, title: e.target.value })}
       />
       <div style={{ marginBottom: 12 }}>
         <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Deskripsi</label>
         <textarea
           value={form.description}
+          maxLength={10000}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           rows={3}
           style={{

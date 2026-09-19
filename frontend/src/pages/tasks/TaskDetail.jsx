@@ -252,6 +252,7 @@ export default function TaskDetail() {
             <Input
               label="Judul"
               value={form.title}
+              maxLength={255}
               onChange={(e) => setField('title', e.target.value)}
               disabled={!canUpdate}
             />
@@ -260,6 +261,7 @@ export default function TaskDetail() {
               <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Deskripsi</label>
               <textarea
                 value={form.description || ''}
+                maxLength={10000}
                 onChange={(e) => setField('description', e.target.value)}
                 rows={4}
                 disabled={!canUpdate}

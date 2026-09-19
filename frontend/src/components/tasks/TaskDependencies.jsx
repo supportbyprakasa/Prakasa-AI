@@ -146,11 +146,15 @@ function AddDependencyModal({ open, onClose, taskId, onAdded }) {
   const [saving, setSaving] = useState(false);
 
   const submit = async () => {
-    if (!otherId || isNaN(Number(otherId))) {
+    const other = Number(otherId);
+    if (!Number.isInteger(other) || other <= 0) {
       toast('Task ID tidak valid', 'error');
       return;
     }
-    const other = Number(otherId);
+    if (other === Number(taskId)) {
+      toast('Task tidak dapat bergantung ke dirinya sendiri.', 'error');
+      return;
+    }
 
     let predecessorTaskId;
     let successorTaskId;
@@ -209,6 +213,8 @@ function AddDependencyModal({ open, onClose, taskId, onAdded }) {
       <Input
         label="Task ID lainnya"
         type="number"
+        min="1"
+        step="1"
         value={otherId}
         onChange={(e) => setOtherId(e.target.value)}
       />

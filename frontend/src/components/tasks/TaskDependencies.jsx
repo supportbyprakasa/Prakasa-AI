@@ -71,11 +71,16 @@ export default function TaskDependencies({ task, canManage, onChanged }) {
           <Section
             icon={LinkIcon}
             label="Related"
-            rows={(data.related || []).map((r) => ({
-              id: r.id,
-              taskId: r.predecessorTaskId === task.id ? r.successorTaskId : r.predecessorTaskId,
-              title: `Task #${r.predecessorTaskId === task.id ? r.successorTaskId : r.predecessorTaskId}`,
-            }))}
+            rows={(data.related || []).map((r) => {
+              const taskIsPredecessor = Number(r.predecessorTaskId) === Number(task.id);
+              const relatedTaskId = taskIsPredecessor ? r.successorTaskId : r.predecessorTaskId;
+              const relatedTitle = taskIsPredecessor ? r.successorTitle : r.predecessorTitle;
+              return {
+                id: r.id,
+                taskId: relatedTaskId,
+                title: relatedTitle || `Task #${relatedTaskId}`,
+              };
+            })}
             canManage={canManage}
             onRemove={remove}
           />

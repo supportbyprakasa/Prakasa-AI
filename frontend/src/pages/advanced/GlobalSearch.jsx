@@ -93,6 +93,11 @@ export default function GlobalSearch() {
     } = opts || {};
 
     const query = String(qq || '').trim();
+    const permittedTypeValues = new Set(visibleTypes.map((item) => item.value));
+    const safeTypes = Array.isArray(tt)
+      ? tt.filter((type) => permittedTypeValues.has(type))
+      : [];
+    const safeEntityId = canCrossEntity ? ee : '';
     if (query.length < 2) {
       toast('Kata kunci minimal 2 karakter', 'error');
       return;
@@ -103,8 +108,8 @@ export default function GlobalSearch() {
 
     try {
       const p = { q: query, page: pp, limit: PAGE_SIZE };
-      if (tt && tt.length) p.type = tt.join(',');
-      if (ee) p.entityId = ee;
+      if (safeTypes.length) p.type = safeTypes.join(',');
+      if (safeEntityId) p.entityId = safeEntityId;
 
       const r = await api.get('/search', { params: p });
       setResults(r.data.data || []);
@@ -121,7 +126,7 @@ export default function GlobalSearch() {
     } finally {
       setLoading(false);
     }
-  }, [q, types, entityId]);
+  }, [q, types, entityId, visibleTypes, canCrossEntity]);
 
   useEffect(() => {
     if (initialQ.length >= 2) {
@@ -132,8 +137,11 @@ export default function GlobalSearch() {
 
   const submit = (e) => {
     e.preventDefault();
-    writeUrl({ q, types, entityId, page: 1 });
-    runSearch({ qq: q, tt: types, ee: entityId, pp: 1 });
+    const safeEntityId = canCrossEntity ? entityId : '';
+    const permittedTypeValues = new Set(visibleTypes.map((item) => item.value));
+    const safeTypes = types.filter((type) => permittedTypeValues.has(type));
+    writeUrl({ q, types: safeTypes, entityId: safeEntityId, page: 1 });
+    runSearch({ qq: q, tt: safeTypes, ee: safeEntityId, pp: 1 });
   };
 
   const toggleType = (t) => {
@@ -144,8 +152,11 @@ export default function GlobalSearch() {
 
   const goPage = (nextPage) => {
     if (nextPage < 1) return;
-    writeUrl({ q, types, entityId, page: nextPage });
-    runSearch({ qq: q, tt: types, ee: entityId, pp: nextPage });
+    const safeEntityId = canCrossEntity ? entityId : '';
+    const permittedTypeValues = new Set(visibleTypes.map((item) => item.value));
+    const safeTypes = types.filter((type) => permittedTypeValues.has(type));
+    writeUrl({ q, types: safeTypes, entityId: safeEntityId, page: nextPage });
+    runSearch({ qq: q, tt: safeTypes, ee: safeEntityId, pp: nextPage });
   };
 
   const totalPages = useMemo(() => {

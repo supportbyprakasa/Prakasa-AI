@@ -302,6 +302,7 @@ export default function TaskDetail() {
                 type="number"
                 min={0}
                 max={100}
+                step={1}
                 value={form.progressPercent}
                 onChange={(e) => setField('progressPercent', e.target.value)}
                 disabled={!canUpdate || done}
@@ -385,7 +386,7 @@ export default function TaskDetail() {
               </div>
               <div>
                 <span style={{ color: 'var(--color-text-muted)' }}>Column:</span>{' '}
-                #{task.columnId || '—'}
+                {task.columnId ? `#${task.columnId}` : '—'}
               </div>
             </div>
 
@@ -394,6 +395,8 @@ export default function TaskDetail() {
                 <Input
                   label="Assignee ID"
                   type="number"
+                  min="1"
+                  step="1"
                   value={form.assigneeId || ''}
                   onChange={(e) => setField('assigneeId', e.target.value)}
                 />

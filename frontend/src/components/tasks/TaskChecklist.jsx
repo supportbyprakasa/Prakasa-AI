@@ -170,6 +170,7 @@ export default function TaskChecklist({ taskId, canManage, onChanged }) {
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="Judul item"
+            maxLength={500}
             onKeyDown={(e) => { if (e.key === 'Enter') add(); }}
             style={{ flex: 1, margin: 0 }}
           />

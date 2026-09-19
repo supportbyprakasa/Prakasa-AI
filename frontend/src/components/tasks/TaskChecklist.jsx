@@ -32,12 +32,6 @@ export default function TaskChecklist({ taskId, canManage, onChanged }) {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [taskId]);
 
-  const afterMutate = (fresh) => {
-    if (fresh) setData(fresh);
-    else load();
-    onChanged?.();
-  };
-
   const add = async () => {
     const title = newTitle.trim();
     if (!title) return;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
-  ArrowLeft, Save, Trash2, CheckCircle2, RotateCcw, AlertTriangle,
+  ArrowLeft, Save, Trash2, CheckCircle2, RotateCcw,
 } from 'lucide-react';
 import api from '../../api/client';
 import Card from '../../components/Card';
@@ -44,7 +44,8 @@ export default function TaskDetail() {
   const [dirty, setDirty] = useState({});
   const [saving, setSaving] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [deleteOpen, setDeleteOpen] = useState(false);  const [comment, setComment] = useState('');
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [comment, setComment] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
 
   const canUpdate = (user?.permissions || []).includes('task.update');
@@ -87,6 +88,17 @@ export default function TaskDetail() {
 
   const save = async () => {
     if (!task) return;
+    if (!form.title.trim()) {
+      toast('Judul task wajib', 'error');
+      return;
+    }
+    if (form.progressPercent !== '') {
+      const progress = Number(form.progressPercent);
+      if (!Number.isInteger(progress) || progress < 0 || progress > 100) {
+        toast('Progress harus berupa integer 0–100', 'error');
+        return;
+      }
+    }
     const payload = {};
     for (const key of Object.keys(dirty)) {
       if (!dirty[key]) continue;
@@ -258,7 +270,7 @@ export default function TaskDetail() {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
               <div>
                 <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Status</label>
                 <select
@@ -267,7 +279,7 @@ export default function TaskDetail() {
                   disabled={!canUpdate}
                   style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
                 >
-                  {['open', 'in_progress', 'review', 'done', 'closed', 'cancelled'].map((s) => (
+                  {['open', 'in_progress', 'review', 'done', 'closed', 'completed', 'cancelled'].map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>

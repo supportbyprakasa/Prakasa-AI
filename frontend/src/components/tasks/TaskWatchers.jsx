@@ -80,7 +80,7 @@ export default function TaskWatchers({ task, canWatch, canManage, onChanged }) {
           borderBottom: '1px solid var(--color-border)', fontSize: 13,
         }}>
           <span>👤 {w.userName}</span>
-          {canManage && (
+          {canManage && Number(w.userId) !== Number(user?.id) && (
             <button type="button" onClick={() => removeWatcher(w.userId)}
               style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
               <X size={12} />
@@ -112,13 +112,14 @@ function AddWatcherModal({ open, onClose, taskId, onAdded }) {
   const [saving, setSaving] = useState(false);
 
   const submit = async () => {
-    if (!userId || isNaN(Number(userId))) {
+    const parsedUserId = Number(userId);
+    if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
       toast('User ID tidak valid', 'error');
       return;
     }
     setSaving(true);
     try {
-      await api.post(`/tasks/${taskId}/watchers`, { userId: Number(userId) });
+      await api.post(`/tasks/${taskId}/watchers`, { userId: parsedUserId });
       toast('Watcher ditambahkan', 'success');
       setUserId('');
       onAdded();
@@ -137,6 +138,8 @@ function AddWatcherModal({ open, onClose, taskId, onAdded }) {
       <Input
         label="User ID"
         type="number"
+        min="1"
+        step="1"
         value={userId}
         onChange={(e) => setUserId(e.target.value)}
       />

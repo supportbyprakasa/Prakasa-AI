@@ -199,6 +199,14 @@ function CreateBoardModal({ open, onClose, onCreated }) {
       }
     }
 
+    if (form.departmentId) {
+      const departmentId = Number(form.departmentId);
+      if (!Number.isInteger(departmentId) || departmentId <= 0) {
+        toast('Department ID tidak valid', 'error');
+        return;
+      }
+    }
+
     const payload = {
       name: form.name.trim(),
       description: form.description || null,
@@ -238,6 +246,8 @@ function CreateBoardModal({ open, onClose, onCreated }) {
       <Input
         label="Department ID (opsional)"
         type="number"
+        min="1"
+        step="1"
         value={form.departmentId}
         onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
       />
@@ -671,6 +681,24 @@ function CreateTaskModal({ open, onClose, board, onCreated }) {
     if (form.startDate && form.dueDate && form.startDate > form.dueDate) {
       toast('Tanggal mulai harus <= tanggal jatuh tempo', 'error'); return;
     }
+    if (form.assigneeId) {
+      const assigneeId = Number(form.assigneeId);
+      if (!Number.isInteger(assigneeId) || assigneeId <= 0) {
+        toast('Assignee ID tidak valid', 'error'); return;
+      }
+    }
+    if (form.progressPercent !== '') {
+      const progress = Number(form.progressPercent);
+      if (!Number.isInteger(progress) || progress < 0 || progress > 100) {
+        toast('Progress harus berupa integer 0–100', 'error'); return;
+      }
+    }
+    if (form.columnId) {
+      const columnId = Number(form.columnId);
+      if (!Number.isInteger(columnId) || columnId <= 0) {
+        toast('Kolom tidak valid', 'error'); return;
+      }
+    }
 
     const payload = {
       departmentId: board.departmentId ?? null,
@@ -754,6 +782,8 @@ function CreateTaskModal({ open, onClose, board, onCreated }) {
         <Input
           label="Assignee ID (opsional)"
           type="number"
+          min="1"
+          step="1"
           value={form.assigneeId}
           onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}
         />
@@ -776,6 +806,7 @@ function CreateTaskModal({ open, onClose, board, onCreated }) {
         type="number"
         min={0}
         max={100}
+        step={1}
         value={form.progressPercent}
         onChange={(e) => setForm({ ...form, progressPercent: e.target.value })}
       />

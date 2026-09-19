@@ -15,7 +15,7 @@ export default function TaskProgress({ percent, showLabel = true, height = 6 }) 
       <div style={{
         flex: 1,
         height,
-        background: '#e2e8f0',
+        background: 'var(--color-border)',
         borderRadius: height / 2,
         overflow: 'hidden',
       }}>

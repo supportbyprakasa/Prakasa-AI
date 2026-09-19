@@ -6,6 +6,7 @@ import App from './App';
 import ToastHost from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 import './styles/tokens.css';
 
 const app = (
@@ -16,10 +17,12 @@ const app = (
     }}
   >
     <AuthProvider>
-      <ErrorBoundary>
-        <App />
-        <ToastHost />
-      </ErrorBoundary>
+      <NotificationProvider>
+        <ErrorBoundary>
+          <App />
+          <ToastHost />
+        </ErrorBoundary>
+      </NotificationProvider>
     </AuthProvider>
   </BrowserRouter>
 );

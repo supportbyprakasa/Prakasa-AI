@@ -200,7 +200,8 @@ async function searchDocuments({ entityId, q, cap }) {
 async function searchTasks({ entityId, q, cap }) {
   const like = `%${escapeLike(q)}%`;
   const [rows] = await pool.query(
-    `SELECT id, entity_id, department_id, title, status, priority, due_date, created_at
+    `SELECT id, entity_id, department_id, title, description,
+            status, priority, due_date, created_at
        FROM tasks
       WHERE entity_id = ? AND deleted_at IS NULL
         AND (title LIKE ? OR description LIKE ?)
@@ -243,6 +244,7 @@ async function searchCustomers({ entityId, q, cap }) {
       score: Math.max(
         scoreMatch(r.name, q),
         scoreSecondary(r.contact_person, q),
+        scoreSecondary(r.phone, q),
         scoreSecondary(r.city, q)
       ),
       meta: { city: r.city || null },

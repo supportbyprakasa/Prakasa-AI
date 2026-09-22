@@ -177,7 +177,6 @@ router.get(
   validate(idParams, 'params'),
   validate(z.object({
     depth: z.coerce.number().int().min(1).max(3).optional(),
-    maxNodes: z.coerce.number().int().min(10).max(200).optional(),
   }).strict(), 'query'),
   ctrl.dependencyGraph
 );

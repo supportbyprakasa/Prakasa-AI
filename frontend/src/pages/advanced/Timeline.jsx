@@ -38,6 +38,7 @@ export default function Timeline() {
   const { isMobile } = useBreakpoint();
 
   const canCrossEntity = (user?.permissions || []).includes('entity.cross_access');
+  const canViewTask = (user?.permissions || []).includes('task.view');
 
   const [tab, setTab] = useState('gantt'); // 'gantt' | 'activity'
   const [zoom, setZoom] = useState('week');
@@ -54,6 +55,7 @@ export default function Timeline() {
   const [ganttError, setGanttError] = useState(null);
 
   const [activityData, setActivityData] = useState(null);
+  const [activityMeta, setActivityMeta] = useState(null);
   const [activityLoading, setActivityLoading] = useState(false);
 
   const [graphTaskId, setGraphTaskId] = useState(null);
@@ -108,6 +110,7 @@ export default function Timeline() {
       if (filters.entityId) params.entityId = filters.entityId;
       const r = await api.get('/timeline', { params });
       setActivityData(r.data.data);
+      setActivityMeta(r.data.meta || null);
     } catch (e) {
       toast(e.response?.data?.error?.message || 'Gagal memuat timeline aktivitas', 'error');
     } finally {
@@ -182,7 +185,7 @@ export default function Timeline() {
                 <GanttListView
                   tasks={ganttData.tasks}
                   onTaskClick={openTask}
-                  onGraphClick={setGraphTaskId}
+                  onGraphClick={canViewTask ? setGraphTaskId : undefined}
                 />
               ) : (
                 <GanttChartCore
@@ -191,7 +194,7 @@ export default function Timeline() {
                   range={{ from: filters.from, to: filters.to }}
                   zoom={zoom}
                   onTaskClick={openTask}
-                  onGraphClick={setGraphTaskId}
+                  onGraphClick={canViewTask ? setGraphTaskId : undefined}
                 />
               )
             )}
@@ -224,6 +227,17 @@ export default function Timeline() {
 
       {tab === 'activity' && (
         <Card title="Timeline Aktivitas">
+          {activityMeta?.truncated && (
+            <div style={{
+              padding: '8px 12px',
+              background: '#fffbeb',
+              borderBottom: '1px solid #fde68a',
+              color: '#92400e', fontSize: 12,
+            }}>
+              Sebagian data terpotong pada modul: {activityMeta.truncatedModules.join(', ')}.
+              {' '}Persempit rentang tanggal untuk melihat data lebih spesifik.
+            </div>
+          )}
           {activityLoading && <div style={{ padding: 16 }}><SkeletonCard lines={5} /></div>}
           {!activityLoading && !activityData?.items?.length && (
             <div style={{

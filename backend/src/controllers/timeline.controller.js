@@ -4,6 +4,8 @@ const ganttSvc = require('../services/gantt.service');
 
 const MAX_TIMELINE_RANGE_DAYS = 365;
 const MAX_TIMELINE_ROWS_PER_MODULE = 200;
+// Fetch one extra row per module so truncation can be detected without COUNT(*).
+const TIMELINE_FETCH_LIMIT = MAX_TIMELINE_ROWS_PER_MODULE + 1;
 
 function parseIsoDate(value, field) {
   if (value == null || value === '') return null;
@@ -57,7 +59,7 @@ async function timeline(req, res, next) {
       );
     }
 
-    const [tasks] = await pool.query(
+    const [tasksRaw] = await pool.query(
       `SELECT id, title AS label, 'task' AS type, due_date AS date,
               status, priority, assignee_id AS assigneeId
          FROM tasks
@@ -65,10 +67,10 @@ async function timeline(req, res, next) {
           AND due_date BETWEEN ? AND ?
         ORDER BY due_date ASC, id ASC
         LIMIT ?`,
-      [entityId, from, to, MAX_TIMELINE_ROWS_PER_MODULE]
+      [entityId, from, to, TIMELINE_FETCH_LIMIT]
     );
 
-    const [meetings] = await pool.query(
+    const [meetingsRaw] = await pool.query(
       `SELECT id, title AS label, 'meeting' AS type, DATE(start_time) AS date,
               status, organizer_user_id AS assigneeId
          FROM meetings
@@ -76,10 +78,10 @@ async function timeline(req, res, next) {
           AND DATE(start_time) BETWEEN ? AND ?
         ORDER BY start_time ASC, id ASC
         LIMIT ?`,
-      [entityId, from, to, MAX_TIMELINE_ROWS_PER_MODULE]
+      [entityId, from, to, TIMELINE_FETCH_LIMIT]
     );
 
-    const [approvals] = await pool.query(
+    const [approvalsRaw] = await pool.query(
       `SELECT id, title AS label, 'approval' AS type, DATE(created_at) AS date,
               status, requested_by AS assigneeId
          FROM approval_requests
@@ -87,10 +89,10 @@ async function timeline(req, res, next) {
           AND DATE(created_at) BETWEEN ? AND ?
         ORDER BY created_at ASC, id ASC
         LIMIT ?`,
-      [entityId, from, to, MAX_TIMELINE_ROWS_PER_MODULE]
+      [entityId, from, to, TIMELINE_FETCH_LIMIT]
     );
 
-    const [finance] = await pool.query(
+    const [financeRaw] = await pool.query(
       `SELECT id, CONCAT(request_number,' ',title) AS label, 'finance' AS type,
               request_date AS date, status, requested_by AS assigneeId
          FROM finance_workflows
@@ -98,10 +100,10 @@ async function timeline(req, res, next) {
           AND request_date BETWEEN ? AND ?
         ORDER BY request_date ASC, id ASC
         LIMIT ?`,
-      [entityId, from, to, MAX_TIMELINE_ROWS_PER_MODULE]
+      [entityId, from, to, TIMELINE_FETCH_LIMIT]
     );
 
-    const [hrga] = await pool.query(
+    const [hrgaRaw] = await pool.query(
       `SELECT id, CONCAT(workflow_number,' ',employee_full_name) AS label,
               'hrga' AS type, effective_date AS date, status, requested_by AS assigneeId
          FROM hrga_workflows
@@ -109,10 +111,10 @@ async function timeline(req, res, next) {
           AND effective_date BETWEEN ? AND ?
         ORDER BY effective_date ASC, id ASC
         LIMIT ?`,
-      [entityId, from, to, MAX_TIMELINE_ROWS_PER_MODULE]
+      [entityId, from, to, TIMELINE_FETCH_LIMIT]
     );
 
-    const [subs] = await pool.query(
+    const [subsRaw] = await pool.query(
       `SELECT id, product_name AS label, 'subscription_renewal' AS type,
               renewal_date AS date, status, pic_user_id AS assigneeId
          FROM software_subscriptions
@@ -120,11 +122,31 @@ async function timeline(req, res, next) {
           AND renewal_date BETWEEN ? AND ?
         ORDER BY renewal_date ASC, id ASC
         LIMIT ?`,
-      [entityId, from, to, MAX_TIMELINE_ROWS_PER_MODULE]
+      [entityId, from, to, TIMELINE_FETCH_LIMIT]
     );
 
+    const truncatedModules = [];
+    const trim = (rows, name) => {
+      if (rows.length > MAX_TIMELINE_ROWS_PER_MODULE) {
+        truncatedModules.push(name);
+        return rows.slice(0, MAX_TIMELINE_ROWS_PER_MODULE);
+      }
+      return rows;
+    };
+
+    const tasks = trim(tasksRaw, 'task');
+    const meetings = trim(meetingsRaw, 'meeting');
+    const approvals = trim(approvalsRaw, 'approval');
+    const finance = trim(financeRaw, 'finance');
+    const hrga = trim(hrgaRaw, 'hrga');
+    const subs = trim(subsRaw, 'subscription_renewal');
+
     const all = [...tasks, ...meetings, ...approvals, ...finance, ...hrga, ...subs];
-    return ok(res, { from, to, items: all });
+    return ok(res, { from, to, items: all }, {
+      truncated: truncatedModules.length > 0,
+      truncatedModules,
+      perModuleLimit: MAX_TIMELINE_ROWS_PER_MODULE,
+    });
   } catch (e) {
     if (e.status === 400) {
       return fail(res, e.code || 'VALIDATION_ERROR', e.message, 400);

@@ -1,5 +1,7 @@
 const pool = require('../db/pool');
 const { ok, fail } = require('../utils/response');
+const taskAccess = require('../services/taskAccess.service');
+const ganttSvc = require('../services/gantt.service');
 
 /**
  * GET /timeline?from=&to=&entityId=
@@ -7,8 +9,10 @@ const { ok, fail } = require('../utils/response');
  */
 async function timeline(req, res, next) {
   try {
-    const entityId = req.query.entityId ? Number(req.query.entityId) : req.user.entityId;
-    if (!entityId) return fail(res, 'VALIDATION_ERROR', 'entityId wajib', 400);
+    const entityId = taskAccess.resolveTargetEntity({
+      user: req.user,
+      requestedEntityId: req.query.entityId || null,
+    });
     const from = req.query.from || new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
     const to = req.query.to || new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10);
 
@@ -54,4 +58,21 @@ async function timeline(req, res, next) {
   } catch (e) { next(e); }
 }
 
-module.exports = { timeline };
+async function gantt(req, res, next) {
+  try {
+    const result = await ganttSvc.getGantt({
+      user: req.user,
+      from: req.query.from,
+      to: req.query.to,
+      entityId: req.query.entityId,
+      departmentId: req.query.departmentId,
+      limit: req.query.limit,
+    });
+    return ok(res, result);
+  } catch (e) {
+    if (e.status) return fail(res, e.code || 'VALIDATION_ERROR', e.message, e.status);
+    next(e);
+  }
+}
+
+module.exports = { timeline, gantt };

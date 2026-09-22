@@ -204,6 +204,19 @@ async function listDependencies(req, res, next) {
   } catch (e) { return svcError(e, res, next); }
 }
 
+async function dependencyGraph(req, res, next) {
+  try {
+    const task = await taskAccess.loadTask(Number(req.params.id));
+    const r = await dependencySvc.graph({
+      task,
+      user: req.user,
+      depth: req.query.depth,
+      maxNodes: req.query.maxNodes,
+    });
+    return ok(res, r);
+  } catch (e) { return svcError(e, res, next); }
+}
+
 async function addDependency(req, res, next) {
   try {
     const task = await taskAccess.loadTask(Number(req.params.id));
@@ -233,5 +246,5 @@ module.exports = {
   listWatchers, addWatcher, removeWatcher,
   listChecklist, addChecklistItem, patchChecklistItem,
   removeChecklistItem, reorderChecklist,
-  listDependencies, addDependency, removeDependency,
+  listDependencies, dependencyGraph, addDependency, removeDependency,
 };

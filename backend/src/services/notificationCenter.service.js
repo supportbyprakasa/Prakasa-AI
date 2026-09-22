@@ -14,19 +14,42 @@ function normalizeId(id) {
   return value;
 }
 
-function toDateStart(v) {
-  if (!v) return null;
-  // Accept "YYYY-MM-DD" or ISO; produce 'YYYY-MM-DD 00:00:00' for MySQL.
-  const s = String(v).slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
-  return `${s} 00:00:00`;
+function parseFilterDate(v, field) {
+  if (v === undefined || v === null || v === '') return null;
+
+  const raw = String(v).trim();
+  let s = null;
+
+  // Preserve legacy support for either YYYY-MM-DD or a valid ISO timestamp.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    s = raw;
+  } else {
+    const parsed = new Date(raw);
+    if (!/^\d{4}-\d{2}-\d{2}T/.test(raw) || Number.isNaN(parsed.getTime())) {
+      const e = new Error(`${field} harus format YYYY-MM-DD atau ISO date`);
+      e.status = 400; e.code = 'VALIDATION_ERROR'; throw e;
+    }
+    s = raw.slice(0, 10);
+  }
+
+  const d = new Date(`${s}T00:00:00Z`);
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== s) {
+    const e = new Error(`${field} tidak valid`);
+    e.status = 400; e.code = 'VALIDATION_ERROR'; throw e;
+  }
+
+  return s;
 }
 
-function toDateEndExclusive(v) {
-  if (!v) return null;
-  const s = String(v).slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
-  const d = new Date(s + 'T00:00:00Z');
+function toDateStart(v, field = 'from') {
+  const s = parseFilterDate(v, field);
+  return s ? `${s} 00:00:00` : null;
+}
+
+function toDateEndExclusive(v, field = 'to') {
+  const s = parseFilterDate(v, field);
+  if (!s) return null;
+  const d = new Date(`${s}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + 1);
   return d.toISOString().slice(0, 10) + ' 00:00:00';
 }
@@ -47,8 +70,12 @@ async function listForUser({
   if (event) { where.push('event = ?'); args.push(event); }
   if (subjectType) { where.push('subject_type = ?'); args.push(subjectType); }
 
-  const fromStr = toDateStart(from);
-  const toStr = toDateEndExclusive(to);
+  const fromStr = toDateStart(from, 'from');
+  const toStr = toDateEndExclusive(to, 'to');
+  if (fromStr && toStr && fromStr >= toStr) {
+    const e = new Error('from harus <= to');
+    e.status = 400; e.code = 'VALIDATION_ERROR'; throw e;
+  }
   if (fromStr) { where.push('created_at >= ?'); args.push(fromStr); }
   if (toStr) { where.push('created_at < ?'); args.push(toStr); }
 

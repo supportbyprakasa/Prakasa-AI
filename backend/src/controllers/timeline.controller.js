@@ -7,7 +7,7 @@ const MAX_TIMELINE_ROWS_PER_MODULE = 200;
 
 function parseIsoDate(value, field) {
   if (value == null || value === '') return null;
-  const s = String(value).slice(0, 10);
+  const s = String(value).trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) {
     const e = new Error(`${field} harus format YYYY-MM-DD`);
     e.status = 400;

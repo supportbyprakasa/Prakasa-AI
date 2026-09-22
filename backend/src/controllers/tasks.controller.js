@@ -2,6 +2,7 @@ const taskSvc = require('../services/task.service');
 const checklistSvc = require('../services/taskChecklist.service');
 const watcherSvc = require('../services/taskWatcher.service');
 const dependencySvc = require('../services/taskDependency.service');
+const dependencyGraphSvc = require('../services/taskDependencyGraph.service');
 const taskActivity = require('../services/taskActivity.service');
 const taskAccess = require('../services/taskAccess.service');
 const { ok, fail } = require('../utils/response');
@@ -206,12 +207,10 @@ async function listDependencies(req, res, next) {
 
 async function dependencyGraph(req, res, next) {
   try {
-    const task = await taskAccess.loadTask(Number(req.params.id));
-    const r = await dependencySvc.graph({
-      task,
+    const r = await dependencyGraphSvc.buildGraph({
+      taskId: Number(req.params.id),
       user: req.user,
-      depth: req.query.depth,
-      maxNodes: req.query.maxNodes,
+      depth: req.query.depth ? Number(req.query.depth) : undefined,
     });
     return ok(res, r);
   } catch (e) { return svcError(e, res, next); }

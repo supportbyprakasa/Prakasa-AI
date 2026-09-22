@@ -6,10 +6,84 @@
 - Domain utama: `prakasa-work-os.com` → frontend
 - Subdomain: `api.prakasa-work-os.com` → backend
 
+## 0. Migration Ledger (Batch 6.4)
+
+Mulai Batch 6.4, migration dilacak di tabel kontrol `schema_migrations`.
+Runner `backend/src/db/migrate.js` hanya menjalankan file yang belum tercatat
+dengan checksum yang sama.
+
+### Fresh database
+
+Gunakan normal migrate. Runner membuat ledger otomatis lalu menjalankan semua
+migration secara berurutan.
+
+```bash
+cd backend
+npm run migrate
+npm run check:ledger
+# Expected: RESULT: HEALTHY
+```
+
+### Existing database dari sebelum Batch 6.4
+
+**Jangan langsung menjalankan normal migrate bila ledger masih kosong.**
+Runner akan mendeteksi schema existing dan abort agar historical migrations
+tidak dijalankan ulang secara tidak sengaja.
+
+Untuk kondisi repository saat ini, jika environment sudah memiliki migration
+001–027 dan migration 028 belum diketahui/applied, gunakan alur aman berikut:
+
+```bash
+cd backend
+npm run migrate -- --dry-run --baseline-through=027
+npm run migrate -- --baseline-through=027
+npm run migrate
+npm run check:ledger
+npm run check:batch5
+```
+
+Dengan alur ini, 001–027 hanya dicatat sebagai baseline. Migration 028 tetap
+pending dan akan benar-benar dieksekusi oleh `npm run migrate`. Karena 028
+idempotent, alur ini juga aman bila sebagian/all perubahan 028 ternyata sudah
+pernah diterapkan manual sebelumnya.
+
+Jika Anda sudah memverifikasi **semua** migration yang ada di folder migration
+sudah diterapkan, `--baseline` dapat digunakan untuk mencatat semuanya:
+
+```bash
+npm run migrate -- --dry-run --baseline
+npm run migrate -- --baseline
+npm run check:ledger
+```
+
+### Common flags
+
+```bash
+npm run migrate -- --dry-run
+npm run migrate -- --baseline-through=027
+npm run migrate -- --force-file=028_search_notification_center.sql
+npm run migrate -- --help
+```
+
+### Rules
+
+- Jangan edit migration yang sudah tercatat sebagai applied. Checksum drift
+  membuat runner abort.
+- `--baseline` dan `--baseline-through` hanya untuk database existing dengan
+  ledger kosong; runner menolak baseline pada fresh DB atau ledger aktif.
+- Baseline **tidak mengeksekusi SQL**. Pastikan schema existing memang sesuai.
+- MySQL DDL dapat auto-commit. Jika satu file gagal di tengah, ledger row tidak
+  ditulis, tetapi sebagian DDL mungkin sudah terapkan. Inspect error lalu retry;
+  migration existing dirancang idempotent/additive.
+- Runner menggunakan koneksi migration khusus dengan
+  `multipleStatements: true` untuk kompatibilitas dengan migration 001–028.
+
+---
+
 ## 1. Database
 1. cPanel → MySQL Databases → buat database + user
 2. Catat: `DB_NAME`, `DB_USER`, `DB_PASS`, `DB_HOST` (biasanya `localhost`)
-3. Import migration `001` sampai `016` secara berurutan, atau jalankan `npm run migrate` dari backend.
+3. Gunakan migration runner dari backend sesuai §0. Jangan import/re-run migration lama secara manual kecuali untuk recovery yang terverifikasi.
 
 ## 2. Backend
 1. Upload folder `backend/` ke `~/prakasa-work-os-backend` (di luar `public_html`)

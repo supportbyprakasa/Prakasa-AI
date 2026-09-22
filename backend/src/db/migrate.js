@@ -105,6 +105,17 @@ async function main() {
     // Explicit baseline path for environments that predate ledger.
     // ----------------------------------------------------------
     if (args.baseline || args.baselineThrough) {
+      if (appliedMap.size > 0) {
+        throw new Error(
+          'Baseline ditolak: ledger sudah memiliki entri. Gunakan normal migrate.'
+        );
+      }
+      if (existingDomainTables === 0) {
+        throw new Error(
+          'Baseline ditolak pada database kosong. Gunakan normal migrate agar schema benar-benar dibuat.'
+        );
+      }
+
       const selected = selectBaselineFiles(
         files,
         args.baselineThrough || null

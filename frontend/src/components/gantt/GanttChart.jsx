@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Network } from 'lucide-react';
 
 const ROW_H = 40;
 const HEADER_H = 48;
@@ -126,7 +127,7 @@ function Bar({ task, left, width, onClick }) {
    Chart
    ============================================================ */
 
-export default function GanttChart({ tasks, links, range, zoom, onTaskClick }) {
+export default function GanttChart({ tasks, links, range, zoom, onTaskClick, onGraphClick }) {
   const dayPx = DAY_PX[zoom] || DAY_PX.week;
   const totalDays = useMemo(() => daysBetween(range.from, range.to) + 1, [range]);
   const canvasWidth = totalDays * dayPx;
@@ -227,6 +228,27 @@ export default function GanttChart({ tasks, links, range, zoom, onTaskClick }) {
               }}>
                 {t.title}
               </span>
+              {onGraphClick && (
+                <button
+                  type="button"
+                  title="Lihat dependency graph"
+                  aria-label="Lihat dependency graph"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onGraphClick(t.id);
+                  }}
+                  style={{
+                    width: 22, height: 22, padding: 0, flexShrink: 0,
+                    background: 'transparent',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 4, cursor: 'pointer',
+                    color: 'var(--color-text-muted)',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  <Network size={12} />
+                </button>
+              )}
             </div>
           ))}
         </div>

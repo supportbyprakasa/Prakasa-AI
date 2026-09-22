@@ -179,7 +179,11 @@ export default function Timeline() {
 
             {!ganttLoading && !ganttError && ganttData && ganttData.tasks.length > 0 && (
               isMobile ? (
-                <GanttListView tasks={ganttData.tasks} onTaskClick={openTask} />
+                <GanttListView
+                  tasks={ganttData.tasks}
+                  onTaskClick={openTask}
+                  onGraphClick={setGraphTaskId}
+                />
               ) : (
                 <GanttChartCore
                   tasks={ganttData.tasks}
@@ -187,6 +191,7 @@ export default function Timeline() {
                   range={{ from: filters.from, to: filters.to }}
                   zoom={zoom}
                   onTaskClick={openTask}
+                  onGraphClick={setGraphTaskId}
                 />
               )
             )}

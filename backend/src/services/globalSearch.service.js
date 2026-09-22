@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const intLog = require('./integrationLog.service');
 
 /* ============================================================
    Constants
@@ -630,18 +631,35 @@ async function search({ user, q, entityId, types, page = 1, limit = 20 }) {
   // Bounded fetch per provider. Page 1: fetch `limit`. Deeper pages: fetch `page*limit` capped.
   const perProviderCap = Math.min(200, page * limit);
 
+  // Provider failures are tracked but do not break the whole search.
+  // Raw provider errors are logged internally; public metadata only exposes
+  // the failed provider type to avoid leaking SQL/schema details.
+  const providerErrors = [];
+
   const tasks = requestedTypes.map(async (type) => {
     const fn = PROVIDERS[type];
     if (!fn) return [];
     try {
-      // KB needs the user for visibility resolution.
       const args = type === 'kb_document'
         ? { entityId: resolvedEntityId, q: query, cap: perProviderCap, user }
         : { entityId: resolvedEntityId, q: query, cap: perProviderCap };
       const rows = await fn(args);
       return rows;
     } catch (e) {
-      // Provider failure must not break the whole search.
+      providerErrors.push({ type });
+      try {
+        await intLog.log({
+          entityId: resolvedEntityId,
+          userId: user?.sub || null,
+          provider: 'internal',
+          operation: `search.provider.${type}`,
+          status: 'failed',
+          errorMessage: e.message,
+          requestMeta: { qLength: query.length },
+        });
+      } catch {
+        // Observability must never break the search response.
+      }
       return [];
     }
   });
@@ -665,15 +683,22 @@ async function search({ user, q, entityId, types, page = 1, limit = 20 }) {
   const offset = (page - 1) * limit;
   const pageRows = scored.slice(offset, offset + limit);
 
+  const meta = {
+    page,
+    limit,
+    total,
+    allowedTypes,
+    requestedTypes,
+  };
+
+  if (providerErrors.length) {
+    meta.providerErrors = providerErrors;
+    meta.partial = true;
+  }
+
   return {
     rows: pageRows,
-    meta: {
-      page,
-      limit,
-      total,
-      allowedTypes,
-      requestedTypes,
-    },
+    meta,
     resolvedEntityId,
   };
 }

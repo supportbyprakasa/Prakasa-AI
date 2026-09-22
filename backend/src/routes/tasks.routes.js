@@ -172,6 +172,16 @@ router.post(
 );
 
 router.get(
+  '/:id/dependencies/graph',
+  requirePermission('task.view'),
+  validate(idParams, 'params'),
+  validate(z.object({
+    depth: z.coerce.number().int().min(1).max(3).optional(),
+    maxNodes: z.coerce.number().int().min(10).max(200).optional(),
+  }).strict(), 'query'),
+  ctrl.dependencyGraph
+);
+router.get(
   '/:id/dependencies',
   requirePermission('task.view'),
   validate(idParams, 'params'),

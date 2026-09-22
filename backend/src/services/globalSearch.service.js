@@ -5,6 +5,9 @@ const intLog = require('./integrationLog.service');
    Constants
    ============================================================ */
 
+// Batch 6.3: stable per-provider fetch cap. Independent of page size.
+const MAX_PER_PROVIDER_FETCH = 200;
+
 const SUPPORTED_TYPES = [
   'document',
   'task',
@@ -628,24 +631,22 @@ async function search({ user, q, entityId, types, page = 1, limit = 20 }) {
     }
   }
 
-  // Bounded fetch per provider. Page 1: fetch `limit`. Deeper pages: fetch `page*limit` capped.
-  const perProviderCap = Math.min(200, page * limit);
-
-  // Provider failures are tracked but do not break the whole search.
-  // Raw provider errors are logged internally; public metadata only exposes
-  // the failed provider type to avoid leaking SQL/schema details.
+  // Stable per-provider cap — never page-dependent.
+  // Fetch one extra row to detect overflow without COUNT(*) per provider.
   const providerErrors = [];
+  const fetchCap = MAX_PER_PROVIDER_FETCH + 1;
 
   const tasks = requestedTypes.map(async (type) => {
     const fn = PROVIDERS[type];
     if (!fn) return [];
     try {
       const args = type === 'kb_document'
-        ? { entityId: resolvedEntityId, q: query, cap: perProviderCap, user }
-        : { entityId: resolvedEntityId, q: query, cap: perProviderCap };
+        ? { entityId: resolvedEntityId, q: query, cap: fetchCap, user }
+        : { entityId: resolvedEntityId, q: query, cap: fetchCap };
       const rows = await fn(args);
       return rows;
     } catch (e) {
+      // Keep public metadata sanitized; raw error stays internal only.
       providerErrors.push({ type });
       try {
         await intLog.log({
@@ -665,7 +666,19 @@ async function search({ user, q, entityId, types, page = 1, limit = 20 }) {
   });
 
   const nested = await Promise.all(tasks);
-  const merged = nested.flat();
+
+  let totalCapped = false;
+  const cappedModules = [];
+  const trimmed = nested.map((rows, idx) => {
+    if (rows.length > MAX_PER_PROVIDER_FETCH) {
+      totalCapped = true;
+      cappedModules.push(requestedTypes[idx]);
+      return rows.slice(0, MAX_PER_PROVIDER_FETCH);
+    }
+    return rows;
+  });
+
+  const merged = trimmed.flat();
 
   // Filter out zero-score (defensive — providers should already do this).
   const scored = merged.filter((r) => (r.score || 0) > 0);
@@ -694,6 +707,12 @@ async function search({ user, q, entityId, types, page = 1, limit = 20 }) {
   if (providerErrors.length) {
     meta.providerErrors = providerErrors;
     meta.partial = true;
+  }
+
+  if (totalCapped) {
+    meta.totalCapped = true;
+    meta.cappedModules = cappedModules;
+    meta.perProviderCap = MAX_PER_PROVIDER_FETCH;
   }
 
   return {

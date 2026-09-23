@@ -27,14 +27,14 @@ const createSessionBody = z.object({
   visibility: z.enum(['private', 'department', 'entity']).optional(),
   systemContext: z.string().max(8000).nullable().optional(),
   departmentId: z.number().int().positive().nullable().optional(),
-  provider: z.enum(['openai', 'gemini', 'claude', 'n8n']).nullable().optional(),
+  provider: z.enum(['openai', 'gemini', 'claude', 'claude_team', 'n8n']).nullable().optional(),
 });
 
 const updateSessionBody = z.object({
   title: z.string().min(1).max(255).optional(),
   visibility: z.enum(['private', 'department', 'entity']).optional(),
   systemContext: z.string().max(8000).nullable().optional(),
-  provider: z.enum(['openai', 'gemini', 'claude', 'n8n']).nullable().optional(),
+  provider: z.enum(['openai', 'gemini', 'claude', 'claude_team', 'n8n']).nullable().optional(),
 });
 
 const messageListQuery = z.object({

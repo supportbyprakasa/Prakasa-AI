@@ -7,7 +7,7 @@
     },
     {
       "source": "/api/:path*",
-      "destination": "https://prakasa-ai-api.vercel.app/api/:path*"
+      "destination": "/api/proxy?path=:path*"
     },
     {
       "source": "/:path*",

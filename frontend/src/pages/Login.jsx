@@ -67,7 +67,7 @@ export default function Login() {
   };
 
   return (
-    <div
+    <div className="prakasa-login"
       style={{
         minHeight: '100vh',
         display: 'grid',
@@ -76,7 +76,19 @@ export default function Login() {
         padding: 20,
       }}
     >
-      <div
+      <svg className="prakasa-login__decoration" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <g className="prakasa-login__crate" fill="none" stroke="#dce4f7" strokeWidth="1.5">
+          <rect x="1120" y="70" width="120" height="120" rx="6"/><path d="M1120 108h120M1180 70v120"/>
+          <rect x="1230" y="150" width="90" height="90" rx="6"/><path d="M1230 178h90M1275 150v90"/>
+          <rect x="1080" y="210" width="70" height="70" rx="6"/><path d="M1080 231h70M1115 210v70"/>
+        </g>
+        <g className="prakasa-login__crate prakasa-login__crate--offset" fill="none" stroke="#dce4f7" strokeWidth="1.5">
+          <rect x="90" y="620" width="130" height="130" rx="6"/><path d="M90 662h130M155 620v130"/>
+          <rect x="210" y="700" width="95" height="95" rx="6"/><path d="M210 730h95M257 700v95"/>
+          <rect x="40" y="740" width="60" height="60" rx="6"/><path d="M40 758h60M70 740v60"/>
+        </g>
+      </svg>
+      <div className="prakasa-login__card fade-in"
         style={{
           width: '100%',
           maxWidth: 390,
@@ -94,10 +106,11 @@ export default function Login() {
         </div>
 
         <form onSubmit={onManualSubmit}>
-          <label style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>
+          <label htmlFor="login-email" style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>
             Email
           </label>
           <input
+            id="login-email"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -108,6 +121,7 @@ export default function Login() {
           />
 
           <label
+            htmlFor="login-password"
             style={{
               display: 'block',
               fontSize: 13,
@@ -118,6 +132,7 @@ export default function Login() {
             Password
           </label>
           <input
+            id="login-password"
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
@@ -143,6 +158,7 @@ export default function Login() {
           )}
 
           <button
+            className="prakasa-login__submit"
             type="submit"
             disabled={submitting}
             style={{

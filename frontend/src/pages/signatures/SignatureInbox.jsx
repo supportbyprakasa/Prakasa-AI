@@ -43,7 +43,7 @@ export default function SignatureInbox() {
   return (
     <div>
       <div style={{ marginBottom: 12 }}>
-        <h2 style={{ margin: 0 }}>Signature Inbox</h2>
+        <h2 style={{ margin: 0 }}>Signatures</h2>
         <div
           style={{
             marginTop: 4,

@@ -32,7 +32,7 @@ export default function SignatureAsset() {
 
   return (
     <div>
-      <h2>Tanda Tangan Pribadi</h2>
+      <h2>Tanda Tangan Saya</h2>
       <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
         Gambar tanda tangan akan disimpan <b>terenkripsi (AES-256-GCM)</b>. Tidak ada endpoint yang mengembalikan file mentah ke user manapun.
       </p>
@@ -62,4 +62,3 @@ export default function SignatureAsset() {
     </div>
   );
 }
-

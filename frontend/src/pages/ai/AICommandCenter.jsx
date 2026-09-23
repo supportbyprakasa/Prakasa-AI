@@ -28,7 +28,7 @@ function useBreakpoint() {
 }
 
 export default function AICommandCenter() {
-  const { isDesktop } = useBreakpoint();
+  const { isDesktop, isMobile } = useBreakpoint();
 
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -64,10 +64,12 @@ export default function AICommandCenter() {
      ---------------------------------------------------------- */
   if (isDesktop) {
     return (
+      <>
+      <div className="prakasa-ai-heading"><Sparkles size={20} /><h1>AI Command Center</h1></div>
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '280px 1fr 360px',
-        height: 'calc(100vh - 120px)',
+        gridTemplateColumns: '260px minmax(0, 1fr) 340px',
+        height: 'max(480px, calc(100dvh - 180px))',
         border: '1px solid var(--color-border)',
         borderRadius: 12,
         overflow: 'hidden',
@@ -138,6 +140,7 @@ export default function AICommandCenter() {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
@@ -145,9 +148,11 @@ export default function AICommandCenter() {
      Mobile / tablet: tabbed
      ---------------------------------------------------------- */
   return (
+    <>
+    <div className="prakasa-ai-heading"><Sparkles size={20} /><h1>AI Command Center</h1></div>
     <div style={{
       display: 'flex', flexDirection: 'column',
-      height: 'calc(100vh - 120px)',
+      height: 'max(480px, calc(100dvh - 180px))',
       border: '1px solid var(--color-border)',
       borderRadius: 12,
       overflow: 'hidden',
@@ -235,6 +240,7 @@ export default function AICommandCenter() {
         )}
       </div>
     </div>
+    </>
   );
 }
 

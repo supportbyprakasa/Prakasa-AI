@@ -6,7 +6,7 @@ export default function Button({ children, variant = 'primary', ...props }) {
   }[variant];
   return (
     <button {...props} style={{
-      padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 14,
+      padding: '9px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600,
       display: 'inline-flex', alignItems: 'center', gap: 6, ...styles, ...(props.style || {}),
     }}>{children}</button>
   );

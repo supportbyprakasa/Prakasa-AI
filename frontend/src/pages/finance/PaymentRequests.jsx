@@ -76,7 +76,7 @@ export default function PaymentRequests() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h2>Finance Workflow</h2>
+        <h2>Payment Requests</h2>
         <Button onClick={() => setOpen(true)}>+ Payment / Reimbursement</Button>
       </div>
 

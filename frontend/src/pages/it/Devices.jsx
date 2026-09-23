@@ -76,7 +76,7 @@ export default function Devices() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>IT Devices</h2>
+        <h2>Devices</h2>
         <Button onClick={() => setOpen(true)}>+ Device</Button>
       </div>
       <DataTable

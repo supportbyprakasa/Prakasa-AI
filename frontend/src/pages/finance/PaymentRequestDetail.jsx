@@ -182,7 +182,7 @@ export default function PaymentRequestDetail() {
         {wf.workflow_type} · diajukan oleh {wf.requesterName} pada {new Date(wf.request_date).toLocaleDateString('id-ID')}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
+      <div className="prakasa-detail-columns" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
         <Card title="Informasi">
           <div style={{ fontSize: 13, lineHeight: 1.9 }}>
             <div>Kategori: <b>{wf.category || '—'}</b></div>

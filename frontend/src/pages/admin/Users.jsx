@@ -133,7 +133,7 @@ export default function Users() {
 
   return (
     <div>
-      <h2 style={{ marginTop: 0 }}>Users & Login Accounts</h2>
+      <h2 style={{ marginTop: 0 }}>Users</h2>
       <p style={{ color: 'var(--color-text-muted)', marginTop: -8 }}>
         Super Admin dapat membuat akun, menentukan role, menonaktifkan akun,
         dan melakukan reset password.

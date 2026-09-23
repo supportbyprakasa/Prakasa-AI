@@ -32,17 +32,17 @@ export default function DataTable({
 
   return (
     <>
-      <div style={{ overflowX: 'auto' }}>
+      <div className="prakasa-table-scroll" style={{ overflowX: 'auto' }}>
         <table
           style={{
             width: '100%',
             borderCollapse: 'collapse',
             background: 'var(--color-surface)',
-            borderRadius: 8,
+            borderRadius: 12,
             overflow: 'hidden',
           }}
         >
-          <thead style={{ background: '#f1f5f9', textAlign: 'left', fontSize: 13 }}>
+          <thead style={{ background: '#f8fafc', textAlign: 'left', fontSize: 12 }}>
             <tr>
               {columns.map((c) => (
                 <th key={c.key} style={{ padding: '10px 12px', fontWeight: 600 }}>
@@ -63,7 +63,7 @@ export default function DataTable({
                 }}
               >
                 {columns.map((c) => (
-                  <td key={c.key} style={{ padding: '10px 12px' }}>
+                  <td key={c.key} style={{ padding: '13px 12px' }}>
                     {c.render ? c.render(r) : r[c.key]}
                   </td>
                 ))}
@@ -78,7 +78,7 @@ export default function DataTable({
           style={{
             marginTop: 12,
             display: 'flex',
-            justify: 'space-between',
+            justifyContent: 'space-between',
             alignItems: 'center',
             fontSize: 13,
             color: 'var(--color-text-muted)',

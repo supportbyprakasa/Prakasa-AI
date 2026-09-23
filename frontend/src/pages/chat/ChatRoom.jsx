@@ -47,7 +47,7 @@ export default function ChatRoom() {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 16, height: 'calc(100vh - 160px)' }}>
+    <div className="prakasa-chat-layout" style={{ display: 'grid', gridTemplateColumns: '260px minmax(0, 1fr)', gap: 16, height: 'calc(100dvh - 180px)' }}>
       <aside style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, overflowY: 'auto' }}>
         {rooms.map((r) => (
           <div key={r.id} onClick={() => loadRoom(r)} style={{

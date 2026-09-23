@@ -3,6 +3,7 @@ import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import DivisionHub from './pages/DivisionHub';
 import Users from './pages/admin/Users';
 import Entities from './pages/admin/Entities';
 import Departments from './pages/admin/Departments';
@@ -82,6 +83,7 @@ export default function App() {
       <Route path="/verify/:code" element={<VerifyDocument />} />
       <Route element={<RequireAuth><Layout /></RequireAuth>}>
         <Route index element={<Dashboard />} />
+        <Route path="hub/:slug" element={<DivisionHub />} />
         <Route path="admin/users" element={<Users />} />
         <Route path="admin/entities" element={<Entities />} />
         <Route path="admin/departments" element={<Departments />} />

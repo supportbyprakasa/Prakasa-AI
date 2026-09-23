@@ -10,7 +10,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useNotificationCount } from '../context/NotificationContext';
 
-function useNavConfig() {
+export function useNavConfig() {
   const { user } = useAuth();
   const has = (p) => !p || user?.permissions?.includes(p);
 

@@ -130,7 +130,7 @@ export default function ApprovalInbox() {
   return (
     <div>
       <div style={{ marginBottom: 12 }}>
-        <h2 style={{ margin: 0 }}>Approval Inbox</h2>
+        <h2 style={{ margin: 0 }}>Approvals</h2>
         <div
           style={{
             marginTop: 4,

@@ -49,10 +49,10 @@ function canViewSession({ user, session }) {
   if (isOwner(user, session)) return true;
 
   if (session.visibility === 'private') {
-    return (
-      sameEntity(user, session) &&
-      hasPerm(user, 'ai_command.private_audit')
-    );
+    // Private means private: only the session owner can read the conversation.
+    // Administrators may inspect usage/audit metadata through dedicated endpoints,
+    // but private prompt/response content is never exposed by session access.
+    return false;
   }
 
   if (session.visibility === 'department') {
@@ -172,13 +172,6 @@ function buildVisibilityFilter(user, alias = 's') {
       );
       args.push(user.sub, user.entityId);
     }
-  }
-
-  if (hasPerm(user, 'ai_command.private_audit') && user.entityId) {
-    conditions.push(
-      `(${alias}.visibility='private' AND ${alias}.entity_id=?)`
-    );
-    args.push(user.entityId);
   }
 
   if (

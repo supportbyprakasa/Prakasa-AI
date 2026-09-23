@@ -4,6 +4,7 @@ const aiAccess = require('../services/aiSessionAccess.service');
 const aiContext = require('../services/aiContext.service');
 const aiCommand = require('../services/aiCommand.service');
 const aiAction = require('../services/aiActionProposal.service');
+const { listProviders } = require('../services/ai/provider');
 
 function handleServiceError(error, res, next) {
   if ([400, 403, 404, 409, 502, 503, 504].includes(error.status)) {
@@ -15,6 +16,15 @@ function handleServiceError(error, res, next) {
     );
   }
   return next(error);
+}
+
+async function providers(req, res, next) {
+  try {
+    const rows = await listProviders('ai_command_center');
+    return ok(res, rows);
+  } catch (error) {
+    return handleServiceError(error, res, next);
+  }
 }
 
 async function listSessions(req, res, next) {
@@ -45,6 +55,7 @@ async function createSession(req, res, next) {
       sessionType: req.body.sessionType,
       visibility: req.body.visibility,
       systemContext: req.body.systemContext,
+      provider: req.body.provider,
       user: req.user,
     });
 
@@ -467,6 +478,7 @@ async function usage(req, res, next) {
 }
 
 module.exports = {
+  providers,
   listSessions,
   createSession,
   getSession,

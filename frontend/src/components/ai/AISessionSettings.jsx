@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../../api/client';
 import Modal from '../Modal';
 import Button from '../Button';
@@ -16,10 +16,29 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
     title: session.title || '',
     visibility: session.visibility || 'private',
     systemContext: session.systemContext || '',
+    provider: session.provider || '',
   });
   const [saving, setSaving] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [providers, setProviders] = useState([]);
+  const [providersLoading, setProvidersLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setProvidersLoading(true);
+    api.get('/ai-command/providers')
+      .then((r) => {
+        if (!cancelled) setProviders(r.data.data || []);
+      })
+      .catch(() => {
+        if (!cancelled) setProviders([]);
+      })
+      .finally(() => {
+        if (!cancelled) setProvidersLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -34,6 +53,7 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
         title: form.title.trim(),
         visibility: form.visibility,
         systemContext: form.systemContext || null,
+        provider: form.provider || null,
       });
       toast('Session diperbarui', 'success');
       onUpdated?.();
@@ -78,6 +98,31 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
           onChange={(e) => set('title', e.target.value)}
           placeholder="Judul singkat"
         />
+
+        <div style={{ marginTop: 12 }}>
+          <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>AI Engine</label>
+          <select
+            value={form.provider}
+            onChange={(e) => set('provider', e.target.value)}
+            disabled={providersLoading || session.generationStatus === 'generating'}
+            style={{
+              width: '100%', padding: 8, borderRadius: 8,
+              border: '1px solid var(--color-border)',
+            }}
+          >
+            <option value="">Default server</option>
+            {providers.map((item) => (
+              <option key={item.id} value={item.id} disabled={!item.available}>
+                {item.label}
+                {item.model ? ` · ${item.model}` : ''}
+                {!item.available ? ' · belum dikonfigurasi' : ''}
+              </option>
+            ))}
+          </select>
+          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
+            Engine dapat diganti per conversation. Credential tetap tersimpan di backend.
+          </div>
+        </div>
 
         <div style={{ marginTop: 12 }}>
           <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Visibilitas</label>

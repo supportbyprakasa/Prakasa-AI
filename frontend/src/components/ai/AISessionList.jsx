@@ -229,8 +229,38 @@ function CreateSessionModal({ open, onClose, onCreated }) {
     visibility: 'private',
     departmentId: '',
     systemContext: '',
+    provider: '',
   });
   const [saving, setSaving] = useState(false);
+  const [providers, setProviders] = useState([]);
+  const [providersLoading, setProvidersLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setProvidersLoading(true);
+    api.get('/ai-command/providers')
+      .then((r) => {
+        if (cancelled) return;
+        const items = r.data.data || [];
+        setProviders(items);
+        const available = items.filter((item) => item.available);
+        setForm((currentForm) => {
+          if (currentForm.provider && available.some((item) => item.id === currentForm.provider)) {
+            return currentForm;
+          }
+          const preferred = available.find((item) => item.isDefault) || available[0];
+          return { ...currentForm, provider: preferred?.id || '' };
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setProviders([]);
+      })
+      .finally(() => {
+        if (!cancelled) setProvidersLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [open]);
 
   const submit = async () => {
     setSaving(true);
@@ -241,6 +271,7 @@ function CreateSessionModal({ open, onClose, onCreated }) {
         visibility: form.visibility,
         departmentId: form.departmentId ? Number(form.departmentId) : undefined,
         systemContext: form.systemContext || undefined,
+        provider: form.provider || undefined,
       });
       toast('Percakapan dibuat', 'success');
       onCreated?.(r.data.data.id);
@@ -275,6 +306,35 @@ function CreateSessionModal({ open, onClose, onCreated }) {
           <option value="drafting">Drafting</option>
           <option value="research">Research</option>
         </select>
+      </div>
+
+      <div style={{ marginTop: 12 }}>
+        <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>AI Engine</label>
+        <select
+          value={form.provider}
+          onChange={(e) => setForm({ ...form, provider: e.target.value })}
+          disabled={providersLoading}
+          style={{
+            width: '100%', padding: 8, borderRadius: 8,
+            border: '1px solid var(--color-border)',
+          }}
+        >
+          {!providers.length && (
+            <option value="">
+              {providersLoading ? 'Memuat engine…' : 'Belum ada engine yang dikonfigurasi'}
+            </option>
+          )}
+          {providers.map((item) => (
+            <option key={item.id} value={item.id} disabled={!item.available}>
+              {item.label}
+              {item.model ? ` · ${item.model}` : ''}
+              {!item.available ? ' · belum dikonfigurasi' : ''}
+            </option>
+          ))}
+        </select>
+        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
+          Credential dan model dikontrol oleh server. User tidak dapat memasukkan API key sendiri.
+        </div>
       </div>
 
       <div style={{ marginTop: 12 }}>
@@ -326,7 +386,10 @@ function CreateSessionModal({ open, onClose, onCreated }) {
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
         <Button variant="secondary" onClick={onClose}>Batal</Button>
-        <Button onClick={submit} disabled={saving}>
+        <Button
+          onClick={submit}
+          disabled={saving || providersLoading || !providers.some((item) => item.available)}
+        >
           {saving ? 'Membuat…' : 'Buat Percakapan'}
         </Button>
       </div>

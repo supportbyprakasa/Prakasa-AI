@@ -5,11 +5,7 @@ import { useParams } from 'react-router-dom';
 import Badge from '../../components/Badge';
 import Card from '../../components/Card';
 import { SkeletonCard } from '../../components/Skeleton';
-
-function publicApiRoot() {
-  const configured = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
-  return configured.replace(/\/api\/v1\/?$/, '').replace(/\/$/, '');
-}
+import { publicVerificationBaseUrl } from '../../api/endpoint';
 
 export default function VerifyDocument() {
   const { code } = useParams();
@@ -26,7 +22,7 @@ export default function VerifyDocument() {
       setState({ loading: true, data: null, error: null });
       try {
         const response = await axios.get(
-          `${publicApiRoot()}/verify/${encodeURIComponent(code)}`,
+          `${publicVerificationBaseUrl}/verify/${encodeURIComponent(code)}`,
           { timeout: 15000 }
         );
         if (active) {

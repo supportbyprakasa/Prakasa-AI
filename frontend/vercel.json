@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/api/public/verify/:code",
+      "destination": "https://prakasa-ai-api.vercel.app/verify/:code"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://prakasa-ai-api.vercel.app/api/:path*"
     },

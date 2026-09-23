@@ -3,13 +3,11 @@ const { z } = require('zod');
 const validate = require('../middleware/validate');
 const {
   setupGuard,
-  setupLockGuard,
   setupLimiter,
 } = require('../middleware/setupGuard');
 const ctrl = require('../controllers/setup.controller');
 
 router.use(setupLimiter);
-router.use(setupLockGuard);
 router.use(setupGuard);
 
 const bootstrapBody = z.object({

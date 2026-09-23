@@ -3,6 +3,7 @@ const { z } = require('zod');
 const requireAuth = require('../middleware/requireAuth');
 const requirePermission = require('../middleware/requirePermission');
 const validate = require('../middleware/validate');
+const upload = require('../middleware/upload');
 const ctrl = require('../controllers/aiCommand.controller');
 
 const idParams = z.object({
@@ -12,6 +13,11 @@ const idParams = z.object({
 const sessionContextParams = z.object({
   id: z.coerce.number().int().positive(),
   contextId: z.coerce.number().int().positive(),
+});
+
+const sessionDocumentParams = z.object({
+  id: z.coerce.number().int().positive(),
+  documentId: z.coerce.number().int().positive(),
 });
 
 const listQuery = z.object({
@@ -44,6 +50,13 @@ const messageListQuery = z.object({
 
 const sendMessageBody = z.object({
   message: z.string().min(1).max(20000),
+});
+
+const generateArtifactBody = z.object({
+  messageId: z.number().int().positive(),
+  format: z.enum(['pdf', 'docx', 'xlsx', 'txt', 'md', 'csv']),
+  title: z.string().min(1).max(255).optional(),
+  documentType: z.string().min(1).max(80).regex(/^[a-zA-Z0-9_-]+$/).optional(),
 });
 
 const attachContextBody = z.object({
@@ -159,6 +172,37 @@ router.post(
   validate(idParams, 'params'),
   validate(sendMessageBody),
   ctrl.sendMessage
+);
+
+router.post(
+  '/sessions/:id/files',
+  requirePermission('ai_command.use'),
+  requirePermission('document.create'),
+  validate(idParams, 'params'),
+  upload.single('file'),
+  ctrl.uploadSessionFile
+);
+router.post(
+  '/sessions/:id/artifacts',
+  requirePermission('ai_command.use'),
+  requirePermission('document.create'),
+  validate(idParams, 'params'),
+  validate(generateArtifactBody),
+  ctrl.generateArtifact
+);
+router.get(
+  '/sessions/:id/artifacts/:documentId',
+  requirePermission('ai_command.session.view'),
+  requirePermission('document.view'),
+  validate(sessionDocumentParams, 'params'),
+  ctrl.getArtifact
+);
+router.get(
+  '/sessions/:id/artifacts/:documentId/download',
+  requirePermission('ai_command.session.view'),
+  requirePermission('document.view'),
+  validate(sessionDocumentParams, 'params'),
+  ctrl.downloadArtifact
 );
 
 router.get(

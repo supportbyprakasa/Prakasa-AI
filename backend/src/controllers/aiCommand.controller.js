@@ -4,6 +4,7 @@ const aiAccess = require('../services/aiSessionAccess.service');
 const aiContext = require('../services/aiContext.service');
 const aiCommand = require('../services/aiCommand.service');
 const aiAction = require('../services/aiActionProposal.service');
+const aiDocumentStorage = require('../services/aiDocumentStorage.service');
 const { listProviders } = require('../services/ai/provider');
 
 function handleServiceError(error, res, next) {
@@ -180,6 +181,85 @@ async function sendMessage(req, res, next) {
     });
 
     return ok(res, result, undefined, 201);
+  } catch (error) {
+    return handleServiceError(error, res, next);
+  }
+}
+
+async function uploadSessionFile(req, res, next) {
+  try {
+    const session = await aiCommand.getSessionById(req.params.id);
+    if (!session) return fail(res, 'NOT_FOUND', 'Session tidak ditemukan', 404);
+
+    aiAccess.assertSessionAccess({ user: req.user, session, action: 'send_message' });
+    const result = await aiDocumentStorage.uploadSessionFile({
+      session,
+      user: req.user,
+      file: req.file,
+      title: req.body?.title,
+      documentType: req.body?.documentType,
+    });
+    return ok(res, result, undefined, 201);
+  } catch (error) {
+    return handleServiceError(error, res, next);
+  }
+}
+
+async function generateArtifact(req, res, next) {
+  try {
+    const session = await aiCommand.getSessionById(req.params.id);
+    if (!session) return fail(res, 'NOT_FOUND', 'Session tidak ditemukan', 404);
+
+    aiAccess.assertSessionAccess({ user: req.user, session, action: 'send_message' });
+    const result = await aiDocumentStorage.generateFromMessage({
+      session,
+      user: req.user,
+      messageId: req.body.messageId,
+      format: req.body.format,
+      title: req.body.title,
+      documentType: req.body.documentType,
+    });
+    return ok(res, result, undefined, 201);
+  } catch (error) {
+    return handleServiceError(error, res, next);
+  }
+}
+
+async function downloadArtifact(req, res, next) {
+  try {
+    const session = await aiCommand.getSessionById(req.params.id);
+    if (!session) return fail(res, 'NOT_FOUND', 'Session tidak ditemukan', 404);
+
+    aiAccess.assertSessionAccess({ user: req.user, session, action: 'view' });
+    const file = await aiDocumentStorage.downloadSessionDocument({
+      session,
+      user: req.user,
+      documentId: Number(req.params.documentId),
+    });
+    const fallback = String(file.fileName || 'document').replace(/[^a-zA-Z0-9._-]/g, '_');
+    res.setHeader('Content-Type', file.mimeType || 'application/octet-stream');
+    res.setHeader('Content-Length', file.buffer.length);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(file.fileName)}`
+    );
+    return res.status(200).send(file.buffer);
+  } catch (error) {
+    return handleServiceError(error, res, next);
+  }
+}
+
+async function getArtifact(req, res, next) {
+  try {
+    const session = await aiCommand.getSessionById(req.params.id);
+    if (!session) return fail(res, 'NOT_FOUND', 'Session tidak ditemukan', 404);
+
+    aiAccess.assertSessionAccess({ user: req.user, session, action: 'view' });
+    const artifact = await aiDocumentStorage.getSessionDocumentMetadata({
+      session,
+      documentId: Number(req.params.documentId),
+    });
+    return ok(res, artifact);
   } catch (error) {
     return handleServiceError(error, res, next);
   }
@@ -490,6 +570,10 @@ module.exports = {
   deleteSession,
   listMessages,
   sendMessage,
+  uploadSessionFile,
+  generateArtifact,
+  getArtifact,
+  downloadArtifact,
   listContexts,
   attachContext,
   removeContext,

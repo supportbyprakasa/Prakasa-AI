@@ -19,24 +19,28 @@
     "check:batch6": "node src/scripts/checkBatch6.js",
     "check:ledger": "node src/scripts/checkLedger.js",
     "test:db-config": "node --test test/dbConnectionConfig.test.js",
+    "test:ai-documents": "node --test test/aiDocumentArtifact.test.js",
     "gateway:claude-team": "node src/scripts/claudeTeamGateway.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "docx": "^9.5.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^7.4.0",
-    "google-auth-library": "^9.14.1",
+    "google-auth-library": "^10.9.1",
+    "googleapis": "^150.0.1",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.11.3",
-    "pino": "^9.4.0",
-    "pino-http": "^10.3.0",
-    "zod": "^3.23.8",
-    "googleapis": "^144.0.0",
+    "jszip": "^3.10.1",
     "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.11.3",
     "openai": "^4.67.3",
     "pdf-lib": "^1.17.1",
-    "qrcode": "^1.5.4"
+    "pdf-parse": "^1.1.1",
+    "pino": "^9.4.0",
+    "pino-http": "^10.3.0",
+    "qrcode": "^1.5.4",
+    "zod": "^3.23.8"
   }
 }

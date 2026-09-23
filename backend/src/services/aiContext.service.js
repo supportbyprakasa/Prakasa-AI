@@ -98,10 +98,14 @@ const RESOLVERS = {
     const [rows] = await pool.query(
       `SELECT d.id, d.entity_id, d.department_id, d.title,
               d.document_type, d.status, d.drive_file_id,
-              f.mime_type AS mimeType
+              f.mime_type AS mimeType,
+              c.extraction_status AS extractionStatus,
+              c.extracted_text AS extractedText
          FROM documents d
          LEFT JOIN drive_files_metadata f
            ON f.drive_file_id=d.drive_file_id
+         LEFT JOIN document_ai_content c
+           ON c.document_id=d.id
         WHERE d.id=? AND d.deleted_at IS NULL
         LIMIT 1`,
       [contextId]
@@ -111,8 +115,12 @@ const RESOLVERS = {
     if (!canAccessScopedRow(user, row)) return null;
 
     let extracted = '';
+    if (includeContent && row.extractionStatus === 'ready' && row.extractedText) {
+      extracted = String(row.extractedText);
+    }
     if (
       includeContent &&
+      !extracted &&
       row.drive_file_id &&
       row.mimeType === 'application/vnd.google-apps.document'
     ) {
@@ -139,6 +147,9 @@ const RESOLVERS = {
         [
           `Document type: ${row.document_type}`,
           `Status: ${row.status}`,
+          row.extractionStatus && row.extractionStatus !== 'ready'
+            ? `AI extraction status: ${row.extractionStatus}`
+            : '',
           extracted ? `Content:\n${truncate(extracted, 5000)}` : '',
         ].filter(Boolean).join('\n')
       ),

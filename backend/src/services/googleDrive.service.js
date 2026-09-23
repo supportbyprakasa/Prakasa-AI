@@ -192,11 +192,29 @@ async function downloadFileBuffer(fileId, ctx = {}) {
   });
 }
 
+async function deleteFile(fileId, ctx = {}) {
+  return integrationLog.wrap({
+    entityId: ctx.entityId || null,
+    userId: ctx.userId || null,
+    provider: 'google_drive',
+    operation: 'deleteFile',
+    subjectType: ctx.subjectType || null,
+    subjectId: ctx.subjectId || null,
+    requestMeta: { fileId },
+    responseMeta: () => ({ deleted: true }),
+  }, async () => {
+    const drive = driveClient();
+    await drive.files.delete({ fileId, supportsAllDrives: true });
+    return { deleted: true };
+  });
+}
+
 module.exports = {
   ensureFolder,
   uploadFile,
   copyFile,
   getFileMeta,
   downloadFileBuffer,
+  deleteFile,
   driveClient,
 };

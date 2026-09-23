@@ -1,0 +1,122 @@
+export const MOBILE_BREAKPOINT = 700;
+export const DESKTOP_BREAKPOINT = 1180;
+export const DEFAULT_DOCUMENT_PANEL_WIDTH = 400;
+export const MIN_DOCUMENT_PANEL_WIDTH = 320;
+export const MAX_DOCUMENT_PANEL_WIDTH = 576;
+
+export function resolveResponsiveMode(viewportWidth) {
+  const width = Number(viewportWidth);
+  if (width < MOBILE_BREAKPOINT) return 'mobile';
+  if (width < DESKTOP_BREAKPOINT) return 'tablet';
+  return 'desktop';
+}
+
+export function clampDocumentPanelWidth(panelWidth, viewportWidth) {
+  const viewport = Number(viewportWidth);
+  const maximumForViewport = Number.isFinite(viewport)
+    ? Math.min(MAX_DOCUMENT_PANEL_WIDTH, Math.max(MIN_DOCUMENT_PANEL_WIDTH, viewport - 816))
+    : MAX_DOCUMENT_PANEL_WIDTH;
+  const requestedWidth = Number(panelWidth);
+  const safeWidth = Number.isFinite(requestedWidth)
+    ? requestedWidth
+    : DEFAULT_DOCUMENT_PANEL_WIDTH;
+
+  return Math.min(maximumForViewport, Math.max(MIN_DOCUMENT_PANEL_WIDTH, safeWidth));
+}
+
+export function normalizeStoredPanelWidth(storedValue, viewportWidth) {
+  if (storedValue === null || storedValue === undefined || storedValue === '') {
+    return clampDocumentPanelWidth(DEFAULT_DOCUMENT_PANEL_WIDTH, viewportWidth);
+  }
+
+  const parsed = Number(storedValue);
+  return clampDocumentPanelWidth(
+    Number.isFinite(parsed) ? parsed : DEFAULT_DOCUMENT_PANEL_WIDTH,
+    viewportWidth,
+  );
+}
+
+export const RECENCY_GROUPS = [
+  { key: 'today', label: 'Hari ini' },
+  { key: 'yesterday', label: 'Kemarin' },
+  { key: 'week', label: '7 hari terakhir' },
+  { key: 'month', label: '30 hari terakhir' },
+  { key: 'older', label: 'Lebih lama' },
+];
+
+function startOfLocalDay(date) {
+  const day = new Date(date);
+  day.setHours(0, 0, 0, 0);
+  return day;
+}
+
+export function recencyKey(isoDate, now = new Date()) {
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return 'older';
+  // Rounding absorbs the ±1h difference on daylight-saving transitions.
+  const days = Math.round((startOfLocalDay(now) - startOfLocalDay(date)) / 86400000);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 7) return 'week';
+  if (days < 30) return 'month';
+  return 'older';
+}
+
+export function groupSessionsByRecency(sessions, now = new Date()) {
+  const buckets = new Map(RECENCY_GROUPS.map((group) => [group.key, []]));
+  for (const session of sessions || []) {
+    buckets.get(recencyKey(session.lastMessageAt || session.createdAt, now)).push(session);
+  }
+  return RECENCY_GROUPS
+    .map((group) => ({ ...group, items: buckets.get(group.key) }))
+    .filter((group) => group.items.length > 0);
+}
+
+export function greetingForHour(hour) {
+  const value = Number(hour);
+  if (value >= 4 && value < 11) return 'Selamat pagi';
+  if (value >= 11 && value < 15) return 'Selamat siang';
+  if (value >= 15 && value < 18) return 'Selamat sore';
+  return 'Selamat malam';
+}
+
+export function titleFromMessage(text, maxLength = 60) {
+  const clean = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!clean) return 'Percakapan baru';
+  if (clean.length <= maxLength) return clean;
+  const cut = clean.slice(0, maxLength);
+  const lastSpace = cut.lastIndexOf(' ');
+  const base = lastSpace > maxLength * 0.6 ? cut.slice(0, lastSpace) : cut;
+  return `${base.trimEnd()}…`;
+}
+
+export function firstNameOf(user) {
+  const name = String(user?.name || '').trim();
+  if (name) return name.split(/\s+/)[0];
+  const email = String(user?.email || '');
+  return email ? email.split('@')[0] : '';
+}
+
+export function isGenerationActive({ sending = false, generationStatus } = {}) {
+  return Boolean(sending || generationStatus === 'generating');
+}
+
+export function getGooglePreviewUrl(webViewLink) {
+  try {
+    const url = new URL(webViewLink);
+    const isGoogleDocument = [
+      'docs.google.com',
+      'drive.google.com',
+    ].includes(url.hostname);
+    if (!isGoogleDocument || !url.pathname.includes('/d/')) return null;
+
+    const parts = url.pathname.split('/').filter(Boolean);
+    const documentIdIndex = parts.indexOf('d') + 1;
+    if (!documentIdIndex || !parts[documentIdIndex]) return null;
+
+    const prefix = parts.slice(0, documentIdIndex + 1).join('/');
+    return `${url.origin}/${prefix}/preview`;
+  } catch {
+    return null;
+  }
+}

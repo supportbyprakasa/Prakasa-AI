@@ -82,6 +82,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/verify/:code" element={<VerifyDocument />} />
+      <Route path="/ai-command" element={<RequireAuth><AICommandCenter /></RequireAuth>} />
       <Route element={<RequireAuth><Layout /></RequireAuth>}>
         <Route index element={<Dashboard />} />
         <Route path="hub/:slug" element={<DivisionHub />} />
@@ -148,7 +149,6 @@ export default function App() {
         <Route path="admin/approval-matrix" element={<ApprovalMatrix />} />
         <Route path="admin/approval-delegations" element={<ApprovalDelegations />} />
         <Route path="admin/signature-precheck" element={<SignaturePrecheckLogs />} />
-        <Route path="ai-command" element={<AICommandCenter />} />
         <Route path="admin/ai-usage" element={<AIUsage />} />
         <Route path="admin/ai-provider-settings" element={<AIProviderSettings />} />
       </Route>

@@ -61,12 +61,8 @@ export default function AIContextPanel({ sessionId, session, refreshKey }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-      <div style={{
-        padding: 12, borderBottom: '1px solid var(--color-border)',
-        display: 'flex', justifyContent: 'space-between',
-        alignItems: 'center', gap: 8,
-      }}>
+    <div className="ai-context-panel">
+      <div className="ai-support-section-header">
         <div style={{ fontSize: 13, fontWeight: 600 }}>Konteks Internal</div>
         {canEdit && !archived && (
           <Button variant="secondary" onClick={() => setAddOpen(true)}>
@@ -75,11 +71,8 @@ export default function AIContextPanel({ sessionId, session, refreshKey }) {
         )}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
-        <div style={{
-          fontSize: 11, color: 'var(--color-text-muted)',
-          marginBottom: 8, lineHeight: 1.5,
-        }}>
+      <div className="ai-support-section-body">
+        <div className="ai-support-helper">
           AI hanya menerima context record yang berhasil diverifikasi backend.
         </div>
 
@@ -88,10 +81,7 @@ export default function AIContextPanel({ sessionId, session, refreshKey }) {
         )}
 
         {!loading && !rows.length && (
-          <div style={{
-            padding: 20, textAlign: 'center',
-            color: 'var(--color-text-muted)', fontSize: 13,
-          }}>
+          <div className="ai-support-empty">
             Belum ada context terhubung.
           </div>
         )}
@@ -100,13 +90,7 @@ export default function AIContextPanel({ sessionId, session, refreshKey }) {
           const meta = TYPE_META[c.contextType] || { label: c.contextType, icon: Link2 };
           const Icon = meta.icon;
           return (
-            <div key={c.id} style={{
-              display: 'flex', alignItems: 'flex-start', gap: 8,
-              padding: 8, marginBottom: 6,
-              background: '#f8fafc',
-              border: '1px solid var(--color-border)',
-              borderRadius: 8, fontSize: 12,
-            }}>
+            <div key={c.id} className="ai-support-card">
               <Icon size={14} style={{ marginTop: 2, flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
@@ -126,11 +110,8 @@ export default function AIContextPanel({ sessionId, session, refreshKey }) {
                   type="button"
                   onClick={() => setDeleteTarget(c)}
                   title="Hapus"
-                  style={{
-                    background: 'transparent', border: 'none',
-                    cursor: 'pointer', color: 'var(--color-error)',
-                    padding: 2, flexShrink: 0,
-                  }}
+                  aria-label={`Lepas ${c.title || meta.label} dari konteks`}
+                  className="ai-support-delete ai-ripple"
                 >
                   <Trash2 size={13} />
                 </button>
@@ -207,7 +188,7 @@ function AddContextModal({ sessionId, onClose, onAdded }) {
           onChange={(e) => setForm({ ...form, contextType: e.target.value })}
           style={{
             width: '100%', padding: 8, borderRadius: 8,
-            border: '1px solid var(--color-border)',
+            boxShadow: 'inset 0 0 0 1px var(--color-border)',
           }}
         >
           {Object.keys(TYPE_META).map((t) => (

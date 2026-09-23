@@ -107,7 +107,7 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
             disabled={providersLoading || session.generationStatus === 'generating'}
             style={{
               width: '100%', padding: 8, borderRadius: 8,
-              border: '1px solid var(--color-border)',
+              boxShadow: 'inset 0 0 0 1px var(--color-border)',
             }}
           >
             <option value="">Default server</option>
@@ -131,7 +131,7 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
             onChange={(e) => set('visibility', e.target.value)}
             style={{
               width: '100%', padding: 8, borderRadius: 8,
-              border: '1px solid var(--color-border)',
+              boxShadow: 'inset 0 0 0 1px var(--color-border)',
             }}
           >
             <option value="private">Private — {visibilityHelper('private')}</option>
@@ -154,7 +154,7 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
             placeholder="Konteks tambahan yang Anda kontrol untuk percakapan ini."
             style={{
               width: '100%', padding: 10, borderRadius: 8,
-              border: '1px solid var(--color-border)', fontSize: 13,
+              boxShadow: 'inset 0 0 0 1px var(--color-border)', fontSize: 13,
             }}
           />
           <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
@@ -165,7 +165,7 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
         <div style={{
           display: 'flex', justifyContent: 'space-between',
           alignItems: 'center', marginTop: 20,
-          paddingTop: 12, borderTop: '1px solid var(--color-border)',
+          paddingTop: 12, boxShadow: 'inset 0 1px 0 0 var(--color-border)',
         }}>
           <div style={{ display: 'flex', gap: 8 }}>
             {session.status === 'active' && (

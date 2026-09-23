@@ -115,10 +115,34 @@ function migrationNumber(filename) {
   return match ? Number(match[1]) : null;
 }
 
+function validateBaselineThroughTarget(files, through) {
+  if (through == null || through === '') return null;
+
+  const raw = String(through).trim();
+  if (/^\d+$/.test(raw)) {
+    const targetNumber = Number(raw);
+    const exactMatch = files.some(
+      (file) => migrationNumber(file.filename) === targetNumber
+    );
+    if (!exactMatch) {
+      throw new Error(
+        `--baseline-through="${raw}" tidak cocok dengan file migrasi apapun`
+      );
+    }
+    return raw;
+  }
+
+  const exactMatch = files.some((file) => file.filename === raw);
+  if (!exactMatch) {
+    throw new Error(`Migration baseline-through tidak ditemukan: ${raw}`);
+  }
+  return raw;
+}
+
 function selectBaselineFiles(files, through) {
   if (through == null || through === '') return [...files];
 
-  const raw = String(through).trim();
+  const raw = validateBaselineThroughTarget(files, through);
   if (/^\d+$/.test(raw)) {
     const maxNumber = Number(raw);
     const selected = files.filter((file) => {
@@ -210,6 +234,7 @@ module.exports = {
   getAppliedMap,
   classify,
   countExistingDomainTables,
+  validateBaselineThroughTarget,
   selectBaselineFiles,
   baselineFiles,
   applyOne,

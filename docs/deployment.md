@@ -6,6 +6,36 @@
 - Domain utama: `prakasa-work-os.com` → frontend
 - Subdomain: `api.prakasa-work-os.com` → backend
 
+## 0a. Bootstrap Admin — Development Only
+
+`backend/src/scripts/bootstrapAdmin.js` hanya untuk local/development dan akan
+abort bila `NODE_ENV=production`. Script juga mewajibkan `BOOTSTRAP_ALLOW=yes`,
+email/password eksplisit, dan password minimal 12 karakter yang tidak lemah.
+
+Contoh development:
+
+```bash
+cd backend
+NODE_ENV=development \
+BOOTSTRAP_ALLOW=yes \
+BOOTSTRAP_ADMIN_EMAIL=admin@dev.local \
+BOOTSTRAP_ADMIN_PASSWORD='long-unique-dev-passphrase' \
+node src/scripts/bootstrapAdmin.js
+```
+
+Jika user sudah ada, script tidak mereset password dan tidak memindahkan user
+lintas entity. Hapus variabel `BOOTSTRAP_*` setelah selesai.
+
+### Production
+
+**Jangan menjalankan `bootstrapAdmin.js` di production.** Repository saat ini
+tidak menyediakan production bootstrap endpoint. Akun Super Admin production
+harus diprovision melalui proses operasional yang disetujui dan diaudit,
+menggunakan mekanisme account-management yang berlaku untuk environment target.
+Jangan mengubah `NODE_ENV` ke development hanya untuk melewati guard ini.
+
+---
+
 ## 0. Migration Ledger (Batch 6.4)
 
 Mulai Batch 6.4, migration dilacak di tabel kontrol `schema_migrations`.
@@ -94,14 +124,9 @@ npm run migrate -- --help
    - Application startup file: `src/app.js`
 3. Set Environment Variables dari `.env.example`
 4. Run NPM Install
-5. Jalankan migration
-6. Bootstrap Super Admin pertama:
-   - set sementara `BOOTSTRAP_ADMIN_NAME`
-   - set sementara `BOOTSTRAP_ADMIN_EMAIL`
-   - set sementara `BOOTSTRAP_ADMIN_PASSWORD`
-   - set `BOOTSTRAP_ADMIN_ENTITY_ID=1`
-   - jalankan `npm run bootstrap:admin`
-   - setelah sukses, hapus `BOOTSTRAP_ADMIN_PASSWORD` dari environment
+5. Jalankan migration sesuai §0 dan pastikan `npm run check:ledger` HEALTHY.
+6. Pastikan akun Super Admin production sudah diprovision melalui proses
+   operasional yang disetujui. Jangan jalankan `bootstrapAdmin.js`; lihat §0a.
 7. Restart Passenger setiap deploy.
 
 ## 3. Authentication

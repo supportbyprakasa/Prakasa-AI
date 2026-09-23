@@ -25,6 +25,75 @@ function isAllowedUser(context = {}) {
   );
 }
 
+async function callGateway({ system, prompt, model, context }) {
+  const url = String(process.env.CLAUDE_TEAM_GATEWAY_URL || '').replace(/\/+$/, '');
+  const secret = process.env.CLAUDE_TEAM_GATEWAY_SECRET;
+
+  if (!url || !secret) {
+    throw providerError(
+      'Claude Team gateway belum dikonfigurasi',
+      'AI_PROVIDER_NOT_CONFIGURED',
+      503
+    );
+  }
+
+  let response;
+  try {
+    response = await fetch(`${url}/generate`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-prakasa-ai-gateway-secret': secret,
+      },
+      body: JSON.stringify({
+        system,
+        prompt,
+        model,
+        userEmail: context?.userEmail || null,
+      }),
+      signal: AbortSignal.timeout(
+        Number(process.env.CLAUDE_TEAM_TIMEOUT_MS || 120000)
+      ),
+    });
+  } catch (error) {
+    if (error?.name === 'TimeoutError' || error?.name === 'AbortError') {
+      throw providerError(
+        'Claude Team gateway timeout',
+        'AI_PROVIDER_TIMEOUT',
+        504
+      );
+    }
+    throw providerError(
+      'Claude Team gateway tidak dapat dijangkau',
+      'AI_PROVIDER_UNAVAILABLE',
+      503
+    );
+  }
+
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch {
+    // handled below
+  }
+
+  if (!response.ok) {
+    const code = payload?.error?.code || 'AI_PROVIDER_ERROR';
+    const status = response.status === 403 ? 403 : response.status >= 500 ? 503 : 502;
+    throw providerError(
+      payload?.error?.message || 'Claude Team gateway gagal',
+      code,
+      status
+    );
+  }
+
+  return {
+    content: String(payload?.content || ''),
+    tokensIn: payload?.tokensIn,
+    tokensOut: payload?.tokensOut,
+  };
+}
+
 async function generate({ system, prompt, model, context }) {
   if (!isAllowedUser(context)) {
     throw providerError(
@@ -32,6 +101,10 @@ async function generate({ system, prompt, model, context }) {
       'AI_PROVIDER_FORBIDDEN',
       403
     );
+  }
+
+  if (process.env.CLAUDE_TEAM_GATEWAY_URL) {
+    return callGateway({ system, prompt, model, context });
   }
 
   const cli = process.env.CLAUDE_TEAM_CLI_PATH || 'claude';
@@ -126,4 +199,5 @@ async function generate({ system, prompt, model, context }) {
 module.exports = {
   generate,
   isAllowedUser,
+  callGateway,
 };

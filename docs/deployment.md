@@ -187,7 +187,16 @@ curl -sS -o /dev/null -w "%{http_code}\n" \
 ## 1. Database
 1. cPanel → MySQL Databases → buat database + user
 2. Catat: `DB_NAME`, `DB_USER`, `DB_PASS`, `DB_HOST` (biasanya `localhost`)
-3. Gunakan migration runner dari backend sesuai §0. Jangan import/re-run migration lama secara manual kecuali untuk recovery yang terverifikasi.
+3. `DB_PORT` default `3306`. Isi hanya jika provider menggunakan port lain.
+4. `DB_SSL_MODE` default `disabled`. Untuk provider remote gunakan:
+   - `required`: TLS aktif dengan certificate verification menggunakan trust store Node/provider.
+   - `verify-ca`: TLS aktif + `DB_SSL_CA` wajib; literal `\n` dinormalisasi menjadi newline.
+5. Jangan set `DB_SSL_CA` pada mode `disabled` atau `required`; konfigurasi invalid akan fail-fast.
+6. Gunakan migration runner dari backend sesuai §0. Jangan import/re-run migration lama secara manual kecuali untuk recovery yang terverifikasi.
+
+Runtime pool dan migration runner menggunakan parser koneksi yang sama di
+`backend/src/db/connectionConfig.js`; hanya opsi khusus pool dan
+`multipleStatements: true` untuk migration yang berbeda.
 
 ## 2. Backend
 1. Upload folder `backend/` ke `~/prakasa-work-os-backend` (di luar `public_html`)

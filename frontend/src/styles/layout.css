@@ -167,27 +167,44 @@
 }
 
 .prakasa-sidebar {
+  position: sticky;
+  top: var(--navbar-height);
+  align-self: flex-start;
   width: var(--sidebar-width);
+  height: calc(100vh - var(--navbar-height));
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
   background: var(--sidebar-bg);
+  overflow: hidden;
+  transition: var(--sidebar-transition);
+}
+
+.prakasa-sidebar__nav {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  transition: var(--sidebar-transition);
+  overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 }
-.prakasa-sidebar:hover {
+.prakasa-sidebar__nav:hover {
   scrollbar-color: #c1c1c1 transparent;
 }
-.prakasa-sidebar::-webkit-scrollbar {
+.prakasa-sidebar__nav::-webkit-scrollbar {
   width: 8px;
 }
-.prakasa-sidebar::-webkit-scrollbar-thumb {
+.prakasa-sidebar__nav::-webkit-scrollbar-thumb {
   background: transparent;
   border-radius: 4px;
 }
-.prakasa-sidebar:hover::-webkit-scrollbar-thumb {
+.prakasa-sidebar__nav:hover::-webkit-scrollbar-thumb {
   background: #c1c1c1;
+}
+.prakasa-sidebar__nav-spacer {
+  height: 24px;
+  flex-shrink: 0;
 }
 
 .prakasa-sidebar--collapsed {

@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const logger = require('../utils/logger');
+const pool = require('../db/pool');
 
 const setupLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -40,7 +41,41 @@ function constantTimeEquals(a, b) {
   }
 }
 
-function setupGuard(req, res, next) {
+async function setupGuard(req, res, next) {
+  try {
+    const [tableRows] = await pool.query(
+      `SELECT COUNT(*) AS c
+         FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'users'`
+    );
+
+    if (Number(tableRows[0]?.c || 0) > 0) {
+      const [[userCountRow]] = await pool.query('SELECT COUNT(*) AS c FROM users');
+      if (Number(userCountRow?.c || 0) > 0) {
+        logger.warn(
+          {
+            setupAudit: true,
+            operation: 'setup.guard',
+            status: 'locked',
+            ip: req.ip,
+          },
+          '[setup] permanently locked after first user provisioning'
+        );
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Not Found',
+          },
+        });
+      }
+    }
+  } catch (error) {
+    logger.error({ err: error.message }, '[setup] provisioning lock check failed');
+    return next(error);
+  }
+
   const expected = getSetupToken();
   const provided = req.headers['x-setup-token'];
 

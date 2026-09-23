@@ -1,16 +1,24 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/v1/(.*)",
-      "dest": "/api/proxy?path=v1/$1"
+      "source": "/api/:path*",
+      "destination": "https://prakasa-ai-api.vercel.app/api/:path*"
     },
     {
-      "handle": "filesystem"
-    },
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/api/:path*",
+      "headers": [
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "0"
+        }
+      ]
     }
   ]
 }

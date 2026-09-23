@@ -7,6 +7,7 @@ const {
   getAppliedMap,
   classify,
   countExistingDomainTables,
+  validateBaselineThroughTarget,
   selectBaselineFiles,
   baselineFiles,
   applyOne,
@@ -93,6 +94,17 @@ async function main() {
     await ensureLedger(db);
 
     const files = loadMigrationFiles();
+
+    if (args.baselineThrough) {
+      const verifiedTarget = validateBaselineThroughTarget(
+        files,
+        args.baselineThrough
+      );
+      console.log(
+        `[migrate] --baseline-through target "${verifiedTarget}" verified.`
+      );
+    }
+
     const appliedMap = await getAppliedMap(db);
     const existingDomainTables = await countExistingDomainTables(db);
 

@@ -60,7 +60,11 @@ function printResult() {
 
   console.log('\n[3] Pending migrations');
   if (!pending.length) pass('none — database is up to date');
-  else for (const file of pending) warn(`${file.filename} — not yet applied`);
+  else {
+    for (const file of pending) {
+      fail(`${file.filename} — not yet applied (run "npm run migrate")`);
+    }
+  }
 
   console.log('\n[4] Changed checksums');
   if (!changed.length) pass('none');
@@ -75,8 +79,13 @@ function printResult() {
   if (!missing.length) pass('none');
   else {
     for (const item of missing) {
-      warn(`${item.filename} — recorded in ledger but not on disk`);
+      fail(
+        `${item.filename} — recorded in ledger but not on disk (applied at ${item.appliedAt})`
+      );
     }
+    console.log(
+      '  Files were likely renamed or deleted. Do NOT run migrate until resolved.'
+    );
   }
 
   printResult();

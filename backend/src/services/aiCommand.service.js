@@ -81,10 +81,17 @@ async function validateDepartment(entityId, departmentId) {
   return Number(departmentId);
 }
 
-async function ensureProviderAvailable(provider, module = 'ai_command_center') {
+async function ensureProviderAvailable(
+  provider,
+  module = 'ai_command_center',
+  user = null
+) {
   if (!provider) return null;
 
-  const options = await listProviders(module);
+  const options = await listProviders(module, {
+    userEmail: user?.email || null,
+    userId: user?.sub || null,
+  });
   const selected = options.find((item) => item.id === provider);
   if (!selected) {
     const error = new Error('Provider AI tidak dikenal');
@@ -157,7 +164,8 @@ async function createSession({
     systemContext == null ? null : String(systemContext).slice(0, 8000);
   const selectedProvider = await ensureProviderAvailable(
     provider || null,
-    'ai_command_center'
+    'ai_command_center',
+    user
   );
 
   const [result] = await pool.query(
@@ -319,7 +327,8 @@ async function updateSession({ session, user, patch }) {
   if (patch.provider !== undefined) {
     const selectedProvider = await ensureProviderAvailable(
       patch.provider || null,
-      session.ai_module || 'ai_command_center'
+      session.ai_module || 'ai_command_center',
+      user
     );
     updates.push('provider=?');
     args.push(selectedProvider);
@@ -662,6 +671,7 @@ async function sendMessage({ sessionId, userMessage, user }) {
         subjectType: 'ai_session',
         subjectId: session.id,
         provider: session.provider || null,
+        userEmail: user.email || null,
       }
     );
 

@@ -20,7 +20,10 @@ function handleServiceError(error, res, next) {
 
 async function providers(req, res, next) {
   try {
-    const rows = await listProviders('ai_command_center');
+    const rows = await listProviders('ai_command_center', {
+      userEmail: req.user.email,
+      userId: req.user.sub,
+    });
     return ok(res, rows);
   } catch (error) {
     return handleServiceError(error, res, next);

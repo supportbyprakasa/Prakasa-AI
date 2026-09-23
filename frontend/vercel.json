@@ -2,8 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/proxy?path=$1"
+      "src": "/api/v1/(.*)",
+      "dest": "/api/proxy?path=v1/$1"
     },
     {
       "handle": "filesystem"

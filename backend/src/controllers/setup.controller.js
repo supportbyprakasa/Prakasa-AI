@@ -55,6 +55,7 @@ async function status(req, res, next) {
         users,
       },
       durationMs: Date.now() - startedAt,
+      persist: false,
     });
 
     return ok(res, {

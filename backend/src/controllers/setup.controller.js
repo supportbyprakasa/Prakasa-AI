@@ -184,6 +184,37 @@ async function bootstrapAdmin(req, res, next) {
       entityId = 1,
     } = req.body;
 
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const [[userCountRow]] = await pool.query(
+      'SELECT COUNT(*) AS c FROM users'
+    );
+    const userCount = Number(userCountRow?.c || 0);
+
+    if (userCount > 0) {
+      const [existingAdminRows] = await pool.query(
+        `SELECT u.id
+           FROM users u
+           JOIN user_roles ur ON ur.user_id = u.id
+           JOIN roles r ON r.id = ur.role_id
+          WHERE u.email = ?
+            AND u.deleted_at IS NULL
+            AND r.deleted_at IS NULL
+            AND LOWER(r.name) IN
+              ('super admin','superadmin','administrator','admin')
+          LIMIT 1`,
+        [normalizedEmail]
+      );
+
+      if (!existingAdminRows[0]) {
+        return fail(
+          res,
+          'FIRST_ADMIN_ALREADY_PROVISIONED',
+          'Database sudah memiliki user. Setup endpoint tidak boleh membuat atau mengangkat Super Admin baru.',
+          409
+        );
+      }
+    }
+
     const result = await bootstrapFirstAdmin({
       email,
       name,

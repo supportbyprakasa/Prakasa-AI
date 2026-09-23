@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const pool = require('../db/pool');
 const { log: activityLog } = require('./activityLog.service');
-const { runModule } = require('./ai/provider');
+const { runModule, listProviders } = require('./ai/provider');
 const aiAccess = require('./aiSessionAccess.service');
 const aiContext = require('./aiContext.service');
 
@@ -81,12 +81,33 @@ async function validateDepartment(entityId, departmentId) {
   return Number(departmentId);
 }
 
+async function ensureProviderAvailable(provider, module = 'ai_command_center') {
+  if (!provider) return null;
+
+  const options = await listProviders(module);
+  const selected = options.find((item) => item.id === provider);
+  if (!selected) {
+    const error = new Error('Provider AI tidak dikenal');
+    error.status = 400;
+    error.code = 'AI_PROVIDER_UNSUPPORTED';
+    throw error;
+  }
+  if (!selected.available) {
+    const error = new Error(`Provider ${selected.label} belum dikonfigurasi oleh administrator`);
+    error.status = 503;
+    error.code = 'AI_PROVIDER_NOT_CONFIGURED';
+    throw error;
+  }
+  return provider;
+}
+
 async function createSession({
   departmentId,
   title,
   sessionType,
   visibility,
   systemContext,
+  provider,
   user,
 }) {
   const entityId = Number(user.entityId);
@@ -134,12 +155,16 @@ async function createSession({
   const safeSessionType = String(sessionType || 'general').trim().slice(0, 60);
   const safeSystemContext =
     systemContext == null ? null : String(systemContext).slice(0, 8000);
+  const selectedProvider = await ensureProviderAvailable(
+    provider || null,
+    'ai_command_center'
+  );
 
   const [result] = await pool.query(
     `INSERT INTO ai_sessions
      (entity_id, department_id, owner_user_id, title, session_type,
-      visibility, ai_module, system_context, created_by)
-     VALUES (?, ?, ?, ?, ?, ?, 'ai_command_center', ?, ?)`,
+      visibility, ai_module, provider, system_context, created_by)
+     VALUES (?, ?, ?, ?, ?, ?, 'ai_command_center', ?, ?, ?)`,
     [
       entityId,
       selectedDepartmentId,
@@ -147,6 +172,7 @@ async function createSession({
       safeTitle,
       safeSessionType || 'general',
       selectedVisibility,
+      selectedProvider,
       safeSystemContext,
       user.sub,
     ]
@@ -290,6 +316,16 @@ async function updateSession({ session, user, patch }) {
     );
   }
 
+  if (patch.provider !== undefined) {
+    const selectedProvider = await ensureProviderAvailable(
+      patch.provider || null,
+      session.ai_module || 'ai_command_center'
+    );
+    updates.push('provider=?');
+    args.push(selectedProvider);
+    updates.push('model=NULL');
+  }
+
   if (!updates.length) return { id: session.id };
 
   args.push(session.id);
@@ -310,6 +346,8 @@ async function updateSession({ session, user, patch }) {
       titleChanged: patch.title !== undefined,
       visibility: patch.visibility,
       systemContextChanged: patch.systemContext !== undefined,
+      providerChanged: patch.provider !== undefined,
+      provider: patch.provider,
     },
   });
 
@@ -623,6 +661,7 @@ async function sendMessage({ sessionId, userMessage, user }) {
         userId: user.sub,
         subjectType: 'ai_session',
         subjectId: session.id,
+        provider: session.provider || null,
       }
     );
 
@@ -807,4 +846,5 @@ module.exports = {
   sendMessage,
   sessionDto,
   insertUsage,
+  ensureProviderAvailable,
 };

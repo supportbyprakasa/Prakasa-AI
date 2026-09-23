@@ -5,10 +5,22 @@ const providers = {
   openai: require('./openai'),
   gemini: require('./gemini'),
   claude: require('./claude'),
+  claude_team: require('./claudeTeamPersonal'),
   n8n: require('./n8n'),
 };
 
 const providerDefinitions = {
+  claude_team: {
+    label: 'Claude Team (Personal)',
+    configured: (ctx = {}) =>
+      process.env.CLAUDE_TEAM_SUBSCRIPTION_ENABLED === 'yes' &&
+      Boolean(process.env.CLAUDE_TEAM_ALLOWED_EMAIL) &&
+      String(process.env.CLAUDE_TEAM_ALLOWED_EMAIL).trim().toLowerCase() ===
+        String(ctx.userEmail || '').trim().toLowerCase(),
+    model: () => process.env.CLAUDE_TEAM_MODEL || 'sonnet',
+    authMode: 'subscription_local',
+    billingMode: 'team_subscription_usage',
+  },
   claude: {
     label: 'Claude API',
     configured: () => Boolean(process.env.ANTHROPIC_API_KEY),
@@ -69,7 +81,7 @@ async function getModuleContext(module) {
   return rows[0];
 }
 
-function resolveProvider(moduleContext, requestedProvider) {
+function resolveProvider(moduleContext, requestedProvider, ctx = {}) {
   const providerName = requestedProvider || moduleContext.provider;
   const definition = providerDefinitions[providerName];
   const implementation = providers[providerName];
@@ -82,7 +94,7 @@ function resolveProvider(moduleContext, requestedProvider) {
     );
   }
 
-  if (!definition.configured()) {
+  if (!definition.configured(ctx)) {
     throw providerError(
       `Provider ${definition.label} belum dikonfigurasi oleh administrator`
     );
@@ -103,11 +115,11 @@ function resolveProvider(moduleContext, requestedProvider) {
   };
 }
 
-async function listProviders(module) {
+async function listProviders(module, ctx = {}) {
   const moduleContext = await getModuleContext(module);
 
   return Object.entries(providerDefinitions).map(([name, definition]) => {
-    const available = definition.configured();
+    const available = definition.configured(ctx);
     const model = available ? definition.model(moduleContext) : null;
 
     return {
@@ -128,7 +140,7 @@ async function runModule(module, prompt, ctx = {}) {
 
   try {
     const moduleContext = await getModuleContext(module);
-    const selected = resolveProvider(moduleContext, ctx.provider || null);
+    const selected = resolveProvider(moduleContext, ctx.provider || null, ctx);
     providerName = selected.name;
 
     const result = await selected.implementation.generate({
@@ -143,6 +155,7 @@ async function runModule(module, prompt, ctx = {}) {
         userId: ctx.userId || null,
         subjectType: ctx.subjectType || null,
         subjectId: ctx.subjectId || null,
+        userEmail: ctx.userEmail || null,
       },
     });
 

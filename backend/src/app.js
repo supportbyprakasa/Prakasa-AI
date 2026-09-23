@@ -58,6 +58,23 @@ app.get('/api/health', (req, res) =>
 );
 
 app.use('/verify', require('./routes/publicVerify.routes'));
+
+const {
+  isSetupEnabled,
+  shouldMountSetupRoutes,
+} = require('./middleware/setupGuard');
+
+if (shouldMountSetupRoutes()) {
+  app.use('/api/v1/setup', require('./routes/setup.routes'));
+  logger.warn(
+    '[app] Temporary production setup routes are ENABLED at /api/v1/setup'
+  );
+} else if (isSetupEnabled()) {
+  logger.error(
+    '[app] SETUP_ENABLED=yes but SETUP_TOKEN is invalid; setup routes NOT mounted'
+  );
+}
+
 app.use('/api/v1', routes);
 
 app.use(errorHandler);

@@ -28,11 +28,9 @@ lintas entity. Hapus variabel `BOOTSTRAP_*` setelah selesai.
 
 ### Production
 
-**Jangan menjalankan `bootstrapAdmin.js` di production.** Repository saat ini
-tidak menyediakan production bootstrap endpoint. Akun Super Admin production
-harus diprovision melalui proses operasional yang disetujui dan diaudit,
-menggunakan mekanisme account-management yang berlaku untuk environment target.
-Jangan mengubah `NODE_ENV` ke development hanya untuk melewati guard ini.
+**Jangan menjalankan `bootstrapAdmin.js` di production.** Untuk first deploy
+di shared cPanel tanpa Terminal/SSH, gunakan temporary setup endpoint pada §0b.
+Jangan mengubah `NODE_ENV` ke development hanya untuk melewati guard CLI.
 
 ---
 
@@ -110,6 +108,82 @@ npm run migrate -- --help
 
 ---
 
+## 0b. First Production Deploy — Temporary Setup Endpoint
+
+Shared cPanel tanpa Terminal/SSH dapat menjalankan first migration + first
+Super Admin melalui endpoint sementara. Endpoint ini hanya mount bila:
+
+```env
+SETUP_ENABLED=yes
+SETUP_TOKEN=<64 hex characters; generate with: openssl rand -hex 32>
+```
+
+**Jangan set `PORT` di cPanel Environment Variables.** Passenger inject port
+runtime sendiri.
+
+### Alur fresh production database
+
+1. Buat database kosong di cPanel dan gunakan **nama DB/user final yang
+   ditampilkan cPanel** (biasanya memiliki prefix akun).
+2. Upload backend, create Node.js App, set environment variables termasuk
+   `SETUP_ENABLED=yes` + `SETUP_TOKEN`, lalu Run NPM Install dan Restart.
+3. Dari komputer operator, cek status:
+
+```bash
+curl -sS \
+  -H "X-Setup-Token: <token>" \
+  https://api.prakasa-work-os.com/api/v1/setup/status
+```
+
+Expected untuk DB fresh: ledger belum ada, domain tables = 0, dan semua migration
+terlihat pending. Request status **read-only** dan tidak membuat ledger/table.
+
+4. Jalankan migration:
+
+```bash
+curl -sS -X POST \
+  -H "X-Setup-Token: <token>" \
+  https://api.prakasa-work-os.com/api/v1/setup/migrate
+```
+
+Endpoint memakai migration connection khusus dengan `multipleStatements:true`.
+Jika DB sudah memiliki domain schema tetapi ledger kosong, endpoint **abort 409**.
+Baseline/recovery existing DB tetap CLI-only.
+
+5. Bootstrap Super Admin setelah ledger 100% healthy:
+
+```bash
+curl -sS -X POST \
+  -H "X-Setup-Token: <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@prakasagroup.com","name":"Super Admin","password":"<strong unique password>"}' \
+  https://api.prakasa-work-os.com/api/v1/setup/bootstrap-admin
+```
+
+Bootstrap tidak mereset password user existing, tidak menghidupkan user
+soft-deleted, dan tidak memindahkan user lintas entity.
+
+6. Login manual sebagai Super Admin dan smoke-test.
+7. **Hapus `SETUP_ENABLED` dan `SETUP_TOKEN` dari cPanel**, lalu Restart.
+8. Verifikasi route hilang:
+
+```bash
+curl -sS -o /dev/null -w "%{http_code}\n" \
+  https://api.prakasa-work-os.com/api/v1/setup/status
+# Expected: 404
+```
+
+### Security rules
+
+- Token harus tepat 64 hex characters dan hanya dikirim via `X-Setup-Token`.
+- Setup route rate-limited 5 request / 15 menit / IP.
+- Token tidak ditulis ke log, response, database, atau query string.
+- `status` read-only; migration memakai `schema_migrations` sebagai source of truth.
+- Bootstrap admin ditolak bila ledger belum 100% healthy.
+- Setelah env setup dihapus + Passenger restart, route tidak terdaftar.
+
+---
+
 ## 1. Database
 1. cPanel → MySQL Databases → buat database + user
 2. Catat: `DB_NAME`, `DB_USER`, `DB_PASS`, `DB_HOST` (biasanya `localhost`)
@@ -124,10 +198,12 @@ npm run migrate -- --help
    - Application startup file: `src/app.js`
 3. Set Environment Variables dari `.env.example`
 4. Run NPM Install
-5. Jalankan migration sesuai §0 dan pastikan `npm run check:ledger` HEALTHY.
-6. Pastikan akun Super Admin production sudah diprovision melalui proses
-   operasional yang disetujui. Jangan jalankan `bootstrapAdmin.js`; lihat §0a.
-7. Restart Passenger setiap deploy.
+5. Fresh shared-cPanel deploy tanpa Terminal: jalankan setup flow §0b.
+   Environment existing dengan ledger aktif dapat menggunakan normal deploy;
+   baseline/recovery tetap membutuhkan CLI/operator access.
+6. Provision first Super Admin melalui §0b. Jangan jalankan
+   `bootstrapAdmin.js` di production.
+7. Hapus env setup setelah selesai dan Restart Passenger.
 
 ## 3. Authentication
 - Login utama: email + password.
@@ -161,8 +237,14 @@ Setiap modul AI memilih provider lewat tabel `ai_module_contexts`.
 Ubah lewat endpoint: `PATCH /api/v1/ai/modules/:module`
 
 ## 7. Cron Job — IT Reminders (Fase 5)
-```
-0 7 * * * /usr/local/bin/node /home/USER/prakasa-work-os-backend/src/jobs/itReminders.js >> /home/USER/logs/itReminders.log 2>&1
+
+Cron shell tidak mewarisi Environment Variables Passenger. Gunakan
+`backend/cron-wrapper.sh` dan buat
+`~/.prakasa-work-os-cron.env` dari template
+`backend/cron.env.example` (chmod 600).
+
+```cron
+0 7 * * * /bin/bash /home/USER/prakasa-work-os-backend/cron-wrapper.sh src/jobs/itReminders.js >> /home/USER/logs/itReminders.log 2>&1
 ```
 
 ## 8. Google Calendar & Meet (Fase 6)
@@ -189,10 +271,13 @@ Tidak ada tabel/kolom yang menduplikasi:
 - Hasil AI disimpan di ai_summaries
 
 ## 12. Fase 8 — Cron Jobs
-```
-*/15 * * * * /usr/local/bin/node /home/USER/prakasa-work-os-backend/src/jobs/automationRunner.js >> /home/USER/logs/automationRunner.log 2>&1
-0 8 * * * /usr/local/bin/node /home/USER/prakasa-work-os-backend/src/jobs/overdueTaskScan.js >> /home/USER/logs/overdueTaskScan.log 2>&1
-0 6 * * * /usr/local/bin/node /home/USER/prakasa-work-os-backend/src/jobs/briefGenerator.js >> /home/USER/logs/briefGenerator.log 2>&1
+
+Gunakan wrapper yang sama agar DB/API secrets tersedia di proses cron.
+
+```cron
+*/15 * * * * /bin/bash /home/USER/prakasa-work-os-backend/cron-wrapper.sh src/jobs/automationRunner.js >> /home/USER/logs/automationRunner.log 2>&1
+0 8 * * * /bin/bash /home/USER/prakasa-work-os-backend/cron-wrapper.sh src/jobs/overdueTaskScan.js >> /home/USER/logs/overdueTaskScan.log 2>&1
+0 6 * * * /bin/bash /home/USER/prakasa-work-os-backend/cron-wrapper.sh src/jobs/briefGenerator.js >> /home/USER/logs/briefGenerator.log 2>&1
 ```
 
 ## 13. Knowledge Base

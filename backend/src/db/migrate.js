@@ -5,13 +5,14 @@ const {
   ensureLedger,
   loadMigrationFiles,
   getAppliedMap,
-  classify,
   countExistingDomainTables,
   validateBaselineThroughTarget,
   selectBaselineFiles,
   baselineFiles,
-  applyOne,
 } = require('./migrations');
+const {
+  runPendingMigrations,
+} = require('../services/migrationRunner.service');
 
 function parseArgs(argv) {
   const args = {
@@ -197,94 +198,69 @@ async function main() {
       return;
     }
 
-    const { pending, applied, changed, missing } = classify(files, appliedMap);
+    const result = await runPendingMigrations({
+      db,
+      forceFiles: args.forceFiles,
+      dryRun: args.dryRun,
+      allowExistingSchema: true,
+    });
 
+    const before = result.before;
     console.log(
-      `[migrate] Applied: ${applied.length} · Pending: ${pending.length} · Changed: ${changed.length} · Missing: ${missing.length}`
+      `[migrate] Applied: ${before.applied} · Pending: ${before.pending} · Changed: ${before.changed} · Missing: ${before.missing}`
     );
 
-    if (missing.length) {
-      console.log('\n[migrate] WARNING — recorded file missing from disk:');
-      for (const item of missing) {
-        console.log(`  ! ${item.filename} (applied at ${item.appliedAt})`);
-      }
-    }
-
-    const knownFiles = new Set(files.map((file) => file.filename));
-    for (const filename of args.forceFiles) {
-      if (!knownFiles.has(filename)) {
-        throw new Error(`--force-file tidak ditemukan: ${filename}`);
-      }
-    }
-
-    const unresolvedChanged = changed.filter(
-      (item) => !args.forceFiles.has(item.file.filename)
-    );
-
-    if (unresolvedChanged.length) {
-      console.error('\n[migrate] ABORT — checksum mismatch on applied migration(s):');
-      for (const item of unresolvedChanged) {
-        console.error(`  ✗ ${item.file.filename}`);
-        console.error(`      recorded: ${item.expected.slice(0, 16)}…`);
-        console.error(`      current:  ${item.actual.slice(0, 16)}…`);
-      }
+    if (result.status === 'blocked') {
       console.error(
-        '[migrate] Revert historical edits or create a new migration. ' +
-        'Use --force-file only for deliberate recovery.'
+        `\n[migrate] ABORT — migration state blocked: ${result.reason}`
+      );
+      if (result.unresolved) {
+        for (const item of result.unresolved) {
+          console.error(`  ✗ ${item.filename}`);
+        }
+      }
+      if (result.missing) {
+        for (const item of result.missing) {
+          console.error(`  ✗ missing: ${item.filename}`);
+        }
+      }
+      process.exitCode = 1;
+      return;
+    }
+
+    if (result.status === 'error') {
+      console.error(`\n[migrate] Migration failed: ${result.failedFile}`);
+      console.error(
+        '[migrate] Aborting. Check the error above and inspect partial DDL before retrying.'
       );
       process.exitCode = 1;
       return;
     }
 
-    const forcedChanged = changed
-      .filter((item) => args.forceFiles.has(item.file.filename))
-      .map((item) => item.file);
+    if (args.dryRun) {
+      if (!result.wouldRun.length) {
+        console.log('\n[migrate] DRY RUN — nothing to run.');
+      } else {
+        console.log('\n[migrate] DRY RUN — would execute:');
+        for (const filename of result.wouldRun) {
+          const forced = args.forceFiles.has(filename) ? ' (forced)' : '';
+          console.log(`  → ${filename}${forced}`);
+        }
+      }
+      return;
+    }
 
-    const toRun = [...pending, ...forcedChanged]
-      .sort((a, b) => a.filename.localeCompare(b.filename));
-
-    if (!toRun.length) {
+    if (!result.executed.length) {
       console.log('\n[migrate] Nothing to run. Database is up to date.');
       return;
     }
 
-    if (args.dryRun) {
-      console.log('\n[migrate] DRY RUN — would execute:');
-      for (const file of toRun) {
-        const forced = args.forceFiles.has(file.filename) ? ' (forced)' : '';
-        console.log(`  → ${file.filename}${forced}`);
-      }
-      return;
+    console.log('\n[migrate] Executed:');
+    for (const item of result.executed) {
+      console.log(`  ✓ ${item.filename} (${item.executionMs}ms)`);
     }
-
-    console.log('\n[migrate] Executing:');
-    const startedAt = Date.now();
-    let appliedCount = 0;
-
-    for (const file of toRun) {
-      process.stdout.write(`  → ${file.filename} … `);
-      try {
-        const result = await applyOne(db, file, {
-          note: args.forceFiles.has(file.filename) ? 'force-rerun' : null,
-        });
-        console.log(`ok (${result.executionMs}ms)`);
-        appliedCount += 1;
-      } catch (error) {
-        console.log('FAILED');
-        console.error(`\n[migrate] ${error.message}`);
-        console.error(
-          '[migrate] Aborting. Ledger is written only after a complete file succeeds.'
-        );
-        console.error(
-          '[migrate] Note: MySQL DDL may auto-commit; inspect partial schema changes before retrying.'
-        );
-        process.exitCode = 1;
-        return;
-      }
-    }
-
     console.log(
-      `\n[migrate] Done. ${appliedCount} applied in ${Date.now() - startedAt}ms.`
+      `[migrate] Done. ${result.executed.length} migration file(s) applied.`
     );
   } finally {
     await db.end();

@@ -14,18 +14,12 @@ const HOP_BY_HOP = new Set([
   'upgrade',
 ]);
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
-    const pathParam = req.query?.path;
-    const path = Array.isArray(pathParam)
-      ? pathParam.join('/')
-      : String(pathParam || '');
-
+    const rawPath = String(req.query?.path || '').replace(/^\/+/, '');
     const incomingUrl = new URL(req.url || '/', 'https://proxy.local');
-    const target = new URL(
-      '/api/' + path + incomingUrl.search,
-      UPSTREAM_ORIGIN
-    );
+    const target = new URL('/api/' + rawPath, UPSTREAM_ORIGIN);
+    target.search = incomingUrl.search;
 
     const headers = {};
     for (const [key, value] of Object.entries(req.headers || {})) {
@@ -48,17 +42,14 @@ export default async function handler(req, res) {
     }
 
     const upstream = await fetch(target, init);
-
     res.statusCode = upstream.status;
 
     for (const [key, value] of upstream.headers.entries()) {
-      const lower = key.toLowerCase();
-      if (HOP_BY_HOP.has(lower)) continue;
+      if (HOP_BY_HOP.has(key.toLowerCase())) continue;
       res.setHeader(key, value);
     }
 
-    const body = Buffer.from(await upstream.arrayBuffer());
-    res.end(body);
+    res.end(Buffer.from(await upstream.arrayBuffer()));
   } catch (error) {
     console.error('[api-proxy] upstream request failed', {
       name: error?.name,
@@ -75,4 +66,4 @@ export default async function handler(req, res) {
       },
     }));
   }
-}
+};

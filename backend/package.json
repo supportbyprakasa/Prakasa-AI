@@ -18,7 +18,8 @@
     "check:batch5": "node src/scripts/checkBatch5.js",
     "check:batch6": "node src/scripts/checkBatch6.js",
     "check:ledger": "node src/scripts/checkLedger.js",
-    "test:db-config": "node --test test/dbConnectionConfig.test.js"
+    "test:db-config": "node --test test/dbConnectionConfig.test.js",
+    "gateway:claude-team": "node src/scripts/claudeTeamGateway.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

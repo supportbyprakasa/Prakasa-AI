@@ -2,7 +2,10 @@
 
 Date: 2026-09-23
 
-Status: Approved in conversation; pending written-spec review
+Status: Subsystem design; implementation sequencing governed by the parent platform spec
+
+Parent design:
+`docs/superpowers/specs/2026-09-23-prakasa-ai-workspace-governance-platform-design.md`
 
 Project: Prakasa AI Work OS
 

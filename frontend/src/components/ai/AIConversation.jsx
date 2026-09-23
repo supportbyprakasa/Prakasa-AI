@@ -288,6 +288,12 @@ export default function AIConversation({ sessionId, onSessionUpdated, onSessionD
         <div ref={bottomRef} />
       </div>
 
+      {session.provider === 'gemini' && (
+        <div role="note" style={{ padding: '8px 12px', fontSize: 12, background: '#fff7ed', color: '#7c2d12' }}>
+          Gemini kuota gratis: hanya pesan saat ini yang dikirim ke Google. Jangan tulis data pribadi atau rahasia; dokumen, catatan, dan riwayat percakapan tidak disertakan otomatis.
+        </div>
+      )}
+
       {/* Composer */}
       <div style={{
         padding: 12, borderTop: '1px solid var(--color-border)',

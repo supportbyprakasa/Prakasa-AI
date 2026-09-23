@@ -239,12 +239,12 @@ Ubah lewat endpoint: `PATCH /api/v1/ai/modules/:module`
 ## 7. Cron Job — IT Reminders (Fase 5)
 
 Cron shell tidak mewarisi Environment Variables Passenger. Gunakan
-`docs/templates/cron-wrapper.sh` dan buat
+`backend/cron-wrapper.sh` dan buat
 `~/.prakasa-work-os-cron.env` dari template
-`docs/templates/prakasa-cron.env.example` (chmod 600).
+`backend/cron.env.example` (chmod 600).
 
 ```cron
-0 7 * * * /home/USER/prakasa-work-os-backend/docs/templates/cron-wrapper.sh src/jobs/itReminders.js >> /home/USER/logs/itReminders.log 2>&1
+0 7 * * * /bin/bash /home/USER/prakasa-work-os-backend/cron-wrapper.sh src/jobs/itReminders.js >> /home/USER/logs/itReminders.log 2>&1
 ```
 
 ## 8. Google Calendar & Meet (Fase 6)
@@ -275,9 +275,9 @@ Tidak ada tabel/kolom yang menduplikasi:
 Gunakan wrapper yang sama agar DB/API secrets tersedia di proses cron.
 
 ```cron
-*/15 * * * * /home/USER/prakasa-work-os-backend/docs/templates/cron-wrapper.sh src/jobs/automationRunner.js >> /home/USER/logs/automationRunner.log 2>&1
-0 8 * * * /home/USER/prakasa-work-os-backend/docs/templates/cron-wrapper.sh src/jobs/overdueTaskScan.js >> /home/USER/logs/overdueTaskScan.log 2>&1
-0 6 * * * /home/USER/prakasa-work-os-backend/docs/templates/cron-wrapper.sh src/jobs/briefGenerator.js >> /home/USER/logs/briefGenerator.log 2>&1
+*/15 * * * * /bin/bash /home/USER/prakasa-work-os-backend/cron-wrapper.sh src/jobs/automationRunner.js >> /home/USER/logs/automationRunner.log 2>&1
+0 8 * * * /bin/bash /home/USER/prakasa-work-os-backend/cron-wrapper.sh src/jobs/overdueTaskScan.js >> /home/USER/logs/overdueTaskScan.log 2>&1
+0 6 * * * /bin/bash /home/USER/prakasa-work-os-backend/cron-wrapper.sh src/jobs/briefGenerator.js >> /home/USER/logs/briefGenerator.log 2>&1
 ```
 
 ## 13. Knowledge Base

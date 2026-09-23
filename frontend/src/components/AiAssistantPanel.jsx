@@ -19,11 +19,11 @@ export default function AiAssistantPanel({ documentId }) {
   };
 
   return (
-    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, padding: 16 }}>
+    <div style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)', borderRadius: 12, padding: 16 }}>
       <h4 style={{ marginTop: 0 }}>Tanya AI</h4>
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         <select value={action} onChange={(e) => setAction(e.target.value)}
-          style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--color-border)' }}>
+          style={{ padding: '6px 10px', borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
           <option value="summarize">Ringkas</option>
           <option value="check_completeness">Cek kelengkapan</option>
           <option value="check_consistency">Cek konsistensi angka</option>
@@ -34,7 +34,7 @@ export default function AiAssistantPanel({ documentId }) {
       {result && (
         <pre style={{
           whiteSpace: 'pre-wrap', fontSize: 13, background: '#f8fafc',
-          padding: 12, borderRadius: 8, border: '1px solid var(--color-border)', margin: 0,
+          padding: 12, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)', margin: 0,
         }}>{result}</pre>
       )}
     </div>

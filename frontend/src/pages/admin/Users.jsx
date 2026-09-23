@@ -126,7 +126,7 @@ export default function Users() {
   const fieldStyle = {
     padding: '9px 10px',
     borderRadius: 7,
-    border: '1px solid var(--color-border)',
+    boxShadow: 'inset 0 0 0 1px var(--color-border)',
     background: 'var(--color-surface)',
     color: 'var(--color-text)',
   };
@@ -147,7 +147,7 @@ export default function Users() {
           gap: 10,
           padding: 16,
           marginBottom: 20,
-          border: '1px solid var(--color-border)',
+          boxShadow: 'inset 0 0 0 1px var(--color-border)',
           borderRadius: 10,
           background: 'var(--color-surface)',
         }}

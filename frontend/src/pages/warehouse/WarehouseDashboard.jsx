@@ -19,7 +19,7 @@ export default function WarehouseDashboard() {
           display: 'flex',
           gap: 4,
           marginTop: 12,
-          borderBottom: '1px solid var(--color-border)',
+          boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
         }}
       >
         {[
@@ -35,7 +35,7 @@ export default function WarehouseDashboard() {
               padding: '10px 16px',
               background: 'transparent',
               border: 'none',
-              borderBottom: tab === t.k ? '2px solid var(--color-primary)' : '2px solid transparent',
+              boxShadow: tab === t.k ? 'inset 0 -2px 0 0 var(--color-primary)' : 'inset 0 -2px 0 0 transparent',
               color: tab === t.k ? 'var(--color-primary)' : 'var(--color-text-muted)',
               fontSize: 14,
               fontWeight: 500,
@@ -339,7 +339,7 @@ function ChecklistTab() {
               style={{
                 padding: 10,
                 borderRadius: 8,
-                border: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 0 0 1px var(--color-border)',
                 fontFamily: 'monospace',
                 fontSize: 13,
               }}
@@ -469,7 +469,7 @@ function IncidentsTab() {
           <Input label="Kategori" name="category" placeholder="damage/lost/delay" required />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
             <label style={{ fontSize: 13 }}>Severity</label>
-            <select name="severity" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+            <select name="severity" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
               {['low', 'medium', 'high', 'critical'].map((s) => (
                 <option key={s}>{s}</option>
               ))}
@@ -481,7 +481,7 @@ function IncidentsTab() {
               name="description"
               rows={4}
               required
-              style={{ padding: 10, borderRadius: 8, border: '1px solid var(--color-border)' }}
+              style={{ padding: 10, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
             />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
@@ -498,7 +498,7 @@ function IncidentsTab() {
           <form onSubmit={doResolve}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
               <label style={{ fontSize: 13 }}>Status</label>
-              <select name="status" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+              <select name="status" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
                 <option value="investigating">Investigating</option>
                 <option value="resolved">Resolved</option>
                 <option value="closed">Closed</option>
@@ -510,7 +510,7 @@ function IncidentsTab() {
                 name="resolution"
                 rows={4}
                 required
-                style={{ padding: 10, borderRadius: 8, border: '1px solid var(--color-border)' }}
+                style={{ padding: 10, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
               />
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>

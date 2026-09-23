@@ -110,7 +110,7 @@ export default function Devices() {
           <Input label="Asset Code" name="assetCode" required />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
             <label style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Tipe</label>
-            <select name="deviceType" required style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+            <select name="deviceType" required style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
               {DEVICE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>

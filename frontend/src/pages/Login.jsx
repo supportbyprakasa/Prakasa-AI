@@ -60,7 +60,7 @@ export default function Login() {
     boxSizing: 'border-box',
     padding: '11px 12px',
     borderRadius: 8,
-    border: '1px solid var(--color-border)',
+    boxShadow: 'inset 0 0 0 1px var(--color-border)',
     background: 'var(--color-surface)',
     color: 'var(--color-text)',
     fontSize: 14,

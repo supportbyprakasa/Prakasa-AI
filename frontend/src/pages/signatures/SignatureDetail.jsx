@@ -302,7 +302,7 @@ export default function SignatureDetail() {
               style={{
                 width: 240,
                 height: 240,
-                border: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 0 0 1px var(--color-border)',
                 borderRadius: 8,
               }}
             />
@@ -404,7 +404,7 @@ function SignForm({
         <div
           style={{
             marginTop: 12,
-            border: '1px solid #fecaca',
+            boxShadow: 'inset 0 0 0 1px #fecaca',
             background: '#fef2f2',
             borderRadius: 8,
             padding: 12,

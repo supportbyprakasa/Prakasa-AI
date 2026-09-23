@@ -48,22 +48,22 @@ export default function ChatRoom() {
 
   return (
     <div className="prakasa-chat-layout" style={{ display: 'grid', gridTemplateColumns: '260px minmax(0, 1fr)', gap: 16, height: 'calc(100dvh - 180px)' }}>
-      <aside style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, overflowY: 'auto' }}>
+      <aside style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)', borderRadius: 12, overflowY: 'auto' }}>
         {rooms.map((r) => (
           <div key={r.id} onClick={() => loadRoom(r)} style={{
             padding: 12, cursor: 'pointer',
             background: active?.id === r.id ? 'rgba(31,78,216,.08)' : 'transparent',
-            borderBottom: '1px solid var(--color-border)', fontSize: 14,
+            boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontSize: 14,
           }}>{r.name}</div>
         ))}
         {!rooms.length && <div style={{ padding: 12, color: 'var(--color-text-muted)', fontSize: 13 }}>Belum ada room.</div>}
       </aside>
 
-      <section style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 12, display: 'flex', flexDirection: 'column' }}>
+      <section style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)', borderRadius: 12, display: 'flex', flexDirection: 'column' }}>
         {!active && <div style={{ padding: 20, color: 'var(--color-text-muted)' }}>Pilih room untuk mulai chat.</div>}
         {active && (
           <>
-            <div style={{ padding: 12, borderBottom: '1px solid var(--color-border)', fontWeight: 600 }}>{active.name}</div>
+            <div style={{ padding: 12, boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontWeight: 600 }}>{active.name}</div>
             <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
               {messages.map((m) => (
                 <div key={m.id} style={{ marginBottom: 10 }}>
@@ -82,7 +82,7 @@ export default function ChatRoom() {
               ))}
               <div ref={bottomRef} />
             </div>
-            <form onSubmit={send} style={{ display: 'flex', gap: 8, padding: 12, borderTop: '1px solid var(--color-border)' }}>
+            <form onSubmit={send} style={{ display: 'flex', gap: 8, padding: 12, boxShadow: 'inset 0 1px 0 0 var(--color-border)' }}>
               <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Tulis pesan…" style={{ flex: 1, margin: 0 }} />
               <Button type="submit">Kirim</Button>
             </form>

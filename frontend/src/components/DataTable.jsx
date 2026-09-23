@@ -20,7 +20,7 @@ export default function DataTable({
           textAlign: 'center',
           color: 'var(--color-text-muted)',
           background: 'var(--color-surface)',
-          border: '1px dashed var(--color-border)',
+          boxShadow: 'inset 0 0 0 1px var(--color-border)',
           borderRadius: 12,
           fontSize: 13,
         }}
@@ -57,7 +57,7 @@ export default function DataTable({
                 key={r.id ?? i}
                 onClick={onRowClick ? () => onRowClick(r) : undefined}
                 style={{
-                  borderTop: '1px solid var(--color-border)',
+                  boxShadow: 'inset 0 1px 0 0 var(--color-border)',
                   fontSize: 14,
                   cursor: onRowClick ? 'pointer' : 'default',
                 }}

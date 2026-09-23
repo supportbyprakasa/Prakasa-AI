@@ -91,7 +91,7 @@ export default function SoftwareSubscriptions() {
           <Input label="Renewal Date (YYYY-MM-DD)" name="renewalDate" required />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
             <label style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Billing Cycle</label>
-            <select name="billingCycle" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+            <select name="billingCycle" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
               <option value="monthly">Monthly</option>
               <option value="quarterly">Quarterly</option>
               <option value="yearly">Yearly</option>

@@ -139,7 +139,7 @@ export default function DeviceDetail() {
         <Card title="Warranty History">
           {device.warranties?.length ? (
             device.warranties.map((w) => (
-              <div key={w.id} style={{ fontSize: 13, padding: 6, borderBottom: '1px solid var(--color-border)' }}>
+              <div key={w.id} style={{ fontSize: 13, padding: 6, boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
                 <b>{w.warrantyType}</b> · {w.startDate} → {w.endDate} · {w.provider || '—'}
               </div>
             ))
@@ -159,7 +159,7 @@ export default function DeviceDetail() {
                 justify: 'space-between',
                 fontSize: 13,
                 padding: 8,
-                borderBottom: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
               }}
             >
               <div>
@@ -176,7 +176,7 @@ export default function DeviceDetail() {
         <Card title="Maintenance Log">
           {device.maintenance?.length ? (
             device.maintenance.map((m) => (
-              <div key={m.id} style={{ fontSize: 13, padding: 6, borderBottom: '1px solid var(--color-border)' }}>
+              <div key={m.id} style={{ fontSize: 13, padding: 6, boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
                 {m.maintenanceDate} · {m.maintenanceType} · {m.cost || 0}
               </div>
             ))
@@ -187,7 +187,7 @@ export default function DeviceDetail() {
         <Card title="Repair Log">
           {device.repairs?.length ? (
             device.repairs.map((r) => (
-              <div key={r.id} style={{ fontSize: 13, padding: 6, borderBottom: '1px solid var(--color-border)' }}>
+              <div key={r.id} style={{ fontSize: 13, padding: 6, boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
                 {r.reportedDate} · {r.severity} · <Badge>{r.status}</Badge>
               </div>
             ))
@@ -234,12 +234,12 @@ export default function DeviceDetail() {
               name="issueDescription"
               rows={3}
               required
-              style={{ padding: 10, borderRadius: 8, border: '1px solid var(--color-border)' }}
+              style={{ padding: 10, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
             />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
             <label style={{ fontSize: 13 }}>Severity</label>
-            <select name="severity" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+            <select name="severity" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
               {['low', 'medium', 'high', 'critical'].map((s) => <option key={s}>{s}</option>)}
             </select>
           </div>

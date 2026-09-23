@@ -104,11 +104,11 @@ export default function AutomationBuilder() {
           </div>
           <textarea name="triggerConfig" rows={3} placeholder='{"scan":"tasks_overdue_by_days","days":3}'
             style={{ width: '100%', padding: 8, borderRadius: 8,
-              border: '1px solid var(--color-border)', fontFamily: 'monospace', fontSize: 12, marginBottom: 12 }} />
+              boxShadow: 'inset 0 0 0 1px var(--color-border)', fontFamily: 'monospace', fontSize: 12, marginBottom: 12 }} />
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
             <label style={{ fontSize: 13 }}>Action</label>
-            <select name="actionType" required style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+            <select name="actionType" required style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
               {actions.map((a) => <option key={a.code} value={a.code}>{a.code}</option>)}
             </select>
           </div>
@@ -118,7 +118,7 @@ export default function AutomationBuilder() {
           </div>
           <textarea name="actionConfig" rows={3} placeholder='{"title":"...","body":"..."}'
             style={{ width: '100%', padding: 8, borderRadius: 8,
-              border: '1px solid var(--color-border)', fontFamily: 'monospace', fontSize: 12, marginBottom: 12 }} />
+              boxShadow: 'inset 0 0 0 1px var(--color-border)', fontFamily: 'monospace', fontSize: 12, marginBottom: 12 }} />
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             <Button variant="secondary" type="button" onClick={() => setOpen(false)}>Batal</Button>

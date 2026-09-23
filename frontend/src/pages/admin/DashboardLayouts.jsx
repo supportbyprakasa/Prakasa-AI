@@ -175,7 +175,7 @@ export default function DashboardLayouts() {
                   <div style={{
                     padding: 24, textAlign: 'center', fontSize: 13,
                     color: 'var(--color-text-muted)',
-                    border: '1px dashed var(--color-border)', borderRadius: 8,
+                    boxShadow: 'inset 0 0 0 1px var(--color-border)', borderRadius: 8,
                   }}>
                     Belum ada widget. Klik "Widget" untuk menambahkan.
                   </div>
@@ -189,7 +189,7 @@ export default function DashboardLayouts() {
                       gap: 8, alignItems: 'center',
                       padding: 10, marginBottom: 6,
                       background: '#f8fafc', borderRadius: 8,
-                      border: '1px solid var(--color-border)', fontSize: 13,
+                      boxShadow: 'inset 0 0 0 1px var(--color-border)', fontSize: 13,
                     }}>
                       <div>
                         <b>{w?.name || entry.widgetCode}</b>
@@ -199,7 +199,7 @@ export default function DashboardLayouts() {
                       </div>
                       <select value={entry.size || 'medium'}
                         onChange={(e) => updateSize(idx, e.target.value)}
-                        style={{ padding: 6, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+                        style={{ padding: 6, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
                         {SIZES.map((s) => <option key={s}>{s}</option>)}
                       </select>
                       <Button variant="secondary" onClick={() => moveWidget(idx, -1)} disabled={idx === 0}>
@@ -222,7 +222,7 @@ export default function DashboardLayouts() {
                   {layouts.map((l) => (
                     <div key={l.id} style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: 8, borderBottom: '1px solid var(--color-border)', fontSize: 13,
+                      padding: 8, boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontSize: 13,
                     }}>
                       <span>
                         <b>{l.roleName}</b> · {l.name || '—'} · {l.layout?.length || 0} widget
@@ -255,7 +255,7 @@ export default function DashboardLayouts() {
               onClick={() => addWidget(w.code)}
               style={{
                 padding: 10, marginBottom: 6, cursor: 'pointer',
-                border: '1px solid var(--color-border)', borderRadius: 8,
+                boxShadow: 'inset 0 0 0 1px var(--color-border)', borderRadius: 8,
                 fontSize: 13,
               }}
             >

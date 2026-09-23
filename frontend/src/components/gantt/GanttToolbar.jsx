@@ -16,7 +16,7 @@ export default function GanttToolbar({
     <div style={{
       display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end',
       padding: 12, background: 'var(--color-surface)',
-      borderBottom: '1px solid var(--color-border)',
+      boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
     }}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <Input
@@ -70,7 +70,7 @@ export default function GanttToolbar({
             onClick={() => onZoomChange(z.value)}
             style={{
               padding: '6px 10px', fontSize: 12,
-              border: `1px solid ${zoom === z.value ? 'var(--color-primary)' : 'var(--color-border)'}`,
+              boxShadow: `inset 0 0 0 1px ${zoom === z.value ? 'var(--color-primary)' : 'var(--color-border)'}`,
               borderRadius: 6,
               background: zoom === z.value ? 'rgba(31,78,216,.08)' : 'transparent',
               color: zoom === z.value ? 'var(--color-primary)' : 'var(--color-text)',

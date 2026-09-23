@@ -77,7 +77,7 @@ export default function TaskWatchers({ task, canWatch, canManage, onChanged }) {
         <div key={w.userId} style={{
           display: 'flex', justifyContent: 'space-between',
           alignItems: 'center', padding: '6px 0',
-          borderBottom: '1px solid var(--color-border)', fontSize: 13,
+          boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontSize: 13,
         }}>
           <span>👤 {w.userName}</span>
           {canManage && Number(w.userId) !== Number(user?.id) && (

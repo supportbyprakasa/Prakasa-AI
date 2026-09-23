@@ -69,21 +69,21 @@ export default function DecisionLog() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
             <label style={{ fontSize: 13 }}>Keputusan</label>
             <textarea name="decision" rows={3} required style={{
-              padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }} />
+              padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
             <label style={{ fontSize: 13 }}>Alasan</label>
             <textarea name="rationale" rows={2} style={{
-              padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }} />
+              padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
             <label style={{ fontSize: 13 }}>Dampak</label>
             <textarea name="impact" rows={2} style={{
-              padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }} />
+              padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
             <label style={{ fontSize: 13 }}>Status</label>
-            <select name="status" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+            <select name="status" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
               <option value="proposed">Proposed</option>
               <option value="approved">Approved</option>
               <option value="implemented">Implemented</option>

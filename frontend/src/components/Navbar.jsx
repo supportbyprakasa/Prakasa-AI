@@ -1,12 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Bell, ChevronRight, LogOut, Search, X } from 'lucide-react';
+import { Bell, ChevronRight, LogOut, Search, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotificationCount } from '../context/NotificationContext';
 import { useNavConfig } from './Sidebar';
 import api from '../api/client';
 
-export default function Navbar({ trail = [] }) {
+export default function Navbar() {
   const { user, logout } = useAuth();
   const { unreadCount } = useNotificationCount();
   const navigate = useNavigate();
@@ -28,7 +28,6 @@ export default function Navbar({ trail = [] }) {
       .catch(() => { if (active) setNotifications([]); });
     return () => { active = false; };
   }, [notificationOpen]);
-  const parent = trail.length > 1 ? trail[trail.length - 2].to : '/';
   const initials = (user?.name || user?.email || 'P').split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase();
   const searchResults = sections.flatMap((section) => section.items).filter((item) => item.to !== '/' && item.label.toLowerCase().includes(q.trim().toLowerCase())).slice(0, 6);
   const canSearchGlobally = sections.some((section) => section.items.some((item) => item.to === '/search'));
@@ -45,17 +44,6 @@ export default function Navbar({ trail = [] }) {
         <Link to="/" className="prakasa-navbar__brand" aria-label="Prakasa Work OS — Home">
           <span className="prakasa-navbar__brand-mark">P</span><span>Prakasa Work OS</span>
         </Link>
-        {trail.length > 0 && <>
-          <Link className="prakasa-navbar__back" to={parent}><ArrowLeft size={15} /> Kembali</Link>
-          <span className="prakasa-navbar__divider" aria-hidden="true" />
-          <nav className="prakasa-navbar__trail" aria-label="Lokasi halaman">
-            <Link to="/">Home</Link>
-            {trail.map((item, index) => <span className="prakasa-navbar__trail-step" key={`${item.to}-${index}`}>
-              <ChevronRight size={11} aria-hidden="true" />
-              {index === trail.length - 1 ? <strong aria-current="page">{item.label}</strong> : <Link to={item.to}>{item.label}</Link>}
-            </span>)}
-          </nav>
-        </>}
       </div>
       <div className="prakasa-navbar__right">
         <button type="button" className="prakasa-navbar__icon-btn" aria-label="Cari" aria-expanded={searchOpen} onClick={() => { setSearchOpen((open) => !open); setNotificationOpen(false); }}><Search size={18} /></button>

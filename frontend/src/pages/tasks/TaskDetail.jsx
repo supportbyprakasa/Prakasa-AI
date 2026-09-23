@@ -265,7 +265,7 @@ export default function TaskDetail() {
                 disabled={!canUpdate}
                 style={{
                   width: '100%', padding: 10, borderRadius: 8,
-                  border: '1px solid var(--color-border)', fontSize: 13,
+                  boxShadow: 'inset 0 0 0 1px var(--color-border)', fontSize: 13,
                 }}
               />
             </div>
@@ -277,7 +277,7 @@ export default function TaskDetail() {
                   value={form.status}
                   onChange={(e) => setField('status', e.target.value)}
                   disabled={!canUpdate}
-                  style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+                  style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
                 >
                   {['open', 'in_progress', 'review', 'done', 'closed', 'completed', 'cancelled'].map((s) => (
                     <option key={s} value={s}>{s}</option>
@@ -290,7 +290,7 @@ export default function TaskDetail() {
                   value={form.priority}
                   onChange={(e) => setField('priority', e.target.value)}
                   disabled={!canUpdate}
-                  style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+                  style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
                 >
                   {['low', 'normal', 'high', 'urgent'].map((s) => (
                     <option key={s} value={s}>{s}</option>
@@ -326,7 +326,7 @@ export default function TaskDetail() {
             <Card title={`Komentar (${task.comments?.length || 0})`}>
               {task.comments?.map((c) => (
                 <div key={c.id} style={{
-                  padding: 8, borderBottom: '1px solid var(--color-border)', fontSize: 13,
+                  padding: 8, boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontSize: 13,
                 }}>
                   <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
                     {c.userName} · {new Date(c.createdAt).toLocaleString('id-ID')}
@@ -349,7 +349,7 @@ export default function TaskDetail() {
                   disabled={!canUpdate}
                   style={{
                     width: '100%', padding: 10, borderRadius: 8,
-                    border: '1px solid var(--color-border)', fontSize: 13,
+                    boxShadow: 'inset 0 0 0 1px var(--color-border)', fontSize: 13,
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -487,7 +487,7 @@ export default function TaskDetail() {
             <div style={{ marginTop: 12 }}>
               <Card title={`Lampiran (${task.attachments.length})`}>
                 {task.attachments.map((a) => (
-                  <div key={a.id} style={{ fontSize: 12, padding: '6px 0', borderBottom: '1px solid var(--color-border)' }}>
+                  <div key={a.id} style={{ fontSize: 12, padding: '6px 0', boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
                     {a.webViewLink ? (
                       <a href={a.webViewLink} target="_blank" rel="noreferrer">{a.name}</a>
                     ) : (

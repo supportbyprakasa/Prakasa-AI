@@ -60,7 +60,7 @@ export default function KnowledgeBase() {
             <Input label="Kategori" name="category" placeholder="sop/policy/guideline/faq" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
               <label style={{ fontSize: 13 }}>Visibility</label>
-              <select name="visibility" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+              <select name="visibility" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
                 <option value="entity">Semua entity</option>
                 <option value="department">Department saja</option>
               </select>
@@ -68,7 +68,7 @@ export default function KnowledgeBase() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
               <label style={{ fontSize: 13 }}>Teks dokumen (paste)</label>
               <textarea name="extractedText" rows={6} style={{
-                padding: 8, borderRadius: 8, border: '1px solid var(--color-border)',
+                padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)',
                 fontFamily: 'monospace', fontSize: 12,
               }} />
             </div>
@@ -103,7 +103,7 @@ export default function KnowledgeBase() {
       <div style={{ marginTop: 12 }}>
         <Card title={`Dokumen KB (${docs.length})`}>
           {docs.map((d) => (
-            <div key={d.id} style={{ fontSize: 13, padding: 6, borderBottom: '1px solid var(--color-border)' }}>
+            <div key={d.id} style={{ fontSize: 13, padding: 6, boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
               <b>{d.title}</b> · {d.category || '—'} · {d.visibility}
             </div>
           ))}

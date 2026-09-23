@@ -58,7 +58,7 @@ export default function DependencyGraphModal({ taskId, onClose }) {
                 <div key={n.id} style={{
                   padding: 8, marginBottom: 4,
                   background: n.isRoot ? 'rgba(31,78,216,.08)' : '#f8fafc',
-                  border: `1px solid ${n.isRoot ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                  boxShadow: `inset 0 0 0 1px ${n.isRoot ? 'var(--color-primary)' : 'var(--color-border)'}`,
                   borderRadius: 6, fontSize: 13,
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 }}>

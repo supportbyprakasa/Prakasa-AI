@@ -5,7 +5,7 @@ export default function Input({ label, error, ...props }) {
       {label && <label htmlFor={id} style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{label}</label>}
       <input id={id} {...props} style={{
         padding: '10px 12px', borderRadius: 8, fontSize: 13,
-        border: `1px solid ${error ? 'var(--color-error)' : 'var(--color-border)'}`,
+        boxShadow: `inset 0 0 0 1px ${error ? 'var(--color-error)' : 'var(--color-border)'}`,
         outline: 'none', ...(props.style || {}),
       }} />
       {error && <span style={{ fontSize: 12, color: 'var(--color-error)' }}>{error}</span>}

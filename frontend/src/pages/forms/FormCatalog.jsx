@@ -75,7 +75,7 @@ export default function FormCatalog() {
             onChange={(e) => setCategory(e.target.value)}
             style={{
               padding: '8px 12px', borderRadius: 8,
-              border: '1px solid var(--color-border)', fontSize: 14,
+              boxShadow: 'inset 0 0 0 1px var(--color-border)', fontSize: 14,
             }}
           >
             <option value="">Semua kategori</option>
@@ -95,7 +95,7 @@ export default function FormCatalog() {
       {!loading && !filtered.length && (
         <div style={{
           padding: 40, textAlign: 'center', background: 'var(--color-surface)',
-          border: '1px dashed var(--color-border)', borderRadius: 12,
+          boxShadow: 'inset 0 0 0 1px var(--color-border)', borderRadius: 12,
         }}>
           <FileText size={32} style={{ color: 'var(--color-text-muted)' }} />
           <div style={{ fontSize: 14, color: 'var(--color-text-muted)', marginTop: 8 }}>

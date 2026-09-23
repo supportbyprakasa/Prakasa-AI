@@ -326,7 +326,7 @@ function ApprovalDetail({
             <div
               key={order}
               style={{
-                border: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 0 0 1px var(--color-border)',
                 borderRadius: 10,
                 marginBottom: 10,
                 overflow: 'hidden',
@@ -364,7 +364,7 @@ function ApprovalDetail({
                     key={step.id}
                     style={{
                       padding: 10,
-                      borderTop: '1px solid var(--color-border)',
+                      boxShadow: 'inset 0 1px 0 0 var(--color-border)',
                       display: 'grid',
                       gridTemplateColumns: 'minmax(160px, 1.2fr) minmax(130px, .8fr) minmax(180px, 1fr) auto',
                       gap: 10,
@@ -536,7 +536,7 @@ function Summary({ label, children }) {
   return (
     <div
       style={{
-        border: '1px solid var(--color-border)',
+        boxShadow: 'inset 0 0 0 1px var(--color-border)',
         borderRadius: 8,
         padding: 10,
       }}

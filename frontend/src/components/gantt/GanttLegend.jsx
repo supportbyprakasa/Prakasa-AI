@@ -4,7 +4,7 @@ export default function GanttLegend() {
       display: 'flex', gap: 16, flexWrap: 'wrap',
       fontSize: 12, color: 'var(--color-text-muted)',
       padding: '8px 12px',
-      borderTop: '1px solid var(--color-border)',
+      boxShadow: 'inset 0 1px 0 0 var(--color-border)',
       background: 'var(--color-surface)',
     }}>
       <Item color="#3b82f6" label="In Progress" />
@@ -34,8 +34,9 @@ function Item({ color, label, border, dashed }) {
       <span style={{
         width: 14, height: 10, borderRadius: 3,
         background: color ? `${color}33` : 'transparent',
-        border: border ? `1px ${dashed ? 'dashed' : 'solid'} ${color || '#94a3b8'}` : 'none',
-        boxShadow: !border && color ? `inset 0 0 0 1.5px ${color}` : 'none',
+        boxShadow: border
+          ? `inset 0 0 0 1px ${color || '#94a3b8'}`
+          : (color ? `inset 0 0 0 1.5px ${color}` : 'none'),
       }} />
       <span>{label}</span>
     </div>

@@ -45,7 +45,7 @@ export default function SignatureAsset() {
               marginTop: 12,
               padding: 12,
               background: '#fff',
-              border: '1px solid var(--color-border)',
+              boxShadow: 'inset 0 0 0 1px var(--color-border)',
               borderRadius: 8,
               display: 'inline-block',
             }}

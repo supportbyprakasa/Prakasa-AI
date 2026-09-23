@@ -145,7 +145,7 @@ export default function VerifyDocument() {
           style={{
             marginTop: 22,
             paddingTop: 16,
-            borderTop: '1px solid var(--color-border)',
+            boxShadow: 'inset 0 1px 0 0 var(--color-border)',
             display: 'flex',
             gap: 8,
             alignItems: 'center',

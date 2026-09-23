@@ -2,7 +2,7 @@ export default function Card({ children, title, actions, noPadding = false }) {
   return (
     <div style={{
       background: 'var(--color-surface)',
-      border: '1px solid var(--color-border)',
+      boxShadow: 'inset 0 0 0 1px var(--color-border)',
       borderRadius: 14,
       padding: noPadding ? 0 : 20,
       overflow: noPadding ? 'hidden' : 'visible',

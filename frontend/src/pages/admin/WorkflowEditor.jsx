@@ -381,7 +381,7 @@ export default function WorkflowEditor() {
               gap: 8, alignItems: 'end',
               padding: 8, marginBottom: 6,
               background: '#f8fafc', borderRadius: 8,
-              border: '1px solid var(--color-border)',
+              boxShadow: 'inset 0 0 0 1px var(--color-border)',
             }}>
               <Input label={idx === 0 ? 'Code' : ''} value={s.code} disabled={!!s._existingId}
                 onChange={(e) => updateStatus(idx, 'code', e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '-'))}
@@ -423,7 +423,7 @@ export default function WorkflowEditor() {
           {form.transitions.map((t, idx) => (
             <div key={idx} style={{
               padding: 10, marginBottom: 8, background: '#f8fafc',
-              borderRadius: 8, border: '1px solid var(--color-border)',
+              borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)',
             }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                 <div>
@@ -434,7 +434,7 @@ export default function WorkflowEditor() {
                       c[idx].fromStatusCode = e.target.value;
                       setForm({ ...form, transitions: c });
                     }}
-                    style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+                    style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
                     {form.statuses.map((s) => <option key={s.code} value={s.code}>{s.label}</option>)}
                   </select>
                 </div>
@@ -446,7 +446,7 @@ export default function WorkflowEditor() {
                       c[idx].toStatusCode = e.target.value;
                       setForm({ ...form, transitions: c });
                     }}
-                    style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+                    style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
                     {form.statuses.map((s) => <option key={s.code} value={s.code}>{s.label}</option>)}
                   </select>
                 </div>

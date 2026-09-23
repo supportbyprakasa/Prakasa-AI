@@ -21,6 +21,7 @@ async function safeAudit({
   requestMeta = null,
   responseMeta = null,
   durationMs = null,
+  persist = true,
 }) {
   logger.info(
     {
@@ -38,6 +39,8 @@ async function safeAudit({
     },
     '[setup] audit'
   );
+
+  if (!persist) return;
 
   try {
     if (!await integrationLogsExist()) return;

@@ -11,7 +11,7 @@ const VIS_META = {
     label: 'Private',
     tone: 'default',
     icon: Lock,
-    helper: 'Hanya Anda, kecuali audit terotorisasi.',
+    helper: 'Hanya Anda yang dapat membaca isi percakapan.'
   },
   department: {
     label: 'Department',

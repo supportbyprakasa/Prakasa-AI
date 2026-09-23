@@ -834,6 +834,13 @@ async function sendMessage({ sessionId, userMessage, user }) {
 
     if (error.status === 409) throw error;
 
+    if (error.code === 'AI_PROVIDER_FORBIDDEN') {
+      const denied = new Error('Engine AI ini tidak tersedia untuk akun atau divisi Anda. Pilih engine lain di pengaturan percakapan.');
+      denied.status = 403;
+      denied.code = 'AI_PROVIDER_FORBIDDEN';
+      throw denied;
+    }
+
     const safe = new Error('Gagal memproses pesan AI. Coba lagi.');
     safe.status =
       error.status === 504 ? 504 :

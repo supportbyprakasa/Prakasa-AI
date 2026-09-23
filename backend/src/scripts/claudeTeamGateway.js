@@ -1,5 +1,5 @@
 const http = require('node:http');
-const { generate } = require('../services/ai/claudeTeamPersonal');
+const { runCli } = require('../services/ai/claudeTeamPersonal');
 
 const host = process.env.CLAUDE_TEAM_GATEWAY_HOST || '127.0.0.1';
 const port = Number(process.env.CLAUDE_TEAM_GATEWAY_PORT || 3199);
@@ -48,23 +48,16 @@ const server = http.createServer(async (req, res) => {
     }
 
     const body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
-    const context = { userEmail: body.userEmail || null };
 
-    // The gateway host must execute locally through Claude Code subscription auth.
-    const previousGatewayUrl = process.env.CLAUDE_TEAM_GATEWAY_URL;
-    delete process.env.CLAUDE_TEAM_GATEWAY_URL;
-    try {
-      const result = await generate({
-        system: body.system || '',
-        prompt: String(body.prompt || ''),
-        model: body.model || process.env.CLAUDE_TEAM_MODEL || 'sonnet',
-        context,
-      });
+    // The shared secret is the trust boundary: the calling Prakasa backend has already
+    // authorized the user against the Super Admin settings before forwarding here.
+    const result = await runCli({
+      system: body.system || '',
+      prompt: String(body.prompt || ''),
+      model: body.model || process.env.CLAUDE_TEAM_MODEL || 'sonnet',
+    });
 
-      return send(res, 200, result);
-    } finally {
-      if (previousGatewayUrl) process.env.CLAUDE_TEAM_GATEWAY_URL = previousGatewayUrl;
-    }
+    return send(res, 200, result);
   } catch (error) {
     const status = [400, 401, 403, 413, 502, 503, 504].includes(error.status)
       ? error.status

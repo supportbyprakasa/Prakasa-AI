@@ -68,6 +68,7 @@ import SignatureDetail from './pages/signatures/SignatureDetail';
 import VerifyDocument from './pages/public/VerifyDocument';
 import AICommandCenter from './pages/ai/AICommandCenter';
 import AIUsage from './pages/admin/AIUsage';
+import AIProviderSettings from './pages/admin/AIProviderSettings';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -149,6 +150,7 @@ export default function App() {
         <Route path="admin/signature-precheck" element={<SignaturePrecheckLogs />} />
         <Route path="ai-command" element={<AICommandCenter />} />
         <Route path="admin/ai-usage" element={<AIUsage />} />
+        <Route path="admin/ai-provider-settings" element={<AIProviderSettings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

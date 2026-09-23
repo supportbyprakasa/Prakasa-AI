@@ -108,6 +108,7 @@ export function useNavConfig() {
         { to: '/admin/approval-delegations', label: 'Approval Delegations', icon: UserCheck, permission: 'approval_delegation.view' },
         { to: '/admin/signature-precheck', label: 'Signature Precheck', icon: ShieldCheck, permission: 'signature_precheck.view' },
         { to: '/admin/ai-usage', label: 'AI Usage', icon: Activity, permission: 'ai_command.usage.view' },
+        { to: '/admin/ai-provider-settings', label: 'AI Provider Settings', icon: Sparkles, permission: 'ai.provider.manage' },
         { to: '/activity-logs', label: 'Activity Log', icon: Activity, permission: 'activity_log.view' },
       ].filter((i) => has(i.permission)),
     },

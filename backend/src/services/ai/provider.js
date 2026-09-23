@@ -1,5 +1,10 @@
 const pool = require('../../db/pool');
 const integrationLog = require('../integrationLog.service');
+const {
+  getClaudeTeamSettings,
+  loadUserIdentity,
+  isClaudeTeamAllowed,
+} = require('./providerSettings');
 
 const providers = {
   openai: require('./openai'),
@@ -11,13 +16,9 @@ const providers = {
 
 const providerDefinitions = {
   claude_team: {
-    label: 'Claude Team (Personal)',
-    configured: (ctx = {}) =>
-      process.env.CLAUDE_TEAM_SUBSCRIPTION_ENABLED === 'yes' &&
-      Boolean(process.env.CLAUDE_TEAM_ALLOWED_EMAIL) &&
-      String(process.env.CLAUDE_TEAM_ALLOWED_EMAIL).trim().toLowerCase() ===
-        String(ctx.userEmail || '').trim().toLowerCase(),
-    model: () => process.env.CLAUDE_TEAM_MODEL || 'sonnet',
+    label: 'Claude Team',
+    configured: (ctx = {}) => Boolean(ctx.claudeTeamAccess),
+    model: (_moduleContext, ctx = {}) => ctx.claudeTeamSettings?.model || 'sonnet',
     authMode: 'subscription_local',
     billingMode: 'team_subscription_usage',
   },
@@ -81,6 +82,21 @@ async function getModuleContext(module) {
   return rows[0];
 }
 
+// Loads the Claude Team settings and the caller's identity once per request so the
+// synchronous provider definitions can decide availability.
+async function withAccessContext(ctx = {}) {
+  const claudeTeamSettings = await getClaudeTeamSettings();
+  const identity = claudeTeamSettings.enabled
+    ? await loadUserIdentity(ctx.userId)
+    : null;
+  return {
+    ...ctx,
+    userEmail: identity?.email || ctx.userEmail || null,
+    claudeTeamSettings,
+    claudeTeamAccess: isClaudeTeamAllowed(claudeTeamSettings, identity),
+  };
+}
+
 function resolveProvider(moduleContext, requestedProvider, ctx = {}) {
   const providerName = requestedProvider || moduleContext.provider;
   const definition = providerDefinitions[providerName];
@@ -95,12 +111,19 @@ function resolveProvider(moduleContext, requestedProvider, ctx = {}) {
   }
 
   if (!definition.configured(ctx)) {
+    if (providerName === 'claude_team' && ctx.claudeTeamSettings?.enabled) {
+      throw providerError(
+        'Claude Team tidak tersedia untuk akun atau divisi Anda',
+        'AI_PROVIDER_FORBIDDEN',
+        403
+      );
+    }
     throw providerError(
       `Provider ${definition.label} belum dikonfigurasi oleh administrator`
     );
   }
 
-  const model = definition.model(moduleContext);
+  const model = definition.model(moduleContext, ctx);
   if (!model) {
     throw providerError(
       `Model untuk provider ${definition.label} belum dikonfigurasi`
@@ -115,12 +138,13 @@ function resolveProvider(moduleContext, requestedProvider, ctx = {}) {
   };
 }
 
-async function listProviders(module, ctx = {}) {
+async function listProviders(module, rawCtx = {}) {
   const moduleContext = await getModuleContext(module);
+  const ctx = await withAccessContext(rawCtx);
 
   return Object.entries(providerDefinitions).map(([name, definition]) => {
     const available = definition.configured(ctx);
-    const model = available ? definition.model(moduleContext) : null;
+    const model = available ? definition.model(moduleContext, ctx) : null;
 
     return {
       id: name,
@@ -140,7 +164,8 @@ async function runModule(module, prompt, ctx = {}) {
 
   try {
     const moduleContext = await getModuleContext(module);
-    const selected = resolveProvider(moduleContext, ctx.provider || null, ctx);
+    const accessCtx = await withAccessContext(ctx);
+    const selected = resolveProvider(moduleContext, ctx.provider || null, accessCtx);
     providerName = selected.name;
 
     const result = await selected.implementation.generate({
@@ -155,7 +180,8 @@ async function runModule(module, prompt, ctx = {}) {
         userId: ctx.userId || null,
         subjectType: ctx.subjectType || null,
         subjectId: ctx.subjectId || null,
-        userEmail: ctx.userEmail || null,
+        userEmail: accessCtx.userEmail || null,
+        accessGranted: selected.name === 'claude_team' && accessCtx.claudeTeamAccess,
       },
     });
 

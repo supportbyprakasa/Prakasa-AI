@@ -1,5 +1,6 @@
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
+const { safeModel } = require('./providerSettings');
 
 const execFileAsync = promisify(execFile);
 
@@ -10,19 +11,16 @@ function providerError(message, code = 'AI_PROVIDER_ERROR', status = 502) {
   return error;
 }
 
-function normalizedEmail(value) {
-  return String(value || '').trim().toLowerCase();
+function cliPath() {
+  return process.env.CLAUDE_TEAM_CLI_PATH || 'claude';
 }
 
-function isAllowedUser(context = {}) {
-  const allowed = normalizedEmail(process.env.CLAUDE_TEAM_ALLOWED_EMAIL);
-  const current = normalizedEmail(context.userEmail);
-  return Boolean(
-    process.env.CLAUDE_TEAM_SUBSCRIPTION_ENABLED === 'yes' &&
-    allowed &&
-    current &&
-    allowed === current
-  );
+function cliEnv() {
+  const env = { ...process.env };
+  // Force the Claude Code subscription credential path instead of API billing.
+  delete env.ANTHROPIC_API_KEY;
+  delete env.ANTHROPIC_AUTH_TOKEN;
+  return env;
 }
 
 async function callGateway({ system, prompt, model, context }) {
@@ -94,20 +92,7 @@ async function callGateway({ system, prompt, model, context }) {
   };
 }
 
-async function generate({ system, prompt, model, context }) {
-  if (!isAllowedUser(context)) {
-    throw providerError(
-      'Claude Team personal mode tidak tersedia untuk user ini',
-      'AI_PROVIDER_FORBIDDEN',
-      403
-    );
-  }
-
-  if (process.env.CLAUDE_TEAM_GATEWAY_URL) {
-    return callGateway({ system, prompt, model, context });
-  }
-
-  const cli = process.env.CLAUDE_TEAM_CLI_PATH || 'claude';
+async function runCli({ system, prompt, model }) {
   const timeout = Number(process.env.CLAUDE_TEAM_TIMEOUT_MS || 120000);
 
   const args = [
@@ -119,24 +104,20 @@ async function generate({ system, prompt, model, context }) {
     '--output-format',
     'json',
     '--model',
-    model || 'sonnet',
+    safeModel(model) || 'sonnet',
   ];
 
   if (system) {
     args.push('--system-prompt', system);
   }
 
-  args.push(prompt);
-
-  const env = { ...process.env };
-  // Force the Claude Code subscription credential path instead of API billing.
-  delete env.ANTHROPIC_API_KEY;
-  delete env.ANTHROPIC_AUTH_TOKEN;
+  // `--` ends option parsing so prompt text starting with "-" is never read as a CLI flag.
+  args.push('--', String(prompt || ''));
 
   let stdout;
   try {
-    const result = await execFileAsync(cli, args, {
-      env,
+    const result = await execFileAsync(cliPath(), args, {
+      env: cliEnv(),
       timeout,
       maxBuffer: 10 * 1024 * 1024,
       cwd: process.env.CLAUDE_TEAM_WORKDIR || process.cwd(),
@@ -196,8 +177,81 @@ async function generate({ system, prompt, model, context }) {
   };
 }
 
+// Access is decided by provider.js from the Super Admin settings; this module only
+// runs requests the caller has explicitly authorized.
+async function generate({ system, prompt, model, context }) {
+  if (context?.accessGranted !== true) {
+    throw providerError(
+      'Claude Team tidak tersedia untuk akun atau divisi Anda',
+      'AI_PROVIDER_FORBIDDEN',
+      403
+    );
+  }
+
+  if (process.env.CLAUDE_TEAM_GATEWAY_URL) {
+    return callGateway({ system, prompt, model, context });
+  }
+
+  return runCli({ system, prompt, model });
+}
+
+function parseAuthStatus(raw) {
+  try {
+    return JSON.parse(String(raw || '').trim());
+  } catch {
+    return null;
+  }
+}
+
+async function cliStatus() {
+  if (process.env.CLAUDE_TEAM_GATEWAY_URL) {
+    return {
+      mode: 'gateway',
+      available: null,
+      message: 'Claude Team dijalankan lewat gateway; status login dicek di host gateway.',
+    };
+  }
+
+  let status = null;
+  let errorCode = null;
+  try {
+    const { stdout } = await execFileAsync(cliPath(), ['auth', 'status'], {
+      env: cliEnv(),
+      timeout: 15000,
+      maxBuffer: 1024 * 1024,
+    });
+    status = parseAuthStatus(stdout);
+  } catch (error) {
+    errorCode = error?.code;
+    // `claude auth status` may exit non-zero when logged out but still print JSON.
+    status = parseAuthStatus(error?.stdout);
+  }
+
+  if (!status) {
+    return {
+      mode: 'local',
+      available: false,
+      loggedIn: false,
+      message: errorCode === 'ENOENT'
+        ? 'Claude CLI tidak tersedia pada host ini'
+        : 'Status Claude CLI tidak dapat dibaca',
+    };
+  }
+
+  return {
+    mode: 'local',
+    available: true,
+    loggedIn: Boolean(status.loggedIn),
+    email: status.email || null,
+    orgName: status.orgName || null,
+    subscriptionType: status.subscriptionType || null,
+    authMethod: status.authMethod || null,
+  };
+}
+
 module.exports = {
   generate,
-  isAllowedUser,
+  runCli,
   callGateway,
+  cliStatus,
 };

@@ -17,7 +17,8 @@
     "task:due-reminders": "node src/scripts/taskDueReminder.js",
     "check:batch5": "node src/scripts/checkBatch5.js",
     "check:batch6": "node src/scripts/checkBatch6.js",
-    "check:ledger": "node src/scripts/checkLedger.js"
+    "check:ledger": "node src/scripts/checkLedger.js",
+    "test:db-config": "node --test test/dbConnectionConfig.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -2,19 +2,15 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const mysql = require('mysql2/promise');
+const { buildDbConnectionConfig } = require('./connectionConfig');
 
 const MIGRATIONS_DIR = path.join(__dirname, '..', '..', 'migrations');
 const LEDGER_TABLE = 'schema_migrations';
 
 function createMigrationConnection() {
   return mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
+    ...buildDbConnectionConfig(),
     multipleStatements: true,
-    charset: 'utf8mb4',
-    timezone: 'Z',
   });
 }
 

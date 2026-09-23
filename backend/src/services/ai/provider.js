@@ -10,7 +10,7 @@ const providers = {
 
 const providerDefinitions = {
   claude: {
-    label: 'Claude',
+    label: 'Claude API',
     configured: () => Boolean(process.env.ANTHROPIC_API_KEY),
     model: (moduleContext) =>
       process.env.CLAUDE_MODEL ||
@@ -20,7 +20,7 @@ const providerDefinitions = {
     billingMode: 'separate_api',
   },
   gemini: {
-    label: 'Gemini',
+    label: 'Gemini API',
     configured: () => Boolean(process.env.GEMINI_API_KEY),
     model: (moduleContext) =>
       process.env.GEMINI_MODEL ||
@@ -30,7 +30,7 @@ const providerDefinitions = {
     billingMode: 'provider_tier',
   },
   openai: {
-    label: 'OpenAI',
+    label: 'OpenAI API',
     configured: () => Boolean(process.env.OPENAI_API_KEY),
     model: (moduleContext) =>
       process.env.OPENAI_MODEL ||

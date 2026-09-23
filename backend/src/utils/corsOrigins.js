@@ -1,6 +1,7 @@
 const VERCEL_WEB_ORIGINS = [
   'https://prakasa-ai-web.vercel.app',
   'https://prakasa-ai-web-git-feat-full-design-revamp-support-prakasa.vercel.app',
+  'https://prakasa-ai-git-feat-full-design-revamp-support-prakasa.vercel.app',
 ];
 
 function allowedOrigins(configuredOrigins = '') {

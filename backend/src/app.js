@@ -6,6 +6,7 @@ const pinoHttp = require('pino-http');
 const logger = require('./utils/logger');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
+const { allowedOrigins } = require('./utils/corsOrigins');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -13,10 +14,7 @@ app.set('trust proxy', 1);
 app.use(pinoHttp({ logger }));
 app.use(express.json({ limit: '1mb' }));
 
-const origins = (process.env.CORS_ORIGINS || '')
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean);
+const origins = allowedOrigins(process.env.CORS_ORIGINS);
 
 function isLoopbackOrigin(origin) {
   try {
@@ -33,14 +31,14 @@ function isLoopbackOrigin(origin) {
 // If at least one configured CORS origin is localhost/127.0.0.1,
 // treat the backend as local-development friendly and allow Vite to
 // move between ports (5173, 5174, 5175, etc.) without editing .env.
-const allowAnyLoopbackPort = origins.some(isLoopbackOrigin);
+const allowAnyLoopbackPort = [...origins].some(isLoopbackOrigin);
 
 app.use(cors({
   origin(origin, callback) {
     // Requests without Origin (curl, server-to-server, health checks) are allowed.
     if (!origin) return callback(null, true);
 
-    if (origins.includes(origin)) {
+    if (origins.has(origin)) {
       return callback(null, true);
     }
 
@@ -48,7 +46,10 @@ app.use(cors({
       return callback(null, true);
     }
 
-    return callback(new Error(`CORS origin not allowed: ${origin}`));
+    const error = new Error(`CORS origin not allowed: ${origin}`);
+    error.status = 403;
+    error.code = 'CORS_ORIGIN_DENIED';
+    return callback(error);
   },
   credentials: true,
 }));

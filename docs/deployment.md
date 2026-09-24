@@ -296,3 +296,12 @@ Gunakan wrapper yang sama agar DB/API secrets tersedia di proses cron.
 ## 14. Automation Builder
 - Rule dijalankan lewat cron `automationRunner.js`, bukan queue.
 - Semua run dicatat di `automation_logs`.
+
+## 15. Prakasa Workspace — organization, Warehouse movements, contextual AI
+
+1. Run the ledger migrate. Migrations `032_prakasa_workspace_organization.sql` and `033_warehouse_movement_approval.sql` are additive and idempotent; they add columns and seed data and never delete rows.
+2. After migrating, the default entity has nine coded divisions, 27 standard roles, and the Super Admin role keyed `system.super_admin`. Existing users keep their roles; assign division roles in **Administrasi → Users** after choosing each user's division.
+3. Migration 033 treats movement rows that existed before it as historical approved records and seeds the Warehouse Supervisor matrix (reminder after 8 hours, escalation to Warehouse Head after 24 hours) only when no active rule exists. Adjust in **Administrasi → Approval Matrix** if policy differs.
+4. Accurate integration is not part of this delivery: no credentials, endpoints, or sync status. Approved movements end at `approved`.
+5. Verify the MySQL server time zone. The app reads timestamps as UTC; if the server's `NOW()` is not UTC, timestamps written by SQL display shifted.
+6. Contextual AI uses `GET /api/v1/ai-command/tools` and `POST /api/v1/ai-command/tool-context`. No new secret is required; the configured AI provider and Claude Team access rules apply unchanged.

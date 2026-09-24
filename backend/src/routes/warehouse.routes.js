@@ -8,8 +8,70 @@ const tasksCtrl = require('../controllers/warehouseSampleTasks.controller');
 const proofCtrl = require('../controllers/warehouseDeliveryProofs.controller');
 const checklistCtrl = require('../controllers/warehouseChecklists.controller');
 const incidentCtrl = require('../controllers/warehouseIncidents.controller');
+const movementCtrl = require('../controllers/warehouseMovements.controller');
 
 router.use(requireAuth);
+
+// ---------- Inbound / outbound movements (entity and division come from auth, never the body)
+const movementType = z.enum(['inbound', 'outbound']);
+const movementParams = z.object({ type: movementType, id: z.coerce.number().int().positive() });
+const movementItem = z.object({
+  sku: z.string().max(80).nullable().optional(),
+  product: z.string().max(190),
+  quantity: z.union([z.number(), z.string().max(30)]),
+  unit: z.string().max(40),
+  batchNo: z.string().max(80).nullable().optional(),
+  expiresOn: z.string().max(10).nullable().optional(),
+  location: z.string().max(120).nullable().optional(),
+  note: z.string().max(500).nullable().optional(),
+});
+const movementFields = {
+  movementDate: z.string().max(10),
+  referenceNo: z.string().max(80).nullable().optional(),
+  party: z.string().max(255).nullable().optional(),
+  notes: z.string().max(5000).nullable().optional(),
+  items: z.array(movementItem).max(200),
+};
+
+router.get('/movements',
+  requirePermission('warehouse.movement.view'),
+  validate(z.object({
+    type: movementType.optional(),
+    status: z.enum(['draft', 'pending_approval', 'revision_requested', 'approved', 'rejected', 'cancelled']).optional(),
+    from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    q: z.string().max(80).optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+  }), 'query'),
+  movementCtrl.list);
+router.get('/movements/:type/:id',
+  requirePermission('warehouse.movement.view'),
+  validate(movementParams, 'params'),
+  movementCtrl.detail);
+router.post('/movements',
+  requirePermission('warehouse.movement.create'),
+  validate(z.object({ type: movementType, ...movementFields }).strict()),
+  movementCtrl.create);
+router.patch('/movements/:type/:id',
+  requirePermission('warehouse.movement.update'),
+  validate(movementParams, 'params'),
+  validate(z.object({ version: z.number().int().positive(), ...movementFields }).strict()),
+  movementCtrl.update);
+router.post('/movements/:type/:id/submit',
+  requirePermission('warehouse.movement.submit'),
+  validate(movementParams, 'params'),
+  validate(z.object({ version: z.number().int().positive().optional() }).strict()),
+  movementCtrl.submit);
+router.post('/movements/:type/:id/cancel',
+  requirePermission('warehouse.movement.cancel'),
+  validate(movementParams, 'params'),
+  validate(z.object({ reason: z.string().trim().min(1).max(500), version: z.number().int().positive().optional() }).strict()),
+  movementCtrl.cancel);
+router.get('/movements/:type/:id/audit',
+  requirePermission('warehouse.movement.audit.view'),
+  validate(movementParams, 'params'),
+  movementCtrl.audit);
 
 // ---------- Sample tasks
 router.get('/sample-tasks', requirePermission('warehouse.sample.view'), tasksCtrl.list);

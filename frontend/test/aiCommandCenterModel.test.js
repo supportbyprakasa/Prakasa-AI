@@ -134,3 +134,36 @@ test('isGenerationActive includes local sending and server generation', () => {
   assert.equal(isGenerationActive({ sending: false, generationStatus: 'failed' }), false);
   assert.equal(isGenerationActive({ sending: false, generationStatus: 'idle' }), false);
 });
+
+test('pinned conversations are grouped first and not repeated in recency groups', async () => {
+  const { groupSessionsByRecency: group } = await import('../src/pages/ai/aiCommandCenterModel.js');
+  const now = new Date('2026-09-24T10:00:00');
+  const groups = group([
+    { id: 1, pinned: true, lastMessageAt: '2026-08-01T10:00:00' },
+    { id: 2, lastMessageAt: '2026-09-24T09:00:00' },
+    { id: 3, pinned: true, lastMessageAt: '2026-09-24T08:00:00' },
+  ], now);
+  assert.deepEqual(groups.map((entry) => entry.key), ['pinned', 'today']);
+  assert.deepEqual(groups[0].items.map((item) => item.id), [1, 3]);
+  assert.equal(groups[0].label, 'Disematkan');
+  assert.deepEqual(groups[1].items.map((item) => item.id), [2]);
+});
+
+test('only your own saved user messages are editable, and never while the AI is answering', async () => {
+  const { canEditMessage } = await import('../src/pages/ai/aiCommandCenterModel.js');
+  const base = { message: { id: 10, role: 'user', createdBy: 7 }, userId: 7, canSend: true, generating: false, archived: false };
+  assert.equal(canEditMessage(base), true);
+  assert.equal(canEditMessage({ ...base, message: { ...base.message, createdBy: 8 } }), false);
+  assert.equal(canEditMessage({ ...base, message: { ...base.message, role: 'assistant' } }), false);
+  assert.equal(canEditMessage({ ...base, message: { ...base.message, id: 'tmp-1' } }), false);
+  assert.equal(canEditMessage({ ...base, generating: true }), false);
+  assert.equal(canEditMessage({ ...base, archived: true }), false);
+  assert.equal(canEditMessage({ ...base, canSend: false }), false);
+});
+
+test('editing replaces the message and everything after it with the new draft', async () => {
+  const { messagesAfterEdit } = await import('../src/pages/ai/aiCommandCenterModel.js');
+  const messages = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }];
+  assert.deepEqual(messagesAfterEdit(messages, 2, { id: 'tmp' }).map((m) => m.id), [1, 'tmp']);
+  assert.deepEqual(messagesAfterEdit(messages, 99, { id: 'tmp' }).map((m) => m.id), [1, 2, 3, 4, 'tmp']);
+});

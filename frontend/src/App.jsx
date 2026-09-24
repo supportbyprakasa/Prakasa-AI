@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
@@ -26,6 +26,8 @@ import SalesCustomerDetail from './pages/sales/SalesCustomerDetail';
 import SampleRequests from './pages/sales/SampleRequests';
 import FieldBotChat from './pages/sales/FieldBotChat';
 import WarehouseDashboard from './pages/warehouse/WarehouseDashboard';
+import WarehouseMovementForm from './pages/warehouse/WarehouseMovementForm';
+import WarehouseMovementDetail from './pages/warehouse/WarehouseMovementDetail';
 import ItDashboard from './pages/it/ItDashboard';
 import Devices from './pages/it/Devices';
 import DeviceDetail from './pages/it/DeviceDetail';
@@ -69,11 +71,19 @@ import VerifyDocument from './pages/public/VerifyDocument';
 import AICommandCenter from './pages/ai/AICommandCenter';
 import AIUsage from './pages/admin/AIUsage';
 import AIProviderSettings from './pages/admin/AIProviderSettings';
+import AccessNotReady from './pages/AccessNotReady';
+import { hasUsableAccess } from './pages/login/loginModel';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
   if (loading) return <div style={{ padding: 24 }}>Memuat…</div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    const returnTo = `${location.pathname}${location.search}${location.hash}`;
+    const query = returnTo && returnTo !== '/' ? `?returnTo=${encodeURIComponent(returnTo)}` : '';
+    return <Navigate to={`/login${query}`} replace />;
+  }
+  if (!hasUsableAccess(user)) return <AccessNotReady />;
   return children;
 }
 
@@ -99,6 +109,7 @@ export default function App() {
         <Route path="tasks/:id" element={<TaskDetail />} />
         <Route path="chat" element={<ChatRoom />} />
         <Route path="approvals" element={<ApprovalInbox />} />
+        <Route path="approvals/:id" element={<ApprovalInbox />} />
         <Route path="signatures" element={<SignatureInbox />} />
         <Route path="signatures/asset" element={<SignatureAsset />} />
         <Route path="signatures/:id" element={<SignatureDetail />} />
@@ -109,6 +120,9 @@ export default function App() {
         <Route path="sales/sample-requests" element={<SampleRequests />} />
         <Route path="sales/field-bot" element={<FieldBotChat />} />
         <Route path="warehouse" element={<WarehouseDashboard />} />
+        <Route path="warehouse/movements/:type/new" element={<WarehouseMovementForm />} />
+        <Route path="warehouse/movements/:type/:id" element={<WarehouseMovementDetail />} />
+        <Route path="warehouse/movements/:type/:id/edit" element={<WarehouseMovementForm />} />
         <Route path="it/dashboard" element={<ItDashboard />} />
         <Route path="it/devices" element={<Devices />} />
         <Route path="it/devices/:id" element={<DeviceDetail />} />

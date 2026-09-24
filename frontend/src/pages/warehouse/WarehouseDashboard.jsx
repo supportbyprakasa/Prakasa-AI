@@ -8,45 +8,52 @@ import DataTable from '../../components/DataTable';
 import Badge from '../../components/Badge';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { toast } from '../../components/Toast';
+import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import MovementList from './WarehouseMovements';
+
+const TABS = [
+  { k: 'inbound', l: 'Barang Masuk', permission: 'warehouse.movement.view' },
+  { k: 'outbound', l: 'Barang Keluar', permission: 'warehouse.movement.view' },
+  { k: 'approval', l: 'Approval Supervisor', permission: 'warehouse.movement.approve' },
+  { k: 'history', l: 'Riwayat Transaksi', permission: 'warehouse.movement.view' },
+  { k: 'queue', l: 'Sample Queue', permission: 'warehouse.sample.view' },
+  { k: 'delivery', l: 'Delivery Proof', permission: 'warehouse.sample.view' },
+  { k: 'checklist', l: 'Checklist', permission: 'warehouse.checklist.view' },
+  { k: 'incidents', l: 'Incidents', permission: 'warehouse.incident.view' },
+];
 
 export default function WarehouseDashboard() {
-  const [tab, setTab] = useState('queue');
+  const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const permissions = user?.permissions || [];
+  const tabs = TABS.filter((entry) => permissions.includes(entry.permission));
+  const requested = searchParams.get('tab');
+  const tab = tabs.some((entry) => entry.k === requested) ? requested : tabs[0]?.k;
+  const setTab = (next) => setSearchParams({ tab: next }, { replace: true });
+
   return (
     <div>
       <h2>Warehouse</h2>
-      <div
-        style={{
-          display: 'flex',
-          gap: 4,
-          marginTop: 12,
-          boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
-        }}
-      >
-        {[
-          { k: 'queue', l: 'Sample Queue' },
-          { k: 'delivery', l: 'Delivery Proof' },
-          { k: 'checklist', l: 'Checklist' },
-          { k: 'incidents', l: 'Incidents' },
-        ].map((t) => (
+      <div className="wm-tabs" role="tablist" aria-label="Menu Warehouse">
+        {tabs.map((t) => (
           <button
             key={t.k}
+            type="button"
+            role="tab"
+            id={`wh-tab-${t.k}`}
+            aria-selected={tab === t.k}
+            aria-controls="wh-tabpanel"
+            className="wm-tab pw-state-layer"
             onClick={() => setTab(t.k)}
-            style={{
-              padding: '10px 16px',
-              background: 'transparent',
-              border: 'none',
-              boxShadow: tab === t.k ? 'inset 0 -2px 0 0 var(--color-primary)' : 'inset 0 -2px 0 0 transparent',
-              color: tab === t.k ? 'var(--color-primary)' : 'var(--color-text-muted)',
-              fontSize: 14,
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}
           >
             {t.l}
           </button>
         ))}
       </div>
-      <div style={{ marginTop: 20 }}>
+      <div id="wh-tabpanel" role="tabpanel" aria-labelledby={tab ? `wh-tab-${tab}` : undefined} style={{ marginTop: 20 }}>
+        {!tab && <p style={{ color: 'var(--pw-on-surface-variant)' }}>Anda belum memiliki akses ke menu Warehouse.</p>}
+        {['inbound', 'outbound', 'approval', 'history'].includes(tab) && <MovementList key={tab} mode={tab} />}
         {tab === 'queue' && <SampleQueueTab />}
         {tab === 'delivery' && <DeliveryProofTab />}
         {tab === 'checklist' && <ChecklistTab />}

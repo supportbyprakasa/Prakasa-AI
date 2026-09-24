@@ -21,7 +21,7 @@ async function generateSignedPdf({ title, signerName, signerEmail, documentHash,
   page.drawText('BERITA ACARA TANDA TANGAN', {
     x: 60, y: height - 80, size: 16, font: bold, color: rgb(0.1, 0.1, 0.1),
   });
-  page.drawText('Prakasa AI Work OS', {
+  page.drawText('Prakasa Workspace', {
     x: 60, y: height - 100, size: 11, font, color: rgb(0.4, 0.4, 0.4),
   });
 
@@ -32,7 +32,7 @@ async function generateSignedPdf({ title, signerName, signerEmail, documentHash,
     `Document Hash  : ${documentHash}`,
     `Kode Verifikasi: ${verificationCode}`,
     '',
-    'Dokumen ini ditandatangani secara elektronik melalui platform Prakasa AI Work OS.',
+    'Dokumen ini ditandatangani secara elektronik melalui platform Prakasa Workspace.',
     'Verifikasi keaslian dapat dilakukan dengan memasukkan kode verifikasi di atas',
     'pada halaman verifikasi dokumen.',
   ];
@@ -71,7 +71,7 @@ async function generateSignedPdfWithQr({
   page.drawText('BERITA ACARA TANDA TANGAN', {
     x: 60, y: height - 80, size: 16, font: bold, color: rgb(0.1, 0.1, 0.1),
   });
-  page.drawText('Prakasa AI Work OS', {
+  page.drawText('Prakasa Workspace', {
     x: 60, y: height - 100, size: 11, font, color: rgb(0.4, 0.4, 0.4),
   });
 
@@ -109,7 +109,7 @@ async function generateSignedPdfWithQr({
 
   y -= 4;
   for (const line of [
-    'Dokumen ini ditandatangani secara elektronik melalui platform Prakasa AI Work OS.',
+    'Dokumen ini ditandatangani secara elektronik melalui platform Prakasa Workspace.',
     'Verifikasi keaslian dapat dilakukan melalui kode atau QR verifikasi.',
   ]) {
     page.drawText(line, { x: 60, y, size: 10, font });

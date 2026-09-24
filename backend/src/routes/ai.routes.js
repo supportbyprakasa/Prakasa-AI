@@ -31,6 +31,7 @@ const claudeTeamSettingsBody = z.object({
   allowedDepartmentIds: z.array(z.number().int().positive()).max(500),
   allowedEmails: z.array(z.string().trim().email().max(190)).max(100),
   model: z.string().trim().regex(MODEL_PATTERN, 'Model tidak valid'),
+  webResearch: z.boolean().optional(),
 });
 
 router.get('/provider-settings/claude-team', requirePermission('ai.provider.manage'), providerSettingsCtrl.getClaudeTeam);

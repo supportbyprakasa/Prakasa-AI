@@ -64,12 +64,32 @@ export function recencyKey(isoDate, now = new Date()) {
 
 export function groupSessionsByRecency(sessions, now = new Date()) {
   const buckets = new Map(RECENCY_GROUPS.map((group) => [group.key, []]));
+  const pinned = [];
   for (const session of sessions || []) {
-    buckets.get(recencyKey(session.lastMessageAt || session.createdAt, now)).push(session);
+    if (session.pinned) pinned.push(session);
+    else buckets.get(recencyKey(session.lastMessageAt || session.createdAt, now)).push(session);
   }
-  return RECENCY_GROUPS
-    .map((group) => ({ ...group, items: buckets.get(group.key) }))
-    .filter((group) => group.items.length > 0);
+  return [
+    { key: 'pinned', label: 'Disematkan', items: pinned },
+    ...RECENCY_GROUPS.map((group) => ({ ...group, items: buckets.get(group.key) })),
+  ].filter((group) => group.items.length > 0);
+}
+
+// A message can be edited by its author once saved, while the chat accepts messages.
+export function canEditMessage({ message, userId, canSend, generating, archived }) {
+  return Boolean(
+    message?.role === 'user'
+    && Number.isFinite(Number(message.id))
+    && Number(message.createdBy) === Number(userId)
+    && canSend && !generating && !archived,
+  );
+}
+
+// Editing discards the edited message and everything after it, then shows the new draft.
+export function messagesAfterEdit(messages, messageId, draft) {
+  const index = messages.findIndex((item) => Number(item.id) === Number(messageId));
+  const kept = index === -1 ? messages : messages.slice(0, index);
+  return [...kept, draft];
 }
 
 export function greetingForHour(hour) {

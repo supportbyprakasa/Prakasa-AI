@@ -2,6 +2,11 @@ const bcrypt = require('bcryptjs');
 const pool = require('../db/pool');
 const { ok, fail } = require('../utils/response');
 const { log } = require('../services/activityLog.service');
+const {
+  loadAssignedRoles,
+  loadRolesForAssignment,
+  validateRoleAssignment,
+} = require('../services/rolePolicy.service');
 
 async function list(req, res, next) {
   try {
@@ -100,6 +105,13 @@ async function create(req, res, next) {
     const passwordHash = await bcrypt.hash(password, 12);
     await conn.beginTransaction();
 
+    const roleRows = await loadRolesForAssignment({ connection: conn, roleIds });
+    validateRoleAssignment({
+      entityId,
+      departmentId: departmentId || null,
+      roleRows,
+    });
+
     const [result] = await conn.query(
       `INSERT INTO users
        (entity_id, department_id, name, email, password_hash, must_change_password, status)
@@ -152,6 +164,31 @@ async function update(req, res, next) {
 
     await conn.beginTransaction();
 
+    const [[currentUser]] = await conn.query(
+      `SELECT id, entity_id, department_id
+         FROM users
+        WHERE id = ? AND deleted_at IS NULL
+        FOR UPDATE`,
+      [id],
+    );
+    if (!currentUser) {
+      await conn.rollback();
+      return fail(res, 'NOT_FOUND', 'User tidak ditemukan', 404);
+    }
+
+    const effectiveEntityId = entityId ?? currentUser.entity_id;
+    const effectiveDepartmentId = departmentId !== undefined
+      ? (departmentId || null)
+      : currentUser.department_id;
+    const roleRows = Array.isArray(roleIds)
+      ? await loadRolesForAssignment({ connection: conn, roleIds })
+      : await loadAssignedRoles({ connection: conn, userId: id });
+    validateRoleAssignment({
+      entityId: effectiveEntityId,
+      departmentId: effectiveDepartmentId,
+      roleRows,
+    });
+
     const fields = [];
     const values = [];
     if (name !== undefined) { fields.push('name = ?'); values.push(name); }
@@ -171,15 +208,6 @@ async function update(req, res, next) {
         values
       );
       if (!result.affectedRows) {
-        await conn.rollback();
-        return fail(res, 'NOT_FOUND', 'User tidak ditemukan', 404);
-      }
-    } else {
-      const [[user]] = await conn.query(
-        'SELECT id FROM users WHERE id = ? AND deleted_at IS NULL',
-        [id]
-      );
-      if (!user) {
         await conn.rollback();
         return fail(res, 'NOT_FOUND', 'User tidak ditemukan', 404);
       }

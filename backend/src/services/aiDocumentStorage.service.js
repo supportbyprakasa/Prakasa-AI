@@ -3,13 +3,24 @@ const zlib = require('zlib');
 const { promisify } = require('util');
 const pool = require('../db/pool');
 const drive = require('./googleDrive.service');
+const fileStore = require('./aiFileStore.service');
 const { log: activityLog } = require('./activityLog.service');
 const {
+  MAX_EXTRACTED_CHARS,
   extractReadableText,
   generateArtifact,
   prepareUpload,
   sanitizeFileName,
 } = require('./aiDocumentArtifact.service');
+const claudeTeam = require('./ai/claudeTeamPersonal');
+const {
+  getClaudeTeamSettings,
+  isClaudeTeamAllowed,
+  loadUserIdentity,
+} = require('./ai/providerSettings');
+
+// A PDF whose text layer is shorter than this is treated as a scan.
+const MIN_PDF_TEXT_CHARS = 50;
 
 const gunzip = promisify(zlib.gunzip);
 
@@ -21,15 +32,26 @@ async function uploadSessionFile({ session, user, file, title, documentType }) {
     fileName: file.originalname,
     mimeType: file.mimetype,
   });
-  const extraction = await extractReadableText({
+  let extraction = await extractReadableText({
     buffer: prepared.storedBuffer,
     storedMimeType: prepared.storedMimeType,
     originalMimeType: prepared.originalMimeType,
     originalName: prepared.originalName,
     compressionMethod: prepared.compressionMethod,
   });
+  let readBy = extraction.status === 'ready' ? 'text' : null;
 
-  return persistPreparedDocument({
+  if (needsVisualRead(prepared.originalMimeType, extraction)) {
+    const visual = await readVisually({ user, buffer: file.buffer, mimeType: prepared.originalMimeType });
+    if (visual.text) {
+      extraction = { status: 'ready', text: visual.text, error: null };
+      readBy = 'vision';
+    } else if (visual.reason) {
+      extraction = { ...extraction, error: [extraction.error, visual.reason].filter(Boolean).join('. ') };
+    }
+  }
+
+  const persisted = await persistPreparedDocument({
     session,
     user,
     prepared,
@@ -39,14 +61,53 @@ async function uploadSessionFile({ session, user, file, title, documentType }) {
     messageId: null,
     relation: 'attachment',
     eventType: 'document_uploaded',
+    readBy,
   });
+  return { ...persisted, readBy };
+}
+
+function needsVisualRead(mimeType, extraction) {
+  if (!claudeTeam.canReadVisually(mimeType)) return false;
+  if (extraction.status !== 'ready') return true;
+  return mimeType === 'application/pdf' && String(extraction.text || '').trim().length < MIN_PDF_TEXT_CHARS;
+}
+
+// Images and scanned PDFs are transcribed once with Claude vision so every later message
+// (and every provider) can use the text. Failure never blocks the upload itself.
+async function readVisually({ user, buffer, mimeType }) {
+  if (process.env.CLAUDE_TEAM_GATEWAY_URL) {
+    return { text: null, reason: 'Pembacaan visual belum tersedia lewat gateway' };
+  }
+  const [settings, identity] = await Promise.all([
+    getClaudeTeamSettings(),
+    loadUserIdentity(user.sub),
+  ]);
+  if (!isClaudeTeamAllowed(settings, identity)) {
+    return { text: null, reason: 'Pembacaan gambar/scan membutuhkan akses Claude Team' };
+  }
+  try {
+    const result = await claudeTeam.transcribeVisual({ buffer, mimeType, model: settings.model });
+    const text = String(result.content || '').trim();
+    if (!text) return { text: null, reason: 'Pembacaan visual tidak menghasilkan teks' };
+    return {
+      text: `[Dibaca dengan AI vision dari gambar/scan]\n\n${text}`.slice(0, MAX_EXTRACTED_CHARS),
+      reason: null,
+    };
+  } catch (error) {
+    return {
+      text: null,
+      reason: error.code === 'VISION_TOO_LARGE'
+        ? 'File terlalu besar untuk pembacaan visual'
+        : 'Pembacaan visual gagal',
+    };
+  }
 }
 
 async function generateFromMessage({ session, user, messageId, format, title, documentType }) {
   const [messages] = await pool.query(
     `SELECT id, role, content
        FROM ai_messages
-      WHERE id=? AND session_id=?
+      WHERE id=? AND session_id=? AND deleted_at IS NULL
       LIMIT 1`,
     [messageId, session.id]
   );
@@ -93,17 +154,21 @@ async function persistPreparedDocument({
   messageId,
   relation,
   eventType,
+  readBy = null,
 }) {
-  const parentId = await resolveArtifactFolder({
-    entityId: session.entity_id,
-    departmentId: session.department_id,
-    documentType,
-    userId: user.sub,
-  });
+  const store = fileStore.storeForUpload();
+  const parentId = store.kind === 'local'
+    ? await store.resolveFolder()
+    : await resolveArtifactFolder({
+      entityId: session.entity_id,
+      departmentId: session.department_id,
+      documentType,
+      userId: user.sub,
+    });
 
   let uploaded = null;
   try {
-    uploaded = await drive.uploadFile({
+    uploaded = await store.upload({
       name: prepared.storedName,
       mimeType: prepared.storedMimeType,
       buffer: prepared.storedBuffer,
@@ -225,6 +290,7 @@ async function persistPreparedDocument({
             storedSize: prepared.storedSize,
             compressionMethod: prepared.compressionMethod,
             extractionStatus: extraction.status,
+            readBy,
           }),
         ]
       );
@@ -269,7 +335,7 @@ async function persistPreparedDocument({
   } catch (error) {
     if (uploaded?.id) {
       try {
-        await drive.deleteFile(uploaded.id, {
+        await fileStore.storeForFile(uploaded.id).remove(uploaded.id, {
           entityId: session.entity_id,
           userId: user.sub,
           subjectType: 'ai_session_rollback',
@@ -302,7 +368,7 @@ async function downloadSessionDocument({ session, documentId, user }) {
   const document = rows[0];
   if (!document?.driveFileId) throw serviceError('Dokumen tidak ditemukan', 404, 'NOT_FOUND');
 
-  const downloaded = await drive.downloadFileBuffer(document.driveFileId, {
+  const downloaded = await fileStore.storeForFile(document.driveFileId).download(document.driveFileId, {
     entityId: session.entity_id,
     userId: user.sub,
     subjectType: 'ai_document_download',

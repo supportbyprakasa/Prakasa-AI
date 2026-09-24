@@ -19,8 +19,8 @@ export function engineChipLabel(providers = [], providerId, fallbackModel) {
 export function visibilityMenuItems(user) {
   return [
     { value: 'private', label: 'Pribadi', description: 'Hanya Anda yang dapat membaca' },
-    ...(user?.departmentId
-      ? [{ value: 'department', label: 'Divisi saya', description: 'Member divisi dengan akses' }]
+    ...(user?.departmentId || (user?.permissions || []).includes('ai_command.admin.view')
+      ? [{ value: 'department', label: 'Divisi', description: 'Semua anggota divisi bisa membaca dan ikut bertanya' }]
       : []),
     { value: 'entity', label: 'Lintas divisi', description: 'Dibagikan sesuai akses entity' },
   ];

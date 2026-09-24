@@ -41,8 +41,8 @@ export default function Navbar() {
   return (
     <header className="prakasa-navbar">
       <div className="prakasa-navbar__left">
-        <Link to="/" className="prakasa-navbar__brand" aria-label="Prakasa Work OS — Home">
-          <span className="prakasa-navbar__brand-mark">P</span><span>Prakasa Work OS</span>
+        <Link to="/" className="prakasa-navbar__brand" aria-label="Prakasa Workspace — Beranda">
+          <img className="prakasa-navbar__brand-mark" src="/logo-nav.png" alt="" aria-hidden="true" /><span>Prakasa Workspace</span>
         </Link>
       </div>
       <div className="prakasa-navbar__right">

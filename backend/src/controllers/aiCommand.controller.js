@@ -5,6 +5,10 @@ const aiContext = require('../services/aiContext.service');
 const aiCommand = require('../services/aiCommand.service');
 const aiAction = require('../services/aiActionProposal.service');
 const aiDocumentStorage = require('../services/aiDocumentStorage.service');
+const aiInbox = require('../services/aiInbox.service');
+const aiToolRegistry = require('../services/aiToolRegistry.service');
+const aiToolContext = require('../services/aiToolContext.service');
+const { log: activityLog } = require('../services/activityLog.service');
 const { listProviders } = require('../services/ai/provider');
 const logger = require('../utils/logger');
 
@@ -64,6 +68,7 @@ async function createSession(req, res, next) {
       visibility: req.body.visibility,
       systemContext: req.body.systemContext,
       provider: req.body.provider,
+      webResearch: req.body.webResearch === true,
       user: req.user,
     });
 
@@ -86,9 +91,31 @@ async function getSession(req, res, next) {
       action: 'view',
     });
 
-    return ok(res, aiCommand.sessionDto(session));
+    return ok(res, {
+      ...aiCommand.sessionDto(session),
+      access: aiAccess.sessionAccessFlags(req.user, session),
+      pinned: await aiCommand.isPinned(session.id, req.user.sub),
+    });
   } catch (error) {
     return handleServiceError(error, res, next);
+  }
+}
+
+async function pinSession(req, res, next) {
+  try {
+    const session = await aiCommand.getSessionById(req.params.id);
+    if (!session) return fail(res, 'NOT_FOUND', 'Session tidak ditemukan', 404);
+    return ok(res, await aiCommand.setPinned({ session, user: req.user, pinned: req.method === 'PUT' }));
+  } catch (error) {
+    return handleServiceError(error, res, next);
+  }
+}
+
+async function divisions(req, res, next) {
+  try {
+    return ok(res, await aiCommand.listTargetDivisions(req.user));
+  } catch (error) {
+    return next(error);
   }
 }
 
@@ -182,9 +209,72 @@ async function sendMessage(req, res, next) {
       sessionId: Number(req.params.id),
       userMessage: req.body.message,
       user: req.user,
+      editMessageId: req.body.editMessageId || null,
     });
 
     return ok(res, result, undefined, 201);
+  } catch (error) {
+    return handleServiceError(error, res, next);
+  }
+}
+
+async function inbox(req, res, next) {
+  try {
+    return ok(res, await aiInbox.getInbox({ user: req.user }));
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function tools(req, res, next) {
+  try {
+    const level = await aiToolContext.roleLevelFromDb(req.user);
+    return ok(res, { roleLevel: level, tools: aiToolRegistry.listToolsForUser(req.user, level) });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Builds the context for the page the user has open and, when a session is given, stores
+// it as that session's notes through the normal owner-checked session update.
+async function toolContext(req, res, next) {
+  try {
+    const context = await aiToolContext.buildToolContext({
+      user: req.user,
+      pathname: req.body.pathname,
+      search: req.body.search || '',
+      visibleState: req.body.visibleState || null,
+    });
+
+    let attachedSessionId = null;
+    if (req.body.sessionId) {
+      const session = await aiCommand.getSessionById(req.body.sessionId);
+      if (!session) return fail(res, 'NOT_FOUND', 'Session tidak ditemukan', 404);
+      await aiCommand.updateSession({ session, user: req.user, patch: { systemContext: context.text } });
+      attachedSessionId = session.id;
+    }
+
+    activityLog({
+      entityId: req.user.entityId,
+      userId: req.user.sub,
+      action: 'ai_tool.context_built',
+      subjectType: 'ai_tool',
+      subjectId: attachedSessionId,
+      metadata: { tool: context.tool.key, sourceRef: context.subject?.sourceRef || null, attached: Boolean(attachedSessionId) },
+    }).catch(() => {});
+
+    return ok(res, { ...context, attachedSessionId });
+  } catch (error) {
+    return handleServiceError(error, res, next);
+  }
+}
+
+async function stopGeneration(req, res, next) {
+  try {
+    const session = await aiCommand.getSessionById(req.params.id);
+    if (!session) return fail(res, 'NOT_FOUND', 'Session tidak ditemukan', 404);
+    const result = await aiCommand.stopGeneration({ session, user: req.user });
+    return ok(res, result);
   } catch (error) {
     return handleServiceError(error, res, next);
   }
@@ -218,7 +308,9 @@ async function streamMessage(req, res) {
       sessionId: Number(req.params.id),
       userMessage: req.body.message,
       user: req.user,
+      editMessageId: req.body.editMessageId || null,
       onDelta: (text) => send('delta', { text }),
+      onStatus: (status) => send('status', status),
     });
     send('done', result);
   } catch (error) {
@@ -610,6 +702,10 @@ async function usage(req, res, next) {
 }
 
 module.exports = {
+  pinSession,
+  divisions,
+  tools,
+  toolContext,
   providers,
   listSessions,
   createSession,
@@ -620,6 +716,8 @@ module.exports = {
   listMessages,
   sendMessage,
   streamMessage,
+  stopGeneration,
+  inbox,
   uploadSessionFile,
   generateArtifact,
   getArtifact,

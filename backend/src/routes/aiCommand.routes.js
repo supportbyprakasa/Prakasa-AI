@@ -34,6 +34,7 @@ const createSessionBody = z.object({
   systemContext: z.string().max(8000).nullable().optional(),
   departmentId: z.number().int().positive().nullable().optional(),
   provider: z.enum(['openai', 'gemini', 'claude', 'claude_team', 'n8n']).nullable().optional(),
+  webResearch: z.boolean().optional(),
 });
 
 const updateSessionBody = z.object({
@@ -41,6 +42,7 @@ const updateSessionBody = z.object({
   visibility: z.enum(['private', 'department', 'entity']).optional(),
   systemContext: z.string().max(8000).nullable().optional(),
   provider: z.enum(['openai', 'gemini', 'claude', 'claude_team', 'n8n']).nullable().optional(),
+  webResearch: z.boolean().optional(),
 });
 
 const messageListQuery = z.object({
@@ -50,6 +52,7 @@ const messageListQuery = z.object({
 
 const sendMessageBody = z.object({
   message: z.string().min(1).max(20000),
+  editMessageId: z.number().int().positive().optional(),
 });
 
 const generateArtifactBody = z.object({
@@ -121,6 +124,36 @@ router.get(
 );
 
 router.get(
+  '/tools',
+  requirePermission('ai_command.use'),
+  ctrl.tools
+);
+
+router.post(
+  '/tool-context',
+  requirePermission('ai_command.use'),
+  validate(z.object({
+    pathname: z.string().min(1).max(300),
+    search: z.string().max(500).optional(),
+    visibleState: z.record(z.union([z.string().max(500), z.number(), z.boolean(), z.null()])).optional(),
+    sessionId: z.number().int().positive().optional(),
+  }).strict()),
+  ctrl.toolContext
+);
+
+router.get(
+  '/divisions',
+  requirePermission('ai_command.use'),
+  ctrl.divisions
+);
+
+router.get(
+  '/inbox',
+  requirePermission('ai_command.use'),
+  ctrl.inbox
+);
+
+router.get(
   '/sessions',
   requirePermission('ai_command.session.view'),
   validate(listQuery, 'query'),
@@ -152,6 +185,18 @@ router.delete(
   validate(idParams, 'params'),
   ctrl.deleteSession
 );
+router.put(
+  '/sessions/:id/pin',
+  requirePermission('ai_command.session.view'),
+  validate(idParams, 'params'),
+  ctrl.pinSession
+);
+router.delete(
+  '/sessions/:id/pin',
+  requirePermission('ai_command.session.view'),
+  validate(idParams, 'params'),
+  ctrl.pinSession
+);
 router.post(
   '/sessions/:id/archive',
   requirePermission('ai_command.session.manage'),
@@ -172,6 +217,12 @@ router.post(
   validate(idParams, 'params'),
   validate(sendMessageBody),
   ctrl.sendMessage
+);
+router.post(
+  '/sessions/:id/generation/stop',
+  requirePermission('ai_command.use'),
+  validate(idParams, 'params'),
+  ctrl.stopGeneration
 );
 router.post(
   '/sessions/:id/messages/stream',

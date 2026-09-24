@@ -40,6 +40,7 @@ export default function AIProviderSettings() {
     allowedDepartmentIds: [],
     emailsText: '',
     model: 'sonnet',
+    webResearch: false,
   });
   const [modules, setModules] = useState([]);
   const [moduleBusy, setModuleBusy] = useState(false);
@@ -50,6 +51,7 @@ export default function AIProviderSettings() {
       allowedDepartmentIds: settings.allowedDepartmentIds,
       emailsText: settings.allowedEmails.join('\n'),
       model: settings.model,
+      webResearch: Boolean(settings.webResearch),
     });
     setMeta({ source: settings.source, updatedAt: settings.updatedAt });
   };
@@ -104,6 +106,7 @@ export default function AIProviderSettings() {
         allowedDepartmentIds: form.allowedDepartmentIds,
         allowedEmails,
         model: form.model,
+        webResearch: form.webResearch,
       });
       applySettings(r.data.data.settings);
       toast('Pengaturan Claude Team disimpan', 'success');
@@ -173,6 +176,22 @@ export default function AIProviderSettings() {
             onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
           />
           Aktifkan Claude Team
+        </label>
+
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, marginBottom: 16 }}>
+          <input
+            type="checkbox"
+            checked={form.webResearch}
+            onChange={(e) => setForm({ ...form, webResearch: e.target.checked })}
+            style={{ marginTop: 3 }}
+          />
+          <span>
+            Izinkan riset web
+            <span style={{ display: 'block', marginTop: 2, fontSize: 12.5, color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+              User dapat menyalakan "Riset web" per percakapan agar AI mencari informasi di internet dan menyertakan sumber.
+              Bila percakapan memuat dokumen internal, AI hanya boleh mencari (tidak membuka URL bebas) untuk mengurangi risiko kebocoran data.
+            </span>
+          </span>
         </label>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16, maxWidth: 240 }}>

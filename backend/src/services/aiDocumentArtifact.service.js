@@ -10,7 +10,7 @@ const gzip = promisify(zlib.gzip);
 const gunzip = promisify(zlib.gunzip);
 
 const MAX_SOURCE_BYTES = Number(process.env.AI_DOCUMENT_MAX_BYTES || 25 * 1024 * 1024);
-const MAX_EXTRACTED_CHARS = Number(process.env.AI_DOCUMENT_MAX_EXTRACTED_CHARS || 100000);
+const MAX_EXTRACTED_CHARS = Number(process.env.AI_DOCUMENT_MAX_EXTRACTED_CHARS || 300000);
 const MAX_ZIP_UNCOMPRESSED_BYTES = 60 * 1024 * 1024;
 const MAX_ZIP_ENTRIES = 5000;
 

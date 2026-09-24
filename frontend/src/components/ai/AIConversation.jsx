@@ -8,9 +8,11 @@ import {
   Loader2,
   Menu,
   PanelRightClose,
+  Pencil,
   PanelRightOpen,
   Paperclip,
   Sparkles,
+  Upload,
 } from 'lucide-react';
 import api from '../../api/client';
 import { streamSessionMessage } from '../../api/aiStream';
@@ -23,12 +25,19 @@ import AIComposer from './AIComposer';
 import AIDropdown from './AIDropdown';
 import AINewChat from './AINewChat';
 import AIMarkdown from './AIMarkdown';
+import AIWebToggle, { toolStatusLabel } from './AIWebToggle';
+import useFileDrop from './useFileDrop';
 import { engineChipLabel, engineMenuItems } from './aiEngineOptions';
-import { closeOpenMarkdown, isGenerationActive } from '../../pages/ai/aiCommandCenterModel';
+import { AI_FILE_ACCEPT, AI_MAX_PENDING_FILES, AI_MAX_UPLOAD_BYTES, formatBytes } from './aiFiles';
+import {
+  canEditMessage,
+  closeOpenMarkdown,
+  isGenerationActive,
+  messagesAfterEdit,
+} from '../../pages/ai/aiCommandCenterModel';
 
 const GENERATION_POLL_MS = 4000;
 const STICK_TO_BOTTOM_PX = 160;
-const FILE_ACCEPT ='.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.png,.jpg,.jpeg,.webp,.txt,.csv,.md,.markdown,.json,.xml,.html,.htm,.rtf';
 
 export default function AIConversation({
   sessionId,
@@ -43,6 +52,7 @@ export default function AIConversation({
   workspaceOpen,
   onToggleWorkspace,
   onOpenSidebar,
+  newChatVisibility = 'private',
 }) {
   const { user } = useAuth();
   const [session, setSession] = useState(null);
@@ -57,6 +67,9 @@ export default function AIConversation({
   const [input, setInput] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [streamingText, setStreamingText] = useState(null);
+  const [toolStatus, setToolStatus] = useState(null);
+  const [togglingWeb, setTogglingWeb] = useState(false);
+  const [stopping, setStopping] = useState(false);
   const bottomRef = useRef(null);
   const scrollRef = useRef(null);
   const stickToBottomRef = useRef(true);
@@ -67,6 +80,18 @@ export default function AIConversation({
   // Latest selected session, so async work started for another session never writes here.
   const activeSessionRef = useRef(sessionId);
   activeSessionRef.current = sessionId;
+
+  // Hooks must run before the early returns below, so derive upload rights from raw state.
+  const userPermissions = user?.permissions || [];
+  const canDropFiles = Boolean(
+    session &&
+    session.status === 'active' &&
+    (session.access ? session.access.canSend : Number(session.ownerUserId) === Number(user?.id)) &&
+    userPermissions.includes('ai_command.use') &&
+    userPermissions.includes('document.create') &&
+    !uploading
+  );
+  const { dragging, dropProps } = useFileDrop((files) => uploadFiles(files), canDropFiles);
 
   const scrollToBottom = (behavior = 'smooth') => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior }), 30);
@@ -86,6 +111,16 @@ export default function AIConversation({
       flushFrameRef.current = null;
       if (activeSessionRef.current === targetSessionId) setStreamingText(streamBufferRef.current);
     });
+  };
+
+  // A tool call means the text so far was only a preamble: clear the draft and show
+  // what the AI is doing until the final answer starts streaming.
+  const handleToolStatus = (targetSessionId, status) => {
+    if (activeSessionRef.current !== targetSessionId) return;
+    cancelStreamFlush();
+    streamBufferRef.current = '';
+    setStreamingText('');
+    setToolStatus(status);
   };
 
   const onMessageScroll = () => {
@@ -144,6 +179,7 @@ export default function AIConversation({
     cancelStreamFlush();
     streamBufferRef.current = '';
     setStreamingText(null);
+    setToolStatus(null);
     setSending(false);
     stickToBottomRef.current = true;
     loadSession();
@@ -182,7 +218,7 @@ export default function AIConversation({
     }
   };
 
-  const send = async (textOverride) => {
+  const send = async (textOverride, { editMessageId = null } = {}) => {
     const text = typeof textOverride === 'string' ? textOverride : input;
     if (!sessionId || !text.trim()) return;
     if (session?.status !== 'active') {
@@ -202,16 +238,21 @@ export default function AIConversation({
     cancelStreamFlush();
     streamBufferRef.current = '';
     setStreamingText('');
+    setToolStatus(null);
     stickToBottomRef.current = true;
 
     const optimistic = {
       id: `tmp-${Date.now()}`,
       role: 'user',
       content: text,
+      createdBy: user?.id,
+      authorName: user?.name,
       createdAt: new Date().toISOString(),
       _optimistic: true,
     };
-    setMessages((current) => [...current, optimistic]);
+    setMessages((current) => (
+      editMessageId ? messagesAfterEdit(current, editMessageId, optimistic) : [...current, optimistic]
+    ));
     scrollToBottom();
 
     try {
@@ -219,11 +260,15 @@ export default function AIConversation({
       try {
         result = await streamSessionMessage(targetSessionId, text, {
           onDelta: (delta) => appendDelta(targetSessionId, delta),
+          onStatus: (status) => handleToolStatus(targetSessionId, status),
+          editMessageId,
         });
       } catch (streamFailure) {
         // Backends without the stream endpoint still get a complete (non-streamed) reply.
         if (!streamFailure.streamUnavailable) throw streamFailure;
-        const response = await api.post(`/ai-command/sessions/${targetSessionId}/messages`, { message: text });
+        const response = await api.post(`/ai-command/sessions/${targetSessionId}/messages`, (
+          editMessageId ? { message: text, editMessageId } : { message: text }
+        ));
         result = response.data.data;
       }
       if (!stillActive()) return;
@@ -234,15 +279,19 @@ export default function AIConversation({
         ...current.map((item) => (
           item.id === optimistic.id ? { ...item, id: result.userMessageId, _optimistic: false } : item
         )),
-        { ...result.assistantMessage, createdAt: new Date().toISOString() },
+        ...(result.assistantMessage
+          ? [{ ...result.assistantMessage, createdAt: new Date().toISOString() }]
+          : []),
       ]);
       setStreamingText(null);
+      setToolStatus(null);
       onSessionUpdated?.();
       await refreshMessagesAndSession();
     } catch (e) {
       if (!stillActive()) return;
       cancelStreamFlush();
       setStreamingText(null);
+      setToolStatus(null);
       const errCode = e.response?.data?.error?.code;
       const status = e.response?.status;
       // Always reload authoritative state. Provider failures occur after the
@@ -253,7 +302,9 @@ export default function AIConversation({
         setMessages((current) => current.filter((item) => item.id !== optimistic.id));
       }
 
-      if (errCode === 'SESSION_BUSY') {
+      if (editMessageId && (status === 403 || status === 404)) {
+        toast(e.response?.data?.error?.message || 'Pesan tidak dapat diedit', 'error');
+      } else if (errCode === 'SESSION_BUSY') {
         setInput(text);
         toast('AI masih memproses pesan sebelumnya.', 'error');
       } else if (errCode === 'SESSION_NOT_ACTIVE') {
@@ -281,39 +332,49 @@ export default function AIConversation({
     if (consumedPendingRef.current === session.id) return;
     consumedPendingRef.current = session.id;
     onPendingConsumed?.();
-    send(pendingMessage.text);
+    if (pendingMessage.autoSend === false) setInput(pendingMessage.text);
+    else send(pendingMessage.text);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, pendingMessage]);
 
-  const uploadFile = async (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file || !sessionId) return;
-    if (file.size > 25 * 1024 * 1024) {
-      toast('Ukuran file maksimum 25 MB', 'error');
-      return;
+  const uploadFiles = async (fileList) => {
+    const files = Array.from(fileList || []);
+    if (!files.length || !sessionId) return;
+    const tooBig = files.filter((file) => file.size > AI_MAX_UPLOAD_BYTES);
+    if (tooBig.length) {
+      toast(`Ukuran file maksimum ${formatBytes(AI_MAX_UPLOAD_BYTES)}: ${tooBig.map((f) => f.name).join(', ')}`, 'error');
     }
+    const accepted = files.filter((file) => file.size <= AI_MAX_UPLOAD_BYTES);
+    if (accepted.length > AI_MAX_PENDING_FILES) toast(`Maksimum ${AI_MAX_PENDING_FILES} file sekaligus`, 'error');
+    const batch = accepted.slice(0, AI_MAX_PENDING_FILES);
+    if (!batch.length) return;
 
-    const form = new FormData();
-    form.append('file', file);
     setUploading(true);
-    try {
-      const response = await api.post(`/ai-command/sessions/${sessionId}/files`, form);
-      const artifact = response.data.data;
-      const saved = artifact.compressionMethod === 'gzip'
-        ? ` Dikompresi dari ${formatBytes(artifact.originalSize)} menjadi ${formatBytes(artifact.storedSize)}.`
-        : '';
-      const readable = artifact.extractionStatus === 'ready'
-        ? ' File siap dibaca AI.'
-        : ' File tersimpan, tetapi teksnya belum dapat dibaca AI.';
-      toast(`File tersimpan di Shared Drive.${saved}${readable}`, 'success');
+    const saved = [];
+    const failed = [];
+    for (const file of batch) {
+      const form = new FormData();
+      form.append('file', file);
+      try {
+        const response = await api.post(`/ai-command/sessions/${sessionId}/files`, form);
+        saved.push(response.data.data);
+      } catch (error) {
+        failed.push(`${file.name} (${error.response?.data?.error?.message || 'gagal'})`);
+      }
+    }
+    setUploading(false);
+
+    if (saved.length) {
+      const unreadable = saved.filter((item) => item.extractionStatus !== 'ready').length;
+      const byVision = saved.filter((item) => item.readBy === 'vision').length;
+      const parts = [`${saved.length} file tersimpan.`];
+      if (byVision) parts.push(`${byVision} gambar/scan dibaca dengan AI vision.`);
+      if (unreadable) parts.push(`${unreadable} file belum dapat dibaca AI.`);
+      toast(parts.join(' '), unreadable ? 'info' : 'success');
       onSessionUpdated?.();
       onOpenWorkspace?.('documents');
-    } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal mengunggah file', 'error');
-    } finally {
-      setUploading(false);
     }
+    if (failed.length) toast(`Gagal mengunggah: ${failed.join(', ')}`, 'error');
   };
 
   const exportMessage = async (message, format) => {
@@ -335,6 +396,32 @@ export default function AIConversation({
       toast(error.response?.data?.error?.message || `Gagal membuat ${format.toUpperCase()}`, 'error');
     } finally {
       setExportingKey('');
+    }
+  };
+
+  const stopGeneration = async () => {
+    setStopping(true);
+    try {
+      await api.post(`/ai-command/sessions/${sessionId}/generation/stop`);
+    } catch (error) {
+      toast(error.response?.data?.error?.message || 'Gagal menghentikan jawaban', 'error');
+    } finally {
+      setStopping(false);
+    }
+  };
+
+  const toggleWebResearch = async () => {
+    const next = !session.webResearch;
+    setTogglingWeb(true);
+    try {
+      await api.patch(`/ai-command/sessions/${sessionId}`, { webResearch: next });
+      const response = await api.get(`/ai-command/sessions/${sessionId}`);
+      setSession(response.data.data);
+      toast(next ? 'Riset web aktif untuk percakapan ini' : 'Riset web dimatikan', 'success');
+    } catch (error) {
+      toast(error.response?.data?.error?.message || 'Gagal mengubah riset web', 'error');
+    } finally {
+      setTogglingWeb(false);
     }
   };
 
@@ -374,9 +461,11 @@ export default function AIConversation({
       <div className="ai-conversation">
         {topbar(<span className="ai-topbar-brand">Prakasa AI</span>)}
         <AINewChat
+          key={newChatVisibility}
           providers={providers}
           providersLoading={providersLoading}
           onSessionCreated={onSessionCreated}
+          initialVisibility={newChatVisibility}
         />
       </div>
     );
@@ -409,16 +498,26 @@ export default function AIConversation({
 
   const permissions = user?.permissions || [];
   const isOwner = Number(session.ownerUserId) === Number(user?.id);
-  const canManage = isOwner && permissions.includes('ai_command.session.manage');
-  const canSend = isOwner && permissions.includes('ai_command.use');
+  // The server decides who may write: the owner, or any member of the division for
+  // shared division chats.
+  const canManage = (session.access ? session.access.canManage : isOwner) && permissions.includes('ai_command.session.manage');
+  const canSend = (session.access ? session.access.canSend : isOwner) && permissions.includes('ai_command.use');
+  const sharedChat = session.visibility !== 'private';
   const canCreateDocument = canSend && permissions.includes('document.create');
   const archived = session.status === 'archived';
   const generating = isGenerationActive({ sending, generationStatus: session.generationStatus });
   const title = session.title || `Percakapan #${session.id}`;
   const engineLabel = engineChipLabel(providers, session.provider, session.model);
+  const webCapable = Boolean(providers.find((item) => item.id === session.provider)?.webResearch);
 
   return (
-    <div className="ai-conversation">
+    <div className="ai-conversation" {...dropProps}>
+      {dragging && (
+        <div className="ai-drop-overlay" aria-hidden="true">
+          <Upload size={28} />
+          <span>Lepaskan file untuk dilampirkan ke percakapan</span>
+        </div>
+      )}
       {topbar(
         <>
           {canManage ? (
@@ -477,6 +576,9 @@ export default function AIConversation({
               canExport={canCreateDocument && !archived}
               exportingKey={exportingKey}
               onExport={exportMessage}
+              showAuthor={sharedChat && message.role === 'user' && Number(message.createdBy) !== Number(user?.id)}
+              canEdit={canEditMessage({ message, userId: user?.id, canSend, generating, archived })}
+              onEdit={(text) => send(text, { editMessageId: message.id })}
             />
           ))}
 
@@ -487,7 +589,7 @@ export default function AIConversation({
           ) : generating && (
             <div className="ai-thinking" role="status" aria-live="polite">
               <span className="ai-thinking-mark" aria-hidden="true"><Sparkles size={18} /></span>
-              <span>Prakasa AI sedang membaca konteks dan menyiapkan jawaban…</span>
+              <span>{toolStatus ? toolStatusLabel(toolStatus) : 'Prakasa AI sedang membaca konteks dan menyiapkan jawaban…'}</span>
             </div>
           )}
           <div ref={bottomRef} />
@@ -500,6 +602,10 @@ export default function AIConversation({
           onChange={setInput}
           onSubmit={() => send()}
           busy={sending}
+          canStop={generating && canSend}
+          onFiles={canCreateDocument && !archived ? uploadFiles : undefined}
+          onStop={stopGeneration}
+          stopping={stopping}
           disabled={!canSend || archived || generating}
           sendDisabled={!canSend || !input.trim() || archived || generating}
           placeholder={
@@ -509,16 +615,24 @@ export default function AIConversation({
                 ? 'Prakasa AI sedang menjawab…'
                 : !canSend
                   ? 'Percakapan ini dibagikan sebagai read-only.'
-                  : 'Balas ke Prakasa AI…'
+                  : session.visibility === 'department'
+                    ? 'Balas ke Prakasa AI… (terlihat oleh anggota divisi)'
+                    : 'Balas ke Prakasa AI…'
           }
-          tools={canCreateDocument && (
+          tools={(
             <>
+              {canCreateDocument && (
+                <>
               <input
                 ref={fileInputRef}
                 type="file"
                 className="ai-visually-hidden"
-                accept={FILE_ACCEPT}
-                onChange={uploadFile}
+                multiple
+                accept={AI_FILE_ACCEPT}
+                onChange={(event) => {
+                  uploadFiles(event.target.files);
+                  event.target.value = '';
+                }}
               />
               <button
                 type="button"
@@ -526,10 +640,19 @@ export default function AIConversation({
                 onClick={() => fileInputRef.current?.click()}
                 disabled={archived || generating || uploading}
                 aria-label="Lampirkan file"
-                title="Lampirkan file (maks. 25 MB)"
+                title={`Lampirkan file (maks. ${AI_MAX_PENDING_FILES} file, ${formatBytes(AI_MAX_UPLOAD_BYTES)} per file) — bisa juga seret atau tempel`}
               >
                 {uploading ? <Loader2 className="ai-spin" size={19} /> : <Paperclip size={19} />}
               </button>
+                </>
+              )}
+              {webCapable && canManage && (
+                <AIWebToggle
+                  active={Boolean(session.webResearch)}
+                  onToggle={toggleWebResearch}
+                  disabled={togglingWeb || generating || archived}
+                />
+              )}
             </>
           )}
           trailing={canManage ? (
@@ -574,8 +697,10 @@ export default function AIConversation({
 }
 
 /* User text renders as plain text; assistant text renders as sanitized Markdown. */
-function MessageItem({ message, canExport, exportingKey, onExport }) {
+function MessageItem({ message, canExport, exportingKey, onExport, showAuthor = false, canEdit = false, onEdit }) {
   const [copied, setCopied] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(message.content);
   const time = new Date(message.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
   if (message.role === 'system' || message.role === 'tool') {
@@ -583,9 +708,54 @@ function MessageItem({ message, canExport, exportingKey, onExport }) {
   }
 
   if (message.role === 'user') {
+    if (editing) {
+      const submitEdit = () => {
+        const text = draft.trim();
+        if (!text) return;
+        setEditing(false);
+        if (text !== message.content.trim()) onEdit?.(text);
+      };
+      return (
+        <div className="ai-msg is-user is-editing">
+          <div className="ai-edit-box">
+            <textarea
+              className="ai-edit-input"
+              value={draft}
+              autoFocus
+              rows={Math.min(8, Math.max(2, draft.split('\n').length))}
+              aria-label="Edit pesan"
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') { setDraft(message.content); setEditing(false); }
+                if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); submitEdit(); }
+              }}
+            />
+            <p className="ai-edit-note">Jawaban setelah pesan ini akan diganti dengan jawaban baru.</p>
+            <div className="ai-edit-actions">
+              <button type="button" className="ai-text-button ai-ripple" onClick={() => { setDraft(message.content); setEditing(false); }}>Batal</button>
+              <button type="button" className="ai-tonal-button ai-ripple" onClick={submitEdit} disabled={!draft.trim()}>Kirim ulang</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="ai-msg is-user">
-        <div className="ai-user-bubble" title={time}>{message.content}</div>
+        {showAuthor && <span className="ai-msg-author">{message.authorName || 'Anggota divisi'}</span>}
+        <div className="ai-user-row">
+          {canEdit && (
+            <button
+              type="button"
+              className="ai-icon-button is-small ai-ripple ai-edit-trigger"
+              onClick={() => { setDraft(message.content); setEditing(true); }}
+              aria-label="Edit pesan ini"
+              title="Edit pesan"
+            >
+              <Pencil size={15} />
+            </button>
+          )}
+          <div className="ai-user-bubble" title={time}>{message.content}</div>
+        </div>
       </div>
     );
   }
@@ -654,11 +824,4 @@ function downloadBlob(blob, fileName) {
   anchor.click();
   anchor.remove();
   URL.revokeObjectURL(url);
-}
-
-function formatBytes(value) {
-  const bytes = Number(value || 0);
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }

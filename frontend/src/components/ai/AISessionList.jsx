@@ -1,5 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Archive, Building2, Inbox, Lock, SquarePen, Users } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Archive, Building2, Inbox, Lock, MessagesSquare, MoreHorizontal, Pencil, Pin, PinOff,
+  Settings2, SquarePen, Trash2, Users,
+} from 'lucide-react';
+import ConfirmDialog from '../ConfirmDialog';
 import api from '../../api/client';
 import Button from '../Button';
 import Input from '../Input';
@@ -12,7 +16,7 @@ import { groupSessionsByRecency } from '../../pages/ai/aiCommandCenterModel';
 const PAGE_SIZE = 30;
 
 const SPACES = [
-  { value: '', label: 'Semua percakapan', icon: Inbox },
+  { value: '', label: 'Semua percakapan', icon: MessagesSquare },
   { value: 'private', label: 'Pribadi', icon: Lock },
   { value: 'department', label: 'Divisi', icon: Users },
   { value: 'entity', label: 'Lintas divisi', icon: Building2 },
@@ -25,9 +29,23 @@ export default function AISessionList({
   onSelectSession,
   onNewChat,
   refreshKey,
+  inboxActive = false,
+  inboxCount = 0,
+  onOpenInbox,
+  onNewDivisionChat,
+  onEditSession,
+  onSessionDeleted,
+  onSessionsChanged,
 }) {
   const { user } = useAuth();
-  const canCreate = (user?.permissions || []).includes('ai_command.use');
+  const permissions = user?.permissions || [];
+  const canCreate = permissions.includes('ai_command.use');
+  const canStartDivisionChat = canCreate && Boolean(user?.departmentId || permissions.includes('ai_command.admin.view'));
+  const [renamingId, setRenamingId] = useState(null);
+  const [renameText, setRenameText] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const renameHandledRef = useRef(null);
   const [rows, setRows] = useState([]);
   const [meta, setMeta] = useState({ page: 1, limit: PAGE_SIZE, total: 0 });
   const [loading, setLoading] = useState(true);
@@ -56,6 +74,60 @@ export default function AISessionList({
   useEffect(() => { load(1, false); /* eslint-disable-next-line */ }, [visibility, archived, refreshKey]);
 
   const groups = useMemo(() => groupSessionsByRecency(rows), [rows]);
+
+  const afterChange = async () => {
+    await load(1, false);
+    onSessionsChanged?.();
+  };
+
+  const togglePin = async (session) => {
+    try {
+      if (session.pinned) await api.delete(`/ai-command/sessions/${session.id}/pin`);
+      else await api.put(`/ai-command/sessions/${session.id}/pin`);
+      toast(session.pinned ? 'Sematan dilepas' : 'Percakapan disematkan', 'success');
+      await afterChange();
+    } catch (error) {
+      toast(error.response?.data?.error?.message || 'Gagal mengubah sematan', 'error');
+    }
+  };
+
+  const startRename = (session) => {
+    renameHandledRef.current = null;
+    setRenamingId(session.id);
+    setRenameText(session.title || '');
+  };
+
+  const saveRename = async (session) => {
+    // Enter and the following blur both call this; only the first one saves.
+    if (renameHandledRef.current === session.id) return;
+    renameHandledRef.current = session.id;
+    const title = renameText.trim();
+    setRenamingId(null);
+    if (!title || title === session.title) return;
+    try {
+      await api.patch(`/ai-command/sessions/${session.id}`, { title });
+      toast('Nama percakapan diganti', 'success');
+      await afterChange();
+    } catch (error) {
+      toast(error.response?.data?.error?.message || 'Gagal mengganti nama', 'error');
+    }
+  };
+
+  const confirmDelete = async () => {
+    setBusy(true);
+    try {
+      await api.delete(`/ai-command/sessions/${deleteTarget.id}`);
+      toast('Percakapan dihapus', 'success');
+      const deletedId = deleteTarget.id;
+      setDeleteTarget(null);
+      onSessionDeleted?.(deletedId);
+      await afterChange();
+    } catch (error) {
+      toast(error.response?.data?.error?.message || 'Gagal menghapus percakapan', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
   const hasMore = rows.length < (meta.total || 0);
 
   return (
@@ -64,6 +136,19 @@ export default function AISessionList({
         <button type="button" className="ai-new-chat-button ai-ripple" onClick={onNewChat}>
           <SquarePen size={18} />
           <span>Percakapan baru</span>
+        </button>
+      )}
+
+      {onOpenInbox && (
+        <button
+          type="button"
+          className={`ai-nav-item ai-ripple ai-inbox-nav${inboxActive ? ' is-active' : ''}`}
+          aria-current={inboxActive ? 'page' : undefined}
+          onClick={onOpenInbox}
+        >
+          <Inbox size={18} />
+          <span>Kotak aksi</span>
+          {inboxCount > 0 && <span className="ai-nav-badge" aria-label={`${inboxCount} menunggu`}>{inboxCount > 99 ? '99+' : inboxCount}</span>}
         </button>
       )}
 
@@ -93,6 +178,12 @@ export default function AISessionList({
           <Archive size={18} />
           <span>{archived ? 'Menampilkan arsip' : 'Arsip'}</span>
         </button>
+        {visibility === 'department' && canStartDivisionChat && onNewDivisionChat && (
+          <button type="button" className="ai-text-button ai-ripple ai-division-new" onClick={onNewDivisionChat}>
+            <Users size={16} />
+            <span>Percakapan divisi baru</span>
+          </button>
+        )}
       </nav>
 
       <div className="ai-recents" aria-label="Riwayat percakapan">
@@ -106,7 +197,11 @@ export default function AISessionList({
 
         {!loading && !rows.length && (
           <div className="ai-session-empty">
-            {archived ? 'Tidak ada percakapan yang diarsipkan.' : 'Belum ada percakapan di ruang ini.'}
+            {archived
+              ? 'Tidak ada percakapan yang diarsipkan.'
+              : visibility === 'department'
+                ? 'Belum ada percakapan divisi. Mulai satu agar tim bisa bertanya bersama.'
+                : 'Belum ada percakapan di ruang ini.'}
           </div>
         )}
 
@@ -114,23 +209,52 @@ export default function AISessionList({
           <section key={group.key} className="ai-recent-group">
             <div className="ai-sidebar-label">{group.label}</div>
             {group.items.map((session) => {
-              const isSelected = Number(session.id) === Number(selectedSessionId);
+              const isSelected = !inboxActive && Number(session.id) === Number(selectedSessionId);
               const isOwner = Number(session.ownerUserId) === Number(user?.id);
               const title = session.title || `Percakapan #${session.id}`;
               const SharedIcon = SHARED_ICONS[session.visibility];
+              if (renamingId === session.id) {
+                return (
+                  <input
+                    key={session.id}
+                    className="ai-rename-input"
+                    value={renameText}
+                    autoFocus
+                    maxLength={255}
+                    aria-label="Nama percakapan"
+                    onChange={(event) => setRenameText(event.target.value)}
+                    onBlur={() => saveRename(session)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') { event.preventDefault(); saveRename(session); }
+                      if (event.key === 'Escape') { renameHandledRef.current = session.id; setRenamingId(null); }
+                    }}
+                  />
+                );
+              }
               return (
-                <button
-                  key={session.id}
-                  type="button"
-                  title={title}
-                  onClick={() => onSelectSession(session.id)}
-                  className={`ai-session-link ai-ripple${isSelected ? ' is-active' : ''}`}
-                  aria-current={isSelected ? 'page' : undefined}
-                >
-                  <span className="ai-session-title">{title}</span>
-                  {!isOwner && <small className="ai-session-owner">{session.ownerName || 'user lain'}</small>}
-                  {SharedIcon && <SharedIcon size={14} className="ai-session-shared" aria-label="Dibagikan" />}
-                </button>
+                <div key={session.id} className={`ai-session-row${isSelected ? ' is-active' : ''}`}>
+                  <button
+                    type="button"
+                    title={title}
+                    onClick={() => onSelectSession(session.id)}
+                    className={`ai-session-link ai-ripple${isSelected ? ' is-active' : ''}`}
+                    aria-current={isSelected ? 'page' : undefined}
+                  >
+                    {session.pinned && <Pin size={13} className="ai-session-pin" aria-label="Disematkan" />}
+                    <span className="ai-session-title">{title}</span>
+                    {!isOwner && <small className="ai-session-owner">{session.ownerName || 'user lain'}</small>}
+                    {SharedIcon && <SharedIcon size={14} className="ai-session-shared" aria-label="Dibagikan" />}
+                  </button>
+                  <SessionMenu
+                    title={title}
+                    pinned={session.pinned}
+                    canManage={isOwner && permissions.includes('ai_command.session.manage')}
+                    onPin={() => togglePin(session)}
+                    onRename={() => startRename(session)}
+                    onEdit={() => onEditSession?.(session.id)}
+                    onDelete={() => setDeleteTarget(session)}
+                  />
+                </div>
               );
             })}
           </section>
@@ -147,6 +271,78 @@ export default function AISessionList({
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Hapus percakapan ini?"
+        message={deleteTarget?.visibility === 'department'
+          ? `“${deleteTarget?.title || 'Percakapan'}” akan hilang untuk semua anggota divisi. Tindakan ini tidak dapat dibatalkan dari antarmuka.`
+          : `“${deleteTarget?.title || 'Percakapan'}” tidak akan tampil lagi. Tindakan ini tidak dapat dibatalkan dari antarmuka.`}
+        confirmLabel="Hapus"
+        tone="danger"
+        loading={busy}
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
+    </div>
+  );
+}
+
+function SessionMenu({ title, pinned, canManage, onPin, onRename, onEdit, onDelete }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onPointerDown = (event) => { if (!rootRef.current?.contains(event.target)) setOpen(false); };
+    const onKeyDown = (event) => { if (event.key === 'Escape') setOpen(false); };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
+
+  const choose = (action) => () => { setOpen(false); action(); };
+  const items = [
+    { key: 'pin', icon: pinned ? PinOff : Pin, label: pinned ? 'Lepas sematan' : 'Sematkan', run: onPin },
+    ...(canManage ? [
+      { key: 'rename', icon: Pencil, label: 'Ganti nama', run: onRename },
+      { key: 'edit', icon: Settings2, label: 'Edit detail', run: onEdit },
+      { key: 'delete', icon: Trash2, label: 'Hapus', run: onDelete, danger: true },
+    ] : []),
+  ];
+
+  return (
+    <div className={`ai-dropdown is-bottom is-right ai-session-menu${open ? ' is-open' : ''}`} ref={rootRef}>
+      <button
+        type="button"
+        className="ai-icon-button is-small ai-ripple ai-session-menu-trigger"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Opsi untuk ${title}`}
+        title="Opsi"
+        onClick={() => setOpen((current) => !current)}
+      >
+        <MoreHorizontal size={16} />
+      </button>
+      {open && (
+        <div className="ai-menu" role="menu" aria-label={`Opsi untuk ${title}`}>
+          {items.map(({ key, icon: Icon, label, run, danger }) => (
+            <button
+              key={key}
+              type="button"
+              role="menuitem"
+              className={`ai-menu-item ai-ripple${danger ? ' is-danger' : ''}`}
+              onClick={choose(run)}
+            >
+              <Icon size={16} aria-hidden="true" />
+              <span className="ai-menu-item-text"><strong>{label}</strong></span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

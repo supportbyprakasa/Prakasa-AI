@@ -76,6 +76,26 @@ function canViewSession({ user, session }) {
   return false;
 }
 
+// Division chats are shared workspaces: every member of that division who may use AI can
+// continue the conversation. Private and entity-wide chats remain owner-written.
+function canWriteSession({ user, session }) {
+  if (!user || !session || session.deleted_at) return false;
+  if (isOwner(user, session)) return true;
+  return session.visibility === 'department'
+    && canViewSession({ user, session })
+    && hasPerm(user, 'ai_command.use');
+}
+
+function sessionAccessFlags(user, session) {
+  const canView = canViewSession({ user, session });
+  return {
+    isOwner: isOwner(user, session),
+    canView,
+    canSend: canView && session?.status === 'active' && canWriteSession({ user, session }),
+    canManage: canManageSession({ user, session }),
+  };
+}
+
 function canManageSession({ user, session }) {
   if (!user || !session || session.deleted_at) return false;
   return isOwner(user, session);
@@ -123,8 +143,8 @@ function assertSessionAccess({ user, session, action }) {
   }
 
   if (writeAction.has(action)) {
-    if (!isOwner(user, session)) {
-      const error = new Error('Hanya pemilik session yang dapat menulis ke session ini');
+    if (!canWriteSession({ user, session })) {
+      const error = new Error('Anda tidak dapat menulis ke percakapan ini');
       error.status = 403;
       error.code = 'FORBIDDEN';
       throw error;
@@ -216,4 +236,6 @@ module.exports = {
   canManageSession,
   assertSessionAccess,
   buildVisibilityFilter,
+  canWriteSession,
+  sessionAccessFlags,
 };

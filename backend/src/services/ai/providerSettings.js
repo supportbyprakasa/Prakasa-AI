@@ -21,6 +21,7 @@ function envClaudeTeamSettings() {
     allowedDepartmentIds: [],
     allowedEmails: email ? [email] : [],
     model: safeModel(process.env.CLAUDE_TEAM_MODEL) || DEFAULT_MODEL,
+    webResearch: process.env.CLAUDE_TEAM_WEB_RESEARCH === 'yes',
     source: 'env',
     updatedAt: null,
     updatedBy: null,
@@ -55,13 +56,20 @@ async function getClaudeTeamSettings() {
       .map(normalizeEmail)
       .filter(Boolean),
     model: safeModel(config.model) || safeModel(process.env.CLAUDE_TEAM_MODEL) || DEFAULT_MODEL,
+    webResearch: config.webResearch === true,
     source: 'database',
     updatedAt: rows[0].updatedAt,
     updatedBy: rows[0].updatedBy,
   };
 }
 
-async function saveClaudeTeamSettings({ enabled, allowedDepartmentIds, allowedEmails, model }, userId) {
+async function saveClaudeTeamSettings({
+  enabled,
+  allowedDepartmentIds,
+  allowedEmails,
+  model,
+  webResearch = false,
+}, userId) {
   const departmentIds = [...new Set(allowedDepartmentIds.map(Number))];
   const emails = [...new Set(allowedEmails.map(normalizeEmail).filter(Boolean))];
   const cleanModel = safeModel(model);
@@ -92,6 +100,7 @@ async function saveClaudeTeamSettings({ enabled, allowedDepartmentIds, allowedEm
     allowedDepartmentIds: departmentIds,
     allowedEmails: emails,
     model: cleanModel,
+    webResearch: webResearch === true,
   });
 
   await pool.query(

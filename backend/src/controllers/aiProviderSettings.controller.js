@@ -46,6 +46,7 @@ async function updateClaudeTeam(req, res, next) {
         provider: 'claude_team',
         enabled: settings.enabled,
         model: settings.model,
+        webResearch: settings.webResearch,
         allowedDepartmentIds: settings.allowedDepartmentIds,
         allowedEmailCount: settings.allowedEmails.length,
       },

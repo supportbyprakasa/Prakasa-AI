@@ -4,6 +4,8 @@ const { log: activityLog } = require('../services/activityLog.service');
 const approvalAudit = require('../services/approvalAudit.service');
 const notif = require('../services/notification.service');
 const engine = require('../services/approvalEngine.service');
+const { notifySteps } = require('../services/approvalNotify.service');
+const lifecycle = require('../services/approvalSubjectLifecycle.service');
 
 async function userRoleIds(userId, entityId, conn = pool) {
   const [rows] = await conn.query(
@@ -16,70 +18,6 @@ async function userRoleIds(userId, entityId, conn = pool) {
     [userId, entityId]
   );
   return rows.map((row) => Number(row.roleId));
-}
-
-async function targetUsersForSteps(stepIds, entityId) {
-  if (!stepIds?.length) return [];
-
-  const [steps] = await pool.query(
-    `SELECT approver_user_id AS approverUserId,
-            approver_role_id AS approverRoleId,
-            escalated_to_user_id AS escalatedToUserId,
-            escalated_to_role_id AS escalatedToRoleId
-       FROM approval_steps
-      WHERE id IN (?)`,
-    [stepIds]
-  );
-
-  const targets = new Set();
-  const roleIds = new Set();
-
-  for (const step of steps) {
-    if (step.escalatedToUserId) targets.add(Number(step.escalatedToUserId));
-    else if (step.approverUserId) targets.add(Number(step.approverUserId));
-
-    if (step.escalatedToRoleId) roleIds.add(Number(step.escalatedToRoleId));
-    else if (step.approverRoleId) roleIds.add(Number(step.approverRoleId));
-  }
-
-  if (roleIds.size) {
-    const [users] = await pool.query(
-      `SELECT DISTINCT u.id
-         FROM users u
-         JOIN user_roles ur ON ur.user_id=u.id
-         JOIN roles r ON r.id=ur.role_id
-        WHERE ur.role_id IN (?)
-          AND u.entity_id=?
-          AND r.entity_id=?
-          AND u.status='active'
-          AND u.deleted_at IS NULL
-          AND r.deleted_at IS NULL`,
-      [[...roleIds], entityId, entityId]
-    );
-    for (const user of users) targets.add(Number(user.id));
-  }
-
-  return [...targets];
-}
-
-async function notifySteps(stepIds, request) {
-  const users = await targetUsersForSteps(stepIds, request.entity_id);
-  for (const userId of users) {
-    try {
-      await notif.create({
-        userId,
-        entityId: request.entity_id,
-        title: 'Approval menunggu keputusan Anda',
-        body: request.title,
-        event: 'approval.step_activated',
-        subjectType: 'approval_request',
-        subjectId: request.id,
-        actionUrl: `/approvals/${request.id}`,
-      });
-    } catch {
-      // Notification failure must not revert the committed approval state.
-    }
-  }
 }
 
 async function validateCreateReferences(conn, entityId, body) {
@@ -242,7 +180,7 @@ async function detail(req, res, next) {
               s.escalated_to_role_id AS escalatedToRoleId,
               er.name AS escalatedToRoleName,
               s.decided_by AS decidedBy,
-              dec.name AS decidedByName,
+              decider.name AS decidedByName,
               s.decided_at AS decidedAt, s.note
          FROM approval_steps s
          LEFT JOIN users au ON au.id=s.approver_user_id
@@ -250,7 +188,7 @@ async function detail(req, res, next) {
          LEFT JOIN users du ON du.id=s.delegated_from_user_id
          LEFT JOIN users eu ON eu.id=s.escalated_to_user_id
          LEFT JOIN roles er ON er.id=s.escalated_to_role_id
-         LEFT JOIN users dec ON dec.id=s.decided_by
+         LEFT JOIN users decider ON decider.id=s.decided_by
         WHERE s.approval_request_id=?
         ORDER BY s.order_index ASC, s.id ASC`,
       [req.params.id]
@@ -270,6 +208,11 @@ async function create(req, res, next) {
   const conn = await pool.getConnection();
   try {
     const entityId = req.entityScope.entityId;
+    const subjectType = req.body.subjectType || 'document';
+    const requestType = req.body.requestType || subjectType;
+    if (lifecycle.isManagedSubject(subjectType) || lifecycle.isManagedSubject(requestType)) {
+      return fail(res, 'VALIDATION_ERROR', 'Approval ini hanya dapat diajukan dari modulnya sendiri', 400);
+    }
     const reference = await validateCreateReferences(conn, entityId, req.body);
 
     await conn.beginTransaction();
@@ -415,6 +358,15 @@ async function decide(req, res, next) {
       return fail(res, 'CONFLICT', 'Approval sudah tidak pending', 409);
     }
 
+    // Domain rules (e.g. Warehouse separation of duties) are checked before any step changes.
+    await lifecycle.assertCanDecide({
+      approval,
+      user: req.user,
+      action: req.body.action,
+      note: req.body.note,
+      conn,
+    });
+
     const targetStepId = await resolveTargetStep({
       approval,
       requestedStepId: req.body.stepId,
@@ -460,6 +412,14 @@ async function decide(req, res, next) {
       };
     }
 
+    const subjectOutcome = await lifecycle.applyDecision({
+      approval,
+      result,
+      actorUserId: req.user.sub,
+      note: req.body.note,
+      conn,
+    });
+
     await approvalAudit.log({
       entityId,
       actorUserId: req.user.sub,
@@ -474,6 +434,7 @@ async function decide(req, res, next) {
     }, conn);
 
     await conn.commit();
+    await lifecycle.afterCommit(subjectOutcome, req.user.sub);
 
     await activityLog({
       entityId,
@@ -506,7 +467,9 @@ async function decide(req, res, next) {
     }
 
     if (result.nextStepIds?.length) {
-      await notifySteps(result.nextStepIds, approval);
+      await notifySteps(result.nextStepIds, approval, {
+        departmentId: lifecycle.isManagedSubject(approval.subject_type) ? approval.department_id : null,
+      });
     }
 
     return ok(res, {
@@ -538,6 +501,7 @@ async function myPendingSteps(req, res, next) {
     const approval = requests[0];
     if (!approval) return fail(res, 'NOT_FOUND', 'Approval tidak ditemukan', 404);
     if (approval.status !== 'pending') return ok(res, []);
+    if (!(await lifecycle.canUserDecide({ approval, user: req.user, conn: pool }))) return ok(res, []);
 
     const roles = await userRoleIds(req.user.sub, approval.entity_id);
     const permissions = req.user.permissions || [];

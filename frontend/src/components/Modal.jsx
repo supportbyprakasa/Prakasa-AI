@@ -1,21 +1,55 @@
+import { useEffect, useId, useRef } from 'react';
+import { X } from 'lucide-react';
+
 export default function Modal({ open, onClose, title, children, footer, maxWidth = 640, minWidth = 0 }) {
+  const dialogRef = useRef(null);
+  const closeRef = useRef(onClose);
+  const titleId = useId();
+  closeRef.current = onClose;
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const previousFocus = document.activeElement;
+    const frame = window.requestAnimationFrame(() => {
+      if (!dialogRef.current?.contains(document.activeElement)) dialogRef.current?.focus();
+    });
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        // Only the top-most modal dialog reacts, so a stacked confirmation closes first.
+        const dialogs = document.querySelectorAll('[role="dialog"][aria-modal="true"]');
+        if (dialogs[dialogs.length - 1] !== dialogRef.current) return;
+        closeRef.current?.();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', onKeyDown);
+      if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+    };
+  }, [open]);
+
   if (!open) return null;
   return (
-    <div onClick={onClose} style={{
-      position: 'fixed', inset: 0, background: 'rgba(15,23,42,.45)',
-      display: 'grid', placeItems: 'center', zIndex: 100,
-    }}>
-      <div role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()} style={{
-        background: 'var(--color-surface)', borderRadius: 16, minWidth: `min(${minWidth}px, calc(100vw - 32px))`,
-        maxWidth, width: 'calc(100% - 32px)', padding: 24, maxHeight: '90vh', overflowY: 'auto',
-        boxShadow: '0 24px 64px rgba(15,23,42,.18)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-          <h3 style={{ margin: 0, fontSize: 18 }}>{title}</h3>
-          <button type="button" aria-label="Tutup" onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 18 }}>×</button>
+    <div className="pw-scrim" onClick={onClose} role="presentation">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="pw-dialog"
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth, minWidth: `min(${minWidth}px, calc(100vw - 32px))` }}
+      >
+        <div className="pw-dialog__header">
+          <h3 id={titleId} className="pw-dialog__title">{title}</h3>
+          <button type="button" className="pw-icon-button pw-state-layer pw-ripple" aria-label="Tutup" onClick={onClose}>
+            <X size={20} aria-hidden="true" />
+          </button>
         </div>
         {children}
-        {footer && <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>{footer}</div>}
+        {footer && <div className="pw-dialog__footer">{footer}</div>}
       </div>
     </div>
   );

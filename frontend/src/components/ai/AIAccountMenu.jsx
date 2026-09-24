@@ -49,7 +49,7 @@ export default function AIAccountMenu({ compact = false }) {
             <small>{user?.email}</small>
           </div>
           <button type="button" role="menuitem" className="ai-menu-item ai-ripple" onClick={() => go('/')}>
-            <LayoutGrid size={17} /><span className="ai-menu-item-text"><strong>Kembali ke Work OS</strong></span>
+            <LayoutGrid size={17} /><span className="ai-menu-item-text"><strong>Kembali ke Workspace</strong></span>
           </button>
           {canManageProvider && (
             <button type="button" role="menuitem" className="ai-menu-item ai-ripple" onClick={() => go('/admin/ai-provider-settings')}>

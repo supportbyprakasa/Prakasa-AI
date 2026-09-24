@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   ClipboardList,
   FileText,
+  Inbox,
   Link2,
   PanelLeftClose,
   PanelLeftOpen,
@@ -15,7 +16,11 @@ import AIContextPanel from '../../components/ai/AIContextPanel';
 import AIActionProposals from '../../components/ai/AIActionProposals';
 import AIDocumentWorkspace from '../../components/ai/AIDocumentWorkspace';
 import AIAccountMenu from '../../components/ai/AIAccountMenu';
+import AISessionSettings from '../../components/ai/AISessionSettings';
+import AIInbox from '../../components/ai/AIInbox';
+import usePointerRipple from '../../components/ai/usePointerRipple';
 import api from '../../api/client';
+import { toast } from '../../components/Toast';
 import {
   MAX_DOCUMENT_PANEL_WIDTH,
   MIN_DOCUMENT_PANEL_WIDTH,
@@ -52,56 +57,35 @@ function useViewport() {
   return { width, mode: resolveResponsiveMode(width) };
 }
 
-// Material-style ripple that starts at the pointer position of any `.ai-ripple` element.
-function usePointerRipple(rootRef) {
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return undefined;
-
-    const onPointerDown = (event) => {
-      const target = event.target.closest?.('.ai-ripple');
-      if (!target || !root.contains(target) || target.disabled) return;
-      const rect = target.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      const size = Math.hypot(Math.max(x, rect.width - x), Math.max(y, rect.height - y)) * 2;
-      target.style.setProperty('--ripple-x', `${x}px`);
-      target.style.setProperty('--ripple-y', `${y}px`);
-      target.style.setProperty('--ripple-size', `${size}px`);
-      target.classList.remove('is-rippling');
-      void target.offsetWidth; // restart the animation on rapid repeated clicks
-      target.classList.add('is-rippling');
-    };
-
-    const onAnimationEnd = (event) => {
-      if (event.animationName === 'ai-ripple') event.target.classList.remove('is-rippling');
-    };
-
-    root.addEventListener('pointerdown', onPointerDown);
-    root.addEventListener('animationend', onAnimationEnd);
-    return () => {
-      root.removeEventListener('pointerdown', onPointerDown);
-      root.removeEventListener('animationend', onAnimationEnd);
-    };
-  }, [rootRef]);
-}
-
 export default function AICommandCenter() {
   const rootRef = useRef(null);
   const { width: viewportWidth, mode } = useViewport();
   const isDesktop = mode === 'desktop';
 
-  const [selectedSessionId, setSelectedSessionId] = useState(null);
+  const [view, setView] = useState('chat');
+  const [newChatVisibility, setNewChatVisibility] = useState('private');
+  const [editingSession, setEditingSession] = useState(null);
+  const [inboxCount, setInboxCount] = useState(0);
+  // ?session=<id>&panel=documents lets the contextual assistant hand a conversation over.
+  const [searchParams] = useSearchParams();
+  const [selectedSessionId, setSelectedSessionId] = useState(() => {
+    const requested = Number(searchParams.get('session'));
+    return Number.isInteger(requested) && requested > 0 ? requested : null;
+  });
   const [selectedSession, setSelectedSession] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [pendingMessage, setPendingMessage] = useState(null);
   const [providers, setProviders] = useState([]);
   const [providersLoading, setProvidersLoading] = useState(true);
-  const [supportTab, setSupportTab] = useState('documents');
+  const [supportTab, setSupportTab] = useState(() => (
+    ['documents', 'context', 'actions'].includes(searchParams.get('panel')) ? searchParams.get('panel') : 'documents'
+  ));
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => readStored(SIDEBAR_COLLAPSED_KEY) === '1');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   // Desktop side panel preference is remembered; the tablet/phone drawer always starts closed.
-  const [workspaceOpen, setWorkspaceOpen] = useState(() => readStored(WORKSPACE_OPEN_KEY) === '1');
+  const [workspaceOpen, setWorkspaceOpen] = useState(() => (
+    searchParams.get('panel') ? true : readStored(WORKSPACE_OPEN_KEY) === '1'
+  ));
   const [workspaceDrawerOpen, setWorkspaceDrawerOpen] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [panelWidth, setPanelWidth] = useState(() => (
@@ -119,6 +103,17 @@ export default function AICommandCenter() {
       .finally(() => { if (!cancelled) setProvidersLoading(false); });
     return () => { cancelled = true; };
   }, []);
+
+  // Badge count for the action inbox; refreshed with the session list and every minute.
+  useEffect(() => {
+    let cancelled = false;
+    const loadCount = () => api.get('/ai-command/inbox')
+      .then((response) => { if (!cancelled) setInboxCount(response.data.data?.counts?.total || 0); })
+      .catch(() => {});
+    loadCount();
+    const timer = window.setInterval(loadCount, 60000);
+    return () => { cancelled = true; window.clearInterval(timer); };
+  }, [refreshKey]);
 
   useEffect(() => { writeStored(SIDEBAR_COLLAPSED_KEY, sidebarCollapsed ? '1' : '0'); }, [sidebarCollapsed]);
   useEffect(() => { writeStored(WORKSPACE_OPEN_KEY, workspaceOpen ? '1' : '0'); }, [workspaceOpen]);
@@ -181,21 +176,45 @@ export default function AICommandCenter() {
   };
 
   const selectSession = (id) => {
+    setView('chat');
     setSelectedSessionId(id);
     closeDrawers();
   };
 
-  const startNewChat = () => {
+  // A visibility string presets the new chat (e.g. 'department' from the Divisi space).
+  const startNewChat = (visibility) => {
+    setNewChatVisibility(typeof visibility === 'string' ? visibility : 'private');
+    setView('chat');
     setSelectedSessionId(null);
     setPendingMessage(null);
     closeDrawers();
   };
 
-  const handleSessionCreated = (id, firstMessage) => {
-    setPendingMessage(firstMessage ? { sessionId: id, text: firstMessage } : null);
+  const handleSessionDeleted = (id) => {
+    if (Number(id) === Number(selectedSessionId)) startNewChat();
+    bumpRefresh();
+  };
+
+  const editSessionDetails = async (id) => {
+    try {
+      const response = await api.get(`/ai-command/sessions/${id}`);
+      setEditingSession(response.data.data);
+    } catch (error) {
+      toast(error.response?.data?.error?.message || 'Percakapan tidak dapat dibuka', 'error');
+    }
+  };
+
+  const openInbox = () => {
+    setView('inbox');
+    closeDrawers();
+  };
+
+  const handleSessionCreated = (id, firstMessage, { autoSend = true, showDocuments = false } = {}) => {
+    setPendingMessage(firstMessage ? { sessionId: id, text: firstMessage, autoSend } : null);
     setSelectedSessionId(id);
     closeDrawers();
     bumpRefresh();
+    if (showDocuments) openWorkspace('documents');
   };
 
   // After an upload/export: show the file on desktop; on small screens only preselect the
@@ -215,7 +234,7 @@ export default function AICommandCenter() {
     else setWorkspaceDrawerOpen(false);
   };
 
-  const showWorkspace = Boolean(selectedSessionId) && (isDesktop ? workspaceOpen : workspaceDrawerOpen);
+  const showWorkspace = view === 'chat' && Boolean(selectedSessionId) && (isDesktop ? workspaceOpen : workspaceDrawerOpen);
   const appStyle = isDesktop ? {
     gridTemplateColumns: `${sidebarCollapsed ? 68 : 280}px minmax(0, 1fr) ${showWorkspace ? `${panelWidth}px` : ''}`.trim(),
   } : undefined;
@@ -226,6 +245,13 @@ export default function AICommandCenter() {
       drawer={drawer}
       onToggle={() => (drawer ? setSidebarOpen(false) : setSidebarCollapsed((current) => !current))}
       onNewChat={startNewChat}
+      onNewDivisionChat={() => startNewChat('department')}
+      onEditSession={editSessionDetails}
+      onSessionDeleted={handleSessionDeleted}
+      onSessionsChanged={bumpRefresh}
+      onOpenInbox={openInbox}
+      inboxActive={view === 'inbox'}
+      inboxCount={inboxCount}
       selectedSessionId={selectedSessionId}
       onSelectSession={selectSession}
       refreshKey={refreshKey}
@@ -263,6 +289,13 @@ export default function AICommandCenter() {
       )}
 
       <main className="ai-main">
+        {view === 'inbox' ? (
+          <AIInbox
+            onOpenSession={selectSession}
+            onChanged={(counts) => setInboxCount(counts?.total || 0)}
+            onOpenSidebar={isDesktop ? undefined : () => setSidebarOpen(true)}
+          />
+        ) : (
         <AIConversation
           sessionId={selectedSessionId}
           providers={providers}
@@ -276,8 +309,20 @@ export default function AICommandCenter() {
           workspaceOpen={showWorkspace}
           onToggleWorkspace={toggleWorkspace}
           onOpenSidebar={isDesktop ? undefined : () => setSidebarOpen(true)}
+          newChatVisibility={newChatVisibility}
         />
+        )}
       </main>
+
+      {editingSession && (
+        <AISessionSettings
+          session={editingSession}
+          onClose={() => setEditingSession(null)}
+          onUpdated={bumpRefresh}
+          onArchived={bumpRefresh}
+          onDeleted={() => handleSessionDeleted(editingSession.id)}
+        />
+      )}
 
       {showWorkspace && (isDesktop ? (
         <div className="ai-support-region">
@@ -318,6 +363,13 @@ function SidebarContent({
   drawer,
   onToggle,
   onNewChat,
+  onNewDivisionChat,
+  onEditSession,
+  onSessionDeleted,
+  onSessionsChanged,
+  onOpenInbox,
+  inboxActive,
+  inboxCount,
   selectedSessionId,
   onSelectSession,
   refreshKey,
@@ -331,8 +383,8 @@ function SidebarContent({
     <>
       <div className="ai-sidebar-header">
         {!collapsed && (
-          <Link to="/" className="ai-brand" title="Kembali ke Work OS">
-            <span className="ai-brand-mark">P</span>
+          <Link to="/" className="ai-brand" title="Kembali ke Prakasa Workspace">
+            <img className="ai-brand-mark" src="/logo-ai.png" alt="" aria-hidden="true" />
             <span>Prakasa AI</span>
           </Link>
         )}
@@ -358,6 +410,16 @@ function SidebarContent({
           >
             <SquarePen size={20} />
           </button>
+          <button
+            type="button"
+            className={`ai-icon-button ai-ripple ai-rail-inbox${inboxActive ? ' is-active' : ''}`}
+            onClick={onOpenInbox}
+            aria-label={inboxCount ? `Kotak aksi, ${inboxCount} menunggu` : 'Kotak aksi'}
+            title="Kotak aksi"
+          >
+            <Inbox size={20} />
+            {inboxCount > 0 && <span className="ai-rail-dot" aria-hidden="true" />}
+          </button>
         </div>
       ) : (
         <AISessionList
@@ -365,6 +427,13 @@ function SidebarContent({
           onSelectSession={onSelectSession}
           onNewChat={onNewChat}
           refreshKey={refreshKey}
+          onOpenInbox={onOpenInbox}
+          inboxActive={inboxActive}
+          inboxCount={inboxCount}
+          onNewDivisionChat={onNewDivisionChat}
+          onEditSession={onEditSession}
+          onSessionDeleted={onSessionDeleted}
+          onSessionsChanged={onSessionsChanged}
         />
       )}
 

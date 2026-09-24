@@ -19,7 +19,7 @@ function handleUnauthorized() {
  * Resolves with the same payload as POST /messages; throws an axios-like error.
  * Throws with `streamUnavailable: true` when the backend has no stream endpoint.
  */
-export async function streamSessionMessage(sessionId, message, { onDelta }) {
+export async function streamSessionMessage(sessionId, message, { onDelta, onStatus, editMessageId = null }) {
   const token = localStorage.getItem('prakasa.token');
   const response = await fetch(`${apiBaseUrl}/ai-command/sessions/${sessionId}/messages/stream`, {
     method: 'POST',
@@ -28,7 +28,7 @@ export async function streamSessionMessage(sessionId, message, { onDelta }) {
       Accept: 'text/event-stream',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify(editMessageId ? { message, editMessageId } : { message }),
   });
 
   const isEventStream = (response.headers.get('content-type') || '').includes('text/event-stream');
@@ -58,6 +58,7 @@ export async function streamSessionMessage(sessionId, message, { onDelta }) {
     for (const { event, data } of parsed.events) {
       const payload = JSON.parse(data);
       if (event === 'delta') onDelta(payload.text || '');
+      else if (event === 'status') onStatus?.(payload);
       else if (event === 'done') outcome = { ok: true, payload };
       else if (event === 'error') outcome = { ok: false, payload };
     }

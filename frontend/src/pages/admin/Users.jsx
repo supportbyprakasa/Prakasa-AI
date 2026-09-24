@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { KeyRound, UserPlus, UsersRound } from 'lucide-react';
 import api from '../../api/client';
+import Button from '../../components/Button';
 import DataTable from '../../components/DataTable';
+import { rolesForDepartment } from './roleAdminModel';
 
 const initialForm = {
   name: '',
@@ -23,7 +26,7 @@ export default function Users() {
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState('');
 
-  const load = async (page = 1) => {
+  const load = useCallback(async (page = 1) => {
     setLoading(true);
     try {
       const [usersRes, entitiesRes, departmentsRes, rolesRes] = await Promise.all([
@@ -41,21 +44,41 @@ export default function Users() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    load(1);
   }, []);
 
+  useEffect(() => { load(1); }, [load]);
+
   const entityId = Number(form.entityId || 0);
+  const departmentId = form.departmentId ? Number(form.departmentId) : null;
   const availableDepartments = useMemo(
-    () => departments.filter((item) => !entityId || Number(item.entityId) === entityId),
-    [departments, entityId]
+    () => departments.filter((item) => Number(item.entityId) === entityId),
+    [departments, entityId],
   );
   const availableRoles = useMemo(
-    () => roles.filter((item) => !entityId || Number(item.entityId) === entityId),
-    [roles, entityId]
+    () => rolesForDepartment(roles, entityId, departmentId),
+    [departmentId, entityId, roles],
   );
+  const entityById = useMemo(
+    () => new Map(entities.map((entity) => [Number(entity.id), entity.name])),
+    [entities],
+  );
+  const departmentById = useMemo(
+    () => new Map(departments.map((department) => [Number(department.id), department.name])),
+    [departments],
+  );
+
+  const updateScope = (nextEntityId, nextDepartmentId) => {
+    const allowedRoleIds = new Set(
+      rolesForDepartment(roles, Number(nextEntityId), nextDepartmentId || null)
+        .map((role) => String(role.id)),
+    );
+    setForm((current) => ({
+      ...current,
+      entityId: String(nextEntityId),
+      departmentId: nextDepartmentId ? String(nextDepartmentId) : '',
+      roleIds: current.roleIds.filter((roleId) => allowedRoleIds.has(String(roleId))),
+    }));
+  };
 
   const createUser = async (event) => {
     event.preventDefault();
@@ -77,16 +100,14 @@ export default function Users() {
       setMessage('Akun berhasil dibuat.');
       await load(1);
     } catch (error) {
-      setMessage(error.response?.data?.error?.message || 'Gagal membuat akun.');
+      setMessage(error.response?.data?.error?.message || 'Akun gagal dibuat.');
     } finally {
       setSaving(false);
     }
   };
 
   const resetPassword = async (user) => {
-    const password = window.prompt(
-      `Password baru untuk ${user.email} (minimal 10 karakter):`
-    );
+    const password = window.prompt(`Password baru untuk ${user.email} (minimal 10 karakter):`);
     if (!password) return;
     if (password.length < 10) {
       window.alert('Password minimal 10 karakter.');
@@ -107,200 +128,179 @@ export default function Users() {
 
   const toggleStatus = async (user) => {
     const nextStatus = user.status === 'active' ? 'inactive' : 'active';
-    if (
-      !window.confirm(
-        `${nextStatus === 'inactive' ? 'Nonaktifkan' : 'Aktifkan'} akun ${user.email}?`
-      )
-    ) {
-      return;
-    }
+    if (!window.confirm(`${nextStatus === 'inactive' ? 'Nonaktifkan' : 'Aktifkan'} akun ${user.email}?`)) return;
 
     try {
       await api.patch(`/users/${user.id}`, { status: nextStatus });
       await load(meta.page || 1);
     } catch (error) {
-      window.alert(error.response?.data?.error?.message || 'Update status gagal.');
+      window.alert(error.response?.data?.error?.message || 'Status akun gagal diubah.');
     }
   };
 
-  const fieldStyle = {
-    padding: '9px 10px',
-    borderRadius: 7,
-    boxShadow: 'inset 0 0 0 1px var(--color-border)',
-    background: 'var(--color-surface)',
-    color: 'var(--color-text)',
-  };
+  const roleSelectionDisabled = availableRoles.length === 0;
 
   return (
-    <div>
-      <h2 style={{ marginTop: 0 }}>Users</h2>
-      <p style={{ color: 'var(--color-text-muted)', marginTop: -8 }}>
-        Super Admin dapat membuat akun, menentukan role, menonaktifkan akun,
-        dan melakukan reset password.
-      </p>
-
-      <form
-        onSubmit={createUser}
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: 10,
-          padding: 16,
-          marginBottom: 20,
-          boxShadow: 'inset 0 0 0 1px var(--color-border)',
-          borderRadius: 10,
-          background: 'var(--color-surface)',
-        }}
-      >
-        <input
-          style={fieldStyle}
-          placeholder="Nama lengkap"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          required
-        />
-        <input
-          style={fieldStyle}
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          required
-        />
-        <input
-          style={fieldStyle}
-          type="password"
-          placeholder="Password awal (min. 10)"
-          minLength={10}
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          required
-        />
-
-        <select
-          style={fieldStyle}
-          value={form.entityId}
-          onChange={(e) =>
-            setForm({ ...form, entityId: e.target.value, departmentId: '', roleIds: [] })
-          }
-          required
-        >
-          {entities.length === 0 && <option value="1">Entity 1</option>}
-          {entities.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-            </option>
-          ))}
-        </select>
-
-        <select
-          style={fieldStyle}
-          value={form.departmentId}
-          onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
-        >
-          <option value="">Tanpa department</option>
-          {availableDepartments.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-            </option>
-          ))}
-        </select>
-
-        <select
-          multiple
-          style={{ ...fieldStyle, minHeight: 74 }}
-          value={form.roleIds.map(String)}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              roleIds: Array.from(e.target.selectedOptions).map((option) => option.value),
-            })
-          }
-        >
-          {availableRoles.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-            </option>
-          ))}
-        </select>
-
-        <select
-          style={fieldStyle}
-          value={form.status}
-          onChange={(e) => setForm({ ...form, status: e.target.value })}
-        >
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-
-        <button
-          type="submit"
-          disabled={saving}
-          style={{
-            ...fieldStyle,
-            border: 0,
-            background: 'var(--color-primary)',
-            color: '#fff',
-            fontWeight: 600,
-            cursor: saving ? 'wait' : 'pointer',
-          }}
-        >
-          {saving ? 'Menyimpan…' : 'Create Account'}
-        </button>
-      </form>
-
-      {message && (
-        <div style={{ marginBottom: 14, fontSize: 13, color: 'var(--color-text-muted)' }}>
-          {message}
+    <div className="user-admin-page">
+      <header className="role-admin-header">
+        <div>
+          <span className="role-admin-eyebrow"><UsersRound size={16} /> Direktori internal</span>
+          <h1>Pengguna</h1>
+          <p>Tempatkan setiap akun pada entity, divisi, dan role yang tepat.</p>
         </div>
-      )}
+      </header>
+
+      <form className="user-create-card" onSubmit={createUser}>
+        <div className="user-create-card__heading">
+          <span><UserPlus size={20} /></span>
+          <div>
+            <h2>Buat akun</h2>
+            <p>Role divisi baru tersedia setelah divisi dipilih.</p>
+          </div>
+        </div>
+
+        <div className="user-create-grid">
+          <label>
+            <span>Nama lengkap</span>
+            <input
+              autoComplete="name"
+              value={form.name}
+              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+              required
+            />
+          </label>
+          <label>
+            <span>Email</span>
+            <input
+              type="email"
+              autoComplete="email"
+              value={form.email}
+              onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+              required
+            />
+          </label>
+          <label>
+            <span>Password awal</span>
+            <input
+              type="password"
+              autoComplete="new-password"
+              minLength={10}
+              value={form.password}
+              onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
+              required
+            />
+            <small>Minimal 10 karakter.</small>
+          </label>
+          <label>
+            <span>Entity</span>
+            <select
+              value={form.entityId}
+              onChange={(event) => updateScope(event.target.value, '')}
+              required
+            >
+              {entities.length === 0 ? <option value="1">Prakasa Group</option> : null}
+              {entities.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>Divisi</span>
+            <select
+              value={form.departmentId}
+              onChange={(event) => updateScope(form.entityId, event.target.value)}
+            >
+              <option value="">Tanpa divisi (Super Admin)</option>
+              {availableDepartments.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Role</span>
+            <select
+              multiple
+              className="user-role-select"
+              value={form.roleIds.map(String)}
+              disabled={roleSelectionDisabled}
+              aria-describedby="role-selection-help"
+              onChange={(event) => setForm((current) => ({
+                ...current,
+                roleIds: Array.from(event.target.selectedOptions, (option) => option.value),
+              }))}
+            >
+              {availableRoles.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name} — {item.departmentName || 'Global'}
+                </option>
+              ))}
+            </select>
+            <small id="role-selection-help">
+              {roleSelectionDisabled
+                ? 'Pilih divisi untuk menampilkan role yang sesuai.'
+                : 'Hanya role dari divisi terpilih dan Super Admin yang ditampilkan.'}
+            </small>
+          </label>
+          <label>
+            <span>Status awal</span>
+            <select
+              value={form.status}
+              onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}
+            >
+              <option value="active">Aktif</option>
+              <option value="inactive">Nonaktif</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="user-create-card__footer">
+          {message ? <span role="status">{message}</span> : <span />}
+          <Button type="submit" disabled={saving || roleSelectionDisabled}>
+            <UserPlus size={18} /> {saving ? 'Menyimpan…' : 'Buat akun'}
+          </Button>
+        </div>
+      </form>
 
       <DataTable
         loading={loading}
         rows={rows}
         columns={[
-          { key: 'name', title: 'Nama' },
-          { key: 'email', title: 'Email' },
-          { key: 'entityId', title: 'Entity' },
-          { key: 'departmentId', title: 'Department' },
-          { key: 'status', title: 'Status' },
           {
-            key: 'hasPassword',
-            title: 'Manual Login',
-            render: (row) => (row.hasPassword ? 'Ready' : 'Belum diset'),
+            key: 'name',
+            title: 'Pengguna',
+            render: (user) => (
+              <div className="role-name-cell"><strong>{user.name}</strong><span>{user.email}</span></div>
+            ),
           },
+          { key: 'entityId', title: 'Entity', render: (user) => entityById.get(Number(user.entityId)) || '—' },
+          { key: 'departmentId', title: 'Divisi', render: (user) => departmentById.get(Number(user.departmentId)) || 'Global' },
+          {
+            key: 'status',
+            title: 'Status',
+            render: (user) => <span className={`user-status user-status--${user.status}`}>{user.status === 'active' ? 'Aktif' : 'Nonaktif'}</span>,
+          },
+          { key: 'hasPassword', title: 'Login manual', render: (user) => (user.hasPassword ? 'Siap' : 'Belum diset') },
           {
             key: 'lastLoginAt',
-            title: 'Last Login',
-            render: (row) =>
-              row.lastLoginAt ? new Date(row.lastLoginAt).toLocaleString() : '-',
+            title: 'Login terakhir',
+            render: (user) => user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString('id-ID') : '—',
           },
           {
             key: 'actions',
-            title: 'Actions',
-            render: (row) => (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                <button type="button" onClick={() => resetPassword(row)}>
-                  Reset Password
-                </button>
-                <button type="button" onClick={() => toggleStatus(row)}>
-                  {row.status === 'active' ? 'Disable' : 'Enable'}
-                </button>
+            title: 'Tindakan',
+            render: (user) => (
+              <div className="role-row-actions">
+                <Button variant="secondary" type="button" onClick={() => resetPassword(user)}>
+                  <KeyRound size={16} /> Reset password
+                </Button>
+                <Button variant="secondary" type="button" onClick={() => toggleStatus(user)}>
+                  {user.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'}
+                </Button>
               </div>
             ),
           },
         ]}
       />
 
-      <div
-        style={{
-          marginTop: 12,
-          color: 'var(--color-text-muted)',
-          fontSize: 13,
-        }}
-      >
-        Total: {meta.total}
-      </div>
+      <div className="user-admin-total">Total: {meta.total}</div>
     </div>
   );
 }

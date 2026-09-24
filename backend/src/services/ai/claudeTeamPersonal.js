@@ -1,8 +1,9 @@
-const { execFile } = require('node:child_process');
+const { execFile, spawn } = require('node:child_process');
 const { promisify } = require('node:util');
 const { safeModel } = require('./providerSettings');
 
 const execFileAsync = promisify(execFile);
+const MAX_CLI_OUTPUT_BYTES = 10 * 1024 * 1024;
 
 function providerError(message, code = 'AI_PROVIDER_ERROR', status = 502) {
   const error = new Error(message);
@@ -92,9 +93,11 @@ async function callGateway({ system, prompt, model, context }) {
   };
 }
 
-async function runCli({ system, prompt, model }) {
-  const timeout = Number(process.env.CLAUDE_TEAM_TIMEOUT_MS || 120000);
+function cliTimeoutMs() {
+  return Number(process.env.CLAUDE_TEAM_TIMEOUT_MS || 120000);
+}
 
+function cliArgs({ system, prompt, model, stream = false }) {
   const args = [
     '-p',
     '--safe-mode',
@@ -102,10 +105,10 @@ async function runCli({ system, prompt, model }) {
     '--tools',
     '',
     '--output-format',
-    'json',
-    '--model',
-    safeModel(model) || 'sonnet',
+    stream ? 'stream-json' : 'json',
   ];
+  if (stream) args.push('--verbose', '--include-partial-messages');
+  args.push('--model', safeModel(model) || 'sonnet');
 
   if (system) {
     args.push('--system-prompt', system);
@@ -113,50 +116,15 @@ async function runCli({ system, prompt, model }) {
 
   // `--` ends option parsing so prompt text starting with "-" is never read as a CLI flag.
   args.push('--', String(prompt || ''));
+  return args;
+}
 
-  let stdout;
-  try {
-    const result = await execFileAsync(cliPath(), args, {
-      env: cliEnv(),
-      timeout,
-      maxBuffer: 10 * 1024 * 1024,
-      cwd: process.env.CLAUDE_TEAM_WORKDIR || process.cwd(),
-    });
-    stdout = result.stdout;
-  } catch (error) {
-    if (error?.killed || error?.signal === 'SIGTERM') {
-      throw providerError(
-        'Claude Team personal mode timeout',
-        'AI_PROVIDER_TIMEOUT',
-        504
-      );
-    }
-    if (error?.code === 'ENOENT') {
-      throw providerError(
-        'Claude CLI tidak tersedia pada host ini',
-        'AI_PROVIDER_NOT_CONFIGURED',
-        503
-      );
-    }
-    throw providerError(
-      'Claude Team personal mode tidak dapat dijalankan',
-      'AI_PROVIDER_UNAVAILABLE',
-      503
-    );
-  }
+const timeoutError = () => providerError('Claude Team personal mode timeout', 'AI_PROVIDER_TIMEOUT', 504);
+const notInstalledError = () => providerError('Claude CLI tidak tersedia pada host ini', 'AI_PROVIDER_NOT_CONFIGURED', 503);
+const unavailableError = () => providerError('Claude Team personal mode tidak dapat dijalankan', 'AI_PROVIDER_UNAVAILABLE', 503);
 
-  let payload;
-  try {
-    payload = JSON.parse(String(stdout || '').trim());
-  } catch {
-    throw providerError(
-      'Claude Team mengembalikan response yang tidak valid',
-      'AI_PROVIDER_ERROR',
-      502
-    );
-  }
-
-  if (payload.is_error || payload.subtype !== 'success') {
+function resultFromPayload(payload) {
+  if (!payload || payload.is_error || payload.subtype !== 'success') {
     throw providerError(
       'Claude Team gagal memproses request',
       'AI_PROVIDER_ERROR',
@@ -177,9 +145,125 @@ async function runCli({ system, prompt, model }) {
   };
 }
 
+async function runCli({ system, prompt, model }) {
+  let stdout;
+  try {
+    const result = await execFileAsync(cliPath(), cliArgs({ system, prompt, model }), {
+      env: cliEnv(),
+      timeout: cliTimeoutMs(),
+      maxBuffer: MAX_CLI_OUTPUT_BYTES,
+      cwd: process.env.CLAUDE_TEAM_WORKDIR || process.cwd(),
+    });
+    stdout = result.stdout;
+  } catch (error) {
+    if (error?.killed || error?.signal === 'SIGTERM') throw timeoutError();
+    if (error?.code === 'ENOENT') throw notInstalledError();
+    throw unavailableError();
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(String(stdout || '').trim());
+  } catch {
+    throw providerError(
+      'Claude Team mengembalikan response yang tidak valid',
+      'AI_PROVIDER_ERROR',
+      502
+    );
+  }
+
+  return resultFromPayload(payload);
+}
+
+// Streams text deltas from `--output-format stream-json`; resolves with the same shape as runCli.
+function runCliStream({ system, prompt, model, onDelta }) {
+  return new Promise((resolve, reject) => {
+    let child;
+    try {
+      child = spawn(cliPath(), cliArgs({ system, prompt, model, stream: true }), {
+        env: cliEnv(),
+        cwd: process.env.CLAUDE_TEAM_WORKDIR || process.cwd(),
+        stdio: ['ignore', 'pipe', 'ignore'],
+      });
+    } catch {
+      reject(unavailableError());
+      return;
+    }
+
+    let settled = false;
+    let timedOut = false;
+    let oversized = false;
+    let received = 0;
+    let pending = '';
+    let finalPayload = null;
+
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill('SIGTERM');
+    }, cliTimeoutMs());
+
+    const settle = (fn) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      fn();
+    };
+
+    const handleLine = (line) => {
+      if (!line.trim()) return;
+      let event;
+      try { event = JSON.parse(line); } catch { return; }
+      const delta = event.type === 'stream_event' && event.event?.type === 'content_block_delta'
+        ? event.event.delta
+        : null;
+      if (delta?.type === 'text_delta' && delta.text) {
+        try { onDelta(delta.text); } catch { /* a failing consumer must not abort generation */ }
+      } else if (event.type === 'result') {
+        finalPayload = event;
+      }
+    };
+
+    child.stdout.setEncoding('utf8');
+    child.stdout.on('data', (chunk) => {
+      received += Buffer.byteLength(chunk);
+      if (received > MAX_CLI_OUTPUT_BYTES) {
+        oversized = true;
+        child.kill('SIGTERM');
+        return;
+      }
+      pending += chunk;
+      let newline = pending.indexOf('\n');
+      while (newline !== -1) {
+        handleLine(pending.slice(0, newline));
+        pending = pending.slice(newline + 1);
+        newline = pending.indexOf('\n');
+      }
+    });
+
+    child.on('error', (error) => {
+      settle(() => reject(error?.code === 'ENOENT' ? notInstalledError() : unavailableError()));
+    });
+
+    child.on('close', () => {
+      settle(() => {
+        if (pending) handleLine(pending);
+        if (timedOut) return reject(timeoutError());
+        if (oversized) {
+          return reject(providerError('Jawaban Claude Team terlalu besar', 'AI_PROVIDER_ERROR', 502));
+        }
+        try {
+          resolve(resultFromPayload(finalPayload));
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+  });
+}
+
 // Access is decided by provider.js from the Super Admin settings; this module only
 // runs requests the caller has explicitly authorized.
-async function generate({ system, prompt, model, context }) {
+async function generate({ system, prompt, model, context, onDelta = null }) {
   if (context?.accessGranted !== true) {
     throw providerError(
       'Claude Team tidak tersedia untuk akun atau divisi Anda',
@@ -188,11 +272,14 @@ async function generate({ system, prompt, model, context }) {
     );
   }
 
+  // The remote gateway does not stream yet; its answer arrives as one piece.
   if (process.env.CLAUDE_TEAM_GATEWAY_URL) {
     return callGateway({ system, prompt, model, context });
   }
 
-  return runCli({ system, prompt, model });
+  return typeof onDelta === 'function'
+    ? runCliStream({ system, prompt, model, onDelta })
+    : runCli({ system, prompt, model });
 }
 
 function parseAuthStatus(raw) {
@@ -252,6 +339,7 @@ async function cliStatus() {
 module.exports = {
   generate,
   runCli,
+  runCliStream,
   callGateway,
   cliStatus,
 };

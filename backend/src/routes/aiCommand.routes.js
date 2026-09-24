@@ -173,6 +173,13 @@ router.post(
   validate(sendMessageBody),
   ctrl.sendMessage
 );
+router.post(
+  '/sessions/:id/messages/stream',
+  requirePermission('ai_command.use'),
+  validate(idParams, 'params'),
+  validate(sendMessageBody),
+  ctrl.streamMessage
+);
 
 router.post(
   '/sessions/:id/files',

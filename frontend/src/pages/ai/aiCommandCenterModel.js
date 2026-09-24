@@ -97,6 +97,47 @@ export function firstNameOf(user) {
   return email ? email.split('@')[0] : '';
 }
 
+// For a reply that is still streaming: close markers left open so the draft renders as
+// formatted text instead of showing raw `**` or an unterminated code block.
+export function closeOpenMarkdown(text) {
+  const value = String(text || '');
+  if ((value.match(/```/g) || []).length % 2 === 1) return `${value}\n\`\`\``;
+
+  const outsideFences = value.replace(/```[\s\S]*?```/g, '');
+  const outsideCode = outsideFences.replace(/`[^`\n]*`/g, '');
+  let result = value;
+  if ((outsideCode.match(/`/g) || []).length % 2 === 1) return `${result}\``;
+  if ((outsideCode.match(/\*\*/g) || []).length % 2 === 1) {
+    // A closing ** directly after whitespace is not treated as bold by Markdown.
+    result = `${result.replace(/\s+$/, '')}**`;
+  }
+  return result;
+}
+
+// Parses a Server-Sent Events buffer; `rest` holds an incomplete trailing event.
+export function parseSseEvents(buffer) {
+  const normalized = String(buffer || '').replace(/\r\n/g, '\n');
+  const blocks = normalized.split('\n\n');
+  const rest = blocks.pop();
+  const events = [];
+
+  for (const block of blocks) {
+    let event = 'message';
+    const data = [];
+    for (const line of block.split('\n')) {
+      if (!line || line.startsWith(':')) continue;
+      const colon = line.indexOf(':');
+      const field = colon === -1 ? line : line.slice(0, colon);
+      const value = colon === -1 ? '' : line.slice(colon + 1).replace(/^ /, '');
+      if (field === 'event') event = value;
+      else if (field === 'data') data.push(value);
+    }
+    if (data.length) events.push({ event, data: data.join('\n') });
+  }
+
+  return { events, rest };
+}
+
 export function isGenerationActive({ sending = false, generationStatus } = {}) {
   return Boolean(sending || generationStatus === 'generating');
 }

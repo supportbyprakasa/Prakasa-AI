@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import api from '../../api/client';
+import { streamSessionMessage } from '../../api/aiStream';
 import Badge from '../Badge';
 import { toast } from '../Toast';
 import { useAuth } from '../../context/AuthContext';
@@ -23,9 +24,11 @@ import AIDropdown from './AIDropdown';
 import AINewChat from './AINewChat';
 import AIMarkdown from './AIMarkdown';
 import { engineChipLabel, engineMenuItems } from './aiEngineOptions';
-import { isGenerationActive } from '../../pages/ai/aiCommandCenterModel';
+import { closeOpenMarkdown, isGenerationActive } from '../../pages/ai/aiCommandCenterModel';
 
-const FILE_ACCEPT = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.png,.jpg,.jpeg,.webp,.txt,.csv,.md,.markdown,.json,.xml,.html,.htm,.rtf';
+const GENERATION_POLL_MS = 4000;
+const STICK_TO_BOTTOM_PX = 160;
+const FILE_ACCEPT ='.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.png,.jpg,.jpeg,.webp,.txt,.csv,.md,.markdown,.json,.xml,.html,.htm,.rtf';
 
 export default function AIConversation({
   sessionId,
@@ -53,19 +56,59 @@ export default function AIConversation({
   const [exportingKey, setExportingKey] = useState('');
   const [input, setInput] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [streamingText, setStreamingText] = useState(null);
   const bottomRef = useRef(null);
+  const scrollRef = useRef(null);
+  const stickToBottomRef = useRef(true);
   const fileInputRef = useRef(null);
   const consumedPendingRef = useRef(null);
+  const streamBufferRef = useRef('');
+  const flushFrameRef = useRef(null);
+  // Latest selected session, so async work started for another session never writes here.
+  const activeSessionRef = useRef(sessionId);
+  activeSessionRef.current = sessionId;
 
   const scrollToBottom = (behavior = 'smooth') => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior }), 30);
   };
 
+  const cancelStreamFlush = () => {
+    if (flushFrameRef.current !== null) cancelAnimationFrame(flushFrameRef.current);
+    flushFrameRef.current = null;
+  };
+
+  // Deltas arrive many times per second; render at most once per animation frame.
+  const appendDelta = (targetSessionId, text) => {
+    if (activeSessionRef.current !== targetSessionId) return;
+    streamBufferRef.current += text;
+    if (flushFrameRef.current !== null) return;
+    flushFrameRef.current = requestAnimationFrame(() => {
+      flushFrameRef.current = null;
+      if (activeSessionRef.current === targetSessionId) setStreamingText(streamBufferRef.current);
+    });
+  };
+
+  const onMessageScroll = () => {
+    const element = scrollRef.current;
+    if (!element) return;
+    stickToBottomRef.current =
+      element.scrollHeight - element.scrollTop - element.clientHeight < STICK_TO_BOTTOM_PX;
+  };
+
+  useEffect(() => {
+    const element = scrollRef.current;
+    if (streamingText && element && stickToBottomRef.current) {
+      element.scrollTop = element.scrollHeight;
+    }
+  }, [streamingText]);
+
   const refreshMessagesAndSession = async () => {
+    const targetSessionId = sessionId;
     const [mr, sr] = await Promise.all([
-      api.get(`/ai-command/sessions/${sessionId}/messages`, { params: { page: 1, limit: 50 } }),
-      api.get(`/ai-command/sessions/${sessionId}`),
+      api.get(`/ai-command/sessions/${targetSessionId}/messages`, { params: { page: 1, limit: 50 } }),
+      api.get(`/ai-command/sessions/${targetSessionId}`),
     ]);
+    if (activeSessionRef.current !== targetSessionId) return;
     setMessages(mr.data.data || []);
     setMessageMeta(mr.data.meta || { page: 1, limit: 50, total: mr.data.data?.length || 0 });
     setSession(sr.data.data);
@@ -97,7 +140,25 @@ export default function AIConversation({
     }
   };
 
-  useEffect(() => { loadSession(); /* eslint-disable-next-line */ }, [sessionId]);
+  useEffect(() => {
+    cancelStreamFlush();
+    streamBufferRef.current = '';
+    setStreamingText(null);
+    setSending(false);
+    stickToBottomRef.current = true;
+    loadSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
+
+  // After a reload or dropped stream the server may still be generating: poll until idle.
+  useEffect(() => {
+    if (!sessionId || sending || session?.generationStatus !== 'generating') return undefined;
+    const timer = setInterval(() => {
+      refreshMessagesAndSession().catch(() => {});
+    }, GENERATION_POLL_MS);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, sending, session?.generationStatus]);
 
   const loadOlder = async () => {
     if (!sessionId || loadingOlder || messages.length >= (messageMeta.total || 0)) return;
@@ -133,8 +194,15 @@ export default function AIConversation({
       return;
     }
 
+    const targetSessionId = sessionId;
+    const stillActive = () => activeSessionRef.current === targetSessionId;
+
     if (typeof textOverride !== 'string') setInput('');
     setSending(true);
+    cancelStreamFlush();
+    streamBufferRef.current = '';
+    setStreamingText('');
+    stickToBottomRef.current = true;
 
     const optimistic = {
       id: `tmp-${Date.now()}`,
@@ -147,11 +215,34 @@ export default function AIConversation({
     scrollToBottom();
 
     try {
-      await api.post(`/ai-command/sessions/${sessionId}/messages`, { message: text });
-      await refreshMessagesAndSession();
+      let result;
+      try {
+        result = await streamSessionMessage(targetSessionId, text, {
+          onDelta: (delta) => appendDelta(targetSessionId, delta),
+        });
+      } catch (streamFailure) {
+        // Backends without the stream endpoint still get a complete (non-streamed) reply.
+        if (!streamFailure.streamUnavailable) throw streamFailure;
+        const response = await api.post(`/ai-command/sessions/${targetSessionId}/messages`, { message: text });
+        result = response.data.data;
+      }
+      if (!stillActive()) return;
+
+      // Swap the streamed draft for the saved message in one render to avoid a flicker.
+      cancelStreamFlush();
+      setMessages((current) => [
+        ...current.map((item) => (
+          item.id === optimistic.id ? { ...item, id: result.userMessageId, _optimistic: false } : item
+        )),
+        { ...result.assistantMessage, createdAt: new Date().toISOString() },
+      ]);
+      setStreamingText(null);
       onSessionUpdated?.();
-      scrollToBottom();
+      await refreshMessagesAndSession();
     } catch (e) {
+      if (!stillActive()) return;
+      cancelStreamFlush();
+      setStreamingText(null);
       const errCode = e.response?.data?.error?.code;
       const status = e.response?.status;
       // Always reload authoritative state. Provider failures occur after the
@@ -171,13 +262,15 @@ export default function AIConversation({
       } else if (status === 400 || status === 403) {
         setInput(text);
         toast(e.response?.data?.error?.message || 'Pesan tidak dapat dikirim', 'error');
+      } else if (errCode === 'STREAM_INTERRUPTED') {
+        toast('Koneksi ke AI terputus. Jawaban akan muncul otomatis bila AI selesai memproses.', 'error');
       } else if (errCode === 'AI_PROVIDER_ERROR' || status === 502 || status === 503 || status === 504) {
         toast('Layanan AI sedang tidak dapat dijangkau. Pesan Anda tetap tersimpan di riwayat.', 'error');
       } else {
         toast(e.response?.data?.error?.message || 'Gagal mengirim pesan', 'error');
       }
     } finally {
-      setSending(false);
+      if (stillActive()) setSending(false);
     }
   };
 
@@ -360,7 +453,7 @@ export default function AIConversation({
         </>,
       )}
 
-      <div className="ai-message-scroll">
+      <div className="ai-message-scroll" ref={scrollRef} onScroll={onMessageScroll}>
         <div className="ai-thread">
           {messages.length < (messageMeta.total || 0) && (
             <div className="ai-load-older">
@@ -387,7 +480,11 @@ export default function AIConversation({
             />
           ))}
 
-          {generating && (
+          {sending && streamingText ? (
+            <div className="ai-msg is-assistant is-streaming" aria-busy="true">
+              <div className="ai-assistant-text"><AIMarkdown>{closeOpenMarkdown(streamingText)}</AIMarkdown></div>
+            </div>
+          ) : generating && (
             <div className="ai-thinking" role="status" aria-live="polite">
               <span className="ai-thinking-mark" aria-hidden="true"><Sparkles size={18} /></span>
               <span>Prakasa AI sedang membaca konteks dan menyiapkan jawaban…</span>

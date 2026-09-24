@@ -168,10 +168,12 @@ async function runModule(module, prompt, ctx = {}) {
     const selected = resolveProvider(moduleContext, ctx.provider || null, accessCtx);
     providerName = selected.name;
 
+    // onDelta is optional: providers that cannot stream ignore it and return the full text.
     const result = await selected.implementation.generate({
       system: moduleContext.systemPrompt,
       prompt,
       model: selected.model,
+      onDelta: typeof ctx.onDelta === 'function' ? ctx.onDelta : null,
       params: typeof moduleContext.params === 'string'
         ? JSON.parse(moduleContext.params)
         : moduleContext.params,

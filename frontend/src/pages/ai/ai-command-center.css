@@ -723,6 +723,20 @@
   overflow-wrap: anywhere;
 }
 
+.ai-msg.is-streaming .ai-markdown > :last-child::after {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 1.1em;
+  margin-left: 3px;
+  vertical-align: text-bottom;
+  border-radius: 2px;
+  background: var(--ai-primary);
+  animation: ai-caret 1s steps(1) infinite;
+}
+
+@keyframes ai-caret { 50% { opacity: 0; } }
+
 .ai-markdown > :first-child { margin-top: 0; }
 .ai-markdown > :last-child { margin-bottom: 0; }
 
@@ -1649,7 +1663,8 @@
   .ai-scrim,
   .ai-sidebar.is-drawer,
   .ai-support-region.is-drawer,
-  .ai-skeleton-line {
+  .ai-skeleton-line,
+  .ai-msg.is-streaming .ai-markdown > :last-child::after {
     animation: none !important;
     transition: none !important;
   }

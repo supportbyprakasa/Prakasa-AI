@@ -3,16 +3,46 @@ import assert from 'node:assert/strict';
 
 import {
   clampDocumentPanelWidth,
+  closeOpenMarkdown,
   firstNameOf,
   getGooglePreviewUrl,
   greetingForHour,
   groupSessionsByRecency,
   isGenerationActive,
   normalizeStoredPanelWidth,
+  parseSseEvents,
   recencyKey,
   resolveResponsiveMode,
   titleFromMessage,
 } from '../src/pages/ai/aiCommandCenterModel.js';
+
+test('closeOpenMarkdown temporarily closes markers left open mid-stream', () => {
+  assert.equal(closeOpenMarkdown('**3. Samp'), '**3. Samp**');
+  assert.equal(closeOpenMarkdown('**Judul '), '**Judul**');
+  assert.equal(closeOpenMarkdown('a **b** c'), 'a **b** c');
+  assert.equal(closeOpenMarkdown('pakai `npm'), 'pakai `npm`');
+  assert.equal(closeOpenMarkdown('```js\nconst a = **1'), '```js\nconst a = **1\n```');
+  assert.equal(closeOpenMarkdown('```js\nx\n```\nlalu **tebal'), '```js\nx\n```\nlalu **tebal**');
+  assert.equal(closeOpenMarkdown(''), '');
+});
+
+test('parseSseEvents returns complete events and keeps the partial tail', () => {
+  const first = parseSseEvents('event: delta\ndata: {"text":"Ha"}\n\n: keep-alive\n\nevent: delta\ndata: {"te');
+  assert.deepEqual(first.events, [{ event: 'delta', data: '{"text":"Ha"}' }]);
+  assert.equal(first.rest, 'event: delta\ndata: {"te');
+
+  const second = parseSseEvents(`${first.rest}xt":"lo"}\n\nevent: done\ndata: {"ok":true}\n\n`);
+  assert.deepEqual(second.events, [
+    { event: 'delta', data: '{"text":"lo"}' },
+    { event: 'done', data: '{"ok":true}' },
+  ]);
+  assert.equal(second.rest, '');
+});
+
+test('parseSseEvents handles CRLF, multi-line data and the default event name', () => {
+  const { events } = parseSseEvents('data: line one\r\ndata: line two\r\n\r\n');
+  assert.deepEqual(events, [{ event: 'message', data: 'line one\nline two' }]);
+});
 
 test('recencyKey buckets by local calendar day', () => {
   const now = new Date(2026, 8, 24, 9, 0);

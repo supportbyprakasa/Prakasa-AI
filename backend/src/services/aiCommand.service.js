@@ -530,7 +530,7 @@ function generationIsStale(session) {
   );
 }
 
-async function sendMessage({ sessionId, userMessage, user }) {
+async function sendMessage({ sessionId, userMessage, user, onDelta = null }) {
   const messageText = String(userMessage || '').trim();
   if (!messageText) {
     const error = new Error('Pesan kosong');
@@ -672,6 +672,7 @@ async function sendMessage({ sessionId, userMessage, user }) {
         subjectId: session.id,
         provider: session.provider || null,
         userEmail: user.email || null,
+        onDelta,
       }
     );
 

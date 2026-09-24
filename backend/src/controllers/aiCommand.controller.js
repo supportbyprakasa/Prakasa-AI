@@ -6,6 +6,10 @@ const aiCommand = require('../services/aiCommand.service');
 const aiAction = require('../services/aiActionProposal.service');
 const aiDocumentStorage = require('../services/aiDocumentStorage.service');
 const { listProviders } = require('../services/ai/provider');
+const logger = require('../utils/logger');
+
+const KNOWN_ERROR_STATUSES = [400, 403, 404, 409, 502, 503, 504];
+const SSE_HEARTBEAT_MS = 15000;
 
 function handleServiceError(error, res, next) {
   if ([400, 403, 404, 409, 502, 503, 504].includes(error.status)) {
@@ -183,6 +187,51 @@ async function sendMessage(req, res, next) {
     return ok(res, result, undefined, 201);
   } catch (error) {
     return handleServiceError(error, res, next);
+  }
+}
+
+// Server-Sent Events over POST: `delta` events carry answer text, then exactly one
+// `done` (same payload as sendMessage) or `error`. Generation is not cancelled when
+// the client disconnects, so the answer is still saved to the history.
+async function streamMessage(req, res) {
+  let clientGone = false;
+  res.on('close', () => { clientGone = true; });
+
+  res.status(200).set({
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    'X-Accel-Buffering': 'no',
+    Connection: 'keep-alive',
+  });
+  res.flushHeaders();
+
+  const send = (event, data) => {
+    if (clientGone || res.writableEnded) return;
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+  const heartbeat = setInterval(() => {
+    if (!clientGone && !res.writableEnded) res.write(': keep-alive\n\n');
+  }, SSE_HEARTBEAT_MS);
+
+  try {
+    const result = await aiCommand.sendMessage({
+      sessionId: Number(req.params.id),
+      userMessage: req.body.message,
+      user: req.user,
+      onDelta: (text) => send('delta', { text }),
+    });
+    send('done', result);
+  } catch (error) {
+    const known = KNOWN_ERROR_STATUSES.includes(error.status);
+    if (!known) logger.error({ err: error.message, stack: error.stack }, 'AI stream failed');
+    send('error', {
+      status: known ? error.status : 500,
+      code: error.code || 'INTERNAL_ERROR',
+      message: known ? error.message : 'Terjadi kesalahan server',
+    });
+  } finally {
+    clearInterval(heartbeat);
+    if (!res.writableEnded) res.end();
   }
 }
 
@@ -570,6 +619,7 @@ module.exports = {
   deleteSession,
   listMessages,
   sendMessage,
+  streamMessage,
   uploadSessionFile,
   generateArtifact,
   getArtifact,

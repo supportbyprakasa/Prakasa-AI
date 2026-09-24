@@ -1,8 +1,11 @@
 const pool = require('../db/pool');
 const { getDocPlainText } = require('./googleDocs.service');
+const { STANDARD_BUDGET } = require('./ai/contextBudget');
 
-const MAX_CONTEXT_CHARS = 6000;
-const MAX_TOTAL_CONTEXT_CHARS = 14000;
+const MAX_CONTEXT_CHARS = STANDARD_BUDGET.itemChars;
+// Below this many characters a partially fitting block is dropped rather than cut.
+const MIN_PARTIAL_BLOCK_CHARS = 1000;
+const DOCUMENT_HEADER_ALLOWANCE = 500;
 
 function truncate(value, max = MAX_CONTEXT_CHARS) {
   if (value === null || value === undefined) return '';
@@ -84,24 +87,29 @@ async function loadRoleIds(user, entityId) {
   return rows.map((row) => Number(row.roleId));
 }
 
-function formatBlock(type, id, title, body) {
+function formatBlock(type, id, title, body, maxChars = MAX_CONTEXT_CHARS) {
   return truncate(
     `[UNTRUSTED_INTERNAL_DATA type=${type} id=${id}]\n` +
-    `Title: ${title || '-'}\n${body || ''}`
+    `Title: ${title || '-'}\n${body || ''}`,
+    maxChars
   );
 }
 
 const RESOLVERS = {
-  async document({ entityId, contextId, user, includeContent = true }) {
+  async document({ entityId, contextId, user, includeContent = true, budget = STANDARD_BUDGET }) {
     if (!assertUnderlyingPermission(user, ['document.view'])) return null;
 
     const [rows] = await pool.query(
       `SELECT d.id, d.entity_id, d.department_id, d.title,
               d.document_type, d.status, d.drive_file_id,
-              f.mime_type AS mimeType
+              f.mime_type AS mimeType,
+              c.extraction_status AS extractionStatus,
+              c.extracted_text AS extractedText
          FROM documents d
          LEFT JOIN drive_files_metadata f
            ON f.drive_file_id=d.drive_file_id
+         LEFT JOIN document_ai_content c
+           ON c.document_id=d.id
         WHERE d.id=? AND d.deleted_at IS NULL
         LIMIT 1`,
       [contextId]
@@ -111,8 +119,12 @@ const RESOLVERS = {
     if (!canAccessScopedRow(user, row)) return null;
 
     let extracted = '';
+    if (includeContent && row.extractionStatus === 'ready' && row.extractedText) {
+      extracted = String(row.extractedText);
+    }
     if (
       includeContent &&
+      !extracted &&
       row.drive_file_id &&
       row.mimeType === 'application/vnd.google-apps.document'
     ) {
@@ -139,8 +151,12 @@ const RESOLVERS = {
         [
           `Document type: ${row.document_type}`,
           `Status: ${row.status}`,
-          extracted ? `Content:\n${truncate(extracted, 5000)}` : '',
-        ].filter(Boolean).join('\n')
+          row.extractionStatus && row.extractionStatus !== 'ready'
+            ? `AI extraction status: ${row.extractionStatus}`
+            : '',
+          extracted ? `Content:\n${truncate(extracted, budget.documentChars)}` : '',
+        ].filter(Boolean).join('\n'),
+        budget.documentChars + DOCUMENT_HEADER_ALLOWANCE
       ),
     };
   },
@@ -427,6 +443,7 @@ async function resolveOne({
   contextId,
   user,
   includeContent = true,
+  budget = STANDARD_BUDGET,
 }) {
   const resolver = RESOLVERS[contextType];
   if (!resolver) return null;
@@ -435,6 +452,7 @@ async function resolveOne({
     contextId,
     user,
     includeContent,
+    budget,
   });
 }
 
@@ -491,7 +509,7 @@ async function attachContext({
   };
 }
 
-async function resolveContext({ session, user }) {
+async function resolveContext({ session, user, budget = STANDARD_BUDGET }) {
   const [links] = await pool.query(
     `SELECT id, context_type AS contextType,
             context_id AS contextId, relation
@@ -505,6 +523,7 @@ async function resolveContext({ session, user }) {
   let totalChars = 0;
   let resolvedCount = 0;
   let skippedCount = 0;
+  let truncatedCount = 0;
 
   for (const link of links) {
     let resolved = null;
@@ -514,6 +533,7 @@ async function resolveContext({ session, user }) {
         contextType: link.contextType,
         contextId: link.contextId,
         user,
+        budget,
       });
     } catch {
       resolved = null;
@@ -524,10 +544,19 @@ async function resolveContext({ session, user }) {
       continue;
     }
 
-    const block = truncate(resolved.text);
-    if (totalChars + block.length > MAX_TOTAL_CONTEXT_CHARS) {
-      skippedCount += 1;
-      continue;
+    const blockLimit = resolved.type === 'document'
+      ? budget.documentChars + DOCUMENT_HEADER_ALLOWANCE
+      : budget.itemChars;
+    let block = truncate(resolved.text, blockLimit);
+    const remaining = budget.totalContextChars - totalChars;
+    if (block.length > remaining) {
+      // Include what fits instead of dropping a large document entirely.
+      if (remaining < MIN_PARTIAL_BLOCK_CHARS) {
+        skippedCount += 1;
+        continue;
+      }
+      block = `${block.slice(0, remaining - 1)}…`;
+      truncatedCount += 1;
     }
 
     parts.push(block);
@@ -540,6 +569,7 @@ async function resolveContext({ session, user }) {
     linkCount: links.length,
     resolvedCount,
     skippedCount,
+    truncatedCount,
     totalChars,
   };
 }

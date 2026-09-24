@@ -131,7 +131,7 @@ async function createProposal({
   if (messageId) {
     const [messages] = await pool.query(
       `SELECT id FROM ai_messages
-        WHERE id=? AND session_id=?
+        WHERE id=? AND session_id=? AND deleted_at IS NULL
         LIMIT 1`,
       [messageId, session.id]
     );

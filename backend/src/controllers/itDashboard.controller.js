@@ -100,7 +100,12 @@ async function aiReport(req, res, next) {
       `(3) warranty/renewal yang akan jatuh tempo dalam 30 hari, ` +
       `(4) rekomendasi tindakan prioritas.`;
 
-    const result = await runModule('it_asset_report', prompt);
+    const result = await runModule('it_asset_report', prompt, {
+      entityId,
+      userId: req.user.sub,
+      subjectType: 'entity',
+      subjectId: entityId,
+    });
 
     const [ins] = await pool.query(
       `INSERT INTO ai_summaries

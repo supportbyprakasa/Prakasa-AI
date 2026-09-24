@@ -17,6 +17,28 @@ async function permissionsForUser(userId) {
   return rows.map((row) => row.code);
 }
 
+// Active roles with their division scope; the client uses this only to decide whether
+// to show the workspace or the "access not prepared" state. Authorization stays server-side.
+async function rolesForUser(userId) {
+  const [rows] = await pool.query(
+    `SELECT r.id, r.name, r.role_key, r.role_level, r.department_id
+       FROM user_roles ur
+       JOIN roles r ON r.id = ur.role_id AND r.deleted_at IS NULL
+       LEFT JOIN departments d ON d.id = r.department_id
+      WHERE ur.user_id = ?
+        AND (r.department_id IS NULL OR d.deleted_at IS NULL)
+      ORDER BY r.id`,
+    [userId]
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    roleKey: row.role_key,
+    roleLevel: row.role_level,
+    departmentId: row.department_id,
+  }));
+}
+
 async function createSession(user) {
   const permissions = await permissionsForUser(user.id);
   const token = jwtService.sign({
@@ -148,6 +170,7 @@ async function me(req, res, next) {
     if (!rows[0]) return fail(res, 'NOT_FOUND', 'User tidak ditemukan', 404);
 
     const user = rows[0];
+    const roles = await rolesForUser(user.id);
     return ok(res, {
       id: user.id,
       name: user.name,
@@ -157,6 +180,7 @@ async function me(req, res, next) {
       departmentId: user.department_id,
       mustChangePassword: Boolean(user.must_change_password),
       permissions: req.user.permissions || [],
+      roles,
     });
   } catch (error) {
     next(error);

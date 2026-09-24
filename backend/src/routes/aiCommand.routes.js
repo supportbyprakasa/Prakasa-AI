@@ -3,6 +3,7 @@ const { z } = require('zod');
 const requireAuth = require('../middleware/requireAuth');
 const requirePermission = require('../middleware/requirePermission');
 const validate = require('../middleware/validate');
+const upload = require('../middleware/upload');
 const ctrl = require('../controllers/aiCommand.controller');
 
 const idParams = z.object({
@@ -12,6 +13,11 @@ const idParams = z.object({
 const sessionContextParams = z.object({
   id: z.coerce.number().int().positive(),
   contextId: z.coerce.number().int().positive(),
+});
+
+const sessionDocumentParams = z.object({
+  id: z.coerce.number().int().positive(),
+  documentId: z.coerce.number().int().positive(),
 });
 
 const listQuery = z.object({
@@ -27,12 +33,16 @@ const createSessionBody = z.object({
   visibility: z.enum(['private', 'department', 'entity']).optional(),
   systemContext: z.string().max(8000).nullable().optional(),
   departmentId: z.number().int().positive().nullable().optional(),
+  provider: z.enum(['openai', 'gemini', 'claude', 'claude_team', 'n8n']).nullable().optional(),
+  webResearch: z.boolean().optional(),
 });
 
 const updateSessionBody = z.object({
   title: z.string().min(1).max(255).optional(),
   visibility: z.enum(['private', 'department', 'entity']).optional(),
   systemContext: z.string().max(8000).nullable().optional(),
+  provider: z.enum(['openai', 'gemini', 'claude', 'claude_team', 'n8n']).nullable().optional(),
+  webResearch: z.boolean().optional(),
 });
 
 const messageListQuery = z.object({
@@ -42,6 +52,14 @@ const messageListQuery = z.object({
 
 const sendMessageBody = z.object({
   message: z.string().min(1).max(20000),
+  editMessageId: z.number().int().positive().optional(),
+});
+
+const generateArtifactBody = z.object({
+  messageId: z.number().int().positive(),
+  format: z.enum(['pdf', 'docx', 'xlsx', 'txt', 'md', 'csv']),
+  title: z.string().min(1).max(255).optional(),
+  documentType: z.string().min(1).max(80).regex(/^[a-zA-Z0-9_-]+$/).optional(),
 });
 
 const attachContextBody = z.object({
@@ -100,6 +118,42 @@ const usageQuery = z.object({
 router.use(requireAuth);
 
 router.get(
+  '/providers',
+  requirePermission('ai_command.use'),
+  ctrl.providers
+);
+
+router.get(
+  '/tools',
+  requirePermission('ai_command.use'),
+  ctrl.tools
+);
+
+router.post(
+  '/tool-context',
+  requirePermission('ai_command.use'),
+  validate(z.object({
+    pathname: z.string().min(1).max(300),
+    search: z.string().max(500).optional(),
+    visibleState: z.record(z.union([z.string().max(500), z.number(), z.boolean(), z.null()])).optional(),
+    sessionId: z.number().int().positive().optional(),
+  }).strict()),
+  ctrl.toolContext
+);
+
+router.get(
+  '/divisions',
+  requirePermission('ai_command.use'),
+  ctrl.divisions
+);
+
+router.get(
+  '/inbox',
+  requirePermission('ai_command.use'),
+  ctrl.inbox
+);
+
+router.get(
   '/sessions',
   requirePermission('ai_command.session.view'),
   validate(listQuery, 'query'),
@@ -131,6 +185,18 @@ router.delete(
   validate(idParams, 'params'),
   ctrl.deleteSession
 );
+router.put(
+  '/sessions/:id/pin',
+  requirePermission('ai_command.session.view'),
+  validate(idParams, 'params'),
+  ctrl.pinSession
+);
+router.delete(
+  '/sessions/:id/pin',
+  requirePermission('ai_command.session.view'),
+  validate(idParams, 'params'),
+  ctrl.pinSession
+);
 router.post(
   '/sessions/:id/archive',
   requirePermission('ai_command.session.manage'),
@@ -151,6 +217,50 @@ router.post(
   validate(idParams, 'params'),
   validate(sendMessageBody),
   ctrl.sendMessage
+);
+router.post(
+  '/sessions/:id/generation/stop',
+  requirePermission('ai_command.use'),
+  validate(idParams, 'params'),
+  ctrl.stopGeneration
+);
+router.post(
+  '/sessions/:id/messages/stream',
+  requirePermission('ai_command.use'),
+  validate(idParams, 'params'),
+  validate(sendMessageBody),
+  ctrl.streamMessage
+);
+
+router.post(
+  '/sessions/:id/files',
+  requirePermission('ai_command.use'),
+  requirePermission('document.create'),
+  validate(idParams, 'params'),
+  upload.single('file'),
+  ctrl.uploadSessionFile
+);
+router.post(
+  '/sessions/:id/artifacts',
+  requirePermission('ai_command.use'),
+  requirePermission('document.create'),
+  validate(idParams, 'params'),
+  validate(generateArtifactBody),
+  ctrl.generateArtifact
+);
+router.get(
+  '/sessions/:id/artifacts/:documentId',
+  requirePermission('ai_command.session.view'),
+  requirePermission('document.view'),
+  validate(sessionDocumentParams, 'params'),
+  ctrl.getArtifact
+);
+router.get(
+  '/sessions/:id/artifacts/:documentId/download',
+  requirePermission('ai_command.session.view'),
+  requirePermission('document.view'),
+  validate(sessionDocumentParams, 'params'),
+  ctrl.downloadArtifact
 );
 
 router.get(

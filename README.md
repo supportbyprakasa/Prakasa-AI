@@ -1,4 +1,4 @@
-# Prakasa AI Work OS
+# Prakasa Workspace
 
 Full MVP project assembled from the Fase 1–8 implementation specification.
 

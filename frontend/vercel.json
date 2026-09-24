@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "alias": [
+    "prakasa-ai-web.vercel.app"
+  ],
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -17,6 +20,15 @@
         {
           "key": "x-vercel-enable-rewrite-caching",
           "value": "0"
+        }
+      ]
+    },
+    {
+      "source": "/login",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
         }
       ]
     }

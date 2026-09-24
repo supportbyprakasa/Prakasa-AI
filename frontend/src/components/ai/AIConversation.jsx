@@ -596,6 +596,12 @@ export default function AIConversation({
         </div>
       </div>
 
+      {session.provider === 'gemini' && (
+        <div role="note" style={{ padding: '8px 12px', fontSize: 12, background: '#fff7ed', color: '#7c2d12', borderRadius: 6, margin: '0 16px 8px' }}>
+          Gemini kuota gratis: hanya pesan saat ini yang dikirim ke Google. Jangan tulis data pribadi atau rahasia; dokumen, catatan, dan riwayat percakapan tidak disertakan otomatis.
+        </div>
+      )}
+
       <div className="ai-composer-dock">
         <AIComposer
           value={input}

@@ -171,7 +171,7 @@ export default function SampleRequests() {
           <Input label="Target Kirim" name="requestedDeliveryDate" type="date" />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
             <label style={{ fontSize: 13 }}>Prioritas</label>
-            <select name="priority" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+            <select name="priority" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
               {['low', 'normal', 'high', 'urgent'].map((p) => (
                 <option key={p}>{p}</option>
               ))}
@@ -208,7 +208,7 @@ export default function SampleRequests() {
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             rows={3}
-            style={{ padding: 10, borderRadius: 8, border: '1px solid var(--color-border)' }}
+            style={{ padding: 10, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
           />
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>

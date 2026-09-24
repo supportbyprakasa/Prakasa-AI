@@ -71,7 +71,7 @@ export default function TaskActivityTimeline({ taskId, refreshKey }) {
       {rows.map((a) => (
         <div key={a.id} style={{
           display: 'flex', gap: 8, padding: '8px 0',
-          borderBottom: '1px solid var(--color-border)', fontSize: 13,
+          boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontSize: 13,
         }}>
           <Clock size={13} style={{ marginTop: 3, color: 'var(--color-text-muted)', flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>

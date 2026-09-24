@@ -56,7 +56,7 @@ export default function SignaturePrecheckPanel({
             textAlign: 'center',
             color: 'var(--color-text-muted)',
             fontSize: 13,
-            border: '1px dashed var(--color-border)',
+            boxShadow: 'inset 0 0 0 1px var(--color-border)',
             borderRadius: 8,
           }}
         >
@@ -115,7 +115,7 @@ export default function SignaturePrecheckPanel({
                 background: '#f8fafc',
                 padding: 10,
                 borderRadius: 8,
-                border: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 0 0 1px var(--color-border)',
               }}
             >
               {precheck.summary}
@@ -144,7 +144,7 @@ export default function SignaturePrecheckPanel({
                     padding: 8,
                     marginBottom: 4,
                     background: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
+                    boxShadow: 'inset 0 0 0 1px var(--color-border)',
                     borderRadius: 8,
                     fontSize: 13,
                   }}

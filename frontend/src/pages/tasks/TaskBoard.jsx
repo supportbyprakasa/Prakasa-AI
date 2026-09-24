@@ -127,7 +127,7 @@ export default function TaskBoard() {
               style={{
                 textAlign: 'left', cursor: 'pointer', font: 'inherit',
                 background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 0 0 1px var(--color-border)',
                 borderRadius: 12, padding: 16, color: 'inherit',
               }}
             >
@@ -464,7 +464,7 @@ function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoar
           <select
             value={filters.priority}
             onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-            style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+            style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
           >
             <option value="">Semua prioritas</option>
             <option value="low">Low</option>
@@ -477,7 +477,7 @@ function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoar
           <select
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+            style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
           >
             <option value="">Semua status</option>
             <option value="open">Open</option>
@@ -524,10 +524,10 @@ function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoar
                 borderRadius: 12,
                 padding: 10,
                 minHeight: 260,
-                border: dragging && Number(dragging.columnId) !== Number(col.id)
-                  ? '2px dashed var(--color-primary)'
-                  : '2px solid transparent',
-                transition: 'border-color 150ms',
+                boxShadow: dragging && Number(dragging.columnId) !== Number(col.id)
+                  ? 'inset 0 0 0 2px var(--color-primary)'
+                  : 'inset 0 0 0 2px transparent',
+                transition: 'box-shadow 150ms',
                 display: 'flex', flexDirection: 'column',
               }}
             >
@@ -609,7 +609,7 @@ function TaskCard({ task, dragging, canDrag, onDragStart, onDragEnd, onClick }) 
       onClick={onClick}
       style={{
         background: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
+        boxShadow: 'inset 0 0 0 1px var(--color-border)',
         borderRadius: 8,
         padding: 10,
         marginBottom: 6,
@@ -745,7 +745,7 @@ function CreateTaskModal({ open, onClose, board, onCreated }) {
           rows={3}
           style={{
             width: '100%', padding: 10, borderRadius: 8,
-            border: '1px solid var(--color-border)', fontSize: 13,
+            boxShadow: 'inset 0 0 0 1px var(--color-border)', fontSize: 13,
           }}
         />
       </div>
@@ -756,7 +756,7 @@ function CreateTaskModal({ open, onClose, board, onCreated }) {
           <select
             value={form.columnId}
             onChange={(e) => setForm({ ...form, columnId: e.target.value })}
-            style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+            style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
           >
             {board.columns.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -768,7 +768,7 @@ function CreateTaskModal({ open, onClose, board, onCreated }) {
           <select
             value={form.priority}
             onChange={(e) => setForm({ ...form, priority: e.target.value })}
-            style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+            style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
           >
             <option value="low">Low</option>
             <option value="normal">Normal</option>

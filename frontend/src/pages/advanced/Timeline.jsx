@@ -168,7 +168,7 @@ export default function Timeline() {
             {ganttError && (
               <div style={{
                 padding: 16, fontSize: 13, color: 'var(--color-error)',
-                borderBottom: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
               }}>
                 {ganttError}
               </div>
@@ -231,7 +231,7 @@ export default function Timeline() {
             <div style={{
               padding: '8px 12px',
               background: '#fffbeb',
-              borderBottom: '1px solid #fde68a',
+              boxShadow: 'inset 0 -1px 0 0 #fde68a',
               color: '#92400e', fontSize: 12,
             }}>
               Sebagian data terpotong pada modul: {activityMeta.truncatedModules.join(', ')}.
@@ -256,7 +256,7 @@ export default function Timeline() {
                     display: 'grid',
                     gridTemplateColumns: '100px 100px 1fr auto',
                     gap: 12, padding: 8, alignItems: 'center',
-                    borderBottom: '1px solid var(--color-border)', fontSize: 13,
+                    boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontSize: 13,
                   }}>
                     <div style={{ fontWeight: 600 }}>{String(item.date).slice(0, 10)}</div>
                     <Badge tone={
@@ -288,7 +288,7 @@ export default function Timeline() {
 function tabStyle(active) {
   return {
     padding: '6px 12px', fontSize: 13,
-    border: `1px solid ${active ? 'var(--color-primary)' : 'var(--color-border)'}`,
+    boxShadow: `inset 0 0 0 1px ${active ? 'var(--color-primary)' : 'var(--color-border)'}`,
     borderRadius: 8,
     background: active ? 'rgba(31,78,216,.08)' : 'transparent',
     color: active ? 'var(--color-primary)' : 'var(--color-text)',

@@ -232,7 +232,7 @@ export default function HrgaWorkflowDetail() {
                 alignItems: 'center',
                 fontSize: 13,
                 padding: 6,
-                borderBottom: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
               }}
             >
               <div>
@@ -251,7 +251,7 @@ export default function HrgaWorkflowDetail() {
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label style={{ fontSize: 13 }}>Tipe</label>
-              <select name="attachmentType" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+              <select name="attachmentType" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
                 <option value="offer_letter">Offer Letter</option>
                 <option value="contract">Kontrak</option>
                 <option value="id_document">Identitas</option>
@@ -275,7 +275,7 @@ export default function HrgaWorkflowDetail() {
                 justify: 'space-between',
                 alignItems: 'center',
                 padding: 12,
-                borderBottom: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
                 fontSize: 13,
                 gap: 12,
               }}
@@ -417,7 +417,7 @@ export default function HrgaWorkflowDetail() {
               name="notes"
               rows={3}
               defaultValue={wf.notes || ''}
-              style={{ padding: 10, borderRadius: 8, border: '1px solid var(--color-border)' }}
+              style={{ padding: 10, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
             />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>

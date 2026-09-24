@@ -40,7 +40,7 @@ export default function TemplateCenter() {
 
   return (
     <div>
-      <h2>Template Center</h2>
+      <h2>Templates</h2>
       <DataTable
         loading={loading}
         rows={rows}

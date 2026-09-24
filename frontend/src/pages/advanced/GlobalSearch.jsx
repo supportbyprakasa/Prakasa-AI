@@ -300,7 +300,7 @@ export default function GlobalSearch() {
 function chipStyle(active) {
   return {
     padding: '4px 10px', fontSize: 12, borderRadius: 999,
-    border: `1px solid ${active ? 'var(--color-primary)' : 'var(--color-border)'}`,
+    boxShadow: `inset 0 0 0 1px ${active ? 'var(--color-primary)' : 'var(--color-border)'}`,
     background: active ? 'rgba(31,78,216,.08)' : 'transparent',
     color: active ? 'var(--color-primary)' : 'var(--color-text)',
     cursor: 'pointer', font: 'inherit',

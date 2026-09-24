@@ -20,7 +20,7 @@ export function UserSelect({
         style={{
           padding: 8,
           borderRadius: 8,
-          border: '1px solid var(--color-border)',
+          boxShadow: 'inset 0 0 0 1px var(--color-border)',
           background: 'var(--color-surface)',
           color: 'var(--color-text)',
         }}
@@ -58,7 +58,7 @@ export function RoleSelect({
         style={{
           padding: 8,
           borderRadius: 8,
-          border: '1px solid var(--color-border)',
+          boxShadow: 'inset 0 0 0 1px var(--color-border)',
           background: 'var(--color-surface)',
           color: 'var(--color-text)',
         }}

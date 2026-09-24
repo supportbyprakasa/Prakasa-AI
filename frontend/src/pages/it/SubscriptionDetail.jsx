@@ -123,7 +123,7 @@ export default function SubscriptionDetail() {
         <Card title="Invoice" actions={<Button onClick={load}>Refresh</Button>}>
           {sub.invoices?.length ? (
             sub.invoices.map((inv) => (
-              <div key={inv.id} style={{ fontSize: 13, padding: 6, borderBottom: '1px solid var(--color-border)' }}>
+              <div key={inv.id} style={{ fontSize: 13, padding: 6, boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
                 <b>{inv.invoiceNumber}</b> · {inv.currency} {Number(inv.totalAmount).toLocaleString('id-ID')} · <Badge>{inv.status}</Badge>
               </div>
             ))
@@ -144,7 +144,7 @@ export default function SubscriptionDetail() {
                 alignItems: 'center',
                 fontSize: 13,
                 padding: 8,
-                borderBottom: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
               }}
             >
               <div>
@@ -175,7 +175,7 @@ export default function SubscriptionDetail() {
         <Card title="Renewal History">
           {sub.renewals?.length ? (
             sub.renewals.map((r) => (
-              <div key={r.id} style={{ fontSize: 13, padding: 6, borderBottom: '1px solid var(--color-border)' }}>
+              <div key={r.id} style={{ fontSize: 13, padding: 6, boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
                 {r.currentRenewalDate} → {r.proposedRenewalDate} · <Badge>{r.status}</Badge>
               </div>
             ))
@@ -186,7 +186,7 @@ export default function SubscriptionDetail() {
         <Card title="Payments" actions={<Button onClick={() => setPaymentOpen(true)}>+ Payment</Button>}>
           {sub.payments?.length ? (
             sub.payments.map((p) => (
-              <div key={p.id} style={{ fontSize: 13, padding: 6, borderBottom: '1px solid var(--color-border)' }}>
+              <div key={p.id} style={{ fontSize: 13, padding: 6, boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
                 {p.paidAt ? new Date(p.paidAt).toLocaleDateString('id-ID') : '—'} · {p.currency} {Number(p.amount).toLocaleString('id-ID')} · <Badge>{p.status}</Badge>
               </div>
             ))

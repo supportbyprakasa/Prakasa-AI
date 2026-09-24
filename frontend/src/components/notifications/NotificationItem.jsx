@@ -36,7 +36,7 @@ export default function NotificationItem({
   return (
     <div style={{
       background: isRead ? 'var(--color-surface)' : '#eff6ff',
-      border: '1px solid var(--color-border)',
+      boxShadow: 'inset 0 0 0 1px var(--color-border)',
       borderRadius: 10,
       padding: 12,
       display: 'flex', gap: 10, alignItems: 'flex-start',

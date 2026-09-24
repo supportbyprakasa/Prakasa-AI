@@ -1,3 +1,6 @@
+// Design tokens and shared component styles load first so page styles can refine them.
+import './styles/tokens.css';
+import { installPwRipple } from './styles/ripple';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -7,7 +10,8 @@ import ToastHost from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
-import './styles/tokens.css';
+
+installPwRipple();
 
 const app = (
   <BrowserRouter

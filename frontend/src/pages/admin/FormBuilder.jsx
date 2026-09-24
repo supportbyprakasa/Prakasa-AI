@@ -227,7 +227,7 @@ export default function FormBuilder() {
             <select
               value={form.workflowDefinitionId || ''}
               onChange={(e) => setForm({ ...form, workflowDefinitionId: e.target.value ? Number(e.target.value) : null })}
-              style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+              style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
             >
               <option value="">Tanpa workflow</option>
               {workflows.map((w) => (
@@ -240,7 +240,7 @@ export default function FormBuilder() {
             <select
               value={form.documentTypeId || ''}
               onChange={(e) => setForm({ ...form, documentTypeId: e.target.value ? Number(e.target.value) : null })}
-              style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+              style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
             >
               <option value="">Tidak ada</option>
               {docTypes.map((d) => (
@@ -276,7 +276,7 @@ export default function FormBuilder() {
           )}
           {form.fields.map((f, idx) => (
             <div key={idx} style={{
-              background: '#f8fafc', border: '1px solid var(--color-border)',
+              background: '#f8fafc', boxShadow: 'inset 0 0 0 1px var(--color-border)',
               borderRadius: 10, padding: 12, marginBottom: 10,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -314,7 +314,7 @@ export default function FormBuilder() {
                   <select
                     value={f.fieldType}
                     onChange={(e) => updateField(idx, 'fieldType', e.target.value)}
-                    style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+                    style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
                   >
                     {FIELD_TYPES.map((t) => <option key={t}>{t}</option>)}
                   </select>
@@ -362,7 +362,7 @@ export default function FormBuilder() {
                     rows={3}
                     style={{
                       width: '100%', padding: 8, borderRadius: 8,
-                      border: '1px solid var(--color-border)',
+                      boxShadow: 'inset 0 0 0 1px var(--color-border)',
                       fontFamily: 'monospace', fontSize: 12,
                     }}
                   />

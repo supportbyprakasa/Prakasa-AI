@@ -87,7 +87,7 @@ export default function Meetings() {
           <Input label="Email peserta (pisah dengan koma)" name="attendeeEmails" />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
             <label style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Tipe</label>
-            <select name="meetingType" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+            <select name="meetingType" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
               <option value="internal">Internal</option>
               <option value="client">Client</option>
               <option value="vendor">Vendor</option>

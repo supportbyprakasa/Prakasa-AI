@@ -143,7 +143,7 @@ export default function DocumentTypes() {
             <select
               name="defaultWorkflowId"
               defaultValue={editing?.defaultWorkflowId || ''}
-              style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+              style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
             >
               <option value="">Tidak ada</option>
               {workflows.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}

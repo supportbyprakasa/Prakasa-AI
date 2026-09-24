@@ -327,7 +327,7 @@ export default function ApprovalMatrixEditor({
         <div
           key={index}
           style={{
-            border: '1px solid var(--color-border)',
+            boxShadow: 'inset 0 0 0 1px var(--color-border)',
             borderRadius: 10,
             padding: 12,
             marginBottom: 10,
@@ -503,7 +503,7 @@ function SelectField({
         style={{
           padding: '8px 10px',
           borderRadius: 8,
-          border: '1px solid var(--color-border)',
+          boxShadow: 'inset 0 0 0 1px var(--color-border)',
           background: 'var(--color-surface)',
           color: 'var(--color-text)',
         }}

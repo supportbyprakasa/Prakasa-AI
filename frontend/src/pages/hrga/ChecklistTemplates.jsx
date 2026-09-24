@@ -109,7 +109,7 @@ export default function ChecklistTemplates() {
             <select
               name="workflowType"
               required
-              style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+              style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
             >
               <option value="onboarding">Onboarding</option>
               <option value="offboarding">Offboarding</option>
@@ -133,7 +133,7 @@ export default function ChecklistTemplates() {
               width: '100%',
               padding: 10,
               borderRadius: 8,
-              border: '1px solid var(--color-border)',
+              boxShadow: 'inset 0 0 0 1px var(--color-border)',
               fontFamily: 'monospace',
               fontSize: 12,
               marginBottom: 12,

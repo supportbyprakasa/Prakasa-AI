@@ -19,7 +19,7 @@ export function SkeletonTable({ rows = 5, columns = 4 }) {
     <div
       style={{
         background: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
+        boxShadow: 'inset 0 0 0 1px var(--color-border)',
         borderRadius: 8,
         overflow: 'hidden',
       }}
@@ -43,7 +43,7 @@ export function SkeletonTable({ rows = 5, columns = 4 }) {
           style={{
             display: 'grid',
             gridTemplateColumns: `repeat(${columns}, 1fr)`,
-            borderTop: '1px solid var(--color-border)',
+            boxShadow: 'inset 0 1px 0 0 var(--color-border)',
           }}
         >
           {Array.from({ length: columns }).map((__, j) => (
@@ -68,7 +68,7 @@ export function SkeletonCard({ lines = 3 }) {
     <div
       style={{
         background: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
+        boxShadow: 'inset 0 0 0 1px var(--color-border)',
         borderRadius: 12,
         padding: 20,
       }}

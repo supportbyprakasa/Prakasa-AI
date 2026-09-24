@@ -299,7 +299,7 @@ export default function ApprovalMatrix() {
                     {group.rules.map((rule) => (
                       <tr
                         key={rule.id}
-                        style={{ borderTop: '1px solid var(--color-border)' }}
+                        style={{ boxShadow: 'inset 0 1px 0 0 var(--color-border)' }}
                       >
                         <td style={{ padding: 8 }}>
                           <b>#{rule.orderIndex}</b>
@@ -876,7 +876,7 @@ function Select({ label, value, onChange, options, allowEmpty = false }) {
         style={{
           padding: '8px 10px',
           borderRadius: 8,
-          border: '1px solid var(--color-border)',
+          boxShadow: 'inset 0 0 0 1px var(--color-border)',
           background: 'var(--color-surface)',
           color: 'var(--color-text)',
         }}

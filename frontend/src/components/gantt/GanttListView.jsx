@@ -25,7 +25,7 @@ export default function GanttListView({ tasks, onTaskClick, onGraphClick }) {
           onClick={() => onTaskClick(t.id)}
           style={{
             padding: 12,
-            borderBottom: '1px solid var(--color-border)',
+            boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
             cursor: 'pointer',
             opacity: t.isCancelled ? 0.6 : 1,
           }}
@@ -62,7 +62,7 @@ export default function GanttListView({ tasks, onTaskClick, onGraphClick }) {
                   style={{
                     width: 26, height: 26, padding: 0,
                     background: 'transparent',
-                    border: '1px solid var(--color-border)',
+                    boxShadow: 'inset 0 0 0 1px var(--color-border)',
                     borderRadius: 6, cursor: 'pointer',
                     color: 'var(--color-text-muted)',
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',

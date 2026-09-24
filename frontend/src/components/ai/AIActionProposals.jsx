@@ -96,12 +96,8 @@ export default function AIActionProposals({ sessionId, session, refreshKey }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-      <div style={{
-        padding: 12, borderBottom: '1px solid var(--color-border)',
-        display: 'flex', justifyContent: 'space-between',
-        alignItems: 'center', gap: 8,
-      }}>
+    <div className="ai-action-panel">
+      <div className="ai-support-section-header">
         <div style={{ fontSize: 13, fontWeight: 600 }}>Action Proposals</div>
         {canPropose && canManage && !archived && (
           <Button variant="secondary" onClick={() => setCreateOpen(true)}>
@@ -110,11 +106,8 @@ export default function AIActionProposals({ sessionId, session, refreshKey }) {
         )}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
-        <div style={{
-          fontSize: 11, color: 'var(--color-text-muted)',
-          marginBottom: 8, lineHeight: 1.5,
-        }}>
+      <div className="ai-support-section-body">
+        <div className="ai-support-helper">
           AI tidak mengeksekusi aksi secara otomatis. Setiap proposal harus dikonfirmasi pengguna.
         </div>
 
@@ -123,10 +116,7 @@ export default function AIActionProposals({ sessionId, session, refreshKey }) {
         )}
 
         {!loading && !rows.length && (
-          <div style={{
-            padding: 20, textAlign: 'center',
-            color: 'var(--color-text-muted)', fontSize: 13,
-          }}>
+          <div className="ai-support-empty">
             Belum ada action proposal.
           </div>
         )}
@@ -180,12 +170,7 @@ function ActionRow({ proposal, canConfirm, onConfirm, onReject }) {
     proposal.executionResult?.deferred === true;
 
   return (
-    <div style={{
-      padding: 10, marginBottom: 8,
-      background: '#f8fafc',
-      border: '1px solid var(--color-border)',
-      borderRadius: 8, fontSize: 12,
-    }}>
+    <div className="ai-support-card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <ClipboardCheck size={14} />
@@ -257,7 +242,7 @@ function ConfirmModal({ proposal, onCancel, onConfirm }) {
         {isDeferred && (
           <div style={{
             marginTop: 12, padding: 10,
-            background: '#fffbeb', border: '1px solid #fde68a',
+            background: '#fffbeb', boxShadow: 'inset 0 0 0 1px #fde68a',
             borderRadius: 8, color: '#92400e', fontSize: 12,
           }}>
             Executor untuk aksi ini belum tersedia. Proposal akan ditandai
@@ -349,7 +334,7 @@ function CreateActionModal({ sessionId, onClose, onCreated }) {
     <Modal open={true} onClose={onClose} title="Action Proposal Baru" maxWidth={520}>
       <div style={{
         padding: 10, marginBottom: 12,
-        background: '#f8fafc', border: '1px solid var(--color-border)',
+        background: '#f8fafc', boxShadow: 'inset 0 0 0 1px var(--color-border)',
         borderRadius: 8, fontSize: 12, color: 'var(--color-text-muted)',
       }}>
         Hanya <b>create_task</b> yang memiliki eksekutor pada fase ini.
@@ -368,7 +353,7 @@ function CreateActionModal({ sessionId, onClose, onCreated }) {
           rows={3}
           style={{
             width: '100%', padding: 10, borderRadius: 8,
-            border: '1px solid var(--color-border)', fontSize: 13,
+            boxShadow: 'inset 0 0 0 1px var(--color-border)', fontSize: 13,
           }}
         />
       </div>
@@ -381,7 +366,7 @@ function CreateActionModal({ sessionId, onClose, onCreated }) {
             onChange={(e) => setForm({ ...form, priority: e.target.value })}
             style={{
               width: '100%', padding: 8, borderRadius: 8,
-              border: '1px solid var(--color-border)',
+              boxShadow: 'inset 0 0 0 1px var(--color-border)',
             }}
           >
             <option value="low">Low</option>

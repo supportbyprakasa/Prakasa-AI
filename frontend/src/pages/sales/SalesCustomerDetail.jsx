@@ -123,7 +123,7 @@ export default function SalesCustomerDetail() {
           display: 'flex',
           gap: 4,
           marginTop: 20,
-          borderBottom: '1px solid var(--color-border)',
+          boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
           overflowX: 'auto',
         }}
       >
@@ -135,7 +135,7 @@ export default function SalesCustomerDetail() {
               padding: '10px 16px',
               background: 'transparent',
               border: 'none',
-              borderBottom: tab === t.key ? '2px solid var(--color-primary)' : '2px solid transparent',
+              boxShadow: tab === t.key ? 'inset 0 -2px 0 0 var(--color-primary)' : 'inset 0 -2px 0 0 transparent',
               color: tab === t.key ? 'var(--color-primary)' : 'var(--color-text-muted)',
               fontSize: 14,
               fontWeight: 500,
@@ -173,7 +173,7 @@ export default function SalesCustomerDetail() {
                   key={p.id}
                   style={{
                     padding: 12,
-                    borderBottom: '1px solid var(--color-border)',
+                    boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
                     fontSize: 14,
                     display: 'flex',
                     justify: 'space-between',
@@ -203,7 +203,7 @@ export default function SalesCustomerDetail() {
                   key={s.id}
                   style={{
                     padding: 12,
-                    borderBottom: '1px solid var(--color-border)',
+                    boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
                     fontSize: 14,
                     display: 'flex',
                     justify: 'space-between',
@@ -244,7 +244,7 @@ export default function SalesCustomerDetail() {
                   key={q.id}
                   style={{
                     padding: 12,
-                    borderBottom: '1px solid var(--color-border)',
+                    boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
                     fontSize: 14,
                     display: 'flex',
                     justify: 'space-between',
@@ -276,7 +276,7 @@ export default function SalesCustomerDetail() {
           <Card title="Activity Timeline">
             {data.activities?.length ? (
               data.activities.map((a) => (
-                <div key={a.id} style={{ padding: 8, borderBottom: '1px solid var(--color-border)', fontSize: 13 }}>
+                <div key={a.id} style={{ padding: 8, boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontSize: 13 }}>
                   <b>{a.action}</b> · {a.subjectType} #{a.subjectId}
                   <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
                     {new Date(a.createdAt).toLocaleString('id-ID')}
@@ -305,7 +305,7 @@ export default function SalesCustomerDetail() {
               name="notes"
               rows={3}
               defaultValue={customer.notes || ''}
-              style={{ padding: 10, borderRadius: 8, border: '1px solid var(--color-border)' }}
+              style={{ padding: 10, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
             />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
@@ -356,7 +356,7 @@ function EmptyBox({ text }) {
         textAlign: 'center',
         color: 'var(--color-text-muted)',
         fontSize: 13,
-        border: '1px dashed var(--color-border)',
+        boxShadow: 'inset 0 0 0 1px var(--color-border)',
         borderRadius: 8,
       }}
     >

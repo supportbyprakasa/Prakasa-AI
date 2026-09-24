@@ -35,7 +35,7 @@ export default function CrossDivisionWorkspace() {
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
-            style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+            style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
           >
             {['customer', 'project', 'vendor', 'employee', 'asset'].map((t) => (
               <option key={t}>{t}</option>
@@ -60,7 +60,7 @@ export default function CrossDivisionWorkspace() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
             <Card title={`Related Records (${data.related?.length || 0})`}>
               {data.related?.map((r) => (
-                <div key={r.id} style={{ fontSize: 13, padding: 6, borderBottom: '1px solid var(--color-border)' }}>
+                <div key={r.id} style={{ fontSize: 13, padding: 6, boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
                   {r.relatedType} #{r.relatedId} · <Badge>{r.relation}</Badge>
                 </div>
               ))}
@@ -69,7 +69,7 @@ export default function CrossDivisionWorkspace() {
 
             <Card title={`Cross Links (${data.links?.length || 0})`}>
               {data.links?.map((l) => (
-                <div key={l.id} style={{ fontSize: 13, padding: 6, borderBottom: '1px solid var(--color-border)' }}>
+                <div key={l.id} style={{ fontSize: 13, padding: 6, boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
                   {l.fromType} #{l.fromId} → {l.toType} #{l.toId} · <Badge>{l.relation}</Badge>
                 </div>
               ))}
@@ -78,7 +78,7 @@ export default function CrossDivisionWorkspace() {
 
             <Card title="Activity">
               {data.activities?.map((a) => (
-                <div key={a.id} style={{ fontSize: 13, padding: 6, borderBottom: '1px solid var(--color-border)' }}>
+                <div key={a.id} style={{ fontSize: 13, padding: 6, boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
                   <b>{a.action}</b>
                   <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
                     {new Date(a.createdAt).toLocaleString('id-ID')}

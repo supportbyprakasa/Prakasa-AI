@@ -102,7 +102,7 @@ export default function DataClassification() {
           <Input label="Subject ID" name="subjectId" type="number" required />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
             <label style={{ fontSize: 13 }}>Klasifikasi</label>
-            <select name="classification" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+            <select name="classification" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
               <option value="public">Public</option>
               <option value="internal">Internal</option>
               <option value="confidential">Confidential</option>

@@ -1,5 +1,6 @@
 import { Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/client';
 import Badge from '../../components/Badge';
 import Button from '../../components/Button';
@@ -19,8 +20,12 @@ const STATUS_TONE = {
   cancelled: 'default',
 };
 
+const WAREHOUSE_SUBJECTS = { warehouse_inbound: 'inbound', warehouse_outbound: 'outbound' };
+
 export default function ApprovalInbox() {
   const { user } = useAuth();
+  const { id: routeId } = useParams();
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [meta, setMeta] = useState(null);
   const [filters, setFilters] = useState({
@@ -60,6 +65,12 @@ export default function ApprovalInbox() {
   useEffect(() => {
     load();
   }, [page, filters.status, filters.requestType]);
+
+  // Deep link from notifications and the Action Inbox: /approvals/:id opens that approval.
+  useEffect(() => {
+    if (routeId && Number(detail?.id) !== Number(routeId)) openDetail({ id: routeId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeId]);
 
   const openDetail = async (row) => {
     setDetailLoading(true);
@@ -130,7 +141,7 @@ export default function ApprovalInbox() {
   return (
     <div>
       <div style={{ marginBottom: 12 }}>
-        <h2 style={{ margin: 0 }}>Approval Inbox</h2>
+        <h2 style={{ margin: 0 }}>Approvals</h2>
         <div
           style={{
             marginTop: 4,
@@ -247,6 +258,7 @@ export default function ApprovalInbox() {
           setDetail(null);
           setPendingSteps([]);
           setNote('');
+          if (routeId) navigate('/approvals', { replace: true });
         }}
         title={detail ? `Approval #${detail.id} — ${detail.title}` : 'Memuat approval…'}
         maxWidth={980}
@@ -287,8 +299,18 @@ function ApprovalDetail({
     stages.get(order).push(step);
   }
 
+  const movementType = WAREHOUSE_SUBJECTS[approval.subjectType];
+
   return (
     <div>
+      {movementType && approval.subjectId && (
+        <p style={{ margin: '0 0 14px', fontSize: 14 }}>
+          Approval ini untuk pergerakan barang Warehouse.{' '}
+          <Link to={`/warehouse/movements/${movementType}/${approval.subjectId}`} style={{ color: 'var(--pw-primary)', fontWeight: 500 }}>
+            Buka detail pergerakan
+          </Link>
+        </p>
+      )}
       <div
         style={{
           display: 'grid',
@@ -326,7 +348,7 @@ function ApprovalDetail({
             <div
               key={order}
               style={{
-                border: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 0 0 1px var(--color-border)',
                 borderRadius: 10,
                 marginBottom: 10,
                 overflow: 'hidden',
@@ -364,7 +386,7 @@ function ApprovalDetail({
                     key={step.id}
                     style={{
                       padding: 10,
-                      borderTop: '1px solid var(--color-border)',
+                      boxShadow: 'inset 0 1px 0 0 var(--color-border)',
                       display: 'grid',
                       gridTemplateColumns: 'minmax(160px, 1.2fr) minmax(130px, .8fr) minmax(180px, 1fr) auto',
                       gap: 10,
@@ -536,7 +558,7 @@ function Summary({ label, children }) {
   return (
     <div
       style={{
-        border: '1px solid var(--color-border)',
+        boxShadow: 'inset 0 0 0 1px var(--color-border)',
         borderRadius: 8,
         padding: 10,
       }}

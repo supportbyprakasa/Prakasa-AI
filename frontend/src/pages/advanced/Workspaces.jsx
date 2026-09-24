@@ -77,7 +77,7 @@ export default function Workspaces() {
             <Card title={`Activity Timeline (${data.activities.length})`}>
               <div style={{ maxHeight: 260, overflowY: 'auto' }}>
                 {data.activities.slice(0, 20).map((a) => (
-                  <div key={a.id} style={{ fontSize: 12, padding: 4, borderBottom: '1px solid var(--color-border)' }}>
+                  <div key={a.id} style={{ fontSize: 12, padding: 4, boxShadow: 'inset 0 -1px 0 0 var(--color-border)' }}>
                     <b>{a.action}</b> · {a.subjectType} #{a.subjectId} · {new Date(a.createdAt).toLocaleString('id-ID')}
                   </div>
                 ))}

@@ -18,11 +18,11 @@ export default function DataTable({
         style={{
           padding: 32,
           textAlign: 'center',
-          color: 'var(--color-text-muted)',
-          background: 'var(--color-surface)',
-          border: '1px dashed var(--color-border)',
-          borderRadius: 12,
-          fontSize: 13,
+          color: 'var(--pw-on-surface-variant)',
+          background: 'var(--pw-surface)',
+          boxShadow: 'inset 0 0 0 1px var(--pw-outline-variant)',
+          borderRadius: 'var(--pw-radius-md)',
+          fontSize: 14,
         }}
       >
         {empty}
@@ -32,20 +32,20 @@ export default function DataTable({
 
   return (
     <>
-      <div style={{ overflowX: 'auto' }}>
+      <div className="prakasa-table-scroll" style={{ overflowX: 'auto' }}>
         <table
           style={{
             width: '100%',
             borderCollapse: 'collapse',
-            background: 'var(--color-surface)',
-            borderRadius: 8,
+            background: 'var(--pw-surface)',
+            borderRadius: 'var(--pw-radius-md)',
             overflow: 'hidden',
           }}
         >
-          <thead style={{ background: '#f1f5f9', textAlign: 'left', fontSize: 13 }}>
+          <thead style={{ background: 'var(--pw-surface-container)', textAlign: 'left', fontSize: 12 }}>
             <tr>
               {columns.map((c) => (
-                <th key={c.key} style={{ padding: '10px 12px', fontWeight: 600 }}>
+                <th key={c.key} scope="col" style={{ padding: '12px 16px', fontWeight: 500 }}>
                   {c.title}
                 </th>
               ))}
@@ -57,13 +57,13 @@ export default function DataTable({
                 key={r.id ?? i}
                 onClick={onRowClick ? () => onRowClick(r) : undefined}
                 style={{
-                  borderTop: '1px solid var(--color-border)',
+                  boxShadow: 'inset 0 1px 0 0 var(--pw-outline-variant)',
                   fontSize: 14,
                   cursor: onRowClick ? 'pointer' : 'default',
                 }}
               >
                 {columns.map((c) => (
-                  <td key={c.key} style={{ padding: '10px 12px' }}>
+                  <td key={c.key} style={{ padding: '14px 16px' }}>
                     {c.render ? c.render(r) : r[c.key]}
                   </td>
                 ))}
@@ -78,10 +78,10 @@ export default function DataTable({
           style={{
             marginTop: 12,
             display: 'flex',
-            justify: 'space-between',
+            justifyContent: 'space-between',
             alignItems: 'center',
             fontSize: 13,
-            color: 'var(--color-text-muted)',
+            color: 'var(--pw-on-surface-variant)',
           }}
         >
           <div>
@@ -97,14 +97,14 @@ export default function DataTable({
                 disabled={meta.page <= 1}
                 onClick={() => onPageChange(meta.page - 1)}
               >
-                ← Prev
+                Sebelumnya
               </Button>
               <Button
                 variant="secondary"
                 disabled={meta.page * (meta.limit || 20) >= (meta.total || 0)}
                 onClick={() => onPageChange(meta.page + 1)}
               >
-                Next →
+                Berikutnya
               </Button>
             </div>
           )}

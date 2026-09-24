@@ -1,18 +1,8 @@
 import axios from 'axios';
-
-function resolveApiBaseUrl() {
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    if (host === 'prakasa-ai-web.vercel.app' || host.endsWith('.vercel.app')) {
-      return '/api/v1';
-    }
-  }
-
-  return import.meta.env.VITE_API_URL || '/api/v1';
-}
+import { apiBaseUrl } from './endpoint';
 
 const api = axios.create({
-  baseURL: resolveApiBaseUrl(),
+  baseURL: apiBaseUrl,
 });
 
 api.interceptors.request.use((config) => {

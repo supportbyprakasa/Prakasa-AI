@@ -116,7 +116,7 @@ function Section({ icon: Icon, label, rows, canManage, onRemove }) {
         <div key={r.id} style={{
           display: 'flex', justifyContent: 'space-between',
           alignItems: 'center', padding: '6px 0',
-          borderBottom: '1px solid var(--color-border)', fontSize: 13,
+          boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontSize: 13,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {r.taskId ? (
@@ -202,7 +202,7 @@ function AddDependencyModal({ open, onClose, taskId, onAdded }) {
         <select
           value={mode}
           onChange={(e) => setMode(e.target.value)}
-          style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+          style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
         >
           <option value="blocked_by">Task ini diblokir oleh task lain</option>
           <option value="blocking">Task ini memblokir task lain</option>

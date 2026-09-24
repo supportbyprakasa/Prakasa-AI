@@ -56,7 +56,7 @@ export default function SalesPipeline() {
             </div>
             {rows.filter((r) => r.stage === s.key).map((d) => (
               <div key={d.id} style={{
-                background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+                background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)',
                 borderRadius: 8, padding: 10, marginBottom: 6, fontSize: 13,
               }}>
                 <div style={{ fontWeight: 500 }}>{d.dealTitle}</div>

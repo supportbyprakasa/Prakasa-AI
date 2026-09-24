@@ -122,7 +122,7 @@ export default function SubmissionDetail() {
                 <div key={h.id} style={{
                   display: 'flex', gap: 8, alignItems: 'flex-start',
                   padding: '6px 0', fontSize: 13,
-                  borderBottom: '1px solid var(--color-border)',
+                  boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
                 }}>
                   <Clock size={14} style={{ marginTop: 2, color: 'var(--color-text-muted)' }} />
                   <div style={{ flex: 1 }}>
@@ -159,7 +159,7 @@ export default function SubmissionDetail() {
       <Card title="Data Formulir">
         {sub.values.map((v) => (
           <div key={v.id} style={{
-            padding: '10px 0', borderBottom: '1px solid var(--color-border)', fontSize: 14,
+            padding: '10px 0', boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontSize: 14,
           }}>
             <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{v.label}</div>
             <div style={{ marginTop: 2 }}>{renderValue(v)}</div>
@@ -173,7 +173,7 @@ export default function SubmissionDetail() {
             {sub.attachments.map((a) => (
               <div key={a.id} style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '8px 0', borderBottom: '1px solid var(--color-border)', fontSize: 13,
+                padding: '8px 0', boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontSize: 13,
               }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Paperclip size={14} />

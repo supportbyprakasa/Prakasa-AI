@@ -490,7 +490,7 @@ function Select({ label, value, onChange, options, allowEmpty = false }) {
         style={{
           padding: '8px 10px',
           borderRadius: 8,
-          border: '1px solid var(--color-border)',
+          boxShadow: 'inset 0 0 0 1px var(--color-border)',
           background: 'var(--color-surface)',
         }}
       >

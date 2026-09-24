@@ -76,7 +76,7 @@ export default function Devices() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>IT Devices</h2>
+        <h2>Devices</h2>
         <Button onClick={() => setOpen(true)}>+ Device</Button>
       </div>
       <DataTable
@@ -110,7 +110,7 @@ export default function Devices() {
           <Input label="Asset Code" name="assetCode" required />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
             <label style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Tipe</label>
-            <select name="deviceType" required style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+            <select name="deviceType" required style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
               {DEVICE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>

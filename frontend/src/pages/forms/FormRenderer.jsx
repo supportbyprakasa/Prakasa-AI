@@ -300,7 +300,7 @@ export default function FormRenderer() {
 
         <div style={{
           display: 'flex', gap: 8, justifyContent: 'flex-end',
-          paddingTop: 16, borderTop: '1px solid var(--color-border)',
+          paddingTop: 16, boxShadow: 'inset 0 1px 0 0 var(--color-border)',
         }}>
           <Button variant="secondary" onClick={() => submit(true)} disabled={submitting}>
             Simpan Draft
@@ -347,7 +347,7 @@ function FieldRenderer({ field, value, error, upload, onChange, onUpload }) {
 
   const inputStyle = {
     width: '100%', padding: 10, borderRadius: 8,
-    border: `1px solid ${error ? 'var(--color-error)' : 'var(--color-border)'}`,
+    boxShadow: `inset 0 0 0 1px ${error ? 'var(--color-error)' : 'var(--color-border)'}`,
     fontSize: 14,
   };
 
@@ -504,7 +504,7 @@ function FieldRenderer({ field, value, error, upload, onChange, onUpload }) {
             <div style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               padding: 10, background: '#f8fafc', borderRadius: 8,
-              border: '1px solid var(--color-border)', fontSize: 13,
+              boxShadow: 'inset 0 0 0 1px var(--color-border)', fontSize: 13,
             }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Paperclip size={14} />
@@ -522,7 +522,7 @@ function FieldRenderer({ field, value, error, upload, onChange, onUpload }) {
           ) : (
             <label style={{
               display: 'flex', alignItems: 'center', gap: 8, padding: 10,
-              border: `1px dashed ${error ? 'var(--color-error)' : 'var(--color-border)'}`,
+              boxShadow: `inset 0 0 0 1px ${error ? 'var(--color-error)' : 'var(--color-border)'}`,
               borderRadius: 8, cursor: 'pointer', fontSize: 13,
               color: 'var(--color-text-muted)',
             }}>

@@ -83,7 +83,7 @@ function Bar({ task, left, width, onClick }) {
         height: BAR_H,
         width,
         background: `${fill}33`,
-        border: `1.5px ${isEstimated ? 'dashed' : 'solid'} ${fill}`,
+        boxShadow: `inset 0 0 0 1.5px ${fill}`,
         borderRadius: 6,
         cursor: 'pointer',
         overflow: 'hidden',
@@ -185,13 +185,13 @@ export default function GanttChart({ tasks, links, range, zoom, onTaskClick, onG
           position: 'sticky', left: 0, zIndex: 3,
           width: LEFT_W, flexShrink: 0,
           background: 'var(--color-surface)',
-          borderRight: '1px solid var(--color-border)',
+          boxShadow: 'inset -1px 0 0 0 var(--color-border)',
         }}>
           {/* Corner header */}
           <div style={{
             height: HEADER_H, position: 'sticky', top: 0, zIndex: 4,
             background: 'var(--color-surface)',
-            borderBottom: '1px solid var(--color-border)',
+            boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
             display: 'flex', alignItems: 'center',
             padding: '0 12px',
             fontSize: 12, fontWeight: 600,
@@ -208,7 +208,7 @@ export default function GanttChart({ tasks, links, range, zoom, onTaskClick, onG
                 height: ROW_H,
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '0 12px',
-                borderBottom: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
                 cursor: 'pointer', fontSize: 13,
                 background: 'var(--color-surface)',
               }}
@@ -240,7 +240,7 @@ export default function GanttChart({ tasks, links, range, zoom, onTaskClick, onG
                   style={{
                     width: 22, height: 22, padding: 0, flexShrink: 0,
                     background: 'transparent',
-                    border: '1px solid var(--color-border)',
+                    boxShadow: 'inset 0 0 0 1px var(--color-border)',
                     borderRadius: 4, cursor: 'pointer',
                     color: 'var(--color-text-muted)',
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -259,7 +259,7 @@ export default function GanttChart({ tasks, links, range, zoom, onTaskClick, onG
           <div style={{
             height: HEADER_H, position: 'sticky', top: 0, zIndex: 2,
             background: 'var(--color-surface)',
-            borderBottom: '1px solid var(--color-border)',
+            boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
           }}>
             {ticks.map((tick) => {
               const off = dateToDayOffset(tick, range.from);
@@ -268,7 +268,7 @@ export default function GanttChart({ tasks, links, range, zoom, onTaskClick, onG
                   position: 'absolute',
                   left: off * dayPx,
                   top: 0, bottom: 0,
-                  borderLeft: '1px solid var(--color-border)',
+                  boxShadow: 'inset 1px 0 0 0 var(--color-border)',
                   padding: '6px 4px',
                   fontSize: 10,
                   color: 'var(--color-text-muted)',
@@ -370,7 +370,7 @@ export default function GanttChart({ tasks, links, range, zoom, onTaskClick, onG
               <div key={t.id} style={{
                 height: ROW_H,
                 position: 'relative',
-                borderBottom: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
                 zIndex: 1,
               }}>
                 {geo && (

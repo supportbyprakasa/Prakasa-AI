@@ -76,7 +76,7 @@ export default function PaymentRequests() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h2>Finance Workflow</h2>
+        <h2>Payment Requests</h2>
         <Button onClick={() => setOpen(true)}>+ Payment / Reimbursement</Button>
       </div>
 
@@ -174,7 +174,7 @@ export default function PaymentRequests() {
           <Input label="Entity ID" name="entityId" type="number" required />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
             <label style={{ fontSize: 13 }}>Tipe</label>
-            <select name="workflowType" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}>
+            <select name="workflowType" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
               <option value="payment_request">Payment Request</option>
               <option value="reimbursement">Reimbursement</option>
             </select>

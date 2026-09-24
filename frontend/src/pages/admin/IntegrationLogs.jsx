@@ -76,7 +76,7 @@ export default function IntegrationLogs() {
 
       <div style={{
         display: 'flex', gap: 4, marginBottom: 12,
-        borderBottom: '1px solid var(--color-border)',
+        boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
       }}>
         {[
           { k: 'health', l: 'Health (24h)' },
@@ -84,7 +84,7 @@ export default function IntegrationLogs() {
         ].map((t) => (
           <button key={t.k} onClick={() => setTab(t.k)} style={{
             padding: '10px 16px', background: 'transparent', border: 'none',
-            borderBottom: tab === t.k ? '2px solid var(--color-primary)' : '2px solid transparent',
+            boxShadow: tab === t.k ? 'inset 0 -2px 0 0 var(--color-primary)' : 'inset 0 -2px 0 0 transparent',
             color: tab === t.k ? 'var(--color-primary)' : 'var(--color-text-muted)',
             fontSize: 14, fontWeight: 500, cursor: 'pointer',
           }}>{t.l}</button>

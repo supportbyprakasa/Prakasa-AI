@@ -4,21 +4,26 @@ const UPSTREAM_ORIGIN =
 const HOP_BY_HOP = new Set([
   'connection',
   'content-length',
+  'content-encoding',
+  'cookie',
   'host',
   'keep-alive',
+  'origin',
   'proxy-authenticate',
   'proxy-authorization',
+  'referer',
   'te',
   'trailer',
   'transfer-encoding',
   'upgrade',
 ]);
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   try {
     const rawPath = String(req.query?.path || '').replace(/^\/+/, '');
     const incomingUrl = new URL(req.url || '/', 'https://proxy.local');
     const target = new URL('/api/' + rawPath, UPSTREAM_ORIGIN);
+    incomingUrl.searchParams.delete('path');
     target.search = incomingUrl.search;
 
     const headers = {};
@@ -36,9 +41,15 @@ module.exports = async function handler(req, res) {
     };
 
     if (method !== 'GET' && method !== 'HEAD') {
-      const chunks = [];
-      for await (const chunk of req) chunks.push(chunk);
-      init.body = Buffer.concat(chunks);
+      if (req.body !== undefined) {
+        init.body = Buffer.isBuffer(req.body)
+          ? req.body
+          : Buffer.from(typeof req.body === 'string' ? req.body : JSON.stringify(req.body));
+      } else {
+        const chunks = [];
+        for await (const chunk of req) chunks.push(chunk);
+        init.body = Buffer.concat(chunks);
+      }
     }
 
     const upstream = await fetch(target, init);
@@ -66,4 +77,4 @@ module.exports = async function handler(req, res) {
       },
     }));
   }
-};
+}

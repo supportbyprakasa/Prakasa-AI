@@ -153,7 +153,7 @@ export default function AIUsage() {
                 <pre style={{
                   background: '#f8fafc', padding: 10, borderRadius: 8,
                   fontSize: 11, overflowX: 'auto', maxHeight: 200,
-                  border: '1px solid var(--color-border)',
+                  boxShadow: 'inset 0 0 0 1px var(--color-border)',
                 }}>
                   {typeof detail.metadata === 'string'
                     ? detail.metadata

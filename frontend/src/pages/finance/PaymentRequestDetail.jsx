@@ -182,7 +182,7 @@ export default function PaymentRequestDetail() {
         {wf.workflow_type} · diajukan oleh {wf.requesterName} pada {new Date(wf.request_date).toLocaleDateString('id-ID')}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
+      <div className="prakasa-detail-columns" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
         <Card title="Informasi">
           <div style={{ fontSize: 13, lineHeight: 1.9 }}>
             <div>Kategori: <b>{wf.category || '—'}</b></div>
@@ -266,7 +266,7 @@ export default function PaymentRequestDetail() {
                 alignItems: 'center',
                 fontSize: 13,
                 padding: 8,
-                borderBottom: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
               }}
             >
               <div>
@@ -302,7 +302,7 @@ export default function PaymentRequestDetail() {
                 <label style={{ fontSize: 13 }}>Tipe</label>
                 <select
                   name="attachmentType"
-                  style={{ padding: 8, borderRadius: 8, border: '1px solid var(--color-border)' }}
+                  style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
                 >
                   <option value="invoice">Invoice</option>
                   <option value="receipt">Receipt</option>
@@ -372,7 +372,7 @@ export default function PaymentRequestDetail() {
               name="notes"
               rows={3}
               defaultValue={wf.notes || ''}
-              style={{ padding: 10, borderRadius: 8, border: '1px solid var(--color-border)' }}
+              style={{ padding: 10, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
             />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>

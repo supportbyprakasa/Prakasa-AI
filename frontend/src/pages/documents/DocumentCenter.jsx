@@ -44,11 +44,11 @@ export default function DocumentCenter() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Document Center</h2>
+        <h2>Documents</h2>
         <Button onClick={() => setUploadOpen(true)}>+ Unggah Dokumen</Button>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+      <div className="prakasa-filter-row" style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         <Input name="q" placeholder="Cari judul…" value={filter.q}
           onChange={(e) => setFilter({ ...filter, q: e.target.value })} style={{ margin: 0 }} />
         <Input name="documentType" placeholder="Tipe (proposal/quotation/…)" value={filter.documentType}

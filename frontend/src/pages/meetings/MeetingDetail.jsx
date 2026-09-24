@@ -121,7 +121,7 @@ export default function MeetingDetail() {
           <textarea value={transcript} onChange={(e) => setTranscript(e.target.value)}
             placeholder="Tempel transcript / notes meeting di sini (atau gunakan transcriptLink di atas)…"
             rows={6} style={{ width: '100%', padding: 10, borderRadius: 8,
-              border: '1px solid var(--color-border)', fontSize: 13 }} />
+              boxShadow: 'inset 0 0 0 1px var(--color-border)', fontSize: 13 }} />
           {summary && (
             <div style={{ marginTop: 12 }}>
               <h4>Ringkasan</h4>
@@ -138,7 +138,7 @@ export default function MeetingDetail() {
             {meeting.actionItems.map((a) => (
               <div key={a.id} style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: 10, borderBottom: '1px solid var(--color-border)', fontSize: 13,
+                padding: 10, boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontSize: 13,
               }}>
                 <div>
                   <div style={{ fontWeight: 500 }}>{a.title}</div>

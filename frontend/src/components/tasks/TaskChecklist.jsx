@@ -119,7 +119,7 @@ export default function TaskChecklist({ taskId, canManage, onChanged }) {
         <div style={{
           fontSize: 13, color: 'var(--color-text-muted)',
           padding: 12, textAlign: 'center',
-          border: '1px dashed var(--color-border)', borderRadius: 8,
+          boxShadow: 'inset 0 0 0 1px var(--color-border)', borderRadius: 8,
         }}>
           Belum ada checklist.
         </div>
@@ -128,7 +128,7 @@ export default function TaskChecklist({ taskId, canManage, onChanged }) {
       {data.items.map((item, idx) => (
         <div key={item.id} style={{
           display: 'flex', alignItems: 'center', gap: 8,
-          padding: '6px 0', borderBottom: '1px solid var(--color-border)',
+          padding: '6px 0', boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
           fontSize: 13,
         }}>
           <input
@@ -183,7 +183,7 @@ export default function TaskChecklist({ taskId, canManage, onChanged }) {
 
 const iconBtnStyle = {
   width: 22, height: 22, padding: 0,
-  background: 'transparent', border: '1px solid var(--color-border)',
+  background: 'transparent', boxShadow: 'inset 0 0 0 1px var(--color-border)',
   borderRadius: 4, cursor: 'pointer',
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
 };

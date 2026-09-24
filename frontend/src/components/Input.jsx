@@ -1,14 +1,20 @@
-export default function Input({ label, error, ...props }) {
-  const id = props.id || props.name;
+import { useId } from 'react';
+
+export default function Input({ label, error, className = '', ...props }) {
+  const generatedId = useId();
+  const id = props.id || props.name || generatedId;
+  const errorId = `${id}-error`;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-      {label && <label htmlFor={id} style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{label}</label>}
-      <input id={id} {...props} style={{
-        padding: '8px 10px', borderRadius: 8, fontSize: 14,
-        border: `1px solid ${error ? 'var(--color-error)' : 'var(--color-border)'}`,
-        outline: 'none', ...(props.style || {}),
-      }} />
-      {error && <span style={{ fontSize: 12, color: 'var(--color-error)' }}>{error}</span>}
+    <div className="pw-field">
+      {label && <label htmlFor={id} className="pw-field__label">{label}</label>}
+      <input
+        {...props}
+        id={id}
+        className={['pw-field__input', className].filter(Boolean).join(' ')}
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={error ? errorId : props['aria-describedby']}
+      />
+      {error && <span id={errorId} className="pw-field__error">{error}</span>}
     </div>
   );
 }

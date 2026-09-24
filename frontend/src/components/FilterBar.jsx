@@ -13,7 +13,7 @@ export default function FilterBar({ filters, values, onChange, onReset, children
         gap: 8,
         alignItems: 'flex-end',
         background: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
+        boxShadow: 'inset 0 0 0 1px var(--color-border)',
         borderRadius: 12,
         padding: 12,
         marginBottom: 12,
@@ -36,7 +36,7 @@ export default function FilterBar({ filters, values, onChange, onReset, children
               style={{
                 padding: 8,
                 borderRadius: 8,
-                border: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 0 0 1px var(--color-border)',
                 fontSize: 13,
               }}
             >

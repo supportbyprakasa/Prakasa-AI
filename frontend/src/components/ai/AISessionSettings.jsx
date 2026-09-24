@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../../api/client';
 import Modal from '../Modal';
 import Button from '../Button';
@@ -16,10 +16,29 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
     title: session.title || '',
     visibility: session.visibility || 'private',
     systemContext: session.systemContext || '',
+    provider: session.provider || '',
   });
   const [saving, setSaving] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [providers, setProviders] = useState([]);
+  const [providersLoading, setProvidersLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setProvidersLoading(true);
+    api.get('/ai-command/providers')
+      .then((r) => {
+        if (!cancelled) setProviders(r.data.data || []);
+      })
+      .catch(() => {
+        if (!cancelled) setProviders([]);
+      })
+      .finally(() => {
+        if (!cancelled) setProvidersLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -34,6 +53,7 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
         title: form.title.trim(),
         visibility: form.visibility,
         systemContext: form.systemContext || null,
+        provider: form.provider || null,
       });
       toast('Session diperbarui', 'success');
       onUpdated?.();
@@ -80,13 +100,38 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
         />
 
         <div style={{ marginTop: 12 }}>
+          <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>AI Engine</label>
+          <select
+            value={form.provider}
+            onChange={(e) => set('provider', e.target.value)}
+            disabled={providersLoading || session.generationStatus === 'generating'}
+            style={{
+              width: '100%', padding: 8, borderRadius: 8,
+              boxShadow: 'inset 0 0 0 1px var(--color-border)',
+            }}
+          >
+            <option value="">Default server</option>
+            {providers.map((item) => (
+              <option key={item.id} value={item.id} disabled={!item.available}>
+                {item.label}
+                {item.model ? ` · ${item.model}` : ''}
+                {!item.available ? ' · belum dikonfigurasi' : ''}
+              </option>
+            ))}
+          </select>
+          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
+            Engine dapat diganti per conversation. Credential tetap tersimpan di backend.
+          </div>
+        </div>
+
+        <div style={{ marginTop: 12 }}>
           <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Visibilitas</label>
           <select
             value={form.visibility}
             onChange={(e) => set('visibility', e.target.value)}
             style={{
               width: '100%', padding: 8, borderRadius: 8,
-              border: '1px solid var(--color-border)',
+              boxShadow: 'inset 0 0 0 1px var(--color-border)',
             }}
           >
             <option value="private">Private — {visibilityHelper('private')}</option>
@@ -109,7 +154,7 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
             placeholder="Konteks tambahan yang Anda kontrol untuk percakapan ini."
             style={{
               width: '100%', padding: 10, borderRadius: 8,
-              border: '1px solid var(--color-border)', fontSize: 13,
+              boxShadow: 'inset 0 0 0 1px var(--color-border)', fontSize: 13,
             }}
           />
           <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
@@ -120,7 +165,7 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
         <div style={{
           display: 'flex', justifyContent: 'space-between',
           alignItems: 'center', marginTop: 20,
-          paddingTop: 12, borderTop: '1px solid var(--color-border)',
+          paddingTop: 12, boxShadow: 'inset 0 1px 0 0 var(--color-border)',
         }}>
           <div style={{ display: 'flex', gap: 8 }}>
             {session.status === 'active' && (

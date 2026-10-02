@@ -1,0 +1,69 @@
+/* Chip (docs/ui-guideline.md §4.6): filter chip and the dashed "Tambah filter"
+   chip. Imported by Chip.jsx. */
+.pw-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  height: var(--pw-chip-height);
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid var(--pw-outline-banner);
+  border-radius: var(--pw-radius-full);
+  background: transparent;
+  box-shadow: none;
+  color: var(--pw-text);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+  font-weight: 400;
+  line-height: 20px;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    opacity var(--pw-dur-xs) var(--pw-ease-standard),
+    background-color var(--pw-dur-xs) var(--pw-ease-standard),
+    border-color var(--pw-dur-xs) var(--pw-ease-standard),
+    color var(--pw-dur-xs) var(--pw-ease-standard);
+}
+.pw-chip__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.pw-chip > .pw-icon { font-size: var(--pw-icon-lg); }
+.pw-chip > svg { flex: 0 0 auto; width: var(--pw-icon-md); height: var(--pw-icon-md); }
+.pw-chip--icon { padding-left: 8px; }
+/* Trailing icon (a menu's arrow_drop_down): 24px, 4px after the label; the
+   glyph's own inner space keeps the right edge level with the 12px text inset. */
+.pw-chip__trailing { display: inline-flex; flex: 0 0 auto; margin-left: -4px; }
+.pw-chip__trailing > .pw-icon { font-size: var(--pw-icon-lg); }
+.pw-chip__trailing > svg { width: var(--pw-icon-md); height: var(--pw-icon-md); }
+.pw-chip--trailing { padding-right: 4px; }
+
+/* Selected filter: tinted, no border (sementara). */
+.pw-chip.is-selected {
+  border-color: transparent;
+  background: var(--pw-selected);
+  color: var(--pw-accent);
+}
+
+/* "Tambah filter": dashed, muted, icon 24 with 6px after it. */
+.pw-chip--add {
+  gap: 0;
+  padding: 0 16px 0 8px;
+  border-style: dashed;
+  border-color: var(--pw-chip-dashed);
+  color: var(--pw-text-muted);
+}
+.pw-chip--add > .pw-icon,
+.pw-chip--add > svg { margin-right: 6px; }
+
+.pw-chip:disabled,
+.pw-chip[aria-disabled="true"] {
+  border-color: var(--pw-outline-panel);
+  background: transparent;
+  color: var(--pw-disabled-text);
+  cursor: not-allowed;
+}
+.pw-chip.is-selected:disabled { border-color: transparent; background: var(--pw-disabled-bg); }

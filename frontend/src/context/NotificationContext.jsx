@@ -16,7 +16,11 @@ const NotificationContext = createContext({
 });
 
 export function NotificationProvider({ children }) {
-  const { user } = useAuth();
+  const { user: signedIn } = useAuth();
+  // While a temporary password must be replaced the API answers only /auth/me
+  // and /auth/change-password (403 PASSWORD_CHANGE_REQUIRED otherwise), so the
+  // badge waits until the password is changed.
+  const user = signedIn && !signedIn.passwordChangeRequired ? signedIn : null;
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const mountedRef = useRef(true);

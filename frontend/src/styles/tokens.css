@@ -1,348 +1,209 @@
-/* Prakasa Workspace design tokens — Google Workspace-inspired light Material 3.
-   Feature CSS consumes --pw-*; legacy --color-* / --radius-* names alias them. */
+/* Prakasa Workspace design tokens — Google Admin console (admin.google.com).
+   Values: docs/referensi-desain-admin-console.md; rules: docs/ui-guideline.md §1.
+   This file holds only :root, the base element rules and the global
+   reduced-motion switch. Component rules live next to their components. */
 :root {
-  /* Color */
+  /* ------------------------------------------------------------ colour §1.1 */
   --pw-primary: #0b57d0;
   --pw-on-primary: #ffffff;
-  --pw-primary-container: #d3e3fd;
-  --pw-on-primary-container: #041e49;
-  --pw-background: #f8fafd;
+  --pw-accent: #3367d6;
+  --pw-tab: #1a73e8;
+  --pw-selected: #e8f0fe;
+  --pw-secondary-container: #c2e7ff;
+  --pw-on-secondary-container: #001d35;
+
+  --pw-text: rgba(0, 0, 0, 0.87);
+  --pw-text-strong: #212121;
+  --pw-text-title: #1f1f1f;
+  --pw-text-secondary: #444746;
+  --pw-text-nav: #424242;
+  --pw-text-header: #616161;
+  --pw-text-muted: rgba(0, 0, 0, 0.54);
+  --pw-text-meta: #757575;
+  --pw-text-stat: #3c4043;
+  --pw-text-input: #000000;
+  --pw-text-select: #444444;
+
   --pw-surface: #ffffff;
-  --pw-surface-container: #f0f4f9;
-  --pw-surface-container-high: #e9eef6;
-  --pw-on-surface: #1f1f1f;
-  --pw-on-surface-variant: #444746;
-  --pw-outline: #747775;
-  --pw-outline-variant: #c4c7c5;
-  --pw-error: #b3261e;
-  --pw-error-container: #f9dedc;
-  --pw-success: #146c2e;
-  --pw-warning: #b06000;
+  --pw-surface-tint: #f0f4f9;
+  --pw-surface-container: #f5f5f5;
+  --pw-hover-row: #eeeeee;
+  --pw-hover-nav: rgba(66, 66, 66, 0.04);
 
-  /* Google's four brand colors, used to give repeating menu-card icons a
-     distinct, colorful identity instead of a single flat blue. */
-  --pw-google-blue: #4285f4;
-  --pw-google-blue-tint: #e8f0fe;
-  --pw-google-red: #ea4335;
-  --pw-google-red-tint: #fce8e6;
-  --pw-google-yellow: #fbbc04;
-  --pw-google-yellow-tint: #fef7e0;
-  --pw-google-green: #34a853;
-  --pw-google-green-tint: #e6f4ea;
+  --pw-divider: #e0e0e0;
+  --pw-outline-panel: rgba(0, 0, 0, 0.12);
+  --pw-outline-banner: #dadce0;
+  --pw-outline-strong: #c4c7c5;
+  --pw-outline-control: #747775; /* sementara */
+  --pw-chip-dashed: rgba(0, 0, 0, 0.26);
 
-  /* Shape */
+  --pw-success: #0b8043;
+  --pw-error: #d93025; /* sementara */
+  --pw-warning: #b06000; /* sementara; darker than Google's #E37400 so 12px status text meets WCAG AA */
+  --pw-info: #1a73e8;
+  --pw-error-tint: #fce8e6; /* sementara */
+  /* Text on a tinted surface (--pw-surface-tint, --pw-surface-container,
+     --pw-hover-row, --pw-selected): the plain text tokens fall under 4.5:1 on
+     #EEEEEE, these keep WCAG AA (test/contrast.test.js). Tinted surfaces swap
+     them in through the on-tint scope (card.css, datagrid.css …). */
+  --pw-text-meta-on-tint: #5f6368;
+  --pw-text-muted-on-tint: #5f6368;
+  --pw-error-on-tint: #c5221f;
+  --pw-warning-on-tint: #985200;
+  --pw-info-on-tint: #1967d2;
+  --pw-success-on-tint: #137333;
+
+  --pw-tooltip-bg: #3c4043;
+  --pw-tooltip-text: #e8eaed;
+  --pw-snackbar-bg: #323232; /* sementara */
+  --pw-snackbar-action: #8ab4f8; /* sementara */
+  --pw-scrim: rgba(0, 0, 0, 0.32); /* sementara */
+  --pw-disabled-bg: rgba(153, 153, 153, 0.1);
+  --pw-disabled-text: rgba(68, 68, 68, 0.5);
+
+  --pw-chart-series: #4184f3;
+  --pw-chart-grid: #eeeeee;
+  --pw-chart-axis: #9e9e9e; /* lines and marks only, never text (2.7:1) */
+
+  /* ------------------------------------------------------------ type §1.2 */
+  --pw-font-sans: "Google Sans", Roboto, Helvetica, Arial, sans-serif;
+  --pw-font-flex: "Google Sans Flex", "Google Sans", Roboto, Arial, sans-serif;
+  --pw-font-roboto: Roboto, Arial, sans-serif;
+  --pw-font-mono: "Roboto Mono", ui-monospace, Menlo, monospace;
+
+  --pw-font-xs: 12px;
+  --pw-font-sm: 13px;
+  --pw-font-body: 14px;
+  --pw-font-panel: 15px;
+  --pw-font-md: 16px;
+  --pw-font-lg: 18px;
+  --pw-font-xl: 20px;
+  --pw-font-title: 22px;
+  --pw-font-page: 24px;
+  --pw-font-stat: 32px;
+  --pw-font-hero: 36px; /* Login only */
+
+  /* ------------------------------------------------------------ shape §1.3 */
   --pw-radius-none: 0;
-  --pw-radius-xs: 4px;
-  --pw-radius-sm: 8px;
-  --pw-radius-md: 12px;
-  --pw-radius-lg: 16px;
-  --pw-radius-xl: 28px;
+  --pw-radius-xs: 2px;
+  --pw-radius-sm: 3px;
+  --pw-radius-md: 4px;
+  --pw-radius-lg: 8px;
+  --pw-radius-xl: 12px;
+  --pw-radius-search: 28px;
   --pw-radius-full: 999px;
+  --pw-radius-nav-item: 0 20px 20px 0;
+  --pw-radius-tab-indicator: 3px 3px 0 0;
+  --pw-radius-segment-start: 20px 0 0 20px;
+  --pw-radius-segment-end: 0 20px 20px 0;
 
-  /* State layers */
-  --pw-state-hover: 0.08;
-  --pw-state-focus: 0.1;
-  --pw-state-pressed: 0.12;
+  /* ------------------------------------------------------------ elevation §1.4 */
+  --pw-elev-1: 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 2px 1px -1px rgba(0, 0, 0, 0.12), 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+  --pw-elev-2: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
+  --pw-elev-appbar: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+  --pw-elev-menu: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
+  --pw-elev-dialog: 0 11px 15px -7px rgba(0, 0, 0, 0.2), 0 24px 38px 3px rgba(0, 0, 0, 0.14), 0 9px 46px 8px rgba(0, 0, 0, 0.12);
+  --pw-elev-fullscreen: 0 12px 15px 0 rgba(0, 0, 0, 0.24);
+  --pw-elev-snackbar: 0 3px 5px -1px rgba(0, 0, 0, 0.2), 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12);
   --pw-focus-ring: 0 0 0 2px var(--pw-surface), 0 0 0 4px var(--pw-primary);
 
-  /* Elevation */
-  --pw-elev-1: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
-  --pw-elev-2: 0 1px 2px rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
-  --pw-elev-3: 0 1px 3px rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
+  /* ------------------------------------------------------------ motion §1.5 */
+  --pw-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --pw-ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --pw-ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
+  --pw-ease-overshoot: cubic-bezier(0.4, 0.1, 0.5, 1.4);
+  --pw-dur-state: 75ms;
+  --pw-dur-xs: 100ms;
+  --pw-dur-menu: 120ms;
+  --pw-dur-enter: 150ms;
+  --pw-dur-sm: 200ms;
+  --pw-dur-dialog: 225ms;
+  --pw-dur-md: 250ms;
+  --pw-dur-icon: 300ms;
+  --pw-dur-ripple: 450ms;
+  --pw-dur-loop: 1350ms;
+  /* Dashboard charts (components/charts): bars and rows moving, a line
+     drawing itself, values fading in, points popping in one after another. */
+  /* The Google logo colours, for "Workspace" in the bar wordmark only. */
+  --pw-brand-blue: #4285F4;
+  --pw-brand-red: #EA4335;
+  --pw-brand-yellow: #FBBC05;
+  --pw-brand-green: #34A853;
+  --pw-ease-chart: cubic-bezier(0.2, 0, 0, 1);
+  --pw-dur-chart: 700ms;
+  --pw-dur-chart-draw: 1100ms;
+  --pw-dur-chart-fade: 500ms;
+  --pw-dur-chart-pop: 320ms;
+  --pw-delay-tooltip: 500ms;
 
-  /* Motion */
-  --pw-duration-short: 100ms;
-  --pw-duration-medium: 200ms;
-  --pw-ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --pw-ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
+  /* ------------------------------------------------------------ layers §1.6 */
+  --pw-z-sticky: 10;
+  --pw-z-appbar: 100;
+  --pw-z-drawer: 200;
+  --pw-z-sheet: 250;
+  --pw-z-dialog: 300;
+  --pw-z-menu: 400;
+  --pw-z-snackbar: 500;
+  --pw-z-tooltip: 600;
 
-  /* Spacing */
-  --space-1: 4px; --space-2: 8px; --space-3: 12px;
-  --space-4: 16px; --space-6: 24px; --space-8: 32px;
+  /* ------------------------------------------------------------ sizes §1.7 */
+  --pw-topbar-height: 64px;
+  --pw-nav-width: 256px;
+  --pw-nav-rail-width: 64px;
+  --pw-nav-drawer-width: 280px;
+  --pw-nav-item-height: 40px;
+  --pw-control-height: 40px;
+  --pw-icon-button: 48px;
+  --pw-icon-button-sm: 40px;
+  --pw-field-height: 62px;
+  --pw-search-height: 46px;
+  --pw-chip-height: 32px;
+  --pw-tab-height: 48px;
+  --pw-row-height: 48px;
+  --pw-header-row-height: 48px;
+  --pw-filterbar-height: 56px;
+  --pw-toolbar-height: 48px;
+  --pw-pager-height: 57px;
+  --pw-icon-sm: 18px;
+  --pw-icon-md: 20px;
+  --pw-icon-lg: 24px;
+  --pw-icon-xl: 48px;
+  --pw-page-gutter: 24px;
 
-  /* Typography */
-  --font-family-base: Roboto, "Google Sans Text", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --text-xs: 12px; --text-sm: 14px; --text-base: 16px;
-  --text-lg: 18px; --text-xl: 20px; --text-2xl: 24px;
+  /* ------------------------------------------------------------ state §1.10 */
+  --pw-state-hover: 0.04;
+  --pw-state-hover-filled: 0.05;
+  --pw-state-focus: 0.12;
+  --pw-state-pressed: 0.1;
+  --pw-ripple-opacity: 0.12;
+}
 
-  /* Legacy aliases kept while pages migrate to --pw-* */
-  --color-primary: var(--pw-primary);
-  --color-secondary: var(--pw-on-surface-variant);
-  --color-accent: var(--pw-warning);
-  --color-background: var(--pw-background);
-  --color-surface: var(--pw-surface);
-  --color-text: var(--pw-on-surface);
-  --color-text-muted: var(--pw-on-surface-variant);
-  --color-success: var(--pw-success);
-  --color-warning: var(--pw-warning);
-  --color-error: var(--pw-error);
-  --color-border: var(--pw-outline-variant);
-  --radius-sm: var(--pw-radius-xs);
-  --radius-md: var(--pw-radius-sm);
-  --radius-lg: var(--pw-radius-lg);
+@media (max-width: 600px) {
+  :root { --pw-topbar-height: 56px; }
 }
 
 * { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
-  font-family: var(--font-family-base);
-  color: var(--pw-on-surface);
-  background: var(--pw-background);
-  font-size: var(--text-base);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+  line-height: 20px;
+  color: var(--pw-text);
+  background: var(--pw-surface);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+b, strong { font-weight: 500; }
 
-/* State layer: 8% hover, 12% pressed, no layout change. Add .pw-state-layer to any
-   positioned control; add .pw-ripple for a pointer-origin ripple (see usePwRipple). */
-.pw-state-layer,
-.pw-button {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
-.pw-state-layer::before,
-.pw-button::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: currentColor;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--pw-duration-short) var(--pw-ease-standard);
-}
-.pw-state-layer:hover:not(:disabled):not([aria-disabled="true"])::before,
-.pw-button:hover:not(:disabled):not([aria-disabled="true"])::before { opacity: var(--pw-state-hover); }
-.pw-state-layer:focus-visible::before,
-.pw-button:focus-visible::before { opacity: var(--pw-state-focus); }
-.pw-state-layer:active:not(:disabled):not([aria-disabled="true"])::before,
-.pw-button:active:not(:disabled):not([aria-disabled="true"])::before { opacity: var(--pw-state-pressed); }
-
-.pw-ripple::after {
-  content: "";
-  position: absolute;
-  left: var(--pw-ripple-x, 50%);
-  top: var(--pw-ripple-y, 50%);
-  width: var(--pw-ripple-size, 0);
-  height: var(--pw-ripple-size, 0);
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0);
-  pointer-events: none;
-}
-.pw-ripple.is-rippling::after { animation: pw-ripple 420ms var(--pw-ease-standard); }
-@keyframes pw-ripple {
-  from { opacity: var(--pw-state-pressed); transform: translate(-50%, -50%) scale(0); }
-  to { opacity: 0; transform: translate(-50%, -50%) scale(1); }
-}
-
-/* Shared button: pill shape; loading keeps the original width. */
-.pw-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 0 24px;
-  border: 0;
-  border-radius: var(--pw-radius-full);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: box-shadow var(--pw-duration-medium) var(--pw-ease-standard);
-}
-.pw-button:focus-visible { outline: 2px solid var(--pw-primary); outline-offset: 2px; }
-.pw-button:disabled,
-.pw-button[aria-disabled="true"] { cursor: not-allowed; opacity: 0.38; }
-.pw-button--primary { background: var(--pw-primary); color: var(--pw-on-primary); }
-.pw-button--primary:hover:not(:disabled) { box-shadow: var(--pw-elev-1); }
-.pw-button--secondary { background: transparent; color: var(--pw-primary); box-shadow: inset 0 0 0 1px var(--pw-outline); }
-.pw-button--tonal { background: var(--pw-primary-container); color: var(--pw-on-primary-container); }
-.pw-button--text { background: transparent; color: var(--pw-primary); padding: 0 12px; }
-.pw-button--danger { background: var(--pw-error); color: var(--pw-on-primary); }
-.pw-button--danger:hover:not(:disabled) { box-shadow: var(--pw-elev-1); }
-.pw-button--block { width: 100%; }
-.pw-button__spinner {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  animation: pw-spin 800ms linear infinite;
-}
-@keyframes pw-spin { to { transform: rotate(360deg); } }
-
-/* Shared text field */
-.pw-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-.pw-field__label { color: var(--pw-on-surface-variant); font-size: 13px; font-weight: 500; }
-.pw-field__input {
-  min-height: 44px;
-  padding: 10px 14px;
-  border: 0;
-  border-radius: var(--pw-radius-sm);
-  background: var(--pw-surface);
-  color: var(--pw-on-surface);
-  font: inherit;
-  font-size: 14px;
-  box-shadow: inset 0 0 0 1px var(--pw-outline);
-  transition: box-shadow var(--pw-duration-short) var(--pw-ease-standard);
-}
-.pw-field__input:hover:not(:disabled) { box-shadow: inset 0 0 0 1px var(--pw-on-surface); }
-.pw-field__input:focus { outline: none; box-shadow: inset 0 0 0 2px var(--pw-primary); }
-.pw-field__input[aria-invalid="true"] { box-shadow: inset 0 0 0 2px var(--pw-error); }
-.pw-field__error { color: var(--pw-error); font-size: 12px; }
-
-/* Shared card and dialog surfaces */
-.pw-card {
-  border-radius: var(--pw-radius-md);
-  background: var(--pw-surface);
-  box-shadow: inset 0 0 0 1px var(--pw-outline-variant);
-}
-.pw-card__header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
-.pw-card__title { margin: 0; font-size: 16px; font-weight: 500; }
-.pw-scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: grid;
-  place-items: center;
-  padding: 16px;
-  background: rgba(31, 31, 31, 0.32);
-}
-.pw-dialog {
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: 24px;
-  border-radius: var(--pw-radius-xl);
-  background: var(--pw-surface);
-  box-shadow: var(--pw-elev-3);
-}
-.pw-dialog__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
-.pw-dialog__title { margin: 0; font-size: 22px; font-weight: 400; line-height: 1.3; }
-.pw-dialog__footer { margin-top: 24px; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
-.pw-icon-button {
-  display: inline-grid;
-  place-items: center;
-  flex: 0 0 auto;
-  width: 40px;
-  height: 40px;
-  border: 0;
-  border-radius: var(--pw-radius-full);
-  background: transparent;
-  color: var(--pw-on-surface-variant);
-  cursor: pointer;
-}
-.pw-icon-button:focus-visible { outline: 2px solid var(--pw-primary); outline-offset: 2px; }
-
-/* Ambient decorative doodles: small, semi-transparent, gently floating in the
-   background of a welcoming screen. The host element supplies size/position
-   per doodle (see .pw-login, .ai-new-chat); this only sets the shared motion. */
-.pw-doodles {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-.pw-doodle {
-  position: absolute;
-  opacity: 0.2;
-  will-change: transform;
-  user-select: none;
-}
-.pw-doodle--a { animation: pw-doodle-float-a 9s ease-in-out infinite; }
-.pw-doodle--b { animation: pw-doodle-float-b 12s ease-in-out infinite; animation-delay: -4s; }
-.pw-doodle--c { animation: pw-doodle-float-a 11s ease-in-out infinite; animation-delay: -7s; }
-.pw-doodle--d { animation: pw-doodle-float-b 8s ease-in-out infinite; animation-delay: -2s; }
-@keyframes pw-doodle-float-a {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-14px) rotate(6deg); }
-}
-@keyframes pw-doodle-float-b {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(12px) rotate(-5deg); }
-}
-
-/* Google-style outlined text field with a floating label (used on Login).
-   `placeholder=" "` on the input is required for the :placeholder-shown trick. */
-.g-field { position: relative; margin-bottom: 20px; }
-.g-field__input {
-  width: 100%;
-  height: 56px;
-  padding: 0 16px;
-  border: none;
-  border-radius: 4px;
-  box-shadow: inset 0 0 0 1px var(--pw-outline);
-  background: transparent;
-  color: var(--pw-on-surface);
-  font: inherit;
-  font-size: 16px;
-  outline: none;
-  transition: box-shadow 120ms ease;
-}
-.g-field__input--icon { padding-right: 44px; }
-.g-field__input:hover:not(:focus):not(:disabled) { box-shadow: inset 0 0 0 1px var(--pw-on-surface); }
-.g-field__input:focus { box-shadow: inset 0 0 0 2px var(--pw-primary); }
-.g-field__input[aria-invalid="true"] { box-shadow: inset 0 0 0 2px var(--pw-error); }
-.g-field__input:disabled { opacity: 0.5; }
-.g-field__input:-webkit-autofill,
-.g-field__input:-webkit-autofill:hover,
-.g-field__input:-webkit-autofill:focus {
-  -webkit-text-fill-color: var(--pw-on-surface);
-  -webkit-box-shadow: 0 0 0 1000px var(--pw-surface) inset, inset 0 0 0 1px var(--pw-outline);
-  transition: background-color 9999s ease-in-out 0s;
-}
-.g-field__label {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  max-width: calc(100% - 32px);
-  margin-left: -4px;
-  padding: 0 4px;
-  overflow: hidden;
-  color: var(--pw-on-surface-variant);
-  font-size: 16px;
-  line-height: 1.2;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  background: transparent;
-  pointer-events: none;
-  transform: translateY(-50%);
-  transform-origin: left center;
-  transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1), color 120ms ease, background-color 120ms ease;
-}
-.g-field__input:focus + .g-field__label,
-.g-field__input:not(:placeholder-shown) + .g-field__label {
-  top: 0;
-  transform: translateY(-50%) scale(0.75);
-  background: var(--pw-surface);
-  color: var(--pw-on-surface-variant);
-}
-.g-field__input:focus + .g-field__label { color: var(--pw-primary); }
-.g-field__input[aria-invalid="true"] + .g-field__label { color: var(--pw-error); }
-.g-field__toggle {
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  width: 40px;
-  height: 40px;
-  transform: translateY(-50%);
-}
-
+/* One switch for every animation and transition (§1.5). */
 @media (prefers-reduced-motion: reduce) {
-  .pw-state-layer::before,
-  .pw-button::before,
-  .pw-button,
-  .pw-field__input,
-  .g-field__input,
-  .g-field__label { transition-duration: 1ms; }
-  .pw-ripple.is-rippling::after { animation: none; }
-  .pw-button__spinner { animation-duration: 2.4s; }
-  .pw-doodle { animation: none; }
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  .pw-ripple-box { display: none; }
 }

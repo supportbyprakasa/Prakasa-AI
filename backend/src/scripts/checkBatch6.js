@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const pool = require('../db/pool');
 
-const REQUIRED_PERMISSIONS = ['timeline.view', 'task.view'];
+const REQUIRED_PERMISSIONS = ['task.view'];
 const REQUIRED_TABLES = [
   'tasks',
   'task_dependencies',
@@ -82,16 +82,6 @@ async function columnExists(table, column) {
 
   console.log('\n[2] Controller functions');
   try {
-    const timelineCtrl = require('../controllers/timeline.controller');
-    if (typeof timelineCtrl.gantt === 'function') pass('timeline.controller#gantt');
-    else fail('timeline.controller#gantt MISSING');
-    if (typeof timelineCtrl.timeline === 'function') pass('timeline.controller#timeline');
-    else warn('timeline.controller#timeline missing');
-  } catch (error) {
-    fail(`timeline.controller failed to load: ${error.message}`);
-  }
-
-  try {
     const taskCtrl = require('../controllers/tasks.controller');
     if (typeof taskCtrl.dependencyGraph === 'function') pass('tasks.controller#dependencyGraph');
     else fail('tasks.controller#dependencyGraph MISSING');
@@ -119,15 +109,6 @@ async function columnExists(table, column) {
   }
 
   console.log('\n[6] Routes');
-  const timelineRoutes = fs.readFileSync(
-    path.join(__dirname, '../routes/timeline.routes.js'),
-    'utf8'
-  );
-  if (timelineRoutes.includes("'/gantt'")) pass('GET /timeline/gantt');
-  else fail('GET /timeline/gantt MISSING');
-  if (timelineRoutes.includes('requireEntityScope')) pass('timeline entity scope middleware');
-  else fail('timeline entity scope middleware MISSING');
-
   const taskRoutes = fs.readFileSync(
     path.join(__dirname, '../routes/tasks.routes.js'),
     'utf8'

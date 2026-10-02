@@ -1,0 +1,43 @@
+/* Task detail cards: progress, checklist, watchers, dependencies, activity.
+   Fields, buttons, badges, bars, dialogs and empty/loading states come from
+   the shared components; this file only lays out the lists. */
+
+.task-progress { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.task-progress__bar { flex: 1 1 auto; }
+.task-progress__label { min-width: 36px; color: var(--pw-text-muted); font-size: var(--pw-font-xs); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* One list row (checklist item, watcher, dependency), divided like table rows. */
+.task-list { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.task-list__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 48px;
+  border-top: 1px solid var(--pw-divider);
+  font-size: var(--pw-font-body);
+}
+.task-list__row:first-child { border-top: 0; }
+.task-list__main { display: flex; flex: 1 1 auto; align-items: center; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
+.task-list__icon { flex-shrink: 0; color: var(--pw-text-muted); }
+.task-list__actions { display: flex; flex-shrink: 0; align-items: center; gap: 4px; }
+
+/* Checklist */
+.task-checklist__title--done { color: var(--pw-text-muted); text-decoration: line-through; }
+.task-checklist__add { display: flex; align-items: flex-start; gap: 8px; }
+.task-checklist__add > .pw-field { flex: 1 1 auto; }
+
+/* Dependencies: one group per kind */
+.task-deps { display: flex; flex-direction: column; gap: 16px; }
+.task-deps__group { display: flex; flex-direction: column; gap: 4px; }
+
+/* Activity timeline */
+.task-activity { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.task-activity__row { display: flex; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pw-divider); }
+.task-activity__row:first-child { border-top: 0; }
+.task-activity__icon { flex-shrink: 0; margin-top: 2px; color: var(--pw-text-muted); }
+.task-activity__more { display: flex; justify-content: center; }
+
+@media (max-width: 600px) {
+  .task-checklist__add { flex-direction: column; align-items: stretch; }
+}

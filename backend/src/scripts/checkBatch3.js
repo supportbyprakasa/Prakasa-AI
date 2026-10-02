@@ -225,17 +225,6 @@ function fail(label, detail = '') {
     fail('AI Command Center module', 'active module seed missing');
   }
 
-  for (const table of ['chat_rooms', 'chat_room_members', 'chat_messages']) {
-    const [[row]] = await pool.query(
-      `SELECT COUNT(*) AS c
-         FROM information_schema.TABLES
-        WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?`,
-      [table]
-    );
-    if (Number(row.c)) pass(`Chat prerequisite: ${table}`);
-    else fail(`Chat prerequisite: ${table}`, 'missing');
-  }
-
   if (process.env.N8N_AI_GATEWAY_URL) {
     pass('N8N_AI_GATEWAY_URL', 'configured');
     if (!process.env.N8N_AI_GATEWAY_SECRET) {

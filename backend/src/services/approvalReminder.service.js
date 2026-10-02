@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { approvalActionUrl } = require('./approvalLink');
 const notif = require('./notification.service');
 const integrationLog = require('./integrationLog.service');
 const logger = require('../utils/logger');
@@ -75,6 +76,8 @@ async function runOnce() {
               s.escalated_at AS escalatedAt,
               ar.entity_id AS entityId,
               ar.title,
+              ar.subject_type AS subjectType,
+              ar.subject_id AS subjectId,
               am.id AS matrixRuleId,
               am.reminder_after_hours AS reminderAfterHours,
               am.escalate_after_hours AS escalateAfterHours,
@@ -135,7 +138,7 @@ async function runOnce() {
               event: 'approval.reminder',
               subjectType: 'approval_request',
               subjectId: candidate.requestId,
-              actionUrl: `/approvals/${candidate.requestId}`,
+              actionUrl: approvalActionUrl({ id: candidate.requestId, subjectType: candidate.subjectType, subjectId: candidate.subjectId }),
             });
 
             if (await insertReminder({
@@ -192,7 +195,7 @@ async function runOnce() {
                 event: 'approval.escalated',
                 subjectType: 'approval_request',
                 subjectId: candidate.requestId,
-                actionUrl: `/approvals/${candidate.requestId}`,
+                actionUrl: approvalActionUrl({ id: candidate.requestId, subjectType: candidate.subjectType, subjectId: candidate.subjectId }),
               });
 
               if (await insertReminder({

@@ -5,11 +5,13 @@ import {
   emptyMovementItem,
   normalizeMovementItem,
   movementValidationSummary,
+  movementFieldErrors,
   movementStatusLabel,
   nextActorText,
   canEditMovement,
   canCancelMovement,
   movementPayload,
+  MOVEMENT_TYPE_COPY,
 } from '../src/pages/warehouse/warehouseMovementModel.js';
 
 const perms = (...codes) => ({ permissions: codes });
@@ -86,4 +88,27 @@ test('payload contains only fields the API accepts', () => {
   assert.deepEqual(Object.keys(payload).sort(), ['items', 'movementDate', 'notes', 'party', 'referenceNo']);
   assert.equal(payload.notes, null);
   assert.equal(payload.items[0].quantity, 5);
+});
+
+test('the destination of Barang Keluar never asks for an address (D5)', () => {
+  assert.equal(MOVEMENT_TYPE_COPY.outbound.partyPlaceholder, 'Cabang atau nama pelanggan (tanpa alamat)');
+  assert.doesNotMatch(MOVEMENT_TYPE_COPY.outbound.partyPlaceholder, /alamat tujuan/);
+  assert.match(MOVEMENT_TYPE_COPY.outbound.partyHint, /surat jalan Accurate/);
+});
+
+test('field errors sit on their own field, matching the summary', () => {
+  assert.deepEqual(movementFieldErrors(valid), { items: [{}] });
+  const errors = movementFieldErrors({
+    ...valid,
+    movementDate: '',
+    items: [
+      { ...emptyMovementItem(), product: '', quantity: '0', unit: '' },
+      { ...emptyMovementItem(), sku: 'A', product: 'Kopi', quantity: '1', unit: 'kg' },
+      { ...emptyMovementItem(), sku: 'a', product: 'Kopi', quantity: '1', unit: 'kg' },
+    ],
+  });
+  assert.equal(errors.movementDate, 'Tanggal transaksi wajib diisi.');
+  assert.deepEqual(Object.keys(errors.items[0]).sort(), ['product', 'quantity', 'unit']);
+  assert.deepEqual(errors.items[1], {});
+  assert.match(errors.items[2].sku, /baris 2/);
 });

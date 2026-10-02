@@ -1,0 +1,13 @@
+/* Retail Commerce — marketplace performance (migration 120). */
+.retail__section { display: flex; flex-direction: column; gap: 12px; }
+.retail__kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: 16px; }
+.retail__split { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px; }
+.retail__trends { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr)); gap: 16px; }
+.retail__trend { min-width: 0; }
+.retail__trend-label { color: var(--pw-text); font-size: var(--pw-font-body); font-weight: 500; line-height: 20px; }
+.retail__trend-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 4px 0 8px; color: var(--pw-text); font-family: var(--pw-font-sans); font-size: var(--pw-font-page); line-height: 32px; font-variant-numeric: tabular-nums; }
+.retail__trend-month { color: var(--pw-text-meta); font-family: var(--pw-font-roboto); font-size: var(--pw-font-xs); line-height: 16px; }
+.retail__change { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.retail__change.is-good { color: var(--pw-success); }
+.retail__change.is-bad { color: var(--pw-error); }
+.retail__change.is-flat { color: var(--pw-text-meta); }

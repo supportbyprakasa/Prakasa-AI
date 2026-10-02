@@ -1,0 +1,27 @@
+/* IT infrastructure registers (wave 2, row 2.3) — layout specifics only.
+   Fields, buttons, grids, dialogs, sheets and status text come from the
+   shared components. */
+
+.it-infra__lead { margin: 0; color: var(--pw-text-muted); font-size: var(--pw-font-body); line-height: 20px; }
+.it-infra__file { color: var(--pw-text); font-size: var(--pw-font-body); line-height: 20px; overflow-wrap: anywhere; }
+.it-infra__subject { margin: 0; color: var(--pw-text-muted); font-size: var(--pw-font-body); line-height: 20px; overflow-wrap: anywhere; }
+
+/* Import preview: a row's notes and field differences. */
+.it-infra__notes { display: flex; flex-direction: column; gap: 2px; min-width: 200px; white-space: normal; }
+.it-infra__issue { color: var(--pw-text-muted); font-size: var(--pw-font-xs); line-height: 18px; overflow-wrap: anywhere; }
+.it-infra__diff { color: var(--pw-text-meta); font-size: var(--pw-font-xs); line-height: 18px; overflow-wrap: anywhere; }
+
+/* Google Workspace: risk flags of the latest review. */
+.it-infra__flags { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.it-infra__flag { color: var(--pw-error); font-size: var(--pw-font-body); line-height: 20px; }
+.it-infra__flag--ok { color: var(--pw-success); }
+
+/* Backup check history inside the side sheet. */
+.it-infra__history { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.it-infra__history-item { display: flex; flex-direction: column; gap: 2px; padding: 12px 0; border-top: 1px solid var(--pw-divider); }
+.it-infra__history-item:first-child { border-top: 0; }
+.it-infra__history-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; color: var(--pw-text); font-size: var(--pw-font-body); line-height: 20px; }
+.it-infra__history-meta { color: var(--pw-text-meta); font-size: var(--pw-font-xs); line-height: 18px; overflow-wrap: anywhere; }
+
+/* The detail sheet: record facts, then its actions. */
+.it-infra__sheet-actions { display: flex; flex-wrap: wrap; gap: 8px; }

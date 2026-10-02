@@ -1,0 +1,31 @@
+/* Template dokumen (migration 115). */
+.doc-tpl__sheet-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.doc-tpl__fields { display: flex; flex-wrap: wrap; gap: 8px; }
+.doc-tpl__field {
+  display: inline-flex; flex-direction: column; gap: 2px; padding: 6px 10px;
+  border: 1px solid var(--pw-outline-panel); border-radius: var(--pw-radius-md);
+  font-family: var(--pw-font-mono); font-size: var(--pw-font-xs); line-height: 16px; color: var(--pw-text);
+}
+.doc-tpl__field.is-auto { background: var(--pw-surface-container); }
+.doc-tpl__field-label { font-family: var(--pw-font-roboto); color: var(--pw-text-meta); }
+
+/* Kop preview: a page in miniature, not the real rendering (Google Docs is). */
+.doc-kop-preview { max-width: 100%; overflow-x: auto; }
+.doc-kop-preview__page {
+  display: flex; flex-direction: column; gap: 16px; box-sizing: border-box; width: 100%; max-width: 640px; min-height: 280px;
+  padding: 24px 32px; border: 1px solid var(--pw-outline-panel); border-radius: var(--pw-radius-sm); background: var(--pw-surface);
+  box-shadow: var(--pw-elev-1);
+}
+.doc-kop-preview__head { display: flex; align-items: center; gap: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--doc-kop-accent, var(--pw-accent)); }
+.doc-kop-preview__head.is-centered { flex-direction: column; text-align: center; }
+.doc-kop-preview__head:not(.is-centered) .doc-kop-preview__text { margin-left: auto; text-align: right; }
+.doc-kop-preview__logo { max-width: 120px; max-height: 52px; object-fit: contain; }
+.doc-kop-preview__banner { width: 100%; height: auto; }
+.doc-kop-preview__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.doc-kop-preview__name { color: var(--doc-kop-accent, var(--pw-accent)); font-family: var(--pw-font-roboto); font-size: var(--pw-font-md); font-weight: 500; line-height: 20px; }
+.doc-kop-preview__line { color: var(--pw-text-meta); font-family: var(--pw-font-roboto); font-size: var(--pw-font-xs); line-height: 16px; overflow-wrap: anywhere; }
+.doc-kop-preview__body { display: flex; flex: 1 1 auto; flex-direction: column; gap: 8px; }
+.doc-kop-preview__body span { height: 8px; border-radius: var(--pw-radius-md); background: var(--pw-surface-container); }
+.doc-kop-preview__body span:nth-child(2) { width: 85%; }
+.doc-kop-preview__body span:nth-child(3) { width: 60%; }
+.doc-kop-preview__foot { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--pw-text-meta); font-family: var(--pw-font-roboto); font-size: var(--pw-font-xs); line-height: 16px; text-align: center; }

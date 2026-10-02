@@ -73,15 +73,18 @@ async function remove(req, res, next) {
   } catch (e) { next(e); }
 }
 
-// Cari folder tujuan berdasarkan (entity, department, documentType)
+// Cari folder tujuan berdasarkan (entity, department, documentType). A rule
+// with document_type='*' catches every type for its department — an admin
+// only needs one rule per division, not one per document type — while a rule
+// for a specific type still wins over the wildcard when both match.
 async function resolveFolder({ entityId, departmentId, documentType }) {
   const [rows] = await pool.query(
     `SELECT drive_folder_id AS driveFolderId FROM folder_mapping_rules
       WHERE entity_id=? AND (department_id=? OR department_id IS NULL)
-        AND document_type=? AND is_active=1 AND deleted_at IS NULL
-      ORDER BY (department_id IS NOT NULL) DESC, priority ASC
+        AND document_type IN (?, '*') AND is_active=1 AND deleted_at IS NULL
+      ORDER BY (document_type=?) DESC, (department_id IS NOT NULL) DESC, priority ASC
       LIMIT 1`,
-    [entityId, departmentId || null, documentType]
+    [entityId, departmentId || null, documentType, documentType]
   );
   return rows[0]?.driveFolderId || null;
 }

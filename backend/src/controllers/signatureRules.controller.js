@@ -5,7 +5,6 @@ const { log: activityLog } = require('../services/activityLog.service');
 async function validateRuleReferences(entityId, rule) {
   const checks = [
     ['documentTypeId', 'document_types', 'id', 'deleted_at IS NULL', 'Document type'],
-    ['appliesToFormId', 'forms', 'id', 'deleted_at IS NULL', 'Form'],
     ['requiredSignerRoleId', 'roles', 'id', 'deleted_at IS NULL', 'Signer role'],
     ['requiredSignerUserId', 'users', 'id', 'deleted_at IS NULL', 'Signer user'],
   ];
@@ -32,7 +31,6 @@ function mergedRule(existing, patch) {
   const has = (key) => Object.prototype.hasOwnProperty.call(patch, key);
   return {
     documentTypeId: has('documentTypeId') ? patch.documentTypeId : existing.document_type_id,
-    appliesToFormId: has('appliesToFormId') ? patch.appliesToFormId : existing.applies_to_form_id,
     requiredSignerRoleId: has('requiredSignerRoleId')
       ? patch.requiredSignerRoleId : existing.required_signer_role_id,
     requiredSignerUserId: has('requiredSignerUserId')
@@ -41,12 +39,8 @@ function mergedRule(existing, patch) {
 }
 
 function validateRuleShape(rule) {
-  if (!rule.documentTypeId && !rule.appliesToFormId) {
-    const error = new Error('Minimal documentTypeId atau appliesToFormId wajib');
-    error.status = 400; error.code = 'VALIDATION_ERROR'; throw error;
-  }
-  if (rule.documentTypeId && rule.appliesToFormId) {
-    const error = new Error('Pilih documentTypeId atau appliesToFormId, bukan keduanya');
+  if (!rule.documentTypeId) {
+    const error = new Error('documentTypeId wajib');
     error.status = 400; error.code = 'VALIDATION_ERROR'; throw error;
   }
   if (!rule.requiredSignerRoleId && !rule.requiredSignerUserId) {
@@ -68,7 +62,6 @@ async function list(req, res, next) {
     const [rows] = await pool.query(
       `SELECT sr.id, sr.entity_id AS entityId,
               sr.document_type_id AS documentTypeId, dt.name AS documentTypeName,
-              sr.applies_to_form_id AS appliesToFormId, f.name AS formName,
               sr.min_approval_level AS minApprovalLevel,
               sr.required_signer_role_id AS requiredSignerRoleId,
               r.name AS requiredSignerRoleName,
@@ -85,7 +78,6 @@ async function list(req, res, next) {
               sr.created_at AS createdAt
          FROM signature_rules sr
          LEFT JOIN document_types dt ON dt.id = sr.document_type_id
-         LEFT JOIN forms f ON f.id = sr.applies_to_form_id
          LEFT JOIN roles r ON r.id = sr.required_signer_role_id
          LEFT JOIN users u ON u.id = sr.required_signer_user_id
         WHERE ${where.join(' AND ')}
@@ -104,17 +96,16 @@ async function create(req, res, next) {
 
     const [result] = await pool.query(
       `INSERT INTO signature_rules
-       (entity_id, document_type_id, applies_to_form_id, min_approval_level,
+       (entity_id, document_type_id, min_approval_level,
         required_signer_role_id, required_signer_user_id,
         requires_ai_precheck, allow_delegation,
         auto_generate_verification_code, qr_required,
         checksum_algorithm, precheck_module, archive_folder_drive_id,
         is_active, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         entityId,
         req.body.documentTypeId ?? null,
-        req.body.appliesToFormId ?? null,
         req.body.minApprovalLevel ?? 1,
         req.body.requiredSignerRoleId ?? null,
         req.body.requiredSignerUserId ?? null,
@@ -159,7 +150,6 @@ async function update(req, res, next) {
 
     const map = {
       documentTypeId: 'document_type_id',
-      appliesToFormId: 'applies_to_form_id',
       minApprovalLevel: 'min_approval_level',
       requiredSignerRoleId: 'required_signer_role_id',
       requiredSignerUserId: 'required_signer_user_id',
@@ -233,7 +223,6 @@ function normalizeRule(row) {
     id: row.id,
     entityId: row.entity_id,
     documentTypeId: row.document_type_id,
-    appliesToFormId: row.applies_to_form_id,
     minApprovalLevel: row.min_approval_level,
     requiredSignerRoleId: row.required_signer_role_id,
     requiredSignerUserId: row.required_signer_user_id,
@@ -248,18 +237,7 @@ function normalizeRule(row) {
   };
 }
 
-async function resolveRule({ entityId, documentTypeId, formId }) {
-  if (formId) {
-    const [rows] = await pool.query(
-      `SELECT * FROM signature_rules
-        WHERE entity_id=? AND applies_to_form_id=?
-          AND is_active=1 AND deleted_at IS NULL
-        ORDER BY id DESC LIMIT 1`,
-      [entityId, formId]
-    );
-    if (rows[0]) return normalizeRule(rows[0]);
-  }
-
+async function resolveRule({ entityId, documentTypeId }) {
   if (documentTypeId) {
     const [rows] = await pool.query(
       `SELECT * FROM signature_rules

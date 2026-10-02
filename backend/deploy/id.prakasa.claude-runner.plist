@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS launchd service for the Claude Team runner (docs/claude-team-runner.md).
+  Replace every /PATH/TO/... and USERNAME before installing to ~/Library/LaunchAgents/.
+  KeepAlive restarts the runner if it stops; RunAtLoad starts it at login.
+  The secret lives in backend/.env (CLAUDE_TEAM_GATEWAY_SECRET), never in this file.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>id.prakasa.claude-runner</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/PATH/TO/node</string>
+    <string>src/scripts/claudeTeamGateway.js</string>
+  </array>
+  <key>WorkingDirectory</key><string>/PATH/TO/prakasa-work-os/backend</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/Users/USERNAME/.local/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>10</integer>
+  <key>StandardOutPath</key><string>/Users/USERNAME/Library/Logs/prakasa-claude-runner.log</string>
+  <key>StandardErrorPath</key><string>/Users/USERNAME/Library/Logs/prakasa-claude-runner.log</string>
+</dict>
+</plist>

@@ -1,0 +1,35 @@
+/* Google Groups page (pages/google/Groups.jsx): cells with an avatar, the
+   group email with its copy button, and the description in the detail. */
+.gg-person {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.gg-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.gg-email__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gg-desc {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.gg-detail__description {
+  margin: 0;
+  color: var(--pw-text-secondary);
+}

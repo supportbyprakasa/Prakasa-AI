@@ -1,5 +1,5 @@
-function getConfig() {
-  const url = process.env.N8N_AI_GATEWAY_URL;
+function getConfig(config) {
+  const url = config?.gatewayUrl || process.env.N8N_AI_GATEWAY_URL;
   if (!url || !/^https?:\/\//i.test(url)) {
     const error = new Error('N8N_AI_GATEWAY_URL tidak dikonfigurasi dengan benar');
     error.code = 'N8N_NOT_CONFIGURED';
@@ -14,7 +14,7 @@ function getConfig() {
 
   return {
     url,
-    secret: process.env.N8N_AI_GATEWAY_SECRET || null,
+    secret: config?.gatewaySecret || process.env.N8N_AI_GATEWAY_SECRET || null,
     timeoutMs,
   };
 }
@@ -29,8 +29,8 @@ function safeContext(context) {
   };
 }
 
-async function generate({ system, prompt, model, params, context }) {
-  const config = getConfig();
+async function generate({ system, prompt, model, params, context, config: providedConfig }) {
+  const config = getConfig(providedConfig);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), config.timeoutMs);
 

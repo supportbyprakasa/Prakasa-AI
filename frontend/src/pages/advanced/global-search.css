@@ -1,0 +1,32 @@
+/* Search page: the query row, the type chips, then one white results panel
+   (like a DataGrid, docs/ui-guideline.md §4.9) with the shared Pager. The
+   result rows are styled by components/search/search-result.css. */
+.gs-form { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.gs-query-block { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.gs-query { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; min-width: 0; }
+.gs-query > .gs-query__field { flex: 1 1 360px; width: auto; max-width: 720px; }
+.gs-query__error { margin: 0; padding: 0 16px; color: var(--pw-error); font-size: var(--pw-font-xs); line-height: 16px; }
+.gs-entity { width: min(240px, 100%); }
+
+.gs-results {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--pw-outline-panel);
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface);
+}
+.gs-results__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  min-height: var(--pw-toolbar-height);
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--pw-divider);
+}
+
+@media (max-width: 600px) {
+  .gs-query > .gs-query__field { flex-basis: 100%; }
+  .gs-results__toolbar { padding: 8px 16px; }
+}

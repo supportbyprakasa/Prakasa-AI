@@ -1,433 +1,611 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Mixed, data } from '../../i18n/NoTranslate';
+import { useCallback, useEffect, useId, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/client';
-import Card from '../../components/Card';
+import ActionMenu from '../../components/ActionMenu';
+import Banner from '../../components/Banner';
 import Button from '../../components/Button';
+import Card from '../../components/Card';
+import ConfirmDialog from '../../components/ConfirmDialog';
+import EmptyState, { LoadingState } from '../../components/EmptyState';
+import IconButton from '../../components/IconButton';
 import Input from '../../components/Input';
-import Badge from '../../components/Badge';
+import KeyValue from '../../components/KeyValue';
 import Modal from '../../components/Modal';
-import { SkeletonCard } from '../../components/Skeleton';
+import Page from '../../components/Page';
+import ProgressBar from '../../components/ProgressBar';
+import ReasonDialog from '../../components/ReasonDialog';
+import Select from '../../components/Select';
+import StatusBadge from '../../components/StatusBadge';
 import { toast } from '../../components/Toast';
+import { formatDate, formatDateTime } from '../../components/format';
+import { allowedLink } from '../../components/navigation';
+import { useAuth } from '../../context/AuthContext';
+import {
+  APPROVER_BASIS_LABELS, ATTACHMENT_TYPES, WORKFLOW_TYPE_LABELS, adminConsoleLink, apiErrorMessage, attachmentTypeLabel,
+  checklistProgress, groupTasks, headerActions, holdingsCounts, isDraftLike, isTaskLate, needsSummary,
+  previewGroups, reasonLabel, taskLinkNote, taskMenuActions, taskMeta, taskPrimaryAction, workflowBadge,
+} from './hrgaModel';
+import {
+  AssignDialog, DeviceHandoverDialog, DeviceReturnTaskDialog, GoogleCompleteDialog, ItTicketDialog, LicenseAssignDialog, PhoneLineDialog,
+} from './TaskDialogs';
+import useOpenFromUrl from '../../components/ai/useOpenFromUrl';
+import WorkflowFormDialog from './WorkflowFormDialog';
+import useHrgaLookups from './useHrgaLookups';
+import './hrga-workflow.css';
+import { safeExternalHref } from '../../components/safeHref.js';
 
+// Task dialogs that hold a form (the rest are confirmations).
+const TASK_FORMS = ['assign', 'it_ticket', 'device_handover', 'device_return', 'license_assign'];
+const DIRECTORY_RESULT = {
+  excluded: 'Orang ini ditandai Dikecualikan di direktori.',
+  reverted: 'Tanggal resign di direktori dikembalikan.',
+  untouched: 'Direktori tidak diubah karena datanya sudah diubah orang lain.',
+};
+
+function WorkflowBadge({ status }) {
+  const b = workflowBadge(status);
+  return <StatusBadge status={b.status} label={b.label} />;
+}
+
+function TaskRow({ task, workflow, permissions, onAction, onMenu, busy }) {
+  const action = taskPrimaryAction(task, workflow, permissions);
+  const menu = taskMenuActions(task, workflow);
+  const consoleUrl = action ? adminConsoleLink(task) : null;
+  const late = isTaskLate(task);
+  const link = taskLinkNote(task);
+  const ticketLink = task.linkedItTicketId ? allowedLink(`/it/tickets/${task.linkedItTicketId}`, permissions) : null;
+  const menuLabels = { skip: ['Lewati dengan alasan', 'skip_next'], assign: ['Tugaskan ke…', 'person'], it_ticket: ['Buat tiket IT', 'support'] };
+  return (
+    <li className="hrga-line">
+      <div className="hrga-line__main">
+        <span className="hrga-line__title">{task.title}</span>
+        <span className="hrga-line__meta">
+          <Mixed parts={taskMeta(task)} />
+          {task.dueDate ? (
+            <>
+              {' · '}
+              <span className={late ? 'hrga-late' : undefined}>{late ? `Lewat tenggat ${formatDate(task.dueDate)}` : `Tenggat ${formatDate(task.dueDate)}`}</span>
+            </>
+          ) : null}
+        </span>
+        {link.length ? (
+          <span className="hrga-line__meta">
+            {link.map((note, index) => (
+              // eslint-disable-next-line react/no-array-index-key
+              <span key={index}>{index > 0 ? ' · ' : ''}<Mixed parts={note} separator=" " /></span>
+            ))}
+          </span>
+        ) : null}
+        {task.linkedItTicketId ? (
+          <span className="hrga-line__meta">
+            {ticketLink ? <Link className="pw-link" to={ticketLink}>{`Tiket IT #${task.linkedItTicketId}`}</Link> : `Tiket IT #${task.linkedItTicketId}`}
+          </span>
+        ) : null}
+      </div>
+      <span className="hrga-line__side">
+        <StatusBadge status={task.status} />
+        {consoleUrl ? <IconButton size="sm" icon="open_in_new" label="Buka konsol admin" href={consoleUrl} target="_blank" rel="noreferrer" /> : null}
+        {action ? (
+          <Button
+            variant="secondary"
+            icon={action.icon}
+            disabled={!action.allowed || busy === task.id}
+            loading={busy === task.id}
+            tooltip={action.blockedReason || undefined}
+            onClick={() => onAction(action.key, task)}
+          >
+            {action.label}
+          </Button>
+        ) : null}
+        <ActionMenu
+          size="sm"
+          label={`Aksi lain untuk ${task.title}`}
+          items={menu.map((key) => ({ label: menuLabels[key][0], icon: menuLabels[key][1], onClick: () => onMenu(key, task) }))}
+        />
+      </span>
+    </li>
+  );
+}
+
+function ChecklistGroups({ groups, renderItem }) {
+  return groups.map((g) => (
+    <section key={g.group} className="hrga-group" aria-label={g.label}>
+      <h4 className="pw-overline hrga-group__title">{`${g.label} (${g.tasks.length})`}</h4>
+      <ul className="hrga-lines">{g.tasks.map(renderItem)}</ul>
+    </section>
+  ));
+}
+
+// Detail of one onboarding/offboarding (spec §2.1.6, detail template §3.2).
+// Readers without hrga.view (a manager with a task, a division Head) get the
+// limited DTO: checklist and summary only.
 export default function HrgaWorkflowDetail() {
   const { id } = useParams();
-  const nav = useNavigate();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const permissions = user?.permissions || [];
+  const kantorkuFormId = useId();
+  const uploadFormId = useId();
   const [wf, setWf] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [linkTask, setLinkTask] = useState(null);
-  const [kantorkuOpen, setKantorkuOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [preview, setPreview] = useState(null);
+  const [dialog, setDialog] = useState(null); // { kind, task? }
+  const [busy, setBusy] = useState('');
+  const [notice, setNotice] = useState(null);
+  const lookups = useHrgaLookups(dialog?.kind === 'assign');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const r = await api.get(`/hrga/workflows/${id}`);
-      setWf(r.data.data);
-    } catch {
-      toast('Workflow tidak ditemukan', 'error');
-      nav('/hrga/onboarding');
+      const data = r.data.data;
+      setWf(data);
+      if (data && (isDraftLike(data) || data.status === 'pending_approval')) {
+        api.get(`/hrga/workflows/${id}/checklist-preview`)
+          .then((p) => setPreview(p.data.data?.items || []))
+          .catch(() => setPreview(null));
+      } else setPreview(null);
+    } catch (error) {
+      setLoadError(error.response?.status === 404
+        ? 'Onboarding/offboarding ini tidak ditemukan, atau Anda tidak punya akses.'
+        : apiErrorMessage(error, 'Periksa koneksi, lalu coba lagi.'));
     } finally {
       setLoading(false);
     }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  }, [id]);
+  useEffect(() => { load(); }, [load]);
 
-  const upload = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
+  const close = () => setDialog(null);
+  const done = async () => { setDialog(null); await load(); };
+  const run = async (key, request, success, fallback) => {
+    setBusy(key);
     try {
-      await api.post(`/hrga/workflows/${id}/attachments`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      toast('Lampiran diunggah', 'success');
-      e.target.reset();
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
+      const response = await request();
+      if (success) toast(typeof success === 'function' ? success(response.data?.data || {}) : success, 'success');
+      return response.data?.data || {};
+    } catch (error) {
+      toast(apiErrorMessage(error, fallback), 'error');
+      return null;
+    } finally {
+      setBusy('');
     }
   };
 
+  // Dialogs a link (or Prakasa AI) may open — only the ones this viewer is
+  // offered on the page itself: ?ubah=1 the draft's form, ?form=<aksi>.<id tugas>
+  // a task dialog (assign, it_ticket, device_handover, device_return, license_assign).
+  // A dialog the user opened that Prakasa AI cannot see (a decision with its reason, a
+  // confirmation) is never replaced by a link either: those are not registered forms.
+  const fromUrl = (next) => (current) => (current && current.kind !== 'edit' && !TASK_FORMS.includes(current.kind) ? current : next);
+  useOpenFromUrl('ubah', () => {
+    if (headerActions(wf).menu.includes('edit')) setDialog(fromUrl({ kind: 'edit' }));
+    // One dialog state for the draft form and every task dialog: an unsaved one is never replaced by a link (keepUnsaved).
+  }, { enabled: Boolean(wf) && !loading, keepUnsaved: true });
+  useOpenFromUrl('form', (value) => {
+    const [kind, taskId] = String(value).split('.');
+    const task = (wf.tasks || []).find((item) => String(item.id) === String(taskId));
+    if (!task || !TASK_FORMS.includes(kind)) return;
+    const primary = taskPrimaryAction(task, wf, permissions);
+    const offered = (primary?.key === kind && primary.allowed) || taskMenuActions(task, wf).includes(kind);
+    if (offered) setDialog(fromUrl({ kind, task }));
+  }, { enabled: Boolean(wf) && !loading, keepUnsaved: true });
+
+  if (loading && !wf) return <Page><LoadingState label="Memuat onboarding/offboarding" /></Page>;
+  if (loadError || !wf) {
+    return (
+      <Page>
+        <EmptyState
+          tone="error"
+          title="Tidak dapat dibuka"
+          description={loadError || undefined}
+          action={<Button variant="secondary" onClick={load}>Coba lagi</Button>}
+        />
+      </Page>
+    );
+  }
+
+  const offboarding = wf.workflowType === 'offboarding';
+  const limited = Boolean(wf.limited);
+  const viewer = wf.viewer || {};
+  const tasks = wf.tasks || [];
+  const progress = checklistProgress(tasks);
+  const actions = headerActions(wf);
+  const approvalId = wf.approvalRequestId;
+
+  const decide = (action) => async (note) => {
+    const out = await run(action, () => api.post(`/approvals/${approvalId}/decide`, { action, note: note || null }),
+      { approve: 'Disetujui. Checklist dibuat.', reject: 'Ditolak', request_revision: 'Dikembalikan untuk revisi' }[action], 'Keputusan gagal disimpan.');
+    if (out) await done();
+  };
   const submit = async () => {
+    const out = await run('submit', () => api.post(`/hrga/workflows/${id}/submit`), (d) => (d.approverName ? `Diajukan ke ${d.approverName}` : 'Diajukan'), 'Gagal mengajukan.');
+    if (out) await load();
+  };
+  const completeTask = async (task) => {
+    setBusy(task.id);
     try {
-      await api.post(`/hrga/workflows/${id}/submit-approval`);
-      toast('Dikirim ke approval queue', 'success');
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
+      await api.patch(`/hrga/workflows/${id}/tasks/${task.id}`, { status: 'completed' });
+      toast('Tugas ditandai selesai', 'success');
+      await load();
+    } catch (error) {
+      toast(apiErrorMessage(error, 'Tugas gagal diperbarui.'), 'error');
+    } finally {
+      setBusy('');
     }
   };
-
-  const applyApproval = async (status) => {
-    try {
-      await api.post(`/hrga/workflows/${id}/apply-approval`, { status });
-      toast(`Status → ${status}`, 'success');
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
-    }
+  const onTaskAction = (key, task) => {
+    if (key === 'complete') { completeTask(task); return; }
+    setDialog({ kind: key, task });
+  };
+  const linkPerson = async (personKey) => {
+    const out = await run('link', () => api.patch(`/hrga/workflows/${id}`, { version: wf.version, personKey }), 'Ditautkan ke orang di direktori', 'Gagal menautkan.');
+    if (out) await load();
+  };
+  const syncHoldings = async () => {
+    const out = await run('sync', () => api.post(`/hrga/workflows/${id}/holdings-sync`), (d) => (Number(d.added) ? `${d.added} tugas ditambahkan ke checklist` : 'Tidak ada kepemilikan baru'), 'Gagal menambahkan kepemilikan.');
+    if (out) await load();
+  };
+  const upload = async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const data = new FormData(form);
+    if (!(data.get('file') instanceof File) || !data.get('file').size) { toast('Pilih file dulu.', 'error'); return; }
+    const out = await run('upload', () => api.post(`/hrga/workflows/${id}/attachments`, data, { headers: { 'Content-Type': 'multipart/form-data' } }), 'Lampiran diunggah', 'Lampiran gagal diunggah.');
+    if (out) { form.reset(); await load(); }
+  };
+  const saveKantorku = async (event) => {
+    event.preventDefault();
+    const data = new FormData(event.target);
+    const out = await run('kantorku', () => api.patch(`/hrga/workflows/${id}/kantorku-reference`, {
+      kantorkuEmployeeId: String(data.get('kantorkuEmployeeId') || '').trim() || null,
+      kantorkuReferenceUrl: String(data.get('kantorkuReferenceUrl') || '').trim() || null,
+    }), 'Referensi KantorKu disimpan', 'Referensi KantorKu gagal disimpan.');
+    if (out) await done();
   };
 
-  const updateTask = async (taskId, status) => {
-    try {
-      await api.patch(`/hrga/workflows/${id}/tasks/${taskId}`, { status });
-      toast('Task diperbarui', 'success');
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
-    }
+  // ---------------------------------------------------------------- header
+  const BUTTONS = {
+    approve: { label: 'Setujui', icon: 'check', onClick: () => setDialog({ kind: 'approve' }) },
+    reject: { label: 'Tolak', icon: 'close', onClick: () => setDialog({ kind: 'reject' }) },
+    request_revision: { label: 'Minta revisi', icon: 'undo', onClick: () => setDialog({ kind: 'request_revision' }) },
+    submit: { label: 'Ajukan', icon: 'send', onClick: submit },
+    withdraw: { label: 'Tarik pengajuan', icon: 'undo', onClick: () => setDialog({ kind: 'withdraw' }) },
   };
-
-  const saveTaskLink = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    try {
-      await api.patch(`/hrga/workflows/${id}/tasks/${linkTask.id}/link`, {
-        linkedDeviceAssignmentId: fd.get('linkedDeviceAssignmentId') ? Number(fd.get('linkedDeviceAssignmentId')) : null,
-        linkedSubscriptionLicenseId: fd.get('linkedSubscriptionLicenseId') ? Number(fd.get('linkedSubscriptionLicenseId')) : null,
-        linkedTaskId: fd.get('linkedTaskId') ? Number(fd.get('linkedTaskId')) : null,
-      });
-      toast('Link task diperbarui', 'success');
-      setLinkTask(null);
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
-    }
+  const MENU = {
+    edit: { label: 'Ubah', icon: 'edit', onClick: () => setDialog({ kind: 'edit' }) },
+    holdings_sync: { label: 'Tambah kepemilikan ke checklist', icon: 'playlist_add', onClick: syncHoldings },
+    kantorku: { label: 'Referensi KantorKu', icon: 'link', onClick: () => setDialog({ kind: 'kantorku' }) },
+    cancel: { label: 'Batalkan workflow', icon: 'cancel', tone: 'danger', onClick: () => setDialog({ kind: 'cancel' }) },
+    delete: { label: 'Hapus draf', icon: 'delete', tone: 'danger', onClick: () => setDialog({ kind: 'delete' }) },
   };
+  const header = (
+    <>
+      {actions.secondary.map((key) => (
+        <Button key={key} variant="secondary" icon={BUTTONS[key].icon} loading={busy === key} onClick={BUTTONS[key].onClick}>{BUTTONS[key].label}</Button>
+      ))}
+      {actions.primary.map((key) => (
+        <Button key={key} icon={BUTTONS[key].icon} loading={busy === key} onClick={BUTTONS[key].onClick}>{BUTTONS[key].label}</Button>
+      ))}
+      <ActionMenu label="Aksi lainnya" items={actions.menu.map((key) => (BUTTONS[key] ? { ...BUTTONS[key] } : MENU[key]))} />
+    </>
+  );
 
-  const saveKantorku = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    try {
-      await api.patch(`/hrga/workflows/${id}/kantorku-reference`, {
-        kantorkuEmployeeId: fd.get('kantorkuEmployeeId') || null,
-        kantorkuReferenceUrl: fd.get('kantorkuReferenceUrl') || null,
-      });
-      toast('Referensi KantorKu disimpan', 'success');
-      setKantorkuOpen(false);
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
-    }
-  };
+  // ---------------------------------------------------------------- summary
+  const summary = [
+    { label: 'Nomor', value: wf.workflowNumber },
+    { label: 'Status', value: <WorkflowBadge status={wf.status} /> },
+    { label: 'Karyawan', value: wf.employeeName },
+    { label: 'Jabatan', value: wf.position },
+    { label: 'Divisi', translate: true, value: wf.departmentName },
+    { label: 'Atasan langsung', value: wf.managerName },
+    !offboarding ? { label: 'Lokasi kerja', value: wf.locationName } : null,
+    !offboarding ? { label: 'Email kerja rencana', value: wf.plannedWorkEmail } : null,
+    { label: offboarding ? 'Hari terakhir' : 'Tanggal mulai', value: (offboarding ? wf.lastWorkingDate : wf.joinDate) ? formatDate(offboarding ? wf.lastWorkingDate : wf.joinDate) : null },
+    offboarding ? { label: 'Alasan', translate: true, value: reasonLabel(wf.reasonCode) } : null,
+    !offboarding ? { label: 'Kebutuhan', translate: true, value: needsSummary(wf.needs, wf.needLicenses) } : null,
+    { label: 'PIC People & Culture', value: wf.picName },
+    { label: 'Diajukan oleh', value: wf.requesterName },
+    wf.approverBasis ? { label: 'Penyetuju', translate: true, value: APPROVER_BASIS_LABELS[wf.approverBasis] } : null,
+    wf.submittedAt ? { label: 'Diajukan', value: formatDateTime(wf.submittedAt) } : null,
+    wf.approvedAt ? { label: 'Disetujui', value: formatDateTime(wf.approvedAt) } : null,
+    wf.completedAt ? { label: 'Selesai', translateContext: 'completed', value: formatDateTime(wf.completedAt) } : null,
+    wf.cancelledAt ? { label: 'Dibatalkan', value: [formatDateTime(wf.cancelledAt), wf.cancelReason].filter(Boolean).join(' · ') } : null,
+    !limited ? {
+      label: 'Referensi KantorKu',
+      value: wf.kantorkuEmployeeId || wf.kantorkuReferenceUrl ? (
+        safeExternalHref(wf.kantorkuReferenceUrl)
+          ? <a className="pw-link" href={safeExternalHref(wf.kantorkuReferenceUrl)} target="_blank" rel="noreferrer" data-translate={wf.kantorkuEmployeeId ? undefined : ''}>{wf.kantorkuEmployeeId || 'Buka di KantorKu'}</a>
+          : wf.kantorkuEmployeeId || wf.kantorkuReferenceUrl
+      ) : null,
+    } : null,
+    !limited && wf.notes ? { label: 'Catatan', value: wf.notes } : null,
+  ];
 
-  const saveEdit = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    try {
-      await api.patch(`/hrga/workflows/${id}`, {
-        employeeFullName: fd.get('employeeFullName'),
-        employeeEmail: fd.get('employeeEmail') || null,
-        employeePhone: fd.get('employeePhone') || null,
-        employeePosition: fd.get('employeePosition') || null,
-        employeeDivision: fd.get('employeeDivision') || null,
-        joinDate: fd.get('joinDate') || null,
-        lastWorkingDate: fd.get('lastWorkingDate') || null,
-        effectiveDate: fd.get('effectiveDate'),
-        reason: fd.get('reason') || null,
-        notes: fd.get('notes') || null,
-      });
-      toast('Workflow diperbarui', 'success');
-      setEditOpen(false);
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
-    }
-  };
-
-  if (loading) return <SkeletonCard lines={10} />;
-  if (!wf) return null;
-
-  const editable = ['draft', 'revision_requested'].includes(wf.status);
-  const completedTasks = wf.tasks?.filter((t) => t.status === 'completed').length || 0;
-  const totalTasks = wf.tasks?.length || 0;
-  const pct = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const matches = !limited && viewer.canEdit && wf.workflowType === 'onboarding' && isDraftLike(wf) && !wf.personKey ? (wf.possibleMatches || []) : [];
+  const counts = holdingsCounts(wf.holdings);
+  const preparedPreview = preview ? previewGroups(preview) : null;
+  // Whole sentences (never "label + value" glued in one template).
+  const dateText = offboarding
+    ? (wf.lastWorkingDate ? `Hari terakhir ${formatDate(wf.lastWorkingDate)}` : null)
+    : (wf.joinDate ? `Mulai ${formatDate(wf.joinDate)}` : null);
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Button variant="secondary" onClick={() => nav(-1)}>
-          ← Kembali
-        </Button>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {editable && <Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button>}
-          <Button variant="secondary" onClick={() => setKantorkuOpen(true)}>
-            KantorKu Ref
-          </Button>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-        <h2>
-          {wf.workflow_number} — {wf.employee_full_name}
-        </h2>
-        <Badge
-          tone={
-            wf.status === 'completed'
-              ? 'success'
-              : wf.status === 'rejected'
-              ? 'error'
-              : wf.status === 'pending_approval'
-              ? 'warning'
-              : 'info'
-          }
+    <Page
+      eyebrow={WORKFLOW_TYPE_LABELS[wf.workflowType] || 'Onboarding/offboarding'}
+      title={wf.employeeName}
+      dataTitle
+      description={(
+        <span className="pw-row">
+          <WorkflowBadge status={wf.status} />
+          <span><Mixed parts={[data(wf.workflowNumber), dateText]} /></span>
+        </span>
+      )}
+      actions={header}
+    >
+      {notice ? <Banner tone="warning" title={notice.title} action={<Button variant="text" onClick={() => setNotice(null)}>Tutup</Button>}>{notice.body}</Banner> : null}
+      {limited ? <Banner tone="info">Anda melihat checklist dan ringkasan. Detail lain hanya untuk People & Culture.</Banner> : null}
+      {matches.length ? (
+        <Banner
+          tone="info"
+          title={`Kemungkinan sama dengan ${matches.map((m) => m.name).join(', ')}`}
+          action={(
+            <span className="pw-row">
+              {matches.map((m) => (
+                <Button key={m.key} variant="text" loading={busy === 'link'} onClick={() => linkPerson(m.key)}>{matches.length > 1 ? `Tautkan ke ${m.name}` : 'Tautkan'}</Button>
+              ))}
+            </span>
+          )}
         >
-          {wf.status}
-        </Badge>
-      </div>
-      <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-        {wf.workflow_type} · efektif {wf.effective_date} · PIC HRGA: {wf.hrgaPicName || '—'}
-      </div>
+          {`${matches.map((m) => [m.departmentName, m.status === 'resigned' ? 'resign' : 'aktif'].filter(Boolean).join(', ')).join('; ')}. Tautkan bila orangnya sama (misalnya bekerja lagi), supaya direktori tidak ganda.`}
+        </Banner>
+      ) : null}
 
-      {/* Progress bar */}
-      <div style={{ marginTop: 16, marginBottom: 4, fontSize: 13 }}>
-        Progres checklist: <b>{completedTasks}/{totalTasks}</b> ({pct}%)
-      </div>
-      <div style={{ width: '100%', height: 8, background: '#e2e8f0', borderRadius: 4, overflow: 'hidden' }}>
-        <div
-          style={{
-            width: `${pct}%`,
-            height: '100%',
-            background: 'var(--color-primary)',
-            transition: 'width 300ms ease',
-          }}
-        />
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
-        <Card title="Informasi Karyawan">
-          <div style={{ fontSize: 13, lineHeight: 1.9 }}>
-            <div>Nama: <b>{wf.employee_full_name}</b></div>
-            <div>Email: {wf.employee_email || '—'}</div>
-            <div>Telepon: {wf.employee_phone || '—'}</div>
-            <div>Posisi: {wf.employee_position || '—'}</div>
-            <div>Divisi: {wf.employee_division || '—'}</div>
-            <div>Manager: {wf.managerName || '—'}</div>
-            {wf.workflow_type === 'onboarding' && <div>Tanggal Join: {wf.join_date || '—'}</div>}
-            {wf.workflow_type === 'offboarding' && (
-              <>
-                <div>Hari Terakhir: {wf.last_working_date || '—'}</div>
-                <div>Alasan: {wf.reason || '—'}</div>
-              </>
-            )}
-            <div>
-              Referensi KantorKu:{' '}
-              {wf.kantorku_employee_id ? (
-                <a href={wf.kantorku_reference_url || '#'} target="_blank" rel="noreferrer">
-                  {wf.kantorku_employee_id}
-                </a>
-              ) : (
-                '—'
-              )}
-            </div>
-          </div>
-        </Card>
-
-        <Card title={`Lampiran (${wf.attachments?.length || 0})`}>
-          {wf.attachments?.map((a) => (
-            <div
-              key={a.id}
-              style={{
-                display: 'flex',
-                justify: 'space-between',
-                alignItems: 'center',
-                fontSize: 13,
-                padding: 6,
-                boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
-              }}
-            >
-              <div>
-                <Badge>{a.attachmentType}</Badge> <b>{a.name}</b>
-              </div>
-              {a.webViewLink && (
-                <a href={a.webViewLink} target="_blank" rel="noreferrer">
-                  <Button variant="secondary">Buka</Button>
-                </a>
-              )}
-            </div>
-          ))}
-          <form
-            onSubmit={upload}
-            style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontSize: 13 }}>Tipe</label>
-              <select name="attachmentType" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
-                <option value="offer_letter">Offer Letter</option>
-                <option value="contract">Kontrak</option>
-                <option value="id_document">Identitas</option>
-                <option value="resignation_letter">Surat Pengunduran Diri</option>
-                <option value="handover_note">Handover Note</option>
-              </select>
-            </div>
-            <Input label="File" name="file" type="file" style={{ margin: 0 }} />
-            <Button type="submit">Unggah</Button>
-          </form>
-        </Card>
-      </div>
-
-      <div style={{ marginTop: 12 }}>
-        <Card title="Checklist">
-          {wf.tasks?.map((t) => (
-            <div
-              key={t.id}
-              style={{
-                display: 'flex',
-                justify: 'space-between',
-                alignItems: 'center',
-                padding: 12,
-                boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
-                fontSize: 13,
-                gap: 12,
-              }}
-            >
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 500 }}>{t.title}</div>
-                <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                  {t.category} · {t.responsibleName || 'belum ditugaskan'} · {t.dueDate || 'tanpa due date'}
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
-                  {t.linkedTaskId && <>Task #{t.linkedTaskId} · </>}
-                  {t.linkedDeviceAssignmentId && <>Device Assign #{t.linkedDeviceAssignmentId} · </>}
-                  {t.linkedSubscriptionLicenseId && <>License #{t.linkedSubscriptionLicenseId}</>}
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 4 }}>
-                <Button variant="secondary" onClick={() => setLinkTask(t)}>
-                  Link
-                </Button>
-                {t.status !== 'completed' && (
-                  <>
-                    {t.status !== 'in_progress' && (
-                      <Button variant="secondary" onClick={() => updateTask(t.id, 'in_progress')}>
-                        Mulai
-                      </Button>
+      <div className="pw-cols-sidebar">
+        <div className="pw-stack">
+          {tasks.length || !preparedPreview ? (
+            <Card title="Checklist">
+              {tasks.length ? (
+                <>
+                  <div className="hrga-progress">
+                    <p className="hrga-progress__label">{`${progress.done} dari ${progress.total} tugas selesai (${progress.pct}%)`}</p>
+                    <ProgressBar value={progress.pct} label="Progres checklist" />
+                  </div>
+                  <ChecklistGroups
+                    groups={groupTasks(tasks)}
+                    renderItem={(task) => (
+                      <TaskRow
+                        key={task.id}
+                        task={task}
+                        workflow={wf}
+                        permissions={permissions}
+                        busy={busy}
+                        onAction={onTaskAction}
+                        onMenu={(key, t) => setDialog({ kind: key, task: t })}
+                      />
                     )}
-                    <Button onClick={() => updateTask(t.id, 'completed')}>Selesai</Button>
-                  </>
-                )}
-                {t.status === 'completed' && <Badge tone="success">Selesai</Badge>}
+                  />
+                </>
+              ) : (
+                <EmptyState compact icon="checklist" title="Belum ada checklist" description="Checklist dibuat saat pengajuan disetujui." />
+              )}
+            </Card>
+          ) : null}
+
+          {preparedPreview ? (
+            <Card title="Pratinjau checklist" subtitle="Dibuat saat disetujui. Tenggat dihitung dari tanggal di pengajuan, paling awal hari disetujui.">
+              {preparedPreview.total ? (
+                <ChecklistGroups
+                  groups={preparedPreview.groups}
+                  renderItem={(item, index) => (
+                    <li key={`${item.category}-${index}`} className="hrga-line">
+                      <div className="hrga-line__main">
+                        <span className="hrga-line__title">{item.title}</span>
+                        <span className="hrga-line__meta">
+                          <Mixed parts={[item.responsibleName ? data(item.responsibleName) : 'Belum ada penanggung jawab', item.dueDate ? `Tenggat ${formatDate(item.dueDate)}` : null]} />
+                        </span>
+                      </div>
+                    </li>
+                  )}
+                />
+              ) : <EmptyState compact icon="checklist" title="Tidak ada item" description="Template dan kebutuhan tidak menghasilkan tugas." />}
+            </Card>
+          ) : null}
+
+          {!limited && wf.approval?.steps?.length ? (
+            <Card title="Riwayat approval">
+              <ul className="hrga-lines">
+                {wf.approval.steps.map((s) => (
+                  <li key={s.id} className="hrga-line">
+                    <div className="hrga-line__main">
+                      <span className="hrga-line__title" data-no-translate={s.approverName ? '' : undefined}>{s.approverName || s.approverRoleName || 'Penyetuju'}</span>
+                      <span className="hrga-line__meta">
+                        {[
+                          s.escalatedToRoleName ? `Dieskalasi ke ${s.escalatedToRoleName}` : null,
+                          s.decidedByName ? `Diputuskan ${s.decidedByName}` : null,
+                          s.decidedAt ? formatDateTime(s.decidedAt) : null,
+                          !s.decidedAt && s.deadlineAt ? `Batas ${formatDateTime(s.deadlineAt)}` : null,
+                        ].filter(Boolean).join(' · ') || '—'}
+                      </span>
+                      {s.note ? <span className="hrga-line__meta">{`Catatan: ${s.note}`}</span> : null}
+                    </div>
+                    <span className="hrga-line__side"><StatusBadge status={s.status} /></span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          ) : null}
+        </div>
+
+        <aside className="pw-stack">
+          <Card title="Ringkasan" size="sm">
+            <KeyValue items={summary} />
+          </Card>
+          {offboarding && wf.holdings ? (
+            <Card title="Kepemilikan" size="sm" subtitle={`${counts.devices} perangkat · ${counts.licenses} lisensi · ${counts.phoneLines} nomor`}>
+              {counts.devices + counts.licenses + counts.phoneLines ? (
+                <ul className="hrga-lines">
+                  {wf.holdings.devices.map((d) => (
+                    <li key={`d${d.assignmentId}`} className="hrga-line"><div className="hrga-line__main"><span data-no-translate="" className="hrga-line__title">{d.name}</span><span className="hrga-line__meta">Perangkat</span></div></li>
+                  ))}
+                  {wf.holdings.licenses.map((l) => (
+                    <li key={`l${l.licenseId}`} className="hrga-line"><div className="hrga-line__main"><span data-no-translate="" className="hrga-line__title">{l.productName}</span><span className="hrga-line__meta">Lisensi</span></div></li>
+                  ))}
+                  {wf.holdings.phoneLines.map((p) => (
+                    <li key={`p${p.id}`} className="hrga-line"><div className="hrga-line__main"><span data-no-translate="" className="hrga-line__title">{p.label}</span><span className="hrga-line__meta">Nomor perusahaan</span></div></li>
+                  ))}
+                </ul>
+              ) : <span className="pw-text-helper">Tidak memegang perangkat, lisensi, atau nomor perusahaan.</span>}
+            </Card>
+          ) : null}
+          {!limited ? (
+            <Card title={`Lampiran (${(wf.attachments || []).length})`} size="sm">
+              <div className="pw-stack">
+                {(wf.attachments || []).length ? (
+                  <ul className="hrga-lines">
+                    {wf.attachments.map((a) => (
+                      <li key={a.id} className="hrga-line">
+                        <div className="hrga-line__main">
+                          <span data-no-translate="" className="hrga-line__title">{a.name}</span>
+                          <span className="hrga-line__meta">{[attachmentTypeLabel(a.attachmentType), a.createdAt ? formatDate(a.createdAt) : null].filter(Boolean).join(' · ')}</span>
+                        </div>
+                        {a.webViewLink ? <IconButton size="sm" icon="open_in_new" label={`Buka ${a.name}`} href={a.webViewLink} target="_blank" rel="noreferrer" /> : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : <span className="pw-text-helper">Belum ada lampiran.</span>}
+                {viewer.canAttach ? (
+                  <form id={uploadFormId} className="pw-stack pw-stack--sm" onSubmit={upload}>
+                    <Banner tone="info">Kontrak, KTP, offer letter, dan surat resign disimpan di KantorKu, jangan diunggah di sini.</Banner>
+                    <Select label="Jenis lampiran" name="attachmentType" options={ATTACHMENT_TYPES} defaultValue="handover_note" />
+                    <Input label="File" name="file" type="file" />
+                    <span><Button variant="secondary" type="submit" icon="upload" loading={busy === 'upload'}>Unggah lampiran</Button></span>
+                  </form>
+                ) : null}
               </div>
-            </div>
-          ))}
-        </Card>
+            </Card>
+          ) : null}
+        </aside>
       </div>
 
-      <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {editable && <Button onClick={submit}>Submit ke Approval Queue</Button>}
-        {wf.status === 'pending_approval' && (
+      {/* ------------------------------------------------ dialogs */}
+      <ReasonDialog
+        open={dialog?.kind === 'approve'}
+        title="Setujui pengajuan ini?"
+        description={`Checklist ${offboarding ? 'offboarding' : 'onboarding'} ${wf.employeeName} dibuat dan penanggung jawab diberi tahu.`}
+        label="Catatan"
+        required={false}
+        confirmLabel="Setujui"
+        onClose={close}
+        onConfirm={decide('approve')}
+      />
+      <ReasonDialog open={dialog?.kind === 'reject'} title="Tolak pengajuan ini?" tone="danger" confirmLabel="Tolak" onClose={close} onConfirm={decide('reject')} />
+      <ReasonDialog open={dialog?.kind === 'request_revision'} title="Minta revisi" label="Yang perlu diperbaiki" confirmLabel="Minta revisi" onClose={close} onConfirm={decide('request_revision')} />
+      <ReasonDialog
+        open={dialog?.kind === 'withdraw'}
+        title="Tarik pengajuan?"
+        description="Pengajuan kembali menjadi draf dan bisa diubah lalu diajukan lagi."
+        label="Catatan"
+        confirmLabel="Tarik pengajuan"
+        onClose={close}
+        onConfirm={async (note) => { const out = await run('withdraw', () => api.post(`/hrga/workflows/${id}/withdraw`, { note }), 'Pengajuan ditarik', 'Gagal menarik pengajuan.'); if (out) await done(); }}
+      />
+      <ReasonDialog
+        open={dialog?.kind === 'cancel'}
+        title="Batalkan workflow?"
+        description="Tugas yang belum selesai berhenti. Data yang sudah tercatat tidak dihapus."
+        tone="danger"
+        confirmLabel="Batalkan workflow"
+        onClose={close}
+        onConfirm={async (reason) => {
+          const out = await run('cancel', () => api.post(`/hrga/workflows/${id}/cancel`, { reason }), 'Workflow dibatalkan', 'Gagal membatalkan.');
+          if (!out) return;
+          const open = out.openAssignments || [];
+          const lines = [DIRECTORY_RESULT[out.directory], open.length ? `Perangkat masih dipegang: ${open.map((a) => a.deviceName).join(', ')}. Terima kembali lewat halaman Perangkat.` : null].filter(Boolean);
+          if (lines.length) setNotice({ title: 'Workflow dibatalkan', body: lines.join(' ') });
+          await done();
+        }}
+      />
+      <ReasonDialog
+        open={dialog?.kind === 'skip'}
+        title="Lewati tugas ini?"
+        description={dialog?.task?.title}
+        confirmLabel="Lewati"
+        onClose={close}
+        onConfirm={async (reason) => {
+          const out = await run('skip', () => api.patch(`/hrga/workflows/${id}/tasks/${dialog.task.id}`, { status: 'skipped', skippedReason: reason }), 'Tugas dilewati', 'Tugas gagal dilewati.');
+          if (out) await done();
+        }}
+      />
+      <ConfirmDialog
+        open={dialog?.kind === 'delete'}
+        title="Hapus draf ini?"
+        message={`${wf.workflowNumber} — ${wf.employeeName} dihapus. Draf yang belum diajukan tidak tercatat di mana pun.`}
+        confirmLabel="Hapus draf"
+        loading={busy === 'delete'}
+        onClose={close}
+        onConfirm={async () => {
+          const out = await run('delete', () => api.delete(`/hrga/workflows/${id}`), 'Draf dihapus', 'Draf gagal dihapus.');
+          if (out) navigate(offboarding ? '/hrga/offboarding' : '/hrga/onboarding');
+        }}
+      />
+      <ConfirmDialog
+        open={dialog?.kind === 'license_revoke'}
+        tone="primary"
+        title="Cabut lisensi?"
+        message={`${dialog?.task?.linkedSubscriptionName || 'Lisensi'} dilepas dari ${wf.employeeName} dan kembali tersedia.`}
+        confirmLabel="Cabut lisensi"
+        loading={busy === 'revoke'}
+        onClose={close}
+        onConfirm={async () => {
+          const out = await run('revoke', () => api.post(`/hrga/workflows/${id}/tasks/${dialog.task.id}/license-revoke`, {}), 'Lisensi dicabut', 'Lisensi gagal dicabut.');
+          if (out) await done();
+        }}
+      />
+      <Modal
+        open={dialog?.kind === 'kantorku'}
+        onClose={close}
+        title="Referensi KantorKu"
+        size="sm"
+        footer={(
           <>
-            <Button onClick={() => applyApproval('approved')}>Tandai Approved</Button>
-            <Button variant="danger" onClick={() => applyApproval('rejected')}>
-              Tandai Rejected
-            </Button>
+            <Button variant="text" type="button" onClick={close}>Batal</Button>
+            <Button type="submit" form={kantorkuFormId} loading={busy === 'kantorku'}>Simpan referensi</Button>
           </>
         )}
-        {wf.status === 'approved' && (
-          <Button onClick={() => applyApproval('in_progress')}>Mulai Proses (In Progress)</Button>
-        )}
-      </div>
-
-      <Modal open={!!linkTask} onClose={() => setLinkTask(null)} title="Link Task">
-        {linkTask && (
-          <form onSubmit={saveTaskLink}>
-            <div style={{ fontSize: 13, marginBottom: 12 }}>
-              Task: <b>{linkTask.title}</b>
-            </div>
-            <Input
-              label="Linked Task ID"
-              name="linkedTaskId"
-              type="number"
-              defaultValue={linkTask.linkedTaskId || ''}
-            />
-            <Input
-              label="Device Assignment ID"
-              name="linkedDeviceAssignmentId"
-              type="number"
-              defaultValue={linkTask.linkedDeviceAssignmentId || ''}
-            />
-            <Input
-              label="Subscription License ID"
-              name="linkedSubscriptionLicenseId"
-              type="number"
-              defaultValue={linkTask.linkedSubscriptionLicenseId || ''}
-            />
-            <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 12 }}>
-              Kosongkan field yang tidak ingin diubah.
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <Button variant="secondary" type="button" onClick={() => setLinkTask(null)}>
-                Batal
-              </Button>
-              <Button type="submit">Simpan</Button>
-            </div>
-          </form>
-        )}
-      </Modal>
-
-      <Modal open={kantorkuOpen} onClose={() => setKantorkuOpen(false)} title="Referensi KantorKu HRIS">
-        <form onSubmit={saveKantorku}>
+      >
+        <form id={kantorkuFormId} className="pw-stack" onSubmit={saveKantorku}>
+          <Input label="ID karyawan KantorKu" name="kantorkuEmployeeId" maxLength={64} defaultValue={wf.kantorkuEmployeeId || ''} />
           <Input
-            label="KantorKu Employee ID"
-            name="kantorkuEmployeeId"
-            defaultValue={wf.kantorku_employee_id || ''}
-          />
-          <Input
-            label="URL Referensi"
+            label="URL referensi"
             name="kantorkuReferenceUrl"
-            defaultValue={wf.kantorku_reference_url || ''}
-            placeholder="https://..."
+            type="url"
+            maxLength={500}
+            defaultValue={wf.kantorkuReferenceUrl || ''}
+            hint="Hanya tautan. Absensi, cuti, dan payroll tetap di KantorKu."
           />
-          <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 12 }}>
-            Platform tidak menyimpan data payroll/absensi/cuti. Hanya referensi/link ke KantorKu.
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button variant="secondary" type="button" onClick={() => setKantorkuOpen(false)}>
-              Batal
-            </Button>
-            <Button type="submit">Simpan</Button>
-          </div>
         </form>
       </Modal>
 
-      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Workflow">
-        <form onSubmit={saveEdit}>
-          <Input label="Nama Lengkap" name="employeeFullName" defaultValue={wf.employee_full_name} required />
-          <Input label="Email" name="employeeEmail" type="email" defaultValue={wf.employee_email || ''} />
-          <Input label="Telepon" name="employeePhone" defaultValue={wf.employee_phone || ''} />
-          <Input label="Posisi" name="employeePosition" defaultValue={wf.employee_position || ''} />
-          <Input label="Divisi" name="employeeDivision" defaultValue={wf.employee_division || ''} />
-          {wf.workflow_type === 'onboarding' && (
-            <Input label="Tanggal Join" name="joinDate" type="date" defaultValue={wf.join_date || ''} />
-          )}
-          {wf.workflow_type === 'offboarding' && (
-            <>
-              <Input
-                label="Hari Terakhir"
-                name="lastWorkingDate"
-                type="date"
-                defaultValue={wf.last_working_date || ''}
-              />
-              <Input label="Alasan" name="reason" defaultValue={wf.reason || ''} />
-            </>
-          )}
-          <Input label="Tanggal Efektif" name="effectiveDate" type="date" defaultValue={wf.effective_date} required />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-            <label style={{ fontSize: 13 }}>Catatan</label>
-            <textarea
-              name="notes"
-              rows={3}
-              defaultValue={wf.notes || ''}
-              style={{ padding: 10, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
-            />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button variant="secondary" type="button" onClick={() => setEditOpen(false)}>
-              Batal
-            </Button>
-            <Button type="submit">Simpan</Button>
-          </div>
-        </form>
-      </Modal>
-    </div>
+      <WorkflowFormDialog
+        open={dialog?.kind === 'edit'}
+        workflow={wf}
+        onClose={close}
+        onSaved={done}
+      />
+      {dialog?.task ? (
+        <>
+          <DeviceHandoverDialog open={dialog.kind === 'device_handover'} workflowId={id} task={dialog.task} employeeName={wf.employeeName} onClose={close} onDone={done} />
+          <DeviceReturnTaskDialog open={dialog.kind === 'device_return'} workflowId={id} task={dialog.task} onClose={close} onDone={done} />
+          <LicenseAssignDialog open={dialog.kind === 'license_assign'} workflowId={id} task={dialog.task} onClose={close} onDone={done} />
+          <PhoneLineDialog open={dialog.kind === 'phone_line' || dialog.kind === 'phone_line_return'} mode={dialog.kind === 'phone_line_return' ? 'return' : 'assign'} workflowId={id} task={dialog.task} onClose={close} onDone={done} />
+          <GoogleCompleteDialog open={dialog.kind === 'google_complete'} workflowId={id} task={dialog.task} onClose={close} onDone={done} />
+          <AssignDialog open={dialog.kind === 'assign'} workflowId={id} task={dialog.task} users={lookups.users} onClose={close} onDone={done} />
+          <ItTicketDialog open={dialog.kind === 'it_ticket'} workflowId={id} task={dialog.task} employeeName={wf.employeeName} onClose={close} onDone={done} />
+        </>
+      ) : null}
+    </Page>
   );
 }

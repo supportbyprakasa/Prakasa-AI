@@ -1,5 +1,6 @@
 const pool = require('../db/pool');
 const taskAccess = require('./taskAccess.service');
+const { wibClock } = require('../utils/wibTime');
 
 const MAX_TASKS = 500;
 const MAX_RANGE_DAYS = 365;
@@ -52,7 +53,7 @@ function parseIsoDate(value, field) {
 }
 
 function defaultRange() {
-  const today = new Date();
+  const today = wibClock();
   const from = new Date(today);
   from.setUTCDate(from.getUTCDate() - DEFAULT_RANGE_DAYS_BACK);
   const to = new Date(today);
@@ -106,14 +107,14 @@ async function buildGantt({
       (
         t.start_date IS NULL
         AND t.due_date IS NULL
-        AND DATE(t.created_at) BETWEEN ? AND ?
+        AND DATE(t.created_at + INTERVAL 7 HOUR) BETWEEN ? AND ?
       )
       OR (
         (t.start_date IS NOT NULL OR t.due_date IS NOT NULL)
-        AND COALESCE(t.start_date, DATE(t.created_at)) <= ?
+        AND COALESCE(t.start_date, DATE(t.created_at + INTERVAL 7 HOUR)) <= ?
         AND COALESCE(
           t.due_date,
-          DATE_ADD(COALESCE(t.start_date, DATE(t.created_at)), INTERVAL 7 DAY)
+          DATE_ADD(COALESCE(t.start_date, DATE(t.created_at + INTERVAL 7 HOUR)), INTERVAL 7 DAY)
         ) >= ?
       )
     )`,
@@ -123,6 +124,11 @@ async function buildGantt({
     fromDate, toDate,
     toDate, fromDate,
   ];
+
+  // Division scope (same predicate as task detail / search).
+  const visible = taskAccess.taskDivisionSql(user, 't');
+  where.push(visible.sql);
+  args.push(...visible.args);
 
   if (departmentId) {
     where.push('t.department_id = ?');
@@ -148,7 +154,7 @@ async function buildGantt({
        FROM tasks t
        LEFT JOIN users u ON u.id=t.assignee_id
       WHERE ${where.join(' AND ')}
-      ORDER BY COALESCE(t.start_date, t.due_date, DATE(t.created_at)) ASC, t.id ASC
+      ORDER BY COALESCE(t.start_date, t.due_date, DATE(t.created_at + INTERVAL 7 HOUR)) ASC, t.id ASC
       LIMIT ?`,
     [...args, MAX_TASKS + 1]
   );

@@ -1,0 +1,170 @@
+/* Panduan (pages/handbook/Handbook.jsx). Two panes from 1024 px: the outline
+   sticks on the left, the chapters scroll on the right; below that the
+   outline folds behind "Daftar isi". Colours, type, radius and motion come
+   from styles/tokens.css only. The print sheet at the end prints the
+   portal copy (.hb-print-root) and nothing else. */
+
+.hb-role-note {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  border-radius: var(--pw-radius-lg); background: var(--pw-selected); color: var(--pw-text);
+}
+.hb-role-note__text { margin: 0; font-size: var(--pw-font-body); line-height: 20px; }
+.hb-role-note__role { font-weight: 500; }
+
+.hb-toolbar { display: flex; align-items: center; gap: 12px; }
+.hb-search { flex: 1 1 auto; min-width: 0; }
+.hb-outline-toggle { display: none; }
+
+.hb-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 24px; align-items: start; }
+.hb-aside { position: sticky; top: 16px; max-height: calc(100vh - 120px); overflow-y: auto; }
+.hb-content { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.hb-chapters { display: flex; flex-direction: column; gap: 24px; }
+.hb-chapters.is-hidden { display: none; }
+
+/* ---- outline */
+.hb-outline { display: flex; flex-direction: column; gap: 16px; }
+.hb-outline__part-title {
+  margin: 0 0 4px; padding: 0 12px; color: var(--pw-text-secondary);
+  font-size: var(--pw-font-xs); font-weight: 500; letter-spacing: 0.04em;
+}
+.hb-outline__list, .hb-outline__sections { margin: 0; padding: 0; list-style: none; }
+.hb-outline__summary {
+  display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px;
+  border-radius: var(--pw-radius-full); color: var(--pw-text-nav); font-size: var(--pw-font-body);
+  cursor: pointer; list-style: none; transition: background-color var(--pw-dur-state) var(--pw-ease-standard);
+}
+.hb-outline__summary::-webkit-details-marker { display: none; }
+.hb-outline__summary:hover { background: var(--pw-hover-nav); }
+.hb-outline__chapter[open] > .hb-outline__summary { background: var(--pw-secondary-container); color: var(--pw-on-secondary-container); }
+.hb-outline__sections { padding: 4px 0 8px 36px; }
+.hb-outline__link {
+  display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: var(--pw-radius-md);
+  color: var(--pw-text-secondary); font-size: var(--pw-font-sm); line-height: 18px; text-decoration: none;
+}
+.hb-outline__link:hover { background: var(--pw-hover-nav); color: var(--pw-text); }
+.hb-outline__link:focus-visible, .hb-outline__summary:focus-visible, .hb-section__link:focus-visible, .hb-results__link:focus-visible {
+  outline: none; box-shadow: var(--pw-focus-ring);
+}
+.hb-outline__lock { color: var(--pw-text-muted); }
+
+/* ---- chapter */
+.hb-chapter { display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 16px; }
+.hb-chapter__header { display: flex; align-items: flex-start; gap: 16px; }
+.hb-chapter__icon {
+  display: inline-flex; align-items: center; justify-content: center; flex: none; width: 48px; height: 48px;
+  border-radius: var(--pw-radius-xl); background: var(--pw-selected); color: var(--pw-primary);
+}
+.hb-chapter__heading { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.hb-chapter__part { color: var(--pw-text-secondary); font-size: var(--pw-font-xs); letter-spacing: 0.04em; }
+.hb-chapter__title { margin: 0; color: var(--pw-text-title); font-family: var(--pw-font-sans); font-size: var(--pw-font-title); font-weight: 400; line-height: 28px; }
+.hb-chapter__summary { margin: 0; color: var(--pw-text-strong); font-size: var(--pw-font-body); line-height: 20px; }
+.hb-chapter__who { display: flex; align-items: center; gap: 4px; margin: 0; color: var(--pw-text-secondary); font-size: var(--pw-font-sm); }
+.hb-chapter__actions { flex: none; }
+
+.hb-section { display: flex; flex-direction: column; gap: 12px; padding-top: 20px; border-top: 1px solid var(--pw-divider); scroll-margin-top: 16px; }
+.hb-section__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.hb-section__title { margin: 0; color: var(--pw-text); font-family: var(--pw-font-sans); font-size: var(--pw-font-lg); font-weight: 500; line-height: 24px; }
+.hb-section__link { display: inline-flex; color: var(--pw-text-muted); opacity: 0; transition: opacity var(--pw-dur-state) var(--pw-ease-standard); }
+.hb-section__head:hover .hb-section__link, .hb-section__link:focus-visible { opacity: 1; }
+.hb-tag {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--pw-radius-full);
+  background: var(--pw-surface-container); color: var(--pw-text-secondary); font-size: var(--pw-font-xs); line-height: 18px;
+}
+
+/* ---- blocks */
+.hb-text, .hb-callout__text, .hb-faq__a { margin: 0; color: var(--pw-text); font-size: var(--pw-font-body); line-height: 22px; }
+.hb-block-title { margin: 0 0 4px; color: var(--pw-text); font-size: var(--pw-font-body); font-weight: 500; line-height: 20px; }
+.hb-steps__list, .hb-list__items { margin: 0; padding-left: 24px; display: flex; flex-direction: column; gap: 6px; color: var(--pw-text); font-size: var(--pw-font-body); line-height: 22px; }
+.hb-steps__list > li::marker { color: var(--pw-primary); font-weight: 500; }
+
+.hb-callout { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-radius: var(--pw-radius-lg); border-left: 4px solid transparent; }
+.hb-callout__icon { flex: none; margin-top: 1px; }
+.hb-callout__body { min-width: 0; }
+.hb-callout--tip { background: var(--pw-surface-tint); border-left-color: var(--pw-primary); }
+.hb-callout--tip .hb-callout__icon { color: var(--pw-primary); }
+.hb-callout--warning { background: var(--pw-surface-container); border-left-color: var(--pw-warning); }
+.hb-callout--warning .hb-callout__icon { color: var(--pw-warning); }
+/* On-tint scope (tokens.css) for the tinted callouts. */
+.hb-callout--tip,
+.hb-callout--warning {
+  --pw-text-meta: var(--pw-text-meta-on-tint);
+  --pw-text-muted: var(--pw-text-muted-on-tint);
+  --pw-error: var(--pw-error-on-tint);
+  --pw-warning: var(--pw-warning-on-tint);
+  --pw-info: var(--pw-info-on-tint);
+  --pw-success: var(--pw-success-on-tint);
+}
+
+.hb-callout--note { background: var(--pw-surface-container); border-left-color: var(--pw-info); }
+.hb-callout--note .hb-callout__icon { color: var(--pw-info); }
+
+.hb-table-wrap { overflow-x: auto; }
+.hb-table { display: grid; font-size: var(--pw-font-sm); line-height: 20px; border-top: 1px solid var(--pw-divider); }
+.hb-table__row { display: grid; grid-template-columns: minmax(120px, 0.6fr) minmax(0, 1.4fr); border-bottom: 1px solid var(--pw-divider); }
+.hb-table--cols-3 .hb-table__row { grid-template-columns: minmax(120px, 0.6fr) minmax(0, 1fr) minmax(0, 1fr); }
+.hb-table--cols-4 .hb-table__row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.hb-table--cols-1 .hb-table__row { grid-template-columns: minmax(0, 1fr); }
+.hb-table__cell { padding: 8px 12px; color: var(--pw-text-strong); overflow-wrap: anywhere; }
+.hb-table__row--head .hb-table__cell { color: var(--pw-text-secondary); font-weight: 500; background: var(--pw-surface-tint); }
+.hb-table__row:not(.hb-table__row--head) .hb-table__cell:first-child { color: var(--pw-text); font-weight: 500; }
+
+.hb-faq { display: flex; flex-direction: column; gap: 8px; }
+.hb-faq__item { border: 1px solid var(--pw-outline-panel); border-radius: var(--pw-radius-lg); padding: 0 16px; }
+.hb-faq__item[open] { padding-bottom: 12px; }
+.hb-faq__q { margin: 0; padding: 12px 0; color: var(--pw-text); font-size: var(--pw-font-body); font-weight: 500; cursor: pointer; }
+
+/* ---- search results */
+.hb-results { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+.hb-results__link {
+  display: flex; align-items: flex-start; gap: 12px; padding: 12px 8px; border-radius: var(--pw-radius-lg);
+  color: var(--pw-text); text-decoration: none;
+}
+.hb-results__link:hover { background: var(--pw-hover-row); }
+.hb-results__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hb-results__title { font-size: var(--pw-font-body); font-weight: 500; color: var(--pw-primary); }
+.hb-results__meta { font-size: var(--pw-font-xs); color: var(--pw-text-secondary); }
+.hb-results__snippet { font-size: var(--pw-font-sm); color: var(--pw-text-strong); }
+
+/* ---- narrow screens: the outline folds behind "Daftar isi" */
+@media (max-width: 1023px) {
+  .hb-layout { grid-template-columns: minmax(0, 1fr); }
+  .hb-outline-toggle { display: inline-flex; }
+  .hb-aside { position: static; max-height: none; overflow: visible; }
+  .hb-outline { display: none; }
+  .hb-outline.is-open { display: flex; padding: 16px 8px; border: 1px solid var(--pw-outline-panel); border-radius: var(--pw-radius-lg); background: var(--pw-surface); }
+}
+@media (max-width: 600px) {
+  .hb-chapter__header { flex-wrap: wrap; }
+  .hb-chapter__actions { width: 100%; }
+  .hb-toolbar { flex-wrap: wrap; }
+  .hb-table__row, .hb-table--cols-3 .hb-table__row, .hb-table--cols-4 .hb-table__row { grid-template-columns: minmax(0, 1fr); padding: 4px 0; }
+  .hb-table__row--head { display: none; }
+  .hb-table__cell { padding: 2px 12px; }
+  .hb-table__cell:not(:first-child)::before { content: attr(data-label) ": "; color: var(--pw-text-secondary); }
+}
+
+/* ---- print: only the portal copy (cover + the user's chapters) */
+.hb-print-root { display: none; }
+
+@media print {
+  @page { size: A4; margin: 16mm 14mm; }
+  body:has(> .hb-print-root) > :not(.hb-print-root) { display: none !important; }
+  body:has(> .hb-print-root) { background: var(--pw-surface); }
+  .hb-print-root { display: block; color: var(--pw-text-input); }
+  .hb-print-root .hb-chapter {
+    display: block; padding: 0; border: 0; box-shadow: none; background: var(--pw-surface); break-before: page;
+  }
+  .hb-print-root .hb-chapter__header { margin-bottom: 12px; }
+  .hb-print-root .hb-section { display: block; padding-top: 12px; margin-top: 12px; break-inside: auto; }
+  .hb-print-root .hb-section__head, .hb-print-root .hb-callout, .hb-print-root .hb-table__row, .hb-print-root .hb-faq__item { break-inside: avoid; }
+  .hb-print-root .hb-steps, .hb-print-root .hb-list, .hb-print-root .hb-callout, .hb-print-root .hb-table-wrap, .hb-print-root .hb-faq, .hb-print-root .hb-text { margin-top: 8px; }
+  .hb-print-root .hb-faq__item { padding: 8px 12px; }
+  .hb-print-root .hb-faq__q { padding: 0 0 4px; }
+  .hb-print-root .hb-table-wrap { overflow: visible; }
+  .hb-cover { display: flex; flex-direction: column; justify-content: center; gap: 12px; min-height: 240mm; }
+  .hb-cover__brand { margin: 0; color: var(--pw-primary); font-family: var(--pw-font-sans); font-size: var(--pw-font-lg); letter-spacing: 0.04em; }
+  .hb-cover__title { margin: 0; font-family: var(--pw-font-sans); font-size: var(--pw-font-stat); font-weight: 400; line-height: 1.2; }
+  .hb-cover__meta { margin: 0; font-size: var(--pw-font-md); }
+  .hb-cover__note { margin: 16px 0 0; max-width: 140mm; color: var(--pw-text-secondary); font-size: var(--pw-font-body); }
+  .hb-cover__toc { margin: 16px 0 0; padding-left: 20px; columns: 2; font-size: var(--pw-font-sm); line-height: 20px; }
+}

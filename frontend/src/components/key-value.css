@@ -1,0 +1,41 @@
+/* KeyValue (docs/ui-guideline.md §3.2): label Roboto 13/20 --pw-text-muted,
+   value Roboto 14/20 --pw-text, rows split by --pw-divider. Loaded after
+   styles/patterns.css, so these rules replace its older .pw-kv look. */
+.pw-kv { display: grid; gap: 0; margin: 0; }
+.pw-kv--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+.pw-kv__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 12px 0;
+  box-shadow: inset 0 -1px 0 var(--pw-divider);
+}
+.pw-kv__row:last-child { box-shadow: none; }
+.pw-kv--2 .pw-kv__row:nth-last-child(2):nth-child(odd) { box-shadow: none; }
+.pw-kv dt.pw-kv__label {
+  flex: 0 0 40%;
+  max-width: 40%;
+  color: var(--pw-text-muted);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-sm);
+  line-height: 20px;
+}
+.pw-kv dd.pw-kv__value {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  color: var(--pw-text);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+  line-height: 20px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.pw-kv__empty { color: var(--pw-text-muted); }
+
+@media (max-width: 600px) {
+  .pw-kv--2 { grid-template-columns: minmax(0, 1fr); }
+  .pw-kv--2 .pw-kv__row:nth-last-child(2):nth-child(odd) { box-shadow: inset 0 -1px 0 var(--pw-divider); }
+}

@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { z } = require('zod');
+const { httpsUrl } = require('../utils/safeUrl');
 const requireAuth = require('../middleware/requireAuth');
 const requirePermission = require('../middleware/requirePermission');
 const validate = require('../middleware/validate');
@@ -7,7 +8,7 @@ const ctrl = require('../controllers/entities.controller');
 const body = z.object({
   name: z.string().min(1).max(150),
   brandCode: z.string().min(1).max(50),
-  logoUrl: z.string().url().optional().nullable(),
+  logoUrl: httpsUrl({ max: 255 }).optional().nullable(),
 });
 router.use(requireAuth);
 router.get('/', requirePermission('entity.manage'), ctrl.list);

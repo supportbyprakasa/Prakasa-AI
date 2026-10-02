@@ -1,6 +1,12 @@
 const pool = require('../db/pool');
 const taskAccess = require('./taskAccess.service');
 const { log: activityLog } = require('./activityLog.service');
+const googleChat = require('./googleChat.service');
+
+function spaceUrlFor(spaceName) {
+  const id = String(spaceName || '').split('/')[1];
+  return id ? `https://chat.google.com/room/${id}` : null;
+}
 
 async function listBoards({ user, filters = {} }) {
   const entityId = taskAccess.resolveTargetEntity({
@@ -11,10 +17,14 @@ async function listBoards({ user, filters = {} }) {
   const args = [entityId];
   if (filters.departmentId) { where.push('b.department_id = ?'); args.push(filters.departmentId); }
   if (filters.activeOnly !== '0') where.push('b.is_archived = 0');
+  // Division scope: own division, company-wide or own boards unless the user spans divisions.
+  const division = taskAccess.boardDivisionSql(user, 'b');
+  where.push(division.sql); args.push(...division.args);
 
   const [rows] = await pool.query(
     `SELECT b.id, b.entity_id AS entityId, b.department_id AS departmentId,
             b.name, b.description, b.is_archived AS isArchived,
+            b.project_key AS projectKey,
             b.created_at AS createdAt
        FROM boards b
       WHERE ${where.join(' AND ')}
@@ -42,6 +52,8 @@ async function getBoardDetail({ boardId, user }) {
     description: board.description,
     isArchived: !!board.is_archived,
     createdAt: board.created_at,
+    googleChatSpaceName: board.google_chat_space_name,
+    googleChatSpaceUrl: board.google_chat_space_url,
     columns: cols,
   };
 }
@@ -114,6 +126,23 @@ async function createBoard({ user, input }) {
         metadata: { name },
       });
     } catch { /* board is already committed */ }
+
+    // A missing/failed Space never blocks the board itself — the UI just shows
+    // "Space belum tersedia" until this is retried or set up (e.g. Chat API
+    // scopes not yet granted in the Workspace Admin Console).
+    try {
+      const space = await googleChat.createSpace(
+        { displayName: name, creatorEmail: user.email },
+        { entityId, userId: user.sub, subjectType: 'board', subjectId: r.insertId }
+      );
+      await pool.query(
+        `UPDATE boards SET google_chat_space_name = ?, google_chat_space_url = ? WHERE id = ?`,
+        [space.name, spaceUrlFor(space.name), r.insertId]
+      );
+    } catch (chatErr) {
+      console.error('[board.createBoard] Google Chat error:', chatErr.message);
+    }
+
     return { id: r.insertId };
   } catch (e) {
     try { await conn.rollback(); } catch { /* noop */ }

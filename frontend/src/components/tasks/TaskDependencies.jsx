@@ -1,26 +1,65 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, X, ArrowRight, ArrowLeft, Link as LinkIcon } from 'lucide-react';
 import api from '../../api/client';
 import Card from '../Card';
 import Button from '../Button';
+import IconButton from '../IconButton';
 import Input from '../Input';
-import Badge from '../Badge';
+import Select from '../Select';
+import StatusBadge from '../StatusBadge';
 import Modal from '../Modal';
+import FormActions from '../FormActions';
+import ConfirmDialog from '../ConfirmDialog';
+import EmptyState, { LoadingState } from '../EmptyState';
+import { statusLabel } from '../statusTone';
 import { toast } from '../Toast';
+import { defineAIForm, f } from '../ai/aiFormFields';
+import usePrakasaAIForm from '../ai/usePrakasaAIForm';
+import useOpenFromUrl from '../ai/useOpenFromUrl';
+import './tasks.css';
 
+const MODE_OPTIONS = [
+  { value: 'blocked_by', label: 'Task ini diblokir oleh task lain' },
+  { value: 'blocking', label: 'Task ini memblokir task lain' },
+  { value: 'related', label: 'Terkait dengan task lain' },
+];
+const EMPTY_DEPENDENCY = { mode: 'blocked_by', otherId: '' };
+
+// Prakasa AI may choose the kind of dependency and type the other task's ID: a
+// task ID is not personal and is shown on the page (decision of Wave C2,
+// docs/prakasa-ai-rencana.md §9.12). Whether that task exists and this user
+// may see it is checked when the user saves (POST /tasks/:id/dependencies).
+const AI_DEPENDENCY = defineAIForm({
+  id: 'task-dependency',
+  title: 'Tambah dependensi',
+  permission: 'task.dependency.manage',
+  submitLabel: 'Tambah dependensi',
+  fields: [
+    f.select('mode', 'Jenis', MODE_OPTIONS, { required: true }),
+    f.number('otherId', 'ID task lain', { required: true, min: 1, step: 1, hint: 'Nomor ID task, dari halaman tugas atau dari data tugas pengguna. Jangan dikarang: bila tidak diketahui, tanyakan.' }),
+  ],
+});
+
+// Tasks this one waits for, tasks waiting for it, and related tasks.
 export default function TaskDependencies({ task, canManage, onChanged }) {
   const [data, setData] = useState({ blockedBy: [], blocking: [], related: [] });
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [addOpen, setAddOpen] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState(null);
+  const [removing, setRemoving] = useState(false);
+
+  // /tasks/<id>?form=dependensi opens the dialog (a link, or Prakasa AI's buka_halaman).
+  useOpenFromUrl('form', (name) => { if (name === 'dependensi') setAddOpen(true); }, { enabled: Boolean(canManage) });
 
   const load = async () => {
     setLoading(true);
     try {
       const r = await api.get(`/tasks/${task.id}/dependencies`);
       setData(r.data.data || { blockedBy: [], blocking: [], related: [] });
+      setLoadError('');
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal memuat dependencies', 'error');
+      setLoadError(e.response?.data?.error?.message || 'Dependensi gagal dimuat.');
     } finally {
       setLoading(false);
     }
@@ -29,63 +68,44 @@ export default function TaskDependencies({ task, canManage, onChanged }) {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [task.id]);
 
   const remove = async (id) => {
-    if (!confirm('Hapus dependency ini?')) return;
+    setRemoving(true);
     try {
       await api.delete(`/tasks/${task.id}/dependencies/${id}`);
       await load();
       onChanged?.();
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal', 'error');
+      toast(e.response?.data?.error?.message || 'Dependensi gagal dihapus.', 'error');
+    } finally {
+      setRemoving(false);
+      setRemoveTarget(null);
     }
   };
 
+  const related = (data.related || []).map((r) => {
+    const taskIsPredecessor = Number(r.predecessorTaskId) === Number(task.id);
+    const relatedTaskId = taskIsPredecessor ? r.successorTaskId : r.predecessorTaskId;
+    const relatedTitle = taskIsPredecessor ? r.successorTitle : r.predecessorTitle;
+    return { id: r.id, taskId: relatedTaskId, title: relatedTitle || `Task #${relatedTaskId}` };
+  });
+
   return (
     <Card
-      title="Dependencies"
-      actions={
-        canManage ? (
-          <Button variant="secondary" onClick={() => setAddOpen(true)}>
-            <Plus size={14} />
-          </Button>
-        ) : null
-      }
+      title="Dependensi"
+      actions={canManage ? <IconButton label="Tambah dependensi" icon="add_link" onClick={() => setAddOpen(true)} /> : null}
     >
-      {loading && <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Memuat…</div>}
+      {loading && !loadError ? <LoadingState compact label="Memuat dependensi…" /> : null}
 
-      {!loading && (
-        <>
-          <Section
-            icon={ArrowLeft}
-            label="Blocked by"
-            rows={data.blockedBy}
-            canManage={canManage}
-            onRemove={remove}
-          />
-          <Section
-            icon={ArrowRight}
-            label="Blocking"
-            rows={data.blocking}
-            canManage={canManage}
-            onRemove={remove}
-          />
-          <Section
-            icon={LinkIcon}
-            label="Related"
-            rows={(data.related || []).map((r) => {
-              const taskIsPredecessor = Number(r.predecessorTaskId) === Number(task.id);
-              const relatedTaskId = taskIsPredecessor ? r.successorTaskId : r.predecessorTaskId;
-              const relatedTitle = taskIsPredecessor ? r.successorTitle : r.predecessorTitle;
-              return {
-                id: r.id,
-                taskId: relatedTaskId,
-                title: relatedTitle || `Task #${relatedTaskId}`,
-              };
-            })}
-            canManage={canManage}
-            onRemove={remove}
-          />
-        </>
-      )}
+      {!loading && loadError ? (
+        <EmptyState compact tone="error" title="Dependensi gagal dimuat" description={loadError} action={<Button variant="secondary" onClick={load}>Coba lagi</Button>} />
+      ) : null}
+
+      {!loading && !loadError ? (
+        <div className="task-deps">
+          <Section kind="blocked_by" rows={data.blockedBy || []} canManage={canManage} onRemove={setRemoveTarget} />
+          <Section kind="blocks" rows={data.blocking || []} canManage={canManage} onRemove={setRemoveTarget} />
+          <Section kind="related" rows={related} canManage={canManage} onRemove={setRemoveTarget} />
+        </div>
+      ) : null}
 
       <AddDependencyModal
         open={addOpen}
@@ -93,66 +113,70 @@ export default function TaskDependencies({ task, canManage, onChanged }) {
         taskId={task.id}
         onAdded={() => { setAddOpen(false); load(); onChanged?.(); }}
       />
+
+      <ConfirmDialog
+        open={!!removeTarget}
+        title="Hapus dependensi?"
+        message={removeTarget ? `Dependensi ke "${removeTarget.title}" akan dihapus.` : ''}
+        confirmLabel="Hapus dependensi"
+        tone="danger"
+        loading={removing}
+        onConfirm={() => remove(removeTarget.id)}
+        onClose={() => setRemoveTarget(null)}
+      />
     </Card>
   );
 }
 
-function Section({ icon: Icon, label, rows, canManage, onRemove }) {
+function Section({ kind, rows, canManage, onRemove }) {
   return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{
-        fontSize: 11, color: 'var(--color-text-muted)',
-        display: 'flex', alignItems: 'center', gap: 4,
-        marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.4,
-      }}>
-        <Icon size={11} /> {label} ({rows.length})
-      </div>
-      {!rows.length && (
-        <div style={{ fontSize: 12, color: 'var(--color-text-muted)', padding: '4px 0' }}>
-          —
-        </div>
+    <section className="task-deps__group" aria-label={statusLabel(kind)}>
+      <h4 className="pw-overline">{`${statusLabel(kind)} (${rows.length})`}</h4>
+      {!rows.length ? <span className="pw-text-helper">Tidak ada.</span> : (
+        <ul className="task-list">
+          {rows.map((r) => (
+            <li key={r.id} className="task-list__row">
+              <span className="task-list__main">
+                {r.taskId ? <Link to={`/tasks/${r.taskId}`} className="pw-link" data-no-translate="">{r.title}</Link> : <span data-no-translate="">{r.title}</span>}
+                {r.status ? <StatusBadge status={r.status} /> : null}
+              </span>
+              {canManage ? (
+                <IconButton label={`Hapus dependensi ke ${r.title}`} size="sm" icon="link_off" onClick={() => onRemove(r)} />
+              ) : null}
+            </li>
+          ))}
+        </ul>
       )}
-      {rows.map((r) => (
-        <div key={r.id} style={{
-          display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', padding: '6px 0',
-          boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontSize: 13,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {r.taskId ? (
-              <Link to={`/tasks/${r.taskId}`} style={{ color: 'inherit', textDecoration: 'none' }}>
-                <b>{r.title}</b>
-              </Link>
-            ) : (
-              <span>{r.title}</span>
-            )}
-            {r.status && <Badge tone="default">{r.status}</Badge>}
-          </div>
-          {canManage && (
-            <button type="button" onClick={() => onRemove(r.id)}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
-              <X size={12} />
-            </button>
-          )}
-        </div>
-      ))}
-    </div>
+    </section>
   );
 }
 
 function AddDependencyModal({ open, onClose, taskId, onAdded }) {
-  const [mode, setMode] = useState('blocked_by');
+  const [mode, setMode] = useState(EMPTY_DEPENDENCY.mode);
   const [otherId, setOtherId] = useState('');
+  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const submit = async () => {
+  useEffect(() => { if (open) { setMode(EMPTY_DEPENDENCY.mode); setOtherId(''); setError(''); } }, [open]);
+
+  const ai = usePrakasaAIForm(AI_DEPENDENCY, {
+    enabled: open,
+    values: { mode, otherId },
+    setters: { mode: setMode, otherId: setOtherId },
+    initialValues: EMPTY_DEPENDENCY,
+    onFill: () => setError(''),
+    validate: (next) => (String(next.otherId || '') !== '' && Number(next.otherId) === Number(taskId) ? { otherId: 'Task tidak dapat bergantung ke dirinya sendiri.' } : {}),
+  });
+
+  const submit = async (event) => {
+    event.preventDefault();
     const other = Number(otherId);
     if (!Number.isInteger(other) || other <= 0) {
-      toast('Task ID tidak valid', 'error');
+      setError('Isi ID task berupa bilangan bulat positif.');
       return;
     }
     if (other === Number(taskId)) {
-      toast('Task tidak dapat bergantung ke dirinya sendiri.', 'error');
+      setError('Task tidak dapat bergantung ke dirinya sendiri.');
       return;
     }
 
@@ -180,54 +204,47 @@ function AddDependencyModal({ open, onClose, taskId, onAdded }) {
         successorTaskId,
         dependencyType,
       });
-      toast('Dependency ditambahkan', 'success');
+      toast('Dependensi ditambahkan', 'success');
       setOtherId('');
       onAdded();
     } catch (e) {
       const code = e.response?.data?.error?.code;
-      if (code === 'DEPENDENCY_CYCLE') {
-        toast('Dependency ini akan membuat siklus.', 'error');
-      } else {
-        toast(e.response?.data?.error?.message || 'Gagal menambahkan dependency', 'error');
-      }
+      setError(code === 'DEPENDENCY_CYCLE'
+        ? 'Dependensi ini akan membuat siklus.'
+        : (e.response?.data?.error?.message || 'Dependensi gagal ditambahkan.'));
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Tambah Dependency" maxWidth={460}>
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Tipe</label>
-        <select
+    <Modal open={open} onClose={onClose} title="Tambah dependensi" size="sm">
+      <form className="pw-stack" onSubmit={submit} noValidate>
+        {ai.notice}
+        <Select
+          label="Jenis"
           value={mode}
+          {...ai.field('mode')}
           onChange={(e) => setMode(e.target.value)}
-          style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
-        >
-          <option value="blocked_by">Task ini diblokir oleh task lain</option>
-          <option value="blocking">Task ini memblokir task lain</option>
-          <option value="related">Terkait dengan task lain</option>
-        </select>
-      </div>
-
-      <Input
-        label="Task ID lainnya"
-        type="number"
-        min="1"
-        step="1"
-        value={otherId}
-        onChange={(e) => setOtherId(e.target.value)}
-      />
-      <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: -6, marginBottom: 12 }}>
-        Harus task di entity yang sama. Siklus dependency akan ditolak backend.
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-        <Button variant="secondary" onClick={onClose}>Batal</Button>
-        <Button onClick={submit} disabled={saving}>
-          {saving ? 'Menambahkan…' : 'Tambah'}
-        </Button>
-      </div>
+          options={MODE_OPTIONS}
+        />
+        <Input
+          label="ID task lain"
+          type="number"
+          min="1"
+          step="1"
+          required
+          value={otherId}
+          {...ai.field('otherId')}
+          error={error}
+          onChange={(e) => { setOtherId(e.target.value); if (error) setError(''); }}
+          hint="Task di entitas yang sama. Dependensi yang membentuk siklus ditolak."
+        />
+        <FormActions>
+          <Button type="button" variant="text" onClick={onClose}>Batal</Button>
+          <Button type="submit" loading={saving}>Tambah dependensi</Button>
+        </FormActions>
+      </form>
     </Modal>
   );
 }

@@ -1,33 +1,43 @@
+import { noTranslate } from '../../i18n/NoTranslate';
 import { useEffect, useState } from 'react';
-import { Plus, Check, X, ClipboardCheck } from 'lucide-react';
 import api from '../../api/client';
+import Banner from '../Banner';
 import Button from '../Button';
-import Badge from '../Badge';
+import EmptyState, { LoadingState } from '../EmptyState';
+import FormActions from '../FormActions';
+import Icon from '../Icon';
 import Input from '../Input';
 import Modal from '../Modal';
+import Select from '../Select';
+import StatusBadge from '../StatusBadge';
+import Textarea from '../Textarea';
 import { toast } from '../Toast';
 import { useAuth } from '../../context/AuthContext';
+import './ai-components.css';
+import { dateLocale } from '../../i18n/language.js';
 
 const ACTION_LABEL = {
-  create_task: 'Buat Task',
-  create_approval: 'Buat Approval',
-  create_document: 'Buat Dokumen',
-  create_calendar_event: 'Buat Event',
-  update_task: 'Ubah Task',
-  send_notification: 'Kirim Notifikasi',
+  create_task: 'Buat tugas',
+  create_approval: 'Buat approval',
+  create_document: 'Buat dokumen',
+  create_calendar_event: 'Buat acara',
+  update_task: 'Ubah tugas',
+  send_notification: 'Kirim notifikasi',
 };
 
-const STATUS_TONE = {
-  proposed: 'info',
-  confirmed: 'warning',
-  rejected: 'error',
-  executed: 'success',
-  failed: 'error',
-  expired: 'default',
+// Proposal statuses mapped to their statusTone() equivalent (§3.4), so the
+// badge tone comes from the one shared map while the wording stays local.
+const STATUS_TONE_KEY = {
+  proposed: 'pending_approval',
+  confirmed: 'processing',
+  rejected: 'rejected',
+  executed: 'completed',
+  failed: 'failed',
+  expired: 'expired',
 };
 
 const STATUS_LABEL = {
-  proposed: 'Menunggu Konfirmasi',
+  proposed: 'Menunggu konfirmasi',
   confirmed: 'Dikonfirmasi',
   rejected: 'Ditolak',
   executed: 'Dieksekusi',
@@ -56,7 +66,7 @@ export default function AIActionProposals({ sessionId, session, refreshKey }) {
       const r = await api.get(`/ai-command/sessions/${sessionId}/actions`);
       setRows(r.data.data || []);
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal memuat actions', 'error');
+      toast(e.response?.data?.error?.message || 'Gagal memuat proposal aksi', 'error');
     } finally {
       setLoading(false);
     }
@@ -70,7 +80,7 @@ export default function AIActionProposals({ sessionId, session, refreshKey }) {
       const r = await api.post(`/ai-command/actions/${confirmTarget.id}/confirm`);
       const data = r.data.data || {};
       if (data.status === 'executed' && data.executionResult?.taskId) {
-        toast(`Task #${data.executionResult.taskId} berhasil dibuat`, 'success');
+        toast(`Tugas #${data.executionResult.taskId} berhasil dibuat`, 'success');
       } else if (data.executionDeferred) {
         toast('Dikonfirmasi — menunggu executor', 'info');
       } else {
@@ -98,10 +108,10 @@ export default function AIActionProposals({ sessionId, session, refreshKey }) {
   return (
     <div className="ai-action-panel">
       <div className="ai-support-section-header">
-        <div style={{ fontSize: 13, fontWeight: 600 }}>Action Proposals</div>
+        <h3 className="ai-support-section-title">Proposal aksi</h3>
         {canPropose && canManage && !archived && (
-          <Button variant="secondary" onClick={() => setCreateOpen(true)}>
-            <Plus size={12} /> Proposal
+          <Button variant="secondary" icon="add" onClick={() => setCreateOpen(true)}>
+            Buat proposal
           </Button>
         )}
       </div>
@@ -111,14 +121,10 @@ export default function AIActionProposals({ sessionId, session, refreshKey }) {
           AI tidak mengeksekusi aksi secara otomatis. Setiap proposal harus dikonfirmasi pengguna.
         </div>
 
-        {loading && (
-          <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Memuat…</div>
-        )}
+        {loading && <LoadingState compact />}
 
         {!loading && !rows.length && (
-          <div className="ai-support-empty">
-            Belum ada action proposal.
-          </div>
+          <EmptyState compact icon="assignment" description="Belum ada proposal aksi." />
         )}
 
         {!loading && rows.map((p) => (
@@ -161,7 +167,6 @@ export default function AIActionProposals({ sessionId, session, refreshKey }) {
 
 function ActionRow({ proposal, canConfirm, onConfirm, onReject }) {
   const label = ACTION_LABEL[proposal.actionType] || proposal.actionType;
-  const tone = STATUS_TONE[proposal.status] || 'default';
   const statusLabel = STATUS_LABEL[proposal.status] || proposal.status;
 
   // Display rule: only mark executed when actually executed
@@ -171,51 +176,51 @@ function ActionRow({ proposal, canConfirm, onConfirm, onReject }) {
 
   return (
     <div className="ai-support-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <ClipboardCheck size={14} />
-          <b>{label}</b>
+      <div className="pw-row pw-row--between pw-row--start pw-row--nowrap ai-proposal-head">
+        <div className="pw-row pw-row--nowrap ai-proposal-label">
+          <Icon name="assignment_turned_in" size="sm" />
+          <span className="ai-proposal-name">{label}</span>
         </div>
-        <Badge tone={tone}>{statusLabel}</Badge>
+        <StatusBadge status={STATUS_TONE_KEY[proposal.status] || proposal.status} label={statusLabel} />
       </div>
 
-      <div style={{ marginTop: 6, color: 'var(--color-text-muted)' }}>
+      <div className="ai-proposal-body">
         {proposal.payload?.title && (
-          <div><b>{proposal.payload.title}</b></div>
+          <div {...noTranslate}><b>{proposal.payload.title}</b></div>
         )}
         {proposal.payload?.description && (
-          <div style={{ marginTop: 2 }}>
+          <div {...noTranslate}>
             {String(proposal.payload.description).slice(0, 140)}
           </div>
         )}
       </div>
 
       {executedOk && proposal.executionResult?.taskId && (
-        <div style={{ marginTop: 6, fontSize: 11, color: 'var(--color-success)' }}>
-          Task berhasil dibuat — <b>#{proposal.executionResult.taskId}</b>
+        <div className="ai-proposal-meta is-success">
+          Tugas berhasil dibuat — <b>#{proposal.executionResult.taskId}</b>
         </div>
       )}
 
       {deferredConfirmed && (
-        <div style={{ marginTop: 6, fontSize: 11, color: 'var(--color-warning)' }}>
+        <div className="ai-proposal-meta is-warning">
           Dikonfirmasi — menunggu executor
         </div>
       )}
 
       {proposal.status === 'failed' && proposal.failureMessage && (
-        <div style={{ marginTop: 6, fontSize: 11, color: 'var(--color-error)' }}>
+        <div className="ai-proposal-meta is-error">
           {proposal.failureMessage}
         </div>
       )}
 
-      <div style={{ marginTop: 6, fontSize: 11, color: 'var(--color-text-muted)' }}>
-        {new Date(proposal.createdAt).toLocaleString('id-ID')}
+      <div className="ai-proposal-meta">
+        {new Date(proposal.createdAt).toLocaleString(dateLocale())}
       </div>
 
       {proposal.status === 'proposed' && canConfirm && (
-        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-          <Button onClick={onConfirm}><Check size={12} /> Konfirmasi</Button>
-          <Button variant="danger" onClick={onReject}><X size={12} /> Tolak</Button>
+        <div className="pw-row ai-proposal-actions">
+          <Button variant="danger" icon="close" onClick={onReject}>Tolak</Button>
+          <Button icon="check" onClick={onConfirm}>Konfirmasi</Button>
         </div>
       )}
     </div>
@@ -229,31 +234,27 @@ function ActionRow({ proposal, canConfirm, onConfirm, onReject }) {
 function ConfirmModal({ proposal, onCancel, onConfirm }) {
   const isDeferred = proposal.actionType !== 'create_task';
   return (
-    <Modal open={true} onClose={onCancel} title="Konfirmasi Proposal" maxWidth={480}>
-      <div style={{ fontSize: 13, lineHeight: 1.6 }}>
+    <Modal open={true} onClose={onCancel} title="Konfirmasi proposal" size="sm">
+      <div className="ai-modal-body">
         <div>
           Aksi: <b>{ACTION_LABEL[proposal.actionType] || proposal.actionType}</b>
         </div>
         {proposal.payload?.title && (
-          <div style={{ marginTop: 6 }}>
+          <div {...noTranslate}>
             <b>{proposal.payload.title}</b>
           </div>
         )}
         {isDeferred && (
-          <div style={{
-            marginTop: 12, padding: 10,
-            background: '#fffbeb', boxShadow: 'inset 0 0 0 1px #fde68a',
-            borderRadius: 8, color: '#92400e', fontSize: 12,
-          }}>
-            Executor untuk aksi ini belum tersedia. Proposal akan ditandai
+          <Banner tone="warning">
+            Eksekutor untuk aksi ini belum tersedia. Proposal akan ditandai
             <b> dikonfirmasi</b> dan menunggu eksekutor.
-          </div>
+          </Banner>
         )}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-        <Button variant="secondary" onClick={onCancel}>Batal</Button>
-        <Button onClick={onConfirm}>Konfirmasi</Button>
-      </div>
+      <FormActions>
+        <Button variant="text" onClick={onCancel}>Batal</Button>
+        <Button onClick={onConfirm}>Konfirmasi proposal</Button>
+      </FormActions>
     </Modal>
   );
 }
@@ -265,20 +266,22 @@ function ConfirmModal({ proposal, onCancel, onConfirm }) {
 function RejectModal({ proposal, onCancel, onReject }) {
   const [reason, setReason] = useState('');
   return (
-    <Modal open={true} onClose={onCancel} title="Tolak Proposal" maxWidth={480}>
-      <div style={{ fontSize: 13, marginBottom: 8 }}>
-        Menolak: <b>{ACTION_LABEL[proposal.actionType] || proposal.actionType}</b>
-        {proposal.payload?.title && <> — {proposal.payload.title}</>}
-      </div>
-      <Input
-        label="Alasan (opsional)"
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-        placeholder="Alasan penolakan"
-      />
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-        <Button variant="secondary" onClick={onCancel}>Batal</Button>
-        <Button variant="danger" onClick={() => onReject(reason)}>Tolak</Button>
+    <Modal open={true} onClose={onCancel} title="Tolak proposal" size="sm">
+      <div className="pw-stack">
+        <div className="ai-modal-body">
+          Menolak: <b>{ACTION_LABEL[proposal.actionType] || proposal.actionType}</b>
+          {proposal.payload?.title && <> — <span {...noTranslate}>{proposal.payload.title}</span></>}
+        </div>
+        <Input
+          label="Alasan (opsional)"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Contoh: sudah ditangani manual"
+        />
+        <FormActions>
+          <Button variant="text" onClick={onCancel}>Batal</Button>
+          <Button variant="danger" onClick={() => onReject(reason)}>Tolak proposal</Button>
+        </FormActions>
       </div>
     </Modal>
   );
@@ -300,10 +303,11 @@ function CreateActionModal({ sessionId, onClose, onCreated }) {
     assigneeId: '',
   });
   const [saving, setSaving] = useState(false);
+  const [titleError, setTitleError] = useState('');
 
   const submit = async () => {
     if (!form.title.trim()) {
-      toast('Judul wajib', 'error');
+      setTitleError('Judul tugas wajib diisi.');
       return;
     }
     const payload = { title: form.title.trim() };
@@ -324,99 +328,80 @@ function CreateActionModal({ sessionId, onClose, onCreated }) {
       toast('Proposal dibuat', 'success');
       onCreated();
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal membuat', 'error');
+      toast(e.response?.data?.error?.message || 'Gagal membuat proposal', 'error');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Modal open={true} onClose={onClose} title="Action Proposal Baru" maxWidth={520}>
-      <div style={{
-        padding: 10, marginBottom: 12,
-        background: '#f8fafc', boxShadow: 'inset 0 0 0 1px var(--color-border)',
-        borderRadius: 8, fontSize: 12, color: 'var(--color-text-muted)',
-      }}>
-        Hanya <b>create_task</b> yang memiliki eksekutor pada fase ini.
-      </div>
+    <Modal open={true} onClose={onClose} title="Proposal aksi baru" size="md">
+      <div className="pw-stack">
+        <Banner tone="info">
+          Pada fase ini hanya aksi <b>Buat tugas</b> yang bisa dijalankan setelah dikonfirmasi.
+        </Banner>
 
-      <Input
-        label="Judul Task *"
-        value={form.title}
-        onChange={(e) => setForm({ ...form, title: e.target.value })}
-      />
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Deskripsi</label>
-        <textarea
+        <Input
+          label="Judul tugas"
+          required
+          value={form.title}
+          error={titleError}
+          onChange={(e) => { setForm({ ...form, title: e.target.value }); setTitleError(''); }}
+        />
+        <Textarea
+          label="Deskripsi"
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           rows={3}
-          style={{
-            width: '100%', padding: 10, borderRadius: 8,
-            boxShadow: 'inset 0 0 0 1px var(--color-border)', fontSize: 13,
-          }}
         />
-      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <div>
-          <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Prioritas</label>
-          <select
+        <div className="pw-form-grid">
+          <Select
+            label="Prioritas"
             value={form.priority}
             onChange={(e) => setForm({ ...form, priority: e.target.value })}
-            style={{
-              width: '100%', padding: 8, borderRadius: 8,
-              boxShadow: 'inset 0 0 0 1px var(--color-border)',
-            }}
-          >
-            <option value="low">Low</option>
-            <option value="normal">Normal</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
-          </select>
+            options={[
+              { value: 'low', label: 'Rendah' },
+              { value: 'normal', label: 'Normal' },
+              { value: 'high', label: 'Tinggi' },
+              { value: 'urgent', label: 'Mendesak' },
+            ]}
+          />
+          <Input
+            label="Tenggat"
+            type="date"
+            value={form.dueDate}
+            onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
+          />
+          <Input
+            label="ID divisi (opsional)"
+            type="number"
+            value={form.departmentId}
+            onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
+          />
+          <Input
+            label="ID pengguna penerima tugas (opsional)"
+            type="number"
+            value={form.assigneeId}
+            onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}
+          />
+          <Input
+            label="ID papan (opsional)"
+            type="number"
+            value={form.boardId}
+            onChange={(e) => setForm({ ...form, boardId: e.target.value })}
+          />
+          <Input
+            label="ID kolom (opsional)"
+            type="number"
+            value={form.columnId}
+            onChange={(e) => setForm({ ...form, columnId: e.target.value })}
+          />
         </div>
-        <Input
-          label="Due Date"
-          type="date"
-          value={form.dueDate}
-          onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
-        />
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <Input
-          label="Department ID (opsional)"
-          type="number"
-          value={form.departmentId}
-          onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
-        />
-        <Input
-          label="Assignee User ID (opsional)"
-          type="number"
-          value={form.assigneeId}
-          onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}
-        />
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <Input
-          label="Board ID (opsional)"
-          type="number"
-          value={form.boardId}
-          onChange={(e) => setForm({ ...form, boardId: e.target.value })}
-        />
-        <Input
-          label="Column ID (opsional)"
-          type="number"
-          value={form.columnId}
-          onChange={(e) => setForm({ ...form, columnId: e.target.value })}
-        />
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-        <Button variant="secondary" onClick={onClose}>Batal</Button>
-        <Button onClick={submit} disabled={saving}>
-          {saving ? 'Menyimpan…' : 'Buat Proposal'}
-        </Button>
+        <FormActions>
+          <Button variant="text" onClick={onClose}>Batal</Button>
+          <Button onClick={submit} loading={saving}>Buat proposal</Button>
+        </FormActions>
       </div>
     </Modal>
   );

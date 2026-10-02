@@ -162,8 +162,9 @@ test('assignable role lookup returns only the database-authorized role rows', as
   const connection = {
     async query(sql, params) {
       assert.match(sql, /r\.entity_id = \?/);
-      assert.match(sql, /r\.department_id = \?|system\.super_admin/);
-      assert.deepEqual(params, [1, 11]);
+      assert.match(sql, /r\.department_id = \?/);
+      // The global roles: Super Admin and Administrator Sistem.
+      assert.deepEqual(params, [1, 11, ['system.super_admin', 'system.admin']]);
       return [expected];
     },
   };
@@ -220,7 +221,6 @@ test('user create validates role scope before inserting the user', async (t) => 
     body: {
       name: 'Warehouse User',
       email: 'warehouse@example.com',
-      password: 'strong-password',
       entityId: 1,
       departmentId: 11,
       roleIds: [9],
@@ -483,4 +483,88 @@ test('permission-only role patch does not overwrite role identity fields', async
   assert.equal(committed, true);
   assert.equal(statements.some((statement) => statement.startsWith('UPDATE roles')), false);
   assert.equal(statements.some((statement) => statement.startsWith('DELETE FROM role_permissions')), true);
+});
+
+function userUpdateConnection({ activeSuperAdmins }) {
+  const state = { writes: [], rolledBack: false, committed: false };
+  const connection = {
+    async beginTransaction() {},
+    async commit() { state.committed = true; },
+    async rollback() { state.rolledBack = true; },
+    release() {},
+    async query(sql) {
+      const statement = String(sql);
+      if (statement.includes('FROM users') && statement.includes('FOR UPDATE')) {
+        return [[{ id: 20, entity_id: 1, department_id: 11 }]];
+      }
+      if (statement.includes('WHERE r.id IN')) {
+        return [[divisionRole({ id: 9, department_id: 11 })]];
+      }
+      if (statement.includes('FROM user_roles') && statement.includes('JOIN roles')
+        && statement.includes('system.super_admin')) {
+        return [[{ total: activeSuperAdmins }]];
+      }
+      if (statement.includes('FROM user_roles')) {
+        return [[divisionRole({ department_id: 11 })]];
+      }
+      if (/UPDATE users|DELETE FROM user_roles|INSERT IGNORE INTO user_roles/.test(statement)) {
+        state.writes.push(statement);
+      }
+      return [{ affectedRows: 1 }];
+    },
+  };
+  return { connection, state };
+}
+
+test('user update refuses to leave the system without an active Super Admin', async (t) => {
+  const { connection, state } = userUpdateConnection({ activeSuperAdmins: 0 });
+  t.mock.method(pool, 'getConnection', async () => connection);
+  t.mock.method(pool, 'query', async () => [{ affectedRows: 1 }]);
+
+  const res = responseDouble();
+  let nextError;
+  await usersController.update({
+    params: { id: '20' },
+    body: { roleIds: [9] },
+    user: { sub: 1, entityId: 1 },
+  }, res, (error) => { nextError = error; });
+
+  assert.equal(nextError, undefined);
+  assert.equal(res.statusCode, 409);
+  assert.equal(res.body.error.code, 'LAST_SUPER_ADMIN');
+  assert.equal(state.rolledBack, true);
+  assert.equal(state.committed, false);
+});
+
+test('user update commits when another active Super Admin remains', async (t) => {
+  const { connection, state } = userUpdateConnection({ activeSuperAdmins: 1 });
+  t.mock.method(pool, 'getConnection', async () => connection);
+  t.mock.method(pool, 'query', async () => [{ affectedRows: 1 }]);
+
+  const res = responseDouble();
+  await usersController.update({
+    params: { id: '20' },
+    body: { roleIds: [9] },
+    user: { sub: 1, entityId: 1 },
+  }, res, (error) => { throw error; });
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(state.committed, true);
+});
+
+test('an admin cannot deactivate their own account', async (t) => {
+  const { connection, state } = userUpdateConnection({ activeSuperAdmins: 1 });
+  t.mock.method(pool, 'getConnection', async () => connection);
+  t.mock.method(pool, 'query', async () => [{ affectedRows: 1 }]);
+
+  const res = responseDouble();
+  await usersController.update({
+    params: { id: '20' },
+    body: { status: 'inactive' },
+    user: { sub: 20, entityId: 1 },
+  }, res, (error) => { throw error; });
+
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.error.code, 'SELF_DEACTIVATION');
+  assert.deepEqual(state.writes, []);
 });

@@ -1,20 +1,20 @@
-import { Globe } from 'lucide-react';
+import Chip from '../Chip';
 
 export default function AIWebToggle({ active, onToggle, disabled = false }) {
   return (
-    <button
-      type="button"
-      className={`ai-chip-button ai-ripple${active ? ' is-active' : ''}`}
-      aria-pressed={active}
+    <Chip
+      className="ai-chip-button"
+      icon="public"
+      selected={Boolean(active)}
+      tooltip={disabled ? undefined : (active ? 'Riset web aktif' : 'Aktifkan riset web')}
       onClick={onToggle}
       disabled={disabled}
-      title={active
+      aria-label={active
         ? 'Riset web aktif: AI boleh mencari informasi di internet dan menyertakan sumber'
         : 'Aktifkan riset web: AI boleh mencari informasi di internet'}
     >
-      <Globe size={15} />
-      <span className="ai-chip-label">Riset web</span>
-    </button>
+      Riset web
+    </Chip>
   );
 }
 

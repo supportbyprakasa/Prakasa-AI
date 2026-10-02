@@ -1,0 +1,23 @@
+[
+  {"file":"pages/advanced/Escalations.jsx","form":"Escalations (tindak lanjut)","what":"Tindak lanjut eskalasi","status":"registered","id":"management-escalation-followup"},
+  {"file":"pages/advanced/GlobalSearch.jsx","form":"GlobalSearch","what":"Pencarian global","status":"excluded","reason":"Kotak pencarian: form hanya dipakai untuk menekan Enter saat mencari."},
+  {"file":"pages/advanced/Targets.jsx","form":"Targets (ubah target)","what":"Ubah target divisi","status":"registered","id":"management-target"},
+  {"file":"pages/finance/PaymentRequestDetail.jsx","form":"RequestDetail (lampirkan dokumen)","what":"Lampirkan dokumen pengajuan","status":"excluded","reason":"Hanya untuk memilih file yang diunggah; unggahan tetap dilakukan pengguna."},
+  {"file":"pages/finance/PaymentRequestDetail.jsx","form":"RequestDetail (tandai dibayar)","what":"Tandai pengajuan sudah dibayar","status":"excluded","reason":"Menandai pengajuan sudah dibayar adalah keputusan Finance."},
+  {"file":"pages/finance/PaymentRequestForm.jsx","form":"PaymentRequestForm","what":"Pengajuan pembayaran / reimbursement","status":"registered","id":"payment-request"},
+  {"file":"pages/procurement/ProcurementOrders.jsx","form":"ProcurementOrders","what":"Filter purchase order dan rincian PO","status":"excluded","reason":"Hanya bilah filter atau pencarian dan tampilan rincian, bukan form isian data."},
+  {"file":"pages/procurement/ProcurementPrices.jsx","form":"ProcurementPrices","what":"Filter harga pemasok dan riwayat harga","status":"excluded","reason":"Hanya bilah filter atau pencarian dan tampilan rincian, bukan form isian data."},
+  {"file":"pages/procurement/ProcurementReorder.jsx","form":"ProcurementReorder","what":"Filter saran pemesanan ulang dan hitungannya","status":"excluded","reason":"Hanya bilah filter atau pencarian dan tampilan rincian, bukan form isian data."},
+  {"file":"pages/warehouse/WarehouseAccurateDocs.jsx","form":"WarehouseAccurateDocs","what":"Filter dokumen Accurate gudang dan rincian dokumen","status":"excluded","reason":"Hanya bilah filter atau pencarian dan tampilan rincian, bukan form isian data."},
+  {"file":"pages/warehouse/WarehouseDashboard.jsx","form":"ChecklistDialog","what":"Buat checklist harian gudang","status":"registered","id":"warehouse-checklist"},
+  {"file":"pages/warehouse/WarehouseDashboard.jsx","form":"IncidentDialog","what":"Catat insiden gudang","status":"registered","id":"warehouse-incident"},
+  {"file":"pages/warehouse/WarehouseDashboard.jsx","form":"ResolveDialog","what":"Selesaikan insiden gudang","status":"excluded","reason":"Menutup insiden dengan status akhir dan resolusinya adalah keputusan pengguna."},
+  {"file":"pages/warehouse/WarehouseMovementForm.jsx","form":"WarehouseMovementForm (buat barang masuk)","what":"Dokumen barang masuk (buat)","status":"registered","id":"warehouse-movement-inbound"},
+  {"file":"pages/warehouse/WarehouseMovementForm.jsx","form":"WarehouseMovementForm (buat barang keluar)","what":"Dokumen barang keluar (buat)","status":"registered","id":"warehouse-movement-outbound"},
+  {"file":"pages/warehouse/WarehouseMovementForm.jsx","form":"WarehouseMovementForm (ubah draft barang masuk)","what":"Dokumen barang masuk (ubah draft)","status":"registered","id":"warehouse-movement-inbound-edit"},
+  {"file":"pages/warehouse/WarehouseMovementForm.jsx","form":"WarehouseMovementForm (ubah draft barang keluar)","what":"Dokumen barang keluar (ubah draft)","status":"registered","id":"warehouse-movement-outbound-edit"},
+  {"file":"pages/warehouse/WarehouseRecon.jsx","form":"CandidatesDialog","what":"Pasangkan pergerakan dengan dokumen Accurate","status":"excluded","reason":"Memasangkan dokumen saat rekonsiliasi adalah keputusan pengguna."},
+  {"file":"pages/warehouse/WarehouseRecon.jsx","form":"WarehouseRecon","what":"Filter rekonsiliasi gudang","status":"excluded","reason":"Hanya bilah filter atau pencarian dan tampilan rincian, bukan form isian data."},
+  {"file":"pages/warehouse/WarehouseShipping.jsx","form":"WarehouseShipping","what":"Filter pengiriman SO dan rincian SO","status":"excluded","reason":"Hanya bilah filter atau pencarian dan tampilan rincian, bukan form isian data."},
+  {"file":"pages/warehouse/WarehouseStock.jsx","form":"WarehouseStock","what":"Stok gudang: filter dan rincian barang","status":"excluded","reason":"Hanya bilah filter atau pencarian dan tampilan rincian, bukan form isian data."}
+]

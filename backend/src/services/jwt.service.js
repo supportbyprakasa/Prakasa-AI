@@ -5,6 +5,6 @@ const sign = (payload) =>
     expiresIn: process.env.JWT_EXPIRES_IN || '8h',
   });
 
-const verify = (token) => jwt.verify(token, process.env.JWT_SECRET);
+const verify = (token) => jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
 module.exports = { sign, verify };

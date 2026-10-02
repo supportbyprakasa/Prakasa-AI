@@ -1,3 +1,5 @@
+import Select from './Select';
+
 export function UserSelect({
   label,
   value,
@@ -5,34 +7,26 @@ export function UserSelect({
   users = [],
   placeholder = '— User —',
   disabled = false,
+  required = false,
+  error,
+  hint,
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      {label && (
-        <label style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-          {label}
-        </label>
-      )}
-      <select
-        value={value || ''}
-        onChange={(event) => onChange(event.target.value)}
-        disabled={disabled}
-        style={{
-          padding: 8,
-          borderRadius: 8,
-          boxShadow: 'inset 0 0 0 1px var(--color-border)',
-          background: 'var(--color-surface)',
-          color: 'var(--color-text)',
-        }}
-      >
-        <option value="">{placeholder}</option>
-        {users.map((user) => (
-          <option key={user.id} value={user.id}>
-            {user.name || user.email || `User #${user.id}`}
-          </option>
-        ))}
-      </select>
-    </div>
+    <Select
+      label={label}
+      value={value || ''}
+      onChange={(event) => onChange(event.target.value)}
+      disabled={disabled}
+      required={required}
+      error={error}
+      hint={hint}
+      placeholder={placeholder}
+      dataOptions
+      options={users.map((user) => ({
+        value: user.id,
+        label: user.name || user.email || `User #${user.id}`,
+      }))}
+    />
   );
 }
 
@@ -41,35 +35,26 @@ export function RoleSelect({
   value,
   onChange,
   roles = [],
-  placeholder = '— Role —',
+  placeholder = '— Peran —',
   disabled = false,
+  required = false,
+  error,
+  hint,
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      {label && (
-        <label style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-          {label}
-        </label>
-      )}
-      <select
-        value={value || ''}
-        onChange={(event) => onChange(event.target.value)}
-        disabled={disabled}
-        style={{
-          padding: 8,
-          borderRadius: 8,
-          boxShadow: 'inset 0 0 0 1px var(--color-border)',
-          background: 'var(--color-surface)',
-          color: 'var(--color-text)',
-        }}
-      >
-        <option value="">{placeholder}</option>
-        {roles.map((role) => (
-          <option key={role.id} value={role.id}>
-            {role.name || `Role #${role.id}`}
-          </option>
-        ))}
-      </select>
-    </div>
+    <Select
+      label={label}
+      value={value || ''}
+      onChange={(event) => onChange(event.target.value)}
+      disabled={disabled}
+      required={required}
+      error={error}
+      hint={hint}
+      placeholder={placeholder}
+      options={roles.map((role) => ({
+        value: role.id,
+        label: role.name || `Role #${role.id}`,
+      }))}
+    />
   );
 }

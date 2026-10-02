@@ -1,22 +1,72 @@
 import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../api/client';
-import Card from '../../components/Card';
 import Button from '../../components/Button';
-import DataTable from '../../components/DataTable';
+import Card from '../../components/Card';
+import EmptyState, { LoadingState } from '../../components/EmptyState';
+import Page from '../../components/Page';
+import ProgressBar from '../../components/ProgressBar';
+import StatCard from '../../components/StatCard';
+import StatusBadge from '../../components/StatusBadge';
 import { toast } from '../../components/Toast';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { formatNumber } from '../../components/format';
+import { unreviewedNote } from '../people/directoryModel';
+import { dashboardBars } from './itDashboardModel';
+import { infraCards } from './infraModel';
+import { DEVICE_TYPE_LABELS, INVOICE_STATUS_LABELS, labelFor } from './itModel';
+import './it-tickets.css';
+import './it-assets.css';
 
+const errorMessage = (error, fallback) => error.response?.data?.error?.message || fallback;
+const count = (value) => Number(value) || 0;
+
+// A bar list for the dashboard (per status / type / location): each line links
+// to the device list with that filter.
+function BarList({ title, rows, empty }) {
+  const max = rows.reduce((n, row) => Math.max(n, row.value), 0);
+  return (
+    <Card variant="chart" title={title}>
+      {rows.length ? (
+        <ul className="it-bars">
+          {rows.map((row) => (
+            <li key={row.key} className="it-bars__item">
+              <div className="it-bars__head">
+                <span className="it-bars__label" data-no-translate={row.data ? '' : undefined}><Link to={row.to}>{row.label}</Link></span>
+                <span className="it-bars__value">{formatNumber(row.value)}{row.note ? ' · ' : ''}{row.note || ''}</span>
+              </div>
+              <ProgressBar value={row.value} max={max || 1} label={`${row.label}: ${formatNumber(row.value)}`} dataLabel={row.data} />
+            </li>
+          ))}
+        </ul>
+      ) : <EmptyState compact title={empty} />}
+    </Card>
+  );
+}
+
+// Dashboard IT (rule 22): numbers labelled so they reconcile with the owner's
+// IT report — Karyawan (direktori) with the accounts People & Culture has not
+// reviewed, devices per status / type / location, Bermasalah = Rusak + Tidak
+// aktif, tanpa nomor aset, garansi ≤ 60 hari, di tangan karyawan resign.
 export default function ItDashboard() {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [aiReport, setAiReport] = useState(null);
   const [running, setRunning] = useState(false);
 
   const load = async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const r = await api.get('/it/dashboard/summary');
-      setData(r.data.data);
-    } finally { setLoading(false); }
+      setData(r.data.data || {});
+    } catch (error) {
+      setLoadError(errorMessage(error, 'Periksa koneksi, lalu coba lagi.'));
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => { load(); }, []);
 
@@ -26,92 +76,166 @@ export default function ItDashboard() {
       const r = await api.post('/it/dashboard/ai-report');
       setAiReport(r.data.data.content);
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal', 'error');
+      toast(errorMessage(e, 'Laporan AI gagal dibuat'), 'error');
     } finally { setRunning(false); }
   };
 
-  return (
-    <div>
-      <h2>IT Dashboard</h2>
-      {loading && <div style={{ color: 'var(--color-text-muted)' }}>Memuat…</div>}
-      {data && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
-            <Card title="Total Device">
-              <div style={{ fontSize: 24, fontWeight: 700 }}>{data.devices.total || 0}</div>
-              <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                {data.devices.assigned || 0} assigned · {data.devices.available || 0} available
-              </div>
-            </Card>
-            <Card title="Repair / Maintenance">
-              <div style={{ fontSize: 24, fontWeight: 700 }}>
-                {(data.devices.repair || 0) + (data.devices.maintenance || 0)}
-              </div>
-            </Card>
-            <Card title="Subscriptions">
-              <div style={{ fontSize: 24, fontWeight: 700 }}>{data.subscriptions.total || 0}</div>
-              <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                {data.subscriptions.expiring || 0} expiring
-              </div>
-            </Card>
-            <Card title="Idle License">
-              <div style={{ fontSize: 24, fontWeight: 700 }}>{data.idleLicenses.total || 0}</div>
-            </Card>
-          </div>
+  const devices = data?.devices || {};
+  const people = data?.people || {};
+  const subscriptions = data?.subscriptions || {};
+  const byStatus = devices.byStatus || {};
+  const expiring = count(subscriptions.expiring);
+  const windowDays = count(devices.warrantyWindowDays) || 60;
+  const bars = dashboardBars(data);
+  const drill = (query) => <Button variant="text" to={`/it/devices?${query}`}>Lihat perangkat</Button>;
 
-          <Card title="Warranty akan berakhir (60 hari)">
-            <DataTable
-              loading={false}
-              rows={data.warrantyDue}
-              empty="Tidak ada warranty yang akan berakhir"
-              columns={[
-                { key: 'assetCode', title: 'Kode' },
-                { key: 'deviceType', title: 'Tipe' },
-                { key: 'warrantyEnd', title: 'Berakhir' },
-                { key: 'daysLeft', title: 'Sisa Hari' },
-              ]}
-            />
+  let content;
+  if (loadError) {
+    content = (
+      <EmptyState
+        tone="error"
+        title="Dashboard IT gagal dimuat"
+        description={loadError}
+        action={<Button variant="secondary" onClick={load}>Coba lagi</Button>}
+      />
+    );
+  } else if (loading || !data) {
+    content = <LoadingState label="Memuat dashboard IT" />;
+  } else {
+    const problematic = count(devices.problematic);
+    // "Infrastruktur" (wave 2, row 2.3): a card per register that has rows.
+    const infra = infraCards(data.infrastructure);
+    const resignedHolder = count(devices.resignedHolder);
+    content = (
+      <>
+        <div className="pw-cols-4 it-dashboard__stats">
+          <StatCard
+            label="Karyawan (direktori)"
+            value={formatNumber(count(people.headcount))}
+            note={unreviewedNote(people.unreviewedAccounts) || 'Semua akun sudah ditinjau People & Culture'}
+            action={<Button variant="text" to="/people/directory">Buka direktori</Button>}
+          />
+          <StatCard
+            label="Total perangkat"
+            value={formatNumber(count(devices.total))}
+            note={`${formatNumber(count(byStatus.available ?? devices.available))} cadangan`}
+            action={drill('')}
+          />
+          <StatCard label="Aktif" value={formatNumber(count(devices.active ?? devices.assigned))} action={drill('status=assigned')} />
+          <StatCard
+            label="Bermasalah (Rusak + Tidak aktif)"
+            value={formatNumber(problematic)}
+            note={`Rusak ${formatNumber(count(byStatus.damaged))} · Tidak aktif ${formatNumber(count(byStatus.retired ?? devices.retired))}`}
+            alert={problematic > 0}
+            action={drill('problematic=1')}
+          />
+        </div>
+        <div className="pw-cols-4 it-dashboard__stats">
+          <StatCard label="Tanpa nomor aset" value={formatNumber(count(devices.withoutAssetCode))} action={drill('noAssetCode=1')} />
+          <StatCard label={`Garansi ≤ ${windowDays} hari`} value={formatNumber(count(devices.warrantyEnding))} action={drill(`warrantyDays=${windowDays}`)} />
+          <StatCard
+            label="Di tangan karyawan resign"
+            value={formatNumber(resignedHolder)}
+            note={resignedHolder ? 'Kembalikan atau serahkan ke orang lain' : null}
+            alert={resignedHolder > 0}
+            action={drill('resignedHolder=1')}
+          />
+          <StatCard
+            label="Langganan software"
+            value={formatNumber(count(subscriptions.total))}
+            note={`${formatNumber(expiring)} segera berakhir`}
+            alert={expiring > 0}
+            action={<Button variant="text" to="/it/subscriptions">Lihat langganan</Button>}
+          />
+        </div>
+
+        <div className="pw-cols-3 it-dashboard__grid">
+          <BarList title="Perangkat per status" rows={bars.byStatus} empty="Belum ada perangkat" />
+          <BarList title="Perangkat per tipe" rows={bars.byType} empty="Belum ada perangkat" />
+          <BarList title="Perangkat per lokasi" rows={bars.byLocation} empty="Belum ada perangkat" />
+        </div>
+
+        {infra.length ? (
+          <section className="pw-stack" aria-label="Infrastruktur">
+            <h2 className="pw-title-section">Infrastruktur</h2>
+            <div className="pw-cols-4 it-dashboard__stats">
+              {infra.map((card) => (
+                <StatCard
+                  key={card.key}
+                  label={card.label}
+                  value={card.value}
+                  note={card.note}
+                  alert={card.alert}
+                  action={<Button variant="text" to={card.to}>Buka register</Button>}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        <DataGrid
+          title={`Garansi berakhir dalam ${windowDays} hari`}
+          searchable={false}
+          rows={data.warrantyDue || []}
+          empty={`Tidak ada garansi yang berakhir dalam ${windowDays} hari`}
+          onRowClick={(row) => navigate(`/it/devices/${row.id}`)}
+          columns={[
+            { key: 'deviceType', header: 'Tipe', translate: true, render: (row) => labelFor(DEVICE_TYPE_LABELS, row.deviceType), exportValue: (row) => labelFor(DEVICE_TYPE_LABELS, row.deviceType) },
+            { key: 'assetCode', header: 'No. aset' },
+            { key: 'warrantyEnd', header: 'Berakhir', type: 'date' },
+            { key: 'daysLeft', header: 'Sisa hari', type: 'number' },
+          ]}
+        />
+
+        <DataGrid
+          title="Perpanjangan langganan dalam 30 hari"
+          searchable={false}
+          rows={data.renewalsDue || []}
+          empty="Tidak ada langganan yang diperpanjang dalam 30 hari"
+          columns={[
+            { key: 'productName', header: 'Produk' },
+            { key: 'renewalDate', header: 'Perpanjangan', type: 'date' },
+            { key: 'daysLeft', header: 'Sisa hari', type: 'number' },
+            { key: 'totalSeats', header: 'Seat', type: 'number' },
+          ]}
+        />
+
+        <DataGrid
+          title="Invoice menunggu"
+          searchable={false}
+          rows={data.pendingInvoices || []}
+          empty="Tidak ada invoice yang menunggu"
+          columns={[
+            { key: 'invoiceNumber', header: 'Nomor' },
+            { key: 'productName', header: 'Produk' },
+            {
+              key: 'status',
+              header: 'Status',
+              exportValue: (row) => INVOICE_STATUS_LABELS[row.status] || row.status,
+              render: (row) => <StatusBadge status={row.status} label={INVOICE_STATUS_LABELS[row.status]} />,
+            },
+            { key: 'invoiceDate', header: 'Tanggal', type: 'date' },
+          ]}
+        />
+
+        {aiReport ? (
+          <Card title="Laporan aset IT dari AI">
+            <p className="it-report">{aiReport}</p>
           </Card>
+        ) : null}
+      </>
+    );
+  }
 
-          <div style={{ marginTop: 16 }}>
-            <Card title="Subscription renewal due (30 hari)">
-              <DataTable
-                loading={false}
-                rows={data.renewalsDue}
-                empty="Tidak ada renewal dalam 30 hari"
-                columns={[
-                  { key: 'productName', title: 'Produk' },
-                  { key: 'renewalDate', title: 'Renewal' },
-                  { key: 'daysLeft', title: 'Sisa Hari' },
-                  { key: 'totalSeats', title: 'Seats' },
-                ]}
-              />
-            </Card>
-          </div>
-
-          <div style={{ marginTop: 16 }}>
-            <Card title="Invoice pending" actions={<Button onClick={runAi} disabled={running}>{running ? 'Menjalankan AI…' : 'AI Asset Report'}</Button>}>
-              <DataTable
-                loading={false}
-                rows={data.pendingInvoices}
-                empty="Tidak ada invoice pending"
-                columns={[
-                  { key: 'invoiceNumber', title: 'Nomor' },
-                  { key: 'productName', title: 'Produk' },
-                  { key: 'status', title: 'Status' },
-                  { key: 'invoiceDate', title: 'Tanggal' },
-                ]}
-              />
-            </Card>
-          </div>
-
-          {aiReport && (
-            <Card title="AI IT Asset Report" >
-              <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, margin: 0 }}>{aiReport}</pre>
-            </Card>
-          )}
-        </>
-      )}
-    </div>
+  return (
+    <Page
+      title="Dashboard IT"
+      description="Ringkasan direktori, perangkat, garansi, dan langganan software — angka yang sama dengan laporan perangkat IT."
+      actions={data && !loadError ? (
+        <Button variant="secondary" icon="auto_awesome" onClick={runAi} loading={running}>Buat laporan aset AI</Button>
+      ) : null}
+    >
+      {content}
+    </Page>
   );
 }

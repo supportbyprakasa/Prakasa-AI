@@ -4,12 +4,12 @@ const { log } = require('../services/activityLog.service');
 
 async function list(req, res, next) {
   try {
-    const where = ['deleted_at IS NULL'];
-    const args = [];
-    if (req.query.entityId) { where.push('entity_id = ?'); args.push(req.query.entityId); }
+    // Always the signed-in user's company; never from the request.
+    const where = ['entity_id = ?', 'deleted_at IS NULL'];
+    const args = [req.user.entityId];
     const [rows] = await pool.query(
-      `SELECT id, entity_id AS entityId, name, contact_person AS contactPerson,
-              email, phone, portal_url AS portalUrl
+      `SELECT id, entity_id AS entityId, name, vendor_kind AS vendorKind, contact_person AS contactPerson,
+              email, phone, portal_url AS portalUrl, notes
          FROM software_vendors WHERE ${where.join(' AND ')}
         ORDER BY name ASC`, args
     );
@@ -19,12 +19,13 @@ async function list(req, res, next) {
 
 async function create(req, res, next) {
   try {
-    const { entityId, name, contactPerson, email, phone, portalUrl, notes } = req.body;
+    const entityId = req.user.entityId;
+    const { name, vendorKind, contactPerson, email, phone, portalUrl, notes } = req.body;
     const [r] = await pool.query(
       `INSERT INTO software_vendors
-       (entity_id, name, contact_person, email, phone, portal_url, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [entityId, name, contactPerson || null, email || null,
+       (entity_id, name, vendor_kind, contact_person, email, phone, portal_url, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [entityId, name, vendorKind || 'software', contactPerson || null, email || null,
        phone || null, portalUrl || null, notes || null]
     );
     await log({
@@ -38,15 +39,15 @@ async function create(req, res, next) {
 async function update(req, res, next) {
   try {
     const { id } = req.params;
-    const { name, contactPerson, email, phone, portalUrl, notes } = req.body;
+    const { name, vendorKind, contactPerson, email, phone, portalUrl, notes } = req.body;
     const [r] = await pool.query(
       `UPDATE software_vendors SET
-         name=COALESCE(?,name), contact_person=COALESCE(?,contact_person),
+         name=COALESCE(?,name), vendor_kind=COALESCE(?,vendor_kind), contact_person=COALESCE(?,contact_person),
          email=COALESCE(?,email), phone=COALESCE(?,phone),
          portal_url=COALESCE(?,portal_url), notes=COALESCE(?,notes)
-       WHERE id=? AND deleted_at IS NULL`,
-      [name || null, contactPerson || null, email || null, phone || null,
-       portalUrl || null, notes || null, id]
+       WHERE id=? AND entity_id=? AND deleted_at IS NULL`,
+      [name || null, vendorKind || null, contactPerson || null, email || null, phone || null,
+       portalUrl || null, notes || null, id, req.user.entityId]
     );
     if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'Vendor tidak ditemukan', 404);
     return ok(res, { id: Number(id) });
@@ -57,7 +58,7 @@ async function remove(req, res, next) {
   try {
     const { id } = req.params;
     const [r] = await pool.query(
-      `UPDATE software_vendors SET deleted_at=NOW() WHERE id=? AND deleted_at IS NULL`, [id]
+      `UPDATE software_vendors SET deleted_at=NOW() WHERE id=? AND entity_id=? AND deleted_at IS NULL`, [id, req.user.entityId]
     );
     if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'Vendor tidak ditemukan', 404);
     return ok(res, { id: Number(id) });

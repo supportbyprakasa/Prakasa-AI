@@ -5,8 +5,9 @@ const drive = require('../services/googleDrive.service');
 
 async function list(req, res, next) {
   try {
-    const where = ['1=1'];
-    const args = [];
+    // Invoices belong to the company of their subscription: the signed-in user's.
+    const where = ['s.entity_id = ?'];
+    const args = [req.user.entityId];
     if (req.query.status) { where.push('i.status = ?'); args.push(req.query.status); }
     if (req.query.subscriptionId) { where.push('i.subscription_id = ?'); args.push(req.query.subscriptionId); }
 
@@ -39,7 +40,7 @@ async function upload(req, res, next) {
     } = req.body;
 
     const [s] = await pool.query(
-      `SELECT * FROM software_subscriptions WHERE id=? AND deleted_at IS NULL`, [id]
+      `SELECT * FROM software_subscriptions WHERE id=? AND entity_id=? AND deleted_at IS NULL`, [id, req.user.entityId]
     );
     if (!s[0]) return fail(res, 'NOT_FOUND', 'Subscription tidak ditemukan', 404);
 
@@ -96,13 +97,13 @@ async function verify(req, res, next) {
     const { id } = req.params;
     const { status } = req.body; // 'verified' | 'void'
     const [r] = await pool.query(
-      `UPDATE subscription_invoices
-          SET status=?, verified_by=?, verified_at=NOW()
-        WHERE id=?`, [status, req.user.sub, id]
+      `UPDATE subscription_invoices i JOIN software_subscriptions s ON s.id = i.subscription_id
+          SET i.status=?, i.verified_by=?, i.verified_at=NOW()
+        WHERE i.id=? AND s.entity_id=?`, [status, req.user.sub, id, req.user.entityId]
     );
     if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'Invoice tidak ditemukan', 404);
     await log({
-      entityId: null, userId: req.user.sub,
+      entityId: req.user.entityId, userId: req.user.sub,
       action: 'subscription_invoice.verify', subjectType: 'subscription_invoice',
       subjectId: Number(id), metadata: { status },
     });
@@ -115,12 +116,12 @@ async function pendingUpload(req, res, next) {
     const [rows] = await pool.query(
       `SELECT i.id, i.subscription_id AS subscriptionId, s.product_name AS productName,
               i.invoice_number AS invoiceNumber, i.status,
-              DATEDIFF(CURDATE(), i.invoice_date) AS daysOld
+              DATEDIFF(DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR), i.invoice_date) AS daysOld
          FROM subscription_invoices i
          JOIN software_subscriptions s ON s.id = i.subscription_id
-        WHERE i.status='pending_upload'
-           OR (i.status='uploaded' AND i.verified_at IS NULL)
-        ORDER BY i.invoice_date ASC`
+        WHERE s.entity_id = ?
+          AND (i.status='pending_upload' OR (i.status='uploaded' AND i.verified_at IS NULL))
+        ORDER BY i.invoice_date ASC`, [req.user.entityId]
     );
     return ok(res, rows);
   } catch (e) { next(e); }

@@ -1,22 +1,17 @@
+import { noTranslate, strictTranslate } from '../../i18n/NoTranslate';
 import { useEffect, useRef, useState } from 'react';
-import {
-  AlertTriangle,
-  Check,
-  ChevronDown,
-  Copy,
-  FileDown,
-  Loader2,
-  Menu,
-  PanelRightClose,
-  Pencil,
-  PanelRightOpen,
-  Paperclip,
-  Sparkles,
-  Upload,
-} from 'lucide-react';
 import api from '../../api/client';
 import { streamSessionMessage } from '../../api/aiStream';
-import Badge from '../Badge';
+import Banner from '../Banner';
+import Button from '../Button';
+import Chip from '../Chip';
+import EmptyState, { LoadingState } from '../EmptyState';
+import FormActions from '../FormActions';
+import Icon from '../Icon';
+import IconButton from '../IconButton';
+import Spinner from '../Spinner';
+import StatusBadge from '../StatusBadge';
+import Textarea from '../Textarea';
 import { toast } from '../Toast';
 import { useAuth } from '../../context/AuthContext';
 import AIVisibilityBadge from './AIVisibilityBadge';
@@ -26,15 +21,23 @@ import AIDropdown from './AIDropdown';
 import AINewChat from './AINewChat';
 import AIMarkdown from './AIMarkdown';
 import AIWebToggle, { toolStatusLabel } from './AIWebToggle';
+import AISteps from './AISteps';
+import { runningStep, stepText, upsertStep } from './aiStepsModel';
 import useFileDrop from './useFileDrop';
 import { engineChipLabel, engineMenuItems } from './aiEngineOptions';
-import { AI_FILE_ACCEPT, AI_MAX_PENDING_FILES, AI_MAX_UPLOAD_BYTES, formatBytes } from './aiFiles';
+import AIAttachmentChips, { AIAttachmentErrors } from './AIAttachmentChips';
+import {
+  AI_FILE_ACCEPT, AI_MAX_MESSAGE_ATTACHMENTS, AI_MAX_PENDING_FILES, AI_MAX_UPLOAD_BYTES,
+  addAttachments, attachmentIdsOf, formatBytes, markFailed, markUploaded, removeAttachment, sentAttachments,
+} from './aiFiles';
+import './ai-components.css';
 import {
   canEditMessage,
   closeOpenMarkdown,
   isGenerationActive,
   messagesAfterEdit,
 } from '../../pages/ai/aiCommandCenterModel';
+import { dateLocale } from '../../i18n/language.js';
 
 const GENERATION_POLL_MS = 4000;
 const STICK_TO_BOTTOM_PX = 160;
@@ -53,6 +56,12 @@ export default function AIConversation({
   onToggleWorkspace,
   onOpenSidebar,
   newChatVisibility = 'private',
+  // Wave C: where this conversation is shown ('panel' = beside a page, 'full' =
+  // the Command Center), the page the panel is on, and — in the panel only —
+  // the function that opens a page or fills a registered form for the AI.
+  surface = 'full',
+  route = null,
+  onClientTool = null,
 }) {
   const { user } = useAuth();
   const [session, setSession] = useState(null);
@@ -68,8 +77,17 @@ export default function AIConversation({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [streamingText, setStreamingText] = useState(null);
   const [toolStatus, setToolStatus] = useState(null);
+  const [liveSteps, setLiveSteps] = useState([]);
   const [togglingWeb, setTogglingWeb] = useState(false);
   const [stopping, setStopping] = useState(false);
+  // Side panel only ("dari dokumen ke formulir", §9.15): the files of the
+  // message being written. They are uploaded when the message is sent, and the
+  // message names them, so the AI reads exactly these files for this request.
+  const panel = surface === 'panel';
+  const [pendingFiles, setPendingFiles] = useState([]);
+  const [attachErrors, setAttachErrors] = useState([]);
+  const pendingFilesRef = useRef(pendingFiles);
+  pendingFilesRef.current = pendingFiles;
   const bottomRef = useRef(null);
   const scrollRef = useRef(null);
   const stickToBottomRef = useRef(true);
@@ -91,7 +109,18 @@ export default function AIConversation({
     userPermissions.includes('document.create') &&
     !uploading
   );
-  const { dragging, dropProps } = useFileDrop((files) => uploadFiles(files), canDropFiles);
+  // Attach button, drag and drop, and paste all end here in the side panel.
+  const addPanelFiles = (fileList) => {
+    if (session && (session.visibility !== 'private' || session.webResearch)) {
+      setAttachErrors([{ name: null, text: 'Lampiran hanya bisa dipakai di percakapan pribadi tanpa riset web. Buat percakapan pribadi baru, lalu lampirkan lagi.' }]);
+      return;
+    }
+    const { next, errors } = addAttachments(pendingFilesRef.current, fileList);
+    pendingFilesRef.current = next;
+    setPendingFiles(next);
+    setAttachErrors(errors);
+  };
+  const { dragging, dropProps } = useFileDrop((files) => (panel ? addPanelFiles(files) : uploadFiles(files)), canDropFiles);
 
   const scrollToBottom = (behavior = 'smooth') => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior }), 30);
@@ -114,9 +143,22 @@ export default function AIConversation({
   };
 
   // A tool call means the text so far was only a preamble: clear the draft and show
-  // what the AI is doing until the final answer starts streaming.
+  // what the AI is doing until the final answer starts streaming. Agent steps are
+  // kept as a timeline above the answer; a notice (e.g. daily limit) is a toast.
   const handleToolStatus = (targetSessionId, status) => {
     if (activeSessionRef.current !== targetSessionId) return;
+    if (status?.type === 'notice') {
+      toast(status.message, 'info');
+      return;
+    }
+    if (status?.type === 'queue') {
+      setToolStatus(status);
+      return;
+    }
+    if (status?.type === 'step') {
+      setLiveSteps((current) => upsertStep(current, status));
+      if (status.status !== 'running' || !status.label) return;
+    }
     cancelStreamFlush();
     streamBufferRef.current = '';
     setStreamingText('');
@@ -180,7 +222,10 @@ export default function AIConversation({
     streamBufferRef.current = '';
     setStreamingText(null);
     setToolStatus(null);
+    setLiveSteps([]);
     setSending(false);
+    setPendingFiles([]);
+    setAttachErrors([]);
     stickToBottomRef.current = true;
     loadSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -218,8 +263,10 @@ export default function AIConversation({
     }
   };
 
-  const send = async (textOverride, { editMessageId = null } = {}) => {
+  // `attachments`: the uploaded files this message carries (side panel).
+  const send = async (textOverride, { editMessageId = null, attachments = [] } = {}) => {
     const text = typeof textOverride === 'string' ? textOverride : input;
+    const attachmentIds = attachmentIdsOf(attachments);
     if (!sessionId || !text.trim()) return;
     if (session?.status !== 'active') {
       toast('Percakapan sudah diarsipkan.', 'error');
@@ -239,6 +286,7 @@ export default function AIConversation({
     streamBufferRef.current = '';
     setStreamingText('');
     setToolStatus(null);
+    setLiveSteps([]);
     stickToBottomRef.current = true;
 
     const optimistic = {
@@ -249,6 +297,7 @@ export default function AIConversation({
       authorName: user?.name,
       createdAt: new Date().toISOString(),
       _optimistic: true,
+      ...(attachmentIds.length ? { attachments: sentAttachments(attachments) } : {}),
     };
     setMessages((current) => (
       editMessageId ? messagesAfterEdit(current, editMessageId, optimistic) : [...current, optimistic]
@@ -262,13 +311,19 @@ export default function AIConversation({
           onDelta: (delta) => appendDelta(targetSessionId, delta),
           onStatus: (status) => handleToolStatus(targetSessionId, status),
           editMessageId,
+          surface,
+          route,
+          onClientTool,
+          attachmentIds,
         });
       } catch (streamFailure) {
         // Backends without the stream endpoint still get a complete (non-streamed) reply.
         if (!streamFailure.streamUnavailable) throw streamFailure;
-        const response = await api.post(`/ai-command/sessions/${targetSessionId}/messages`, (
-          editMessageId ? { message: text, editMessageId } : { message: text }
-        ));
+        const response = await api.post(`/ai-command/sessions/${targetSessionId}/messages`, {
+          message: text,
+          ...(editMessageId ? { editMessageId } : {}),
+          ...(attachmentIds.length ? { attachmentIds } : {}),
+        });
         result = response.data.data;
       }
       if (!stillActive()) return;
@@ -285,6 +340,7 @@ export default function AIConversation({
       ]);
       setStreamingText(null);
       setToolStatus(null);
+      setLiveSteps([]);
       onSessionUpdated?.();
       await refreshMessagesAndSession();
     } catch (e) {
@@ -292,6 +348,7 @@ export default function AIConversation({
       cancelStreamFlush();
       setStreamingText(null);
       setToolStatus(null);
+      setLiveSteps([]);
       const errCode = e.response?.data?.error?.code;
       const status = e.response?.status;
       // Always reload authoritative state. Provider failures occur after the
@@ -306,15 +363,24 @@ export default function AIConversation({
         toast(e.response?.data?.error?.message || 'Pesan tidak dapat diedit', 'error');
       } else if (errCode === 'SESSION_BUSY') {
         setInput(text);
+        if (attachmentIds.length) setPendingFiles(attachments);
         toast('AI masih memproses pesan sebelumnya.', 'error');
       } else if (errCode === 'SESSION_NOT_ACTIVE') {
         setInput(text);
         toast('Percakapan sudah diarsipkan.', 'error');
+      } else if (attachmentIds.length && [400, 403, 404, 409].includes(status)) {
+        // The message was refused with its files (not private, too many, a file
+        // that is gone): the request and the files come back, with the reason.
+        setInput(text);
+        setPendingFiles(attachments);
+        setAttachErrors([{ name: null, text: e.response?.data?.error?.message || 'Pesan dengan lampiran tidak dapat dikirim.' }]);
       } else if (status === 400 || status === 403) {
         setInput(text);
         toast(e.response?.data?.error?.message || 'Pesan tidak dapat dikirim', 'error');
       } else if (errCode === 'STREAM_INTERRUPTED') {
         toast('Koneksi ke AI terputus. Jawaban akan muncul otomatis bila AI selesai memproses.', 'error');
+      } else if (['AI_RATE_LIMITED', 'AI_BUSY', 'AI_PROVIDER_LOGGED_OUT'].includes(errCode)) {
+        toast(e.response?.data?.error?.message || e.message || 'Prakasa AI sedang tidak tersedia', 'error');
       } else if (errCode === 'AI_PROVIDER_ERROR' || status === 502 || status === 503 || status === 504) {
         toast('Layanan AI sedang tidak dapat dijangkau. Pesan Anda tetap tersimpan di riwayat.', 'error');
       } else {
@@ -332,10 +398,54 @@ export default function AIConversation({
     if (consumedPendingRef.current === session.id) return;
     consumedPendingRef.current = session.id;
     onPendingConsumed?.();
+    // A starter that works from a file hands the picked files over with its text.
+    if (panel && pendingMessage.files?.length) addPanelFiles(pendingMessage.files);
+    // Files already uploaded on the new-chat screen, when the message itself was not sent.
+    if (panel && pendingMessage.autoSend === false && pendingMessage.attachments?.length) setPendingFiles(pendingMessage.attachments);
     if (pendingMessage.autoSend === false) setInput(pendingMessage.text);
-    else send(pendingMessage.text);
+    else send(pendingMessage.text, { attachments: pendingMessage.attachments || [] });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, pendingMessage]);
+
+  // Side panel: upload the files of this message (one by one: each image is
+  // read by AI vision on the way in), then send the message naming them. A file
+  // that fails stays on its chip with the reason and nothing is sent.
+  const submitWithFiles = async () => {
+    const text = input;
+    if (!sessionId || !text.trim() || uploading) return;
+    const targetSessionId = sessionId;
+    setUploading(true);
+    setAttachErrors([]);
+    let list = pendingFilesRef.current;
+    const errors = [];
+    for (const item of list) {
+      if (item.status === 'uploaded') continue;
+      list = list.map((entry) => (entry.key === item.key ? { ...entry, status: 'uploading', error: '' } : entry));
+      if (activeSessionRef.current === targetSessionId) setPendingFiles(list);
+      const form = new FormData();
+      form.append('file', item.file);
+      try {
+        const response = await api.post(`/ai-command/sessions/${targetSessionId}/files`, form);
+        list = markUploaded(list, item.key, response.data.data);
+      } catch (error) {
+        const message = error.response?.data?.error?.message || 'Gagal mengunggah';
+        list = markFailed(list, item.key, message);
+        errors.push({ name: item.name, text: message });
+      }
+      if (activeSessionRef.current === targetSessionId) setPendingFiles(list);
+    }
+    if (activeSessionRef.current !== targetSessionId) return;
+    pendingFilesRef.current = list;
+    setUploading(false);
+    if (errors.length) {
+      setAttachErrors([...errors, { name: null, text: 'Pesan belum dikirim. Hapus atau lampirkan ulang file yang gagal, lalu kirim lagi.' }]);
+      return;
+    }
+    setPendingFiles([]);
+    pendingFilesRef.current = [];
+    onSessionUpdated?.();
+    send(undefined, { attachments: list });
+  };
 
   const uploadFiles = async (fileList) => {
     const files = Array.from(fileList || []);
@@ -443,14 +553,7 @@ export default function AIConversation({
   const topbar = (content) => (
     <header className="ai-topbar">
       {onOpenSidebar && (
-        <button
-          type="button"
-          className="ai-icon-button ai-ripple"
-          onClick={onOpenSidebar}
-          aria-label="Buka daftar percakapan"
-        >
-          <Menu size={20} />
-        </button>
+        <IconButton label="Buka daftar percakapan" icon="menu" onClick={onOpenSidebar} />
       )}
       {content}
     </header>
@@ -466,6 +569,7 @@ export default function AIConversation({
           providersLoading={providersLoading}
           onSessionCreated={onSessionCreated}
           initialVisibility={newChatVisibility}
+          surface={surface}
         />
       </div>
     );
@@ -475,9 +579,8 @@ export default function AIConversation({
     return (
       <div className="ai-conversation">
         {topbar(null)}
-        <div className="ai-conversation-state" role="status">
-          <Loader2 className="ai-spin" size={22} />
-          <p>Memuat percakapan…</p>
+        <div className="ai-conversation-state">
+          <LoadingState label="Memuat percakapan…" />
         </div>
       </div>
     );
@@ -488,9 +591,13 @@ export default function AIConversation({
       <div className="ai-conversation">
         {topbar(null)}
         <div className="ai-conversation-state">
-          <div className="ai-state-icon is-warning"><AlertTriangle size={24} /></div>
-          <strong>Percakapan tidak tersedia</strong>
-          <p>Periksa kembali akses Anda atau pilih percakapan lain.</p>
+          <EmptyState
+            tone="error"
+            icon="warning"
+            title="Percakapan tidak tersedia"
+            description="Periksa kembali akses Anda atau pilih percakapan lain."
+            action={<Button variant="secondary" onClick={loadSession}>Coba lagi</Button>}
+          />
         </div>
       </div>
     );
@@ -504,6 +611,18 @@ export default function AIConversation({
   const canSend = (session.access ? session.access.canSend : isOwner) && permissions.includes('ai_command.use');
   const sharedChat = session.visibility !== 'private';
   const canCreateDocument = canSend && permissions.includes('document.create');
+  const filesFull = pendingFiles.length >= AI_MAX_MESSAGE_ATTACHMENTS;
+  const attachmentHeader = panel && (pendingFiles.length || attachErrors.length) ? (
+    <>
+      <AIAttachmentChips
+        items={pendingFiles}
+        disabled={uploading}
+        onRemove={(key) => { setPendingFiles((current) => removeAttachment(current, key)); setAttachErrors([]); }}
+      />
+      <AIAttachmentErrors errors={attachErrors} onClose={() => setAttachErrors([])} />
+      {uploading ? <p className="ai-progress-note" role="status">Mengunggah dan membaca lampiran…</p> : null}
+    </>
+  ) : null;
   const archived = session.status === 'archived';
   const generating = isGenerationActive({ sending, generationStatus: session.generationStatus });
   const title = session.title || `Percakapan #${session.id}`;
@@ -514,40 +633,30 @@ export default function AIConversation({
     <div className="ai-conversation" {...dropProps}>
       {dragging && (
         <div className="ai-drop-overlay" aria-hidden="true">
-          <Upload size={28} />
+          <Icon name="upload" size="xl" />
           <span>Lepaskan file untuk dilampirkan ke percakapan</span>
         </div>
       )}
       {topbar(
         <>
-          {canManage ? (
-            <button
-              type="button"
-              className="ai-title-button ai-ripple"
-              onClick={() => setSettingsOpen(true)}
-              title="Pengaturan percakapan"
-            >
-              <span>{title}</span>
-              <ChevronDown size={16} />
-            </button>
-          ) : (
-            <span className="ai-title-text" title={title}>{title}</span>
+          <span className="pw-tooltip-anchor ai-title" data-pw-tooltip={title}>
+            <span className="ai-title-text">{title}</span>
+          </span>
+          {canManage && (
+            <IconButton size="sm" label="Pengaturan percakapan" icon="settings" onClick={() => setSettingsOpen(true)} />
           )}
           <div className="ai-topbar-meta">
-            {archived && <Badge tone="default">arsip</Badge>}
+            {archived && <StatusBadge status={session.status} label="Diarsipkan" />}
             <AIVisibilityBadge visibility={session.visibility} />
           </div>
           <div className="ai-topbar-actions">
-            <button
-              type="button"
-              className={`ai-icon-button ai-ripple${workspaceOpen ? ' is-selected' : ''}`}
+            <IconButton
+              label={workspaceOpen ? 'Tutup panel dokumen' : 'Dokumen, konteks & aksi'}
+              icon={workspaceOpen ? 'right_panel_close' : 'right_panel_open'}
+              selected={Boolean(workspaceOpen)}
               onClick={onToggleWorkspace}
-              aria-pressed={Boolean(workspaceOpen)}
               aria-label={workspaceOpen ? 'Tutup panel dokumen' : 'Buka panel dokumen, konteks, dan aksi'}
-              title={workspaceOpen ? 'Tutup panel dokumen' : 'Dokumen, konteks & aksi'}
-            >
-              {workspaceOpen ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
-            </button>
+            />
           </div>
         </>,
       )}
@@ -556,17 +665,17 @@ export default function AIConversation({
         <div className="ai-thread">
           {messages.length < (messageMeta.total || 0) && (
             <div className="ai-load-older">
-              <button type="button" className="ai-text-button ai-ripple" onClick={loadOlder} disabled={loadingOlder}>
-                {loadingOlder ? 'Memuat…' : 'Muat pesan lebih lama'}
-              </button>
+              <Button variant="text" onClick={loadOlder} loading={loadingOlder}>
+                Muat pesan lebih lama
+              </Button>
             </div>
           )}
 
           {!messages.length && !generating && (
-            <div className="ai-thread-empty">
-              <span className="ai-greeting-mark" aria-hidden="true"><Sparkles size={22} /></span>
-              <p>Belum ada pesan. Tulis permintaan pertama Anda di bawah.</p>
-            </div>
+            <EmptyState
+              icon="auto_awesome"
+              description="Belum ada pesan. Tulis permintaan pertama Anda di bawah."
+            />
           )}
 
           {messages.map((message) => (
@@ -582,14 +691,23 @@ export default function AIConversation({
             />
           ))}
 
+          {sending && liveSteps.length ? <AISteps steps={liveSteps} live /> : null}
           {sending && streamingText ? (
             <div className="ai-msg is-assistant is-streaming" aria-busy="true">
               <div className="ai-assistant-text"><AIMarkdown>{closeOpenMarkdown(streamingText)}</AIMarkdown></div>
             </div>
           ) : generating && (
             <div className="ai-thinking" role="status" aria-live="polite">
-              <span className="ai-thinking-mark" aria-hidden="true"><Sparkles size={18} /></span>
-              <span>{toolStatus ? toolStatusLabel(toolStatus) : 'Prakasa AI sedang membaca konteks dan menyiapkan jawaban…'}</span>
+              <Spinner label={null} />
+              <span>
+                {runningStep(liveSteps)
+                  ? `${stepText(runningStep(liveSteps))}…`
+                  : toolStatus?.type === 'queue'
+                    ? `Prakasa AI sedang ramai — menunggu giliran (${toolStatus.position} di depan Anda)…`
+                    : toolStatus && toolStatus.type !== 'step'
+                      ? toolStatusLabel(toolStatus)
+                    : 'Prakasa AI sedang membaca konteks dan menyiapkan jawaban…'}
+              </span>
             </div>
           )}
           <div ref={bottomRef} />
@@ -597,8 +715,10 @@ export default function AIConversation({
       </div>
 
       {session.provider === 'gemini' && (
-        <div role="note" style={{ padding: '8px 12px', fontSize: 12, background: '#fff7ed', color: '#7c2d12', borderRadius: 6, margin: '0 16px 8px' }}>
-          Gemini kuota gratis: hanya pesan saat ini yang dikirim ke Google. Jangan tulis data pribadi atau rahasia; dokumen, catatan, dan riwayat percakapan tidak disertakan otomatis.
+        <div className="ai-provider-note">
+          <Banner tone="warning">
+            Gemini kuota gratis: hanya pesan saat ini yang dikirim ke Google. Jangan tulis data pribadi atau rahasia; dokumen, catatan, dan riwayat percakapan tidak disertakan otomatis.
+          </Banner>
         </div>
       )}
 
@@ -606,19 +726,22 @@ export default function AIConversation({
         <AIComposer
           value={input}
           onChange={setInput}
-          onSubmit={() => send()}
-          busy={sending}
+          onSubmit={() => (panel && pendingFiles.length ? submitWithFiles() : send())}
+          busy={sending || (panel && uploading)}
           canStop={generating && canSend}
-          onFiles={canCreateDocument && !archived ? uploadFiles : undefined}
+          header={attachmentHeader}
+          onFiles={canCreateDocument && !archived ? (panel ? addPanelFiles : uploadFiles) : undefined}
           onStop={stopGeneration}
           stopping={stopping}
-          disabled={!canSend || archived || generating}
-          sendDisabled={!canSend || !input.trim() || archived || generating}
+          disabled={!canSend || archived || generating || (panel && uploading)}
+          sendDisabled={!canSend || !input.trim() || archived || generating || (panel && uploading)}
           placeholder={
             archived
               ? 'Percakapan sudah diarsipkan.'
               : generating
                 ? 'Prakasa AI sedang menjawab…'
+              : panel && pendingFiles.length
+                ? 'Apa yang ingin Anda lakukan dengan file ini?'
                 : !canSend
                   ? 'Percakapan ini dibagikan sebagai read-only.'
                   : session.visibility === 'department'
@@ -632,24 +755,27 @@ export default function AIConversation({
               <input
                 ref={fileInputRef}
                 type="file"
-                className="ai-visually-hidden"
+                className="pw-visually-hidden"
+                tabIndex={-1}
+                aria-label="Lampirkan file ke percakapan"
                 multiple
                 accept={AI_FILE_ACCEPT}
                 onChange={(event) => {
-                  uploadFiles(event.target.files);
+                  if (panel) addPanelFiles(event.target.files);
+                  else uploadFiles(event.target.files);
                   event.target.value = '';
                 }}
               />
-              <button
-                type="button"
-                className="ai-icon-button ai-ripple"
+              <IconButton
+                label={panel && filesFull ? `Paling banyak ${AI_MAX_MESSAGE_ATTACHMENTS} lampiran per pesan` : 'Lampirkan file'}
                 onClick={() => fileInputRef.current?.click()}
-                disabled={archived || generating || uploading}
-                aria-label="Lampirkan file"
-                title={`Lampirkan file (maks. ${AI_MAX_PENDING_FILES} file, ${formatBytes(AI_MAX_UPLOAD_BYTES)} per file) — bisa juga seret atau tempel`}
+                disabled={archived || generating || uploading || (panel && filesFull)}
+                aria-label={panel
+                  ? `Lampirkan foto, scan, atau dokumen (maks. ${AI_MAX_MESSAGE_ATTACHMENTS} file per pesan, ${formatBytes(AI_MAX_UPLOAD_BYTES)} per file) — bisa juga seret atau tempel`
+                  : `Lampirkan file (maks. ${AI_MAX_PENDING_FILES} file, ${formatBytes(AI_MAX_UPLOAD_BYTES)} per file) — bisa juga seret atau tempel`}
               >
-                {uploading ? <Loader2 className="ai-spin" size={19} /> : <Paperclip size={19} />}
-              </button>
+                {uploading ? <Spinner label={null} /> : <Icon name="attach_file" />}
+              </IconButton>
                 </>
               )}
               {webCapable && canManage && (
@@ -664,6 +790,7 @@ export default function AIConversation({
           trailing={canManage ? (
             <AIDropdown
               label={switchingEngine ? 'Mengganti…' : engineLabel}
+              dataLabel={!switchingEngine && engineLabel !== 'Engine default'}
               ariaLabel="Ganti engine AI untuk percakapan ini"
               items={engineMenuItems(providers)}
               value={session.provider}
@@ -672,11 +799,13 @@ export default function AIConversation({
               align="right"
             />
           ) : (
-            <span className="ai-engine-static" title="Engine AI percakapan ini">{engineLabel}</span>
+            <span className="pw-tooltip-anchor ai-engine-static" data-pw-tooltip="Engine AI percakapan ini">
+              <span className="ai-engine-static-text" data-no-translate={engineLabel === 'Engine default' ? undefined : ''}>{engineLabel}</span>
+            </span>
           )}
         />
         <p className="ai-disclaimer">
-          Prakasa AI dapat membuat kesalahan. Periksa kembali informasi penting. · Powered by Prakasa
+          Prakasa AI dapat membuat kesalahan. Periksa kembali informasi penting. · Didukung Prakasa
         </p>
       </div>
 
@@ -707,10 +836,10 @@ function MessageItem({ message, canExport, exportingKey, onExport, showAuthor = 
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(message.content);
-  const time = new Date(message.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  const time = new Date(message.createdAt).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
 
   if (message.role === 'system' || message.role === 'tool') {
-    return <div className="ai-system-message">{message.content}</div>;
+    return <div className="ai-system-message" {...strictTranslate}>{message.content}</div>;
   }
 
   if (message.role === 'user') {
@@ -724,23 +853,22 @@ function MessageItem({ message, canExport, exportingKey, onExport, showAuthor = 
       return (
         <div className="ai-msg is-user is-editing">
           <div className="ai-edit-box">
-            <textarea
-              className="ai-edit-input"
+            <Textarea
+              label="Ubah pesan"
               value={draft}
               autoFocus
               rows={Math.min(8, Math.max(2, draft.split('\n').length))}
-              aria-label="Edit pesan"
+              hint="Jawaban setelah pesan ini akan diganti dengan jawaban baru."
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Escape') { setDraft(message.content); setEditing(false); }
                 if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); submitEdit(); }
               }}
             />
-            <p className="ai-edit-note">Jawaban setelah pesan ini akan diganti dengan jawaban baru.</p>
-            <div className="ai-edit-actions">
-              <button type="button" className="ai-text-button ai-ripple" onClick={() => { setDraft(message.content); setEditing(false); }}>Batal</button>
-              <button type="button" className="ai-tonal-button ai-ripple" onClick={submitEdit} disabled={!draft.trim()}>Kirim ulang</button>
-            </div>
+            <FormActions>
+              <Button variant="text" onClick={() => { setDraft(message.content); setEditing(false); }}>Batal</Button>
+              <Button onClick={submitEdit} disabled={!draft.trim()}>Kirim ulang</Button>
+            </FormActions>
           </div>
         </div>
       );
@@ -750,18 +878,18 @@ function MessageItem({ message, canExport, exportingKey, onExport, showAuthor = 
         {showAuthor && <span className="ai-msg-author">{message.authorName || 'Anggota divisi'}</span>}
         <div className="ai-user-row">
           {canEdit && (
-            <button
-              type="button"
-              className="ai-icon-button is-small ai-ripple ai-edit-trigger"
+            <IconButton
+              size="sm"
+              label="Ubah pesan"
+              icon="edit"
+              className="ai-edit-trigger"
               onClick={() => { setDraft(message.content); setEditing(true); }}
-              aria-label="Edit pesan ini"
-              title="Edit pesan"
-            >
-              <Pencil size={15} />
-            </button>
+              aria-label="Ubah pesan ini"
+            />
           )}
-          <div className="ai-user-bubble" title={time}>{message.content}</div>
+          <div className="ai-user-bubble" data-pw-tooltip={time} {...noTranslate}>{message.content}</div>
         </div>
+        <AIAttachmentChips items={message.attachments} sent />
       </div>
     );
   }
@@ -780,41 +908,32 @@ function MessageItem({ message, canExport, exportingKey, onExport, showAuthor = 
 
   return (
     <div className="ai-msg is-assistant">
+      <AISteps steps={message.steps} />
       <div className="ai-assistant-text"><AIMarkdown>{message.content}</AIMarkdown></div>
       <div className="ai-msg-actions">
-        <button
-          type="button"
-          className="ai-icon-button is-small ai-ripple"
-          onClick={copy}
-          aria-label={copied ? 'Tersalin' : 'Salin jawaban'}
-          title={copied ? 'Tersalin' : 'Salin'}
-        >
-          {copied ? <Check size={16} /> : <Copy size={16} />}
-        </button>
+        <IconButton size="sm" label={copied ? 'Tersalin' : 'Salin jawaban'} icon={copied ? 'check' : 'content_copy'} onClick={copy} />
         {exportable && (
-          <div className="ai-export-group" aria-label="Unduh jawaban sebagai dokumen">
-            <FileDown size={15} aria-hidden="true" />
+          <div className="ai-export-group" role="group" aria-label="Unduh jawaban sebagai dokumen">
+            <Icon name="download" />
             {['pdf', 'docx', 'xlsx'].map((format) => {
               const active = exportingKey === `${message.id}:${format}`;
               return (
-                <button
+                <Chip
                   key={format}
-                  type="button"
-                  className="ai-export-chip ai-ripple"
+                  icon={active ? <Spinner label={null} /> : undefined}
+                  tooltip={exportingKey ? undefined : `Jadikan ${format.toUpperCase()}`}
                   disabled={Boolean(exportingKey)}
                   onClick={() => onExport(message, format)}
-                  title={`Jadikan ${format.toUpperCase()}`}
                 >
-                  {active && <Loader2 className="ai-spin" size={12} />}
                   {format.toUpperCase()}
-                </button>
+                </Chip>
               );
             })}
           </div>
         )}
         <span className="ai-msg-meta">
           {time}
-          {message.provider && ` · ${message.provider}${message.model ? ` ${message.model}` : ''}`}
+          {message.provider && <>{' · '}<span {...noTranslate}>{`${message.provider}${message.model ? ` ${message.model}` : ''}`}</span></>}
         </span>
       </div>
     </div>

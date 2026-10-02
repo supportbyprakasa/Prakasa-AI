@@ -1,0 +1,16 @@
+{
+  "name": "Prakasa Workspace",
+  "short_name": "Prakasa",
+  "description": "Ruang kerja internal Prakasa: tugas, approval, dokumen, dan modul divisi.",
+  "lang": "id",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b57d0",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-256.png", "sizes": "256x256", "type": "image/png", "purpose": "any" }
+  ]
+}

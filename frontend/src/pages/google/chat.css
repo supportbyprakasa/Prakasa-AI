@@ -1,0 +1,649 @@
+/* Google Chat inside Prakasa Workspace — the chat.google.com layout on the
+   admin console tokens: conversations on the left, the open conversation on
+   the right, the thread beside it (over it when the conversation is narrow).
+   When the page is narrow the panes become two screens (list → conversation,
+   back button). Pane switches follow the space the app really has (the side
+   menu and the AI panel change it), so they are container queries; viewport
+   breakpoints are the admin console's 600 only. */
+
+/* The page fills the viewport under the top bar: the trail (16 + 20) and the
+   main padding (16 top, 48 bottom) are the chrome around it. */
+.pw-gchat {
+  container: gchat / inline-size;
+  height: calc(100dvh - var(--pw-topbar-height) - 100px);
+  min-height: 520px;
+}
+
+.pw-gchat > .pw-page-header { flex: 0 0 auto; }
+
+.pw-gchat__frame {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: clamp(260px, 30%, 320px) minmax(0, 1fr);
+  border: 1px solid var(--pw-outline-panel);
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface);
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------ list pane */
+
+.pw-gchat__list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--pw-divider);
+}
+
+.pw-gchat__list-head { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px 12px 8px; }
+.pw-gchat__new { display: inline-flex; }
+
+.pw-gchat__list-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 8px 12px;
+}
+
+.pw-gchat__section { padding-top: 4px; }
+.pw-gchat__section.is-apps { margin-top: 8px; border-top: 1px solid var(--pw-divider); }
+.pw-gchat__section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--pw-control-height);
+  padding: 0 12px 0 8px;
+  border-radius: var(--pw-radius-full);
+  color: var(--pw-text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+.pw-gchat__section-head:focus-visible { outline: 2px solid var(--pw-primary); outline-offset: -2px; }
+.pw-gchat__section-chevron { flex: 0 0 auto; transition: transform var(--pw-dur-sm) var(--pw-ease-standard); }
+.pw-gchat__section-head[aria-expanded="false"] .pw-gchat__section-chevron { transform: rotate(-90deg); }
+.pw-gchat__section-title {
+  flex: 1 1 auto;
+  margin: 0;
+  color: var(--pw-text);
+  font-size: var(--pw-font-sm);
+  font-weight: 500;
+}
+.pw-gchat__section-count {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--pw-font-xs);
+}
+
+.pw-gchat__rows { list-style: none; margin: 0; padding: 0; }
+
+/* A conversation row: a pill like the side menu item; selected rows use the
+   side menu's selected colours. */
+.pw-gchat__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 4px 12px;
+  border-radius: var(--pw-radius-full);
+  color: var(--pw-text);
+  text-decoration: none;
+}
+.pw-gchat__row:focus-visible { outline: 2px solid var(--pw-primary); outline-offset: -2px; }
+.pw-gchat__row.is-active { background: var(--pw-selected); color: var(--pw-accent); }
+.pw-gchat__row.is-active .pw-gchat__row-name { font-weight: 500; }
+.pw-gchat__row.is-active .pw-gchat__row-meta,
+.pw-gchat__row.is-active .pw-gchat__row-time { color: inherit; }
+
+.pw-gchat__row-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.pw-gchat__row-name,
+.pw-gchat__row-meta { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pw-gchat__row-name { font-size: var(--pw-font-body); line-height: 20px; }
+.pw-gchat__row.is-unread .pw-gchat__row-name { font-weight: 500; }
+.pw-gchat__row-end { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.pw-gchat__row-meta,
+.pw-gchat__row-time { color: var(--pw-text-muted); font-size: var(--pw-font-xs); line-height: 16px; }
+.pw-gchat__row-time { flex: 0 0 auto; }
+
+/* ------------------------------------------------------------ conversation */
+
+.pw-gchat__conversation {
+  container: gchat-conversation / inline-size;
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+.pw-gchat__conversation-main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.pw-gchat__placeholder { flex-direction: column; justify-content: center; }
+
+/* Thread panel — beside the conversation, over it when the conversation is
+   narrow (see the container query below). */
+.pw-gchat__thread {
+  flex: 0 0 380px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-left: 1px solid var(--pw-divider);
+  background: var(--pw-surface);
+}
+.pw-gchat__thread-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 8px 8px 8px 12px;
+  border-bottom: 1px solid var(--pw-divider);
+}
+
+.pw-gchat__conversation-head {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--pw-divider);
+}
+/* The tab bar draws its own bottom line. */
+.pw-gchat__conversation-head.has-tabs { border-bottom: 0; }
+.pw-gchat__conversation-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 64px;
+  padding: 8px 12px 8px 16px;
+}
+.pw-gchat__conversation-head.has-tabs .pw-gchat__conversation-bar { min-height: 56px; padding-bottom: 0; }
+.pw-gchat__conversation-bar > .pw-tooltip-anchor:has(> .pw-gchat__back) { display: none; }
+.pw-gchat__space-tabs { padding: 0 12px; }
+
+.pw-gchat__conversation-title { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; margin: 0 4px 0 8px; }
+.pw-gchat__conversation-title h2 {
+  margin: 0;
+  overflow: hidden;
+  color: var(--pw-text);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-md);
+  font-weight: 400;
+  line-height: 24px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pw-gchat__conversation-title span {
+  overflow: hidden;
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-xs);
+  line-height: 16px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pw-gchat__panel { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+.pw-gchat__tab-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  overflow-y: auto;
+}
+.pw-gchat__tab-panel > * { flex-shrink: 0; }
+.pw-gchat__tasks { padding: 0; }
+.pw-gchat__filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.pw-gchat__file-cell { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.pw-gchat__file-cell > span { overflow-wrap: anywhere; }
+
+.pw-gchat__banner { padding: 12px 16px 0; }
+.pw-gchat__search-bar { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px 0; }
+.pw-gchat__hint { margin: 0; padding: 0 16px; color: var(--pw-text-muted); font-size: var(--pw-font-xs); line-height: 16px; }
+
+.pw-gchat__messages {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 0 16px;
+  overscroll-behavior: contain;
+}
+
+.pw-gchat__older { display: flex; justify-content: center; padding: 8px 0; }
+
+.pw-gchat__day-label {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0 4px;
+}
+.pw-gchat__day-label span {
+  padding: 4px 12px;
+  border-radius: var(--pw-radius-full);
+  background: var(--pw-surface);
+  box-shadow: inset 0 0 0 1px var(--pw-divider);
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-xs);
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.pw-gchat__message-list { list-style: none; margin: 0; padding: 0; }
+
+.pw-gchat__message {
+  position: relative;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  padding: 4px 16px 4px 12px;
+}
+.pw-gchat__message:focus { outline: none; }
+.pw-gchat__message.has-header { margin-top: 12px; }
+.pw-gchat__message:hover { background: var(--pw-surface-container); }
+.pw-gchat__message.is-highlighted { background: var(--pw-selected); transition: background var(--pw-dur-sm) var(--pw-ease-standard); }
+.pw-gchat__message.is-pending { opacity: .6; }
+
+.pw-gchat__message-gutter { display: flex; justify-content: center; padding-top: 4px; }
+.pw-gchat__hover-time {
+  visibility: hidden;
+  padding-top: 4px;
+  color: var(--pw-text-meta);
+  font-size: var(--pw-font-xs);
+  line-height: 16px;
+}
+.pw-gchat__message:hover .pw-gchat__hover-time { visibility: visible; }
+
+.pw-gchat__message-body { min-width: 0; }
+.pw-gchat__message-head { display: flex; align-items: baseline; gap: 8px; }
+.pw-gchat__sender { color: var(--pw-text); font-size: var(--pw-font-body); font-weight: 500; line-height: 20px; }
+.pw-gchat__time { color: var(--pw-text-meta); font-size: var(--pw-font-xs); line-height: 16px; }
+
+.pw-gchat__text {
+  margin: 0;
+  color: var(--pw-text);
+  font-size: var(--pw-font-body);
+  line-height: 20px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.pw-gchat__bold { font-weight: 500; }
+.pw-gchat__text.is-muted { color: var(--pw-text-muted); font-style: italic; }
+.pw-gchat__text a { color: var(--pw-primary); }
+.pw-gchat__mention {
+  padding: 0 4px;
+  border-radius: var(--pw-radius-xs);
+  background: var(--pw-selected);
+  color: var(--pw-accent);
+  font-weight: 500;
+}
+.pw-gchat__quote {
+  margin: 4px 0;
+  padding: 4px 12px;
+  border-left: 3px solid var(--pw-outline-strong);
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.pw-gchat__reactions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.pw-gchat__replies { margin-top: 4px; }
+.pw-gchat__edit { display: flex; flex-direction: column; gap: 8px; margin: 4px 0; }
+.pw-gchat__edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+.pw-gchat__code {
+  padding: 0 4px;
+  border-radius: var(--pw-radius-xs);
+  background: var(--pw-hover-row);
+  font-family: var(--pw-font-mono);
+  font-size: var(--pw-font-sm);
+}
+.pw-gchat__codeblock {
+  margin: 4px 0;
+  padding: 8px 12px;
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface-container);
+  font-family: var(--pw-font-mono);
+  font-size: var(--pw-font-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.pw-gchat__thread-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-xs);
+  line-height: 16px;
+}
+
+.pw-gchat__attachments { list-style: none; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; margin: 8px 0 4px; padding: 0; }
+.pw-gchat__attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 0 4px 0 12px;
+  border-radius: var(--pw-radius-sm);
+  box-shadow: inset 0 0 0 1px var(--pw-divider);
+  color: var(--pw-text);
+  font-size: var(--pw-font-sm);
+  text-decoration: none;
+}
+a.pw-gchat__attachment { padding-right: 12px; }
+.pw-gchat__attachment span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pw-gchat__attachment.is-disabled { padding-right: 12px; color: var(--pw-text-muted); }
+.pw-gchat__attachment-image { display: flex; align-items: flex-start; gap: 4px; }
+.pw-gchat__image { display: block; }
+.pw-gchat__image img {
+  display: block;
+  max-width: min(320px, 100%);
+  max-height: 240px;
+  border-radius: var(--pw-radius-sm);
+  box-shadow: inset 0 0 0 1px var(--pw-divider);
+  object-fit: cover;
+}
+.pw-gchat__image-placeholder {
+  display: grid;
+  place-items: center;
+  width: 200px;
+  height: 120px;
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface-container);
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-xs);
+}
+
+/* Hover toolbar of a message (react, reply, quote, ⋮). */
+.pw-gchat__message-actions {
+  position: absolute;
+  top: -8px;
+  right: 16px;
+  z-index: 1;
+  display: none;
+  align-items: center;
+  padding: 0 4px;
+  border-radius: var(--pw-radius-full);
+  background: var(--pw-surface);
+  box-shadow: var(--pw-elev-1);
+}
+.pw-gchat__message:hover .pw-gchat__message-actions,
+.pw-gchat__message:focus-within .pw-gchat__message-actions,
+.pw-gchat__message-actions:has([aria-expanded="true"]) { display: flex; }
+
+/* Emoji grid popover: a grid of choices, not a menu (§4.14 surface). */
+.pw-gchat__emoji-anchor { position: relative; display: inline-flex; }
+.pw-gchat__emoji-picker {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 40px);
+  gap: 4px;
+  padding: 8px;
+  border-radius: var(--pw-radius-md);
+  background: var(--pw-surface);
+  box-shadow: var(--pw-elev-menu);
+}
+.pw-gchat__emoji-picker.is-upward { top: auto; bottom: calc(100% + 4px); }
+.pw-gchat__emoji { font-size: var(--pw-font-lg); }
+
+/* ------------------------------------------------------------ composer */
+
+.pw-gchat__composer {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 16px 12px;
+  border-top: 1px solid var(--pw-divider);
+}
+.pw-gchat__composer.is-compact { padding: 8px 12px 12px; }
+.pw-gchat__replying {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 8px;
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-xs);
+}
+.pw-gchat__replying span:not(.pw-icon) { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pw-gchat__composer-row { position: relative; display: flex; align-items: flex-end; gap: 4px; }
+.pw-gchat__file-input { display: none; }
+.pw-gchat__format { display: flex; flex-wrap: wrap; gap: 4px; }
+.pw-gchat__file-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 0 12px;
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface-container);
+  font-size: var(--pw-font-sm);
+}
+.pw-gchat__file-chip > span:not(.pw-icon):first-of-type { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pw-gchat__drive-draft { list-style: none; display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; }
+
+/* "@" suggestions: a listbox over the message list, the menu surface. */
+.pw-gchat__mentions {
+  position: absolute;
+  left: 0;
+  right: 48px;
+  bottom: calc(100% + 4px);
+  z-index: 1;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 8px 0;
+  border-radius: var(--pw-radius-md);
+  background: var(--pw-surface);
+  box-shadow: var(--pw-elev-menu);
+}
+
+/* Message box: a filled rounded field (Google Chat), white with the search
+   pill's lift on focus; the shared field's underline is not drawn here. 48px
+   high, level with the icon buttons beside it. */
+.pw-gchat .pw-gchat__input-field { flex: 1 1 auto; min-width: 0; padding-bottom: 0; }
+.pw-gchat .pw-field--textarea.pw-gchat__input-field > .pw-field__area {
+  height: auto;
+  min-height: 48px;
+  padding: 0;
+  border-radius: var(--pw-radius-xl);
+  background: var(--pw-surface-container);
+  transition: background-color var(--pw-dur-xs) var(--pw-ease-standard), box-shadow var(--pw-dur-xs) var(--pw-ease-standard);
+}
+.pw-gchat .pw-gchat__input-field > .pw-field__area::before,
+.pw-gchat .pw-gchat__input-field > .pw-field__area::after { display: none; }
+.pw-gchat .pw-gchat__input-field > .pw-field__area:focus-within { background: var(--pw-surface); box-shadow: var(--pw-elev-appbar); }
+.pw-gchat .pw-gchat__input-field .pw-gchat__input {
+  min-height: 48px;
+  max-height: 160px;
+  padding: 12px 16px;
+  resize: none;
+  field-sizing: content;
+}
+.pw-gchat .pw-gchat__input-field > .pw-field__assist { min-height: 0; padding: 0 16px; }
+
+/* ------------------------------------------------------------ Drive */
+
+.pw-gchat__file-icon { flex: 0 0 auto; color: var(--pw-text-muted); }
+.pw-gchat__file-icon--document { color: var(--pw-primary); }
+.pw-gchat__file-icon--spreadsheet { color: var(--pw-success); }
+.pw-gchat__file-icon--presentation { color: var(--pw-warning); }
+.pw-gchat__file-icon--form { color: var(--pw-accent); }
+.pw-gchat__file-icon--pdf,
+.pw-gchat__file-icon--image,
+.pw-gchat__file-icon--video { color: var(--pw-error); }
+
+.pw-gchat__drive-chips { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 4px; padding: 0; }
+.pw-gchat__drive-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(360px, 100%);
+  min-height: 48px;
+  padding: 4px 12px;
+  border-radius: var(--pw-radius-sm);
+  box-shadow: inset 0 0 0 1px var(--pw-divider);
+  background: var(--pw-surface);
+  color: var(--pw-text);
+  text-decoration: none;
+}
+.pw-gchat__drive-chip:focus-visible { outline: 2px solid var(--pw-primary); outline-offset: 2px; }
+.pw-gchat__drive-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.pw-gchat__drive-name { overflow: hidden; font-size: var(--pw-font-body); font-weight: 500; line-height: 20px; white-space: nowrap; text-overflow: ellipsis; }
+.pw-gchat__drive-text .pw-gchat__muted { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pw-gchat__drive-external,
+.pw-gchat__drive-chevron { flex: 0 0 auto; color: var(--pw-text-muted); }
+
+.pw-gchat__drive-picker { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pw-gchat__crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-height: var(--pw-control-height); font-size: var(--pw-font-body); }
+.pw-gchat__crumb { display: inline-flex; align-items: center; gap: 4px; color: var(--pw-text-muted); }
+.pw-gchat__crumb [aria-current] { padding: 0 8px; color: var(--pw-text); font-weight: 500; }
+.pw-gchat__drive-body {
+  height: min(420px, 50vh);
+  overflow-y: auto;
+  border: 1px solid var(--pw-outline-panel);
+  border-radius: var(--pw-radius-sm);
+}
+.pw-gchat__drive-list { padding: 4px 0; }
+.pw-gchat__drive-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 4px 16px;
+  cursor: pointer;
+}
+.pw-gchat__drive-row:focus-visible { outline: 2px solid var(--pw-primary); outline-offset: -2px; }
+.pw-gchat__drive-row.is-selected { background: var(--pw-selected); color: var(--pw-accent); }
+.pw-gchat__drive-check { flex: 0 0 auto; color: var(--pw-accent); }
+/* The count sits at the start of the dialog's action row. */
+.pw-gchat__muted.pw-gchat__drive-count { margin-right: auto; }
+
+.pw-gchat__label { color: var(--pw-text-muted); font-size: var(--pw-font-xs); font-weight: 500; line-height: 16px; }
+.pw-gchat__dialog-text { margin: 0; color: var(--pw-text); font-size: var(--pw-font-body); line-height: 20px; }
+.pw-gchat__access-files { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; max-height: 200px; overflow-y: auto; }
+.pw-gchat__access-files li { display: flex; align-items: center; gap: 12px; }
+.pw-gchat__forward-list,
+.pw-gchat__people-results {
+  overflow-y: auto;
+  border: 1px solid var(--pw-outline-panel);
+  border-radius: var(--pw-radius-sm);
+}
+.pw-gchat__forward-list { max-height: 280px; }
+.pw-gchat__people-results { max-height: 200px; }
+.pw-gchat__people-results > .pw-gchat__muted { padding: 12px; }
+
+/* ------------------------------------------------------------ app cards */
+
+.pw-gchat__cards { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 4px; }
+.pw-gchat__card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 480px;
+  padding: 12px 16px;
+  border: 1px solid var(--pw-outline-panel);
+  border-radius: var(--pw-radius-lg);
+  background: var(--pw-surface);
+}
+.pw-gchat__card-head { display: flex; flex-direction: column; }
+.pw-gchat__card-title { font-family: var(--pw-font-sans); font-size: var(--pw-font-md); font-weight: 400; line-height: 24px; overflow-wrap: anywhere; }
+.pw-gchat__card-section { display: flex; flex-direction: column; gap: 8px; }
+.pw-gchat__card-section-title { margin: 0; color: var(--pw-text-muted); font-size: var(--pw-font-xs); font-weight: 500; line-height: 16px; }
+.pw-gchat__card-text { margin: 0; font-size: var(--pw-font-body); line-height: 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pw-gchat__card-text a,
+.pw-gchat__card-decorated a { color: var(--pw-primary); }
+.pw-gchat__card-decorated { display: flex; flex-direction: column; font-size: var(--pw-font-body); overflow-wrap: anywhere; }
+.pw-gchat__card-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.pw-gchat__card-divider { width: 100%; margin: 0; border: 0; border-top: 1px solid var(--pw-divider); }
+
+/* ------------------------------------------------------------ shared bits */
+
+.pw-gchat__muted { margin: 0; color: var(--pw-text-muted); font-size: var(--pw-font-xs); line-height: 16px; }
+.pw-gchat__option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 4px 16px;
+  cursor: pointer;
+}
+.pw-gchat__option.is-active { background: var(--pw-selected); }
+.pw-gchat__option:focus-visible { outline: 2px solid var(--pw-primary); outline-offset: -2px; }
+.pw-gchat__option-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; font-size: var(--pw-font-body); line-height: 20px; }
+.pw-gchat__option-text > span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+.pw-gchat__mode { align-self: flex-start; max-width: 100%; }
+.pw-gchat__people { display: flex; flex-direction: column; gap: 8px; }
+.pw-gchat__people-selected { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Detail percakapan (full-screen dialog). */
+.pw-gchat__details-head { display: flex; align-items: center; gap: 12px; }
+.pw-gchat__details-head > div { display: flex; flex-direction: column; min-width: 0; }
+.pw-gchat__details-name { font-family: var(--pw-font-sans); font-size: var(--pw-font-md); font-weight: 400; line-height: 24px; overflow-wrap: anywhere; }
+.pw-gchat__description { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pw-gchat__setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.pw-gchat__setting > div { display: flex; flex-direction: column; min-width: 0; }
+.pw-gchat__setting-label { color: var(--pw-text); font-size: var(--pw-font-body); line-height: 20px; }
+.pw-gchat__add-people { display: flex; flex-direction: column; gap: 8px; }
+.pw-gchat__members { list-style: none; margin: 0; padding: 0; }
+.pw-gchat__member { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 4px 0; border-top: 1px solid var(--pw-divider); }
+.pw-gchat__member:first-child { border-top: 0; }
+.pw-gchat__role { flex: 0 0 auto; color: var(--pw-text-meta); font-size: var(--pw-font-xs); line-height: 18px; }
+.pw-gchat__danger { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+
+/* ------------------------------------------------------------ narrow panes */
+
+/* A narrow conversation: the thread slides over it (a sheet inside the app). */
+@container gchat-conversation (max-width: 759px) {
+  .pw-gchat__thread {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    width: min(400px, 100%);
+    box-shadow: var(--pw-elev-dialog);
+  }
+}
+
+/* A narrow page: list and conversation become two screens. */
+@container gchat (max-width: 640px) {
+  .pw-gchat__frame { grid-template-columns: minmax(0, 1fr); }
+  .pw-gchat__list { border-right: 0; }
+  .pw-gchat.is-conversation .pw-gchat__list,
+  .pw-gchat:not(.is-conversation) .pw-gchat__conversation { display: none; }
+  .pw-gchat__conversation-bar > .pw-tooltip-anchor:has(> .pw-gchat__back) { display: inline-flex; }
+  .pw-gchat__conversation-bar { padding: 8px 4px; gap: 4px; }
+  .pw-gchat__conversation-bar > .g-avatar { display: none; }
+  .pw-gchat__space-tabs { padding: 0 4px; }
+  .pw-gchat__tab-panel { padding: 12px; }
+  .pw-gchat__message { grid-template-columns: 48px minmax(0, 1fr); padding: 4px 12px 4px 4px; }
+  .pw-gchat__composer { padding: 8px; }
+  .pw-gchat__thread { width: 100%; border-left: 0; box-shadow: none; }
+  .pw-gchat__drive-chip { max-width: 100%; }
+}
+
+/* ------------------------------------------------------------ phone */
+
+@media (max-width: 600px) {
+  /* The phone trail (48, its back button), main 8 top and 48 bottom. */
+  .pw-gchat { height: calc(100dvh - var(--pw-topbar-height) - 104px); min-height: 440px; }
+  .pw-gchat.is-conversation > .pw-page-header { display: none; }
+  .pw-gchat__drive-body { height: 36vh; }
+  .pw-gchat__drive-count { flex: 1 1 100%; text-align: center; }
+  .pw-gchat__danger .pw-button { flex: 1 1 auto; }
+}

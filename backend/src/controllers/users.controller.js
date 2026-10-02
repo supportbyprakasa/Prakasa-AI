@@ -2,11 +2,24 @@ const bcrypt = require('bcryptjs');
 const pool = require('../db/pool');
 const { ok, fail } = require('../utils/response');
 const { log } = require('../services/activityLog.service');
+const { invalidateAuth } = require('../middleware/requireAuth');
+const directory = require('../services/peopleDirectory.service');
 const {
+  assertCanChangeAccount,
+  countActiveSuperAdmins,
+  isSuperAdmin,
   loadAssignedRoles,
   loadRolesForAssignment,
   validateRoleAssignment,
 } = require('../services/rolePolicy.service');
+
+// Passwords are managed by the Super Admin only (owner decision, 2 Oct 2026):
+// an initial password, a reset, and lifting the "change at next sign-in" flag.
+// A password set this way is always temporary — its owner replaces it at the
+// next sign-in (POST /auth/change-password) — so the Super Admin who typed it
+// cannot keep using it.
+const PASSWORD_RESET_SUPER_ADMIN_ONLY = 'Hanya Super Admin yang bisa mereset kata sandi';
+const PASSWORD_SET_SUPER_ADMIN_ONLY = 'Hanya Super Admin yang bisa mengatur kata sandi';
 
 async function list(req, res, next) {
   try {
@@ -99,10 +112,14 @@ async function create(req, res, next) {
       departmentId,
       status = 'active',
       roleIds = [],
-      mustChangePassword = true,
     } = req.body;
 
-    const passwordHash = await bcrypt.hash(password, 12);
+    // An account with a password is created by a Super Admin only; anyone
+    // else with user.manage creates Google sign-in accounts (no password).
+    if (password && !(await isSuperAdmin(req.user.sub, conn))) {
+      return fail(res, 'SUPER_ADMIN_ONLY', PASSWORD_SET_SUPER_ADMIN_ONLY, 403);
+    }
+    const passwordHash = password ? await bcrypt.hash(password, 12) : null;
     await conn.beginTransaction();
 
     const roleRows = await loadRolesForAssignment({ connection: conn, roleIds });
@@ -111,6 +128,10 @@ async function create(req, res, next) {
       departmentId: departmentId || null,
       roleRows,
     });
+    await assertCanChangeAccount({ connection: conn, actorId: req.user.sub, targetUserId: null, nextRoles: roleRows });
+    // Same as resetPassword: an initial password is always temporary. Without
+    // a password there is nothing to replace.
+    const mustChange = passwordHash ? 1 : 0;
 
     const [result] = await conn.query(
       `INSERT INTO users
@@ -122,7 +143,7 @@ async function create(req, res, next) {
         name,
         email.trim().toLowerCase(),
         passwordHash,
-        mustChangePassword ? 1 : 0,
+        mustChange,
         status,
       ]
     );
@@ -134,14 +155,19 @@ async function create(req, res, next) {
       );
     }
 
+    // A person already in the directory without an account (same work email)
+    // gets this account attached — never a second entry (People & Culture rule 8).
+    await directory.linkAccount(conn, entityId, result.insertId, req.user.sub);
+
     await conn.commit();
+    invalidateAuth(result.insertId);
     await log({
       entityId,
       userId: req.user.sub,
       action: 'user.create',
       subjectType: 'user',
       subjectId: result.insertId,
-      metadata: { email: email.trim().toLowerCase(), entityId, departmentId, roleIds },
+      metadata: { email: email.trim().toLowerCase(), entityId, departmentId, roleIds, signIn: passwordHash ? 'password' : 'google' },
     });
 
     return ok(res, { id: result.insertId }, undefined, 201);
@@ -162,10 +188,14 @@ async function update(req, res, next) {
     const { id } = req.params;
     const { name, email, entityId, departmentId, status, roleIds, mustChangePassword } = req.body;
 
+    if (status === 'inactive' && Number(id) === Number(req.user.sub)) {
+      return fail(res, 'SELF_DEACTIVATION', 'Anda tidak dapat menonaktifkan akun Anda sendiri', 400);
+    }
+
     await conn.beginTransaction();
 
     const [[currentUser]] = await conn.query(
-      `SELECT id, entity_id, department_id
+      `SELECT id, entity_id, department_id, email, status
          FROM users
         WHERE id = ? AND deleted_at IS NULL
         FOR UPDATE`,
@@ -188,6 +218,15 @@ async function update(req, res, next) {
       departmentId: effectiveDepartmentId,
       roleRows,
     });
+    await assertCanChangeAccount({
+      connection: conn,
+      actorId: req.user.sub,
+      targetUserId: id,
+      targetRoles: await loadAssignedRoles({ connection: conn, userId: id }),
+      nextRoles: Array.isArray(roleIds) ? roleRows : null,
+      changesDivision: departmentId !== undefined
+        && String(departmentId || '') !== String(currentUser.department_id ?? ''),
+    });
 
     const fields = [];
     const values = [];
@@ -196,7 +235,11 @@ async function update(req, res, next) {
     if (entityId !== undefined) { fields.push('entity_id = ?'); values.push(entityId); }
     if (departmentId !== undefined) { fields.push('department_id = ?'); values.push(departmentId || null); }
     if (status !== undefined) { fields.push('status = ?'); values.push(status); }
-    if (mustChangePassword !== undefined) {
+    // Lifting the "change at next sign-in" flag is Super Admin only, like
+    // everything else about passwords; below Super Admin a `false` leaves the
+    // flag as it is.
+    if (mustChangePassword !== undefined
+      && (mustChangePassword || await isSuperAdmin(req.user.sub, conn))) {
       fields.push('must_change_password = ?');
       values.push(mustChangePassword ? 1 : 0);
     }
@@ -223,7 +266,24 @@ async function update(req, res, next) {
       }
     }
 
+    if (await countActiveSuperAdmins({ connection: conn }) === 0) {
+      await conn.rollback();
+      return fail(res, 'LAST_SUPER_ADMIN', 'Perubahan ini akan menghapus Super Admin aktif terakhir. Tetapkan Super Admin lain terlebih dahulu.', 409);
+    }
+
+    // Directory (People & Culture rules 8 and 10): a new email attaches the
+    // account to its directory entry; deactivating counts as resigned, and
+    // reactivating undoes only that.
+    if (email !== undefined && email.trim().toLowerCase() !== String(currentUser.email || '').toLowerCase()) {
+      await directory.linkAccount(conn, effectiveEntityId, id, req.user.sub);
+    }
+    if (status !== undefined && status !== currentUser.status) {
+      await directory.syncAccountStatus(conn, effectiveEntityId, id, req.user.sub, status === 'active');
+    }
+
     await conn.commit();
+    // Status, roles, division or entity changed: the next request reads them.
+    invalidateAuth(id);
     await log({
       entityId: entityId ?? req.user.entityId ?? null,
       userId: req.user.sub,
@@ -248,18 +308,26 @@ async function update(req, res, next) {
 async function resetPassword(req, res, next) {
   try {
     const { id } = req.params;
+    if (!(await isSuperAdmin(req.user.sub))) {
+      return fail(res, 'SUPER_ADMIN_ONLY', PASSWORD_RESET_SUPER_ADMIN_ONLY, 403);
+    }
+    // A reset password is always temporary: the owner of the account must
+    // replace it at the next sign-in.
+    const mustChange = 1;
     const passwordHash = await bcrypt.hash(req.body.password, 12);
 
     const [result] = await pool.query(
       `UPDATE users
-          SET password_hash = ?, must_change_password = ?
+          SET password_hash = ?, must_change_password = ?, password_changed_at = NOW()
         WHERE id = ? AND deleted_at IS NULL`,
-      [passwordHash, req.body.mustChangePassword === false ? 0 : 1, id]
+      [passwordHash, mustChange, id]
     );
 
     if (!result.affectedRows) {
       return fail(res, 'NOT_FOUND', 'User tidak ditemukan', 404);
     }
+    // The account's older sessions end now.
+    invalidateAuth(id);
 
     await log({
       entityId: req.user.entityId ?? null,
@@ -267,7 +335,7 @@ async function resetPassword(req, res, next) {
       action: 'user.password_reset',
       subjectType: 'user',
       subjectId: Number(id),
-      metadata: { mustChangePassword: req.body.mustChangePassword !== false },
+      metadata: { mustChangePassword: true },
     });
 
     return ok(res, { id: Number(id) });
@@ -277,14 +345,37 @@ async function resetPassword(req, res, next) {
 }
 
 async function remove(req, res, next) {
+  if (Number(req.params.id) === Number(req.user.sub)) {
+    return fail(res, 'SELF_DELETION', 'Anda tidak dapat menghapus akun Anda sendiri', 400);
+  }
+  const conn = await pool.getConnection();
   try {
-    const [result] = await pool.query(
+    await conn.beginTransaction();
+    await assertCanChangeAccount({
+      connection: conn,
+      actorId: req.user.sub,
+      targetUserId: req.params.id,
+      targetRoles: await loadAssignedRoles({ connection: conn, userId: req.params.id }),
+    });
+    const [result] = await conn.query(
       'UPDATE users SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL',
       [req.params.id]
     );
     if (!result.affectedRows) {
+      await conn.rollback();
       return fail(res, 'NOT_FOUND', 'User tidak ditemukan', 404);
     }
+    // A deleted account counts as resigned in the directory (rule 10, source 'account').
+    const [owner] = await conn.query('SELECT entity_id FROM users WHERE id = ?', [req.params.id]);
+    if (Array.isArray(owner) && owner[0]?.entity_id) {
+      await directory.syncAccountStatus(conn, owner[0].entity_id, req.params.id, req.user.sub, false);
+    }
+    if (await countActiveSuperAdmins({ connection: conn }) === 0) {
+      await conn.rollback();
+      return fail(res, 'LAST_SUPER_ADMIN', 'Akun ini adalah Super Admin aktif terakhir dan tidak dapat dihapus.', 409);
+    }
+    await conn.commit();
+    invalidateAuth(req.params.id);
 
     await log({
       entityId: null,
@@ -296,7 +387,10 @@ async function remove(req, res, next) {
 
     return ok(res, { id: Number(req.params.id) });
   } catch (error) {
+    await conn.rollback();
     next(error);
+  } finally {
+    conn.release();
   }
 }
 

@@ -8,7 +8,9 @@ const ctrl = require('../controllers/users.controller');
 const createSchema = z.object({
   name: z.string().min(1).max(150),
   email: z.string().email().max(190),
-  password: z.string().min(10).max(200),
+  // Optional: without it the account signs in with Google only. Setting one
+  // is Super Admin only (users.controller create).
+  password: z.string().min(10).max(200).optional(),
   entityId: z.number().int().positive(),
   departmentId: z.number().int().positive().nullable().optional(),
   status: z.enum(['active', 'inactive']).optional(),
@@ -36,6 +38,8 @@ router.get('/', requirePermission('user.manage'), ctrl.list);
 router.get('/:id', requirePermission('user.manage'), ctrl.detail);
 router.post('/', requirePermission('user.manage'), validate(createSchema), ctrl.create);
 router.patch('/:id', requirePermission('user.manage'), validate(updateSchema), ctrl.update);
+// Passwords are managed by the Super Admin only (owner decision, 2 Oct 2026):
+// user.manage opens the route, the controller then requires a Super Admin.
 router.post(
   '/:id/reset-password',
   requirePermission('user.manage'),

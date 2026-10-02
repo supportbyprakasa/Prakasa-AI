@@ -3,7 +3,7 @@ const { assertTaskAccess, hasPerm } = require('./taskAccess.service');
 const activity = require('./taskActivity.service');
 
 async function list({ task, user }) {
-  assertTaskAccess({ user, task, action: 'view' });
+  await assertTaskAccess({ user, task, action: 'view' });
   const [rows] = await pool.query(
     `SELECT w.user_id AS userId, u.name AS userName, u.email AS userEmail,
             w.created_by AS createdBy, w.created_at AS createdAt
@@ -17,7 +17,7 @@ async function list({ task, user }) {
 }
 
 async function add({ task, user, targetUserId, conn = pool }) {
-  assertTaskAccess({ user, task, action: 'manage' });
+  await assertTaskAccess({ user, task, action: 'manage' });
 
   const isSelf = Number(targetUserId) === Number(user.sub);
   if (!isSelf && !hasPerm(user, 'task.watch.manage')) {
@@ -57,7 +57,7 @@ async function add({ task, user, targetUserId, conn = pool }) {
 }
 
 async function remove({ task, user, targetUserId, conn = pool }) {
-  assertTaskAccess({ user, task, action: 'manage' });
+  await assertTaskAccess({ user, task, action: 'manage' });
 
   const isSelf = Number(targetUserId) === Number(user.sub);
   if (!isSelf && !hasPerm(user, 'task.watch.manage')) {

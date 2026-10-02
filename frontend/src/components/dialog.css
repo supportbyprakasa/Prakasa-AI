@@ -1,0 +1,208 @@
+/* Dialogs (docs/ui-guideline.md §3.3, §4.14): Modal sm/md and ConfirmDialog
+   share the small-dialog base; Modal lg and FullScreenDialog are the admin
+   console's full-screen "Add new user" dialog (referensi §10).
+   Motion: small dialog enters with scale .8 → 1 and a fade in --pw-dur-enter
+   (150ms) decelerate and leaves with a 75ms fade; the full-screen
+   dialog slides up in --pw-dur-dialog decelerate and back down accelerating. */
+
+/* ------------------------------------------------------------ small dialog */
+.pw-scrim {
+  position: fixed;
+  /* --pw-ai-dock: width of the docked Prakasa AI panel (Layout.jsx, ≥ 1024px).
+     Dialogs leave it visible, so the user can keep talking to the AI while
+     reviewing the form it filled (Wave C). 0 when the panel is closed. */
+  inset: 0 var(--pw-ai-dock, 0px) 0 0;
+  z-index: var(--pw-z-dialog);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--pw-scrim);
+  animation: pw-fade-in var(--pw-dur-enter) var(--pw-ease-decelerate);
+}
+.pw-scrim[data-state="closing"] {
+  pointer-events: none;
+  animation: pw-fade-out var(--pw-dur-state) linear forwards;
+}
+.pw-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(640px, 100%);
+  max-height: calc(100dvh - 48px);
+  min-width: 0;
+  padding: 24px;
+  border-radius: var(--pw-radius-lg);
+  background: var(--pw-surface);
+  box-shadow: var(--pw-elev-dialog);
+  color: var(--pw-text);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+  line-height: 20px;
+  animation: pw-scale-in var(--pw-dur-enter) var(--pw-ease-decelerate);
+}
+.pw-dialog:focus { outline: none; }
+.pw-dialog--sm { width: min(480px, 100%); }
+.pw-dialog--md { width: min(640px, 100%); }
+
+.pw-dialog__header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+.pw-dialog__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  color: var(--pw-text-title);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-title);
+  font-weight: 400;
+  line-height: 28px;
+  letter-spacing: normal;
+  overflow-wrap: anywhere;
+}
+/* The 40px close button sits in the corner without making the header taller
+   than the title line. */
+.pw-dialog__header > .pw-tooltip-anchor { flex: 0 0 auto; margin: -6px -12px -6px 0; }
+
+/* The body scrolls between a fixed header and footer. It reaches the dialog's
+   edges (negative margin, same padding back) so a focus ring on a control at
+   the edge is not clipped by the scroll box. */
+.pw-dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  margin: -4px -24px;
+  padding: 4px 24px;
+  overflow-wrap: break-word;
+}
+.pw-dialog__footer { flex: 0 0 auto; padding-top: 8px; }
+.pw-dialog__footer > .pw-form-actions { margin: 0; }
+
+/* ConfirmDialog: the message reads as dialog body text. */
+.pw-confirm__message {
+  color: var(--pw-text-muted);
+  white-space: pre-wrap;
+}
+
+@media (max-width: 600px) {
+  /* Phones: Modal sm/md fills the screen; the footer stays at the bottom. */
+  .pw-scrim { padding: 0; }
+  .pw-dialog,
+  .pw-dialog.pw-dialog--sm,
+  .pw-dialog.pw-dialog--md {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border-radius: var(--pw-radius-none);
+  }
+  /* A confirmation stays a centred alert dialog (Material alert dialogs are
+     never full screen); 16px from the screen edges. */
+  .pw-scrim:has(> .pw-confirm) { padding: 16px; }
+  .pw-dialog.pw-confirm {
+    height: auto;
+    max-height: calc(100dvh - 32px);
+    border-radius: var(--pw-radius-lg);
+  }
+}
+
+/* ------------------------------------------------------------ full screen */
+.pw-dialog.pw-dialog--fullscreen {
+  position: fixed;
+  inset: 0 var(--pw-ai-dock, 0px) 0 0;
+  z-index: var(--pw-z-dialog);
+  gap: 0;
+  width: auto;
+  height: 100%;
+  max-height: none;
+  padding: 0;
+  border-radius: var(--pw-radius-none);
+  box-shadow: var(--pw-elev-fullscreen);
+  animation: pw-fsdialog-enter var(--pw-dur-dialog) var(--pw-ease-decelerate);
+}
+.pw-dialog.pw-dialog--fullscreen[data-state="closing"] {
+  pointer-events: none;
+  animation: pw-fsdialog-exit var(--pw-dur-sm) var(--pw-ease-accelerate) forwards;
+}
+
+.pw-fsdialog__appbar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  height: 72px;
+  padding: 12px 24px;
+  background: var(--pw-accent);
+  color: var(--pw-on-primary);
+  box-shadow: var(--pw-elev-appbar);
+}
+.pw-dialog--fullscreen .pw-fsdialog__appbar .pw-icon-button { color: var(--pw-on-primary); }
+.pw-fsdialog__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--pw-on-primary);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-xl);
+  font-weight: 400;
+  line-height: 26px;
+  letter-spacing: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pw-fsdialog__appbar-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; }
+
+.pw-fsdialog__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+/* Two 472px fields and a 24px gap inside a 24px-padded card (referensi §10). */
+.pw-fsdialog__content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1066px;
+  margin: 0 auto;
+  padding: 24px;
+}
+.pw-fsdialog__card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--pw-outline-panel);
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface);
+  overflow-wrap: break-word;
+}
+.pw-fsdialog__section-title {
+  margin: 0;
+  color: var(--pw-text-nav);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-lg);
+  font-weight: 400;
+  line-height: 24px;
+}
+/* Fields sit in two columns, like the admin console's form. Existing forms
+   built on .pw-form-grid get the same columns inside the card. */
+.pw-fsdialog__fields,
+.pw-fsdialog__card .pw-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 24px;
+}
+.pw-fsdialog__content > .pw-form-actions.pw-fsdialog__actions { gap: 16px; margin: 0; }
+
+@media (max-width: 600px) {
+  .pw-fsdialog__content { gap: 16px; padding: 16px; }
+  .pw-fsdialog__card { padding: 16px; }
+  .pw-fsdialog__fields,
+  .pw-fsdialog__card .pw-form-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@keyframes pw-fsdialog-enter { from { transform: translateY(100%); } }
+@keyframes pw-fsdialog-exit { to { transform: translateY(100%); } }

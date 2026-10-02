@@ -1,0 +1,40 @@
+/* Target & realisasi — only the page's own layout. */
+
+/* Dashboard cards sit 24px apart (docs/ui-guideline.md §3.4); four small
+   counters still fit two by two on a phone. */
+.pw-cols-4.tgt-kpis { gap: 24px; }
+.tgt-note { margin: 0; }
+
+/* Period picker: two selects on the left, the period and its progress on the right. */
+.tgt-period { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 24px; min-width: 0; }
+.tgt-period__controls { display: grid; grid-template-columns: repeat(2, minmax(160px, 240px)); gap: 16px; min-width: 0; }
+.tgt-period__status { display: flex; flex: 1 1 240px; flex-direction: column; gap: 8px; min-width: 0; max-width: 360px; padding-bottom: 8px; }
+.tgt-period__label { color: var(--pw-text); font-size: var(--pw-font-md); font-weight: 500; line-height: 24px; overflow-wrap: anywhere; }
+
+/* One matrix cell: realisation, target, pace, then status + edit. */
+.tgt-division { display: inline-block; min-width: 120px; color: var(--pw-text); overflow-wrap: break-word; }
+.tgt-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 132px; padding: 8px 0; }
+.tgt-cell__actual { color: var(--pw-text); font-weight: 500; font-variant-numeric: tabular-nums; }
+.tgt-cell__actual.is-empty { color: var(--pw-text-muted); font-weight: 400; }
+.tgt-cell__target,
+.tgt-cell__measure { color: var(--pw-text-muted); font-size: var(--pw-font-xs); line-height: 16px; }
+.tgt-cell__foot { display: flex; flex-wrap: nowrap; align-items: center; gap: 4px; }
+
+/* Legend: one line per metric. */
+.tgt-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin: 0; padding: 0; list-style: none; }
+.tgt-legend__name { color: var(--pw-text); font-size: var(--pw-font-body); font-weight: 500; line-height: 20px; }
+
+/* The destructive action sits apart from Batal / Simpan. */
+.tgt-clear { margin-right: auto; }
+
+@media (max-width: 1023px) {
+  .tgt-legend { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  .pw-cols-4.tgt-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .tgt-period { align-items: stretch; }
+  .tgt-period__controls { grid-template-columns: minmax(0, 1fr); width: 100%; }
+  .tgt-period__status { max-width: none; }
+  .tgt-division { min-width: 0; }
+  .tgt-cell { min-width: 0; padding: 0; }
+}

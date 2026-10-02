@@ -1,0 +1,190 @@
+/* Login and AccessNotReady (LoginShell): two balanced regions on one white
+   card with a 1px border, a single flat column on phones. The product name
+   is the one 36px hero title of the app (docs/ui-guideline.md §1.2). */
+
+.pw-login {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 24px;
+  overflow: hidden;
+  background: var(--pw-surface);
+}
+
+/* Language switch: top-right corner of every LoginShell screen. */
+.pw-login__language {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1;
+}
+
+.pw-login__surface {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 48px;
+  width: min(1040px, 100%);
+  padding: 48px;
+  border: 1px solid var(--pw-outline-banner);
+  border-radius: var(--pw-radius-xl);
+  background: var(--pw-surface);
+}
+
+/* Ambient doodles float in the page background around the card, never over it. */
+.pw-login .pw-doodle--a { top: 11%; left: 8%; width: 26px; }
+.pw-login .pw-doodle--b { bottom: 9%; left: 6%; width: 32px; }
+.pw-login .pw-doodle--c { right: 7%; bottom: 12%; width: 30px; }
+.pw-login .pw-doodle--d { top: 14%; right: 11%; width: 22px; }
+
+.pw-login__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.pw-login__mark {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--pw-radius-md);
+  object-fit: cover;
+}
+
+.pw-login__product {
+  margin: 8px 0 0;
+  color: var(--pw-text);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-hero);
+  font-weight: 400;
+  line-height: 44px;
+}
+
+.pw-login__tagline {
+  max-width: 380px;
+  margin: 0;
+  color: var(--pw-text-secondary);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-md);
+  line-height: 24px;
+}
+
+.pw-login__panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pw-login__title {
+  margin: 0 0 8px;
+  color: var(--pw-text-title);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-title);
+  font-weight: 400;
+  line-height: 28px;
+}
+
+.pw-login__subtitle {
+  margin: 0 0 24px;
+  color: var(--pw-text-muted);
+  overflow-wrap: anywhere;
+}
+
+/* The error banner's wrapper takes focus so it is read out after a failed login. */
+.pw-login__error { margin: 0 0 16px; }
+.pw-login__error:focus { outline: none; }
+.pw-login__error:focus-visible { outline: 2px solid var(--pw-primary); outline-offset: 2px; }
+
+.pw-login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pw-login__submit { margin-top: 8px; }
+
+.pw-login__google-mark {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+
+.pw-login__separator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-xs);
+}
+
+.pw-login__separator::before,
+.pw-login__separator::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--pw-divider);
+}
+
+.pw-login__help {
+  margin: 24px 0 0;
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-xs);
+  line-height: 16px;
+}
+
+/* The show/hide IconButton sits on the password field's input line. */
+.pw-login__password { position: relative; }
+.pw-login__password .pw-login__password-input { padding-right: 48px; }
+.pw-login__password-toggle { position: absolute; top: 18px; right: 0; }
+
+/* AccessNotReady */
+.pw-login__status-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  border-radius: var(--pw-radius-full);
+  background: var(--pw-surface-container);
+  color: var(--pw-error);
+}
+
+.pw-login__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  .pw-login {
+    place-items: start stretch;
+    padding: 0;
+  }
+
+  .pw-login .pw-doodles { display: none; }
+
+  .pw-login__surface {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+    padding: 32px 24px;
+    border: 0;
+    border-radius: var(--pw-radius-none);
+  }
+
+  .pw-login__intro { gap: 12px; }
+
+  .pw-login__product {
+    font-size: var(--pw-font-page);
+    line-height: 32px;
+  }
+
+  .pw-login__tagline { font-size: var(--pw-font-body); line-height: 20px; }
+}

@@ -1,0 +1,89 @@
+/* Printable Sales documents on A4. The sheet is black ink on white paper and
+   only the sheet is printed. Colours and weights come from styles/tokens.css:
+   ink --pw-text-input, paper --pw-surface, rules --pw-outline-control /
+   --pw-divider, the "Lunas" stamp --pw-success; emphasis is weight 500. */
+
+@page { size: A4; margin: 12mm; }
+
+.sp-wrap { min-height: 100vh; padding: 16px; background: var(--pw-surface-container); }
+.sp-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; max-width: 210mm; margin: 0 auto 16px; }
+.sp-message { max-width: 210mm; margin: 0 auto; }
+
+.sp-sheet {
+  box-sizing: border-box; width: 100%; max-width: 210mm; min-height: 297mm; margin: 0 auto; padding: 14mm 14mm 10mm;
+  background: var(--pw-surface); color: var(--pw-text-input); font-size: var(--pw-font-sm); line-height: 1.45;
+  box-shadow: var(--pw-elev-1); display: flex; flex-direction: column; gap: 16px;
+}
+
+.sp-letterhead { display: block; width: 100%; height: auto; max-height: 40mm; object-fit: contain; }
+.sp-company { display: flex; align-items: center; gap: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--pw-text-input); }
+.sp-company__logo { width: 16mm; height: 16mm; object-fit: contain; }
+.sp-company__name { font-size: var(--pw-font-lg); font-weight: 500; }
+
+.sp-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sp-title { margin: 0; font-size: var(--pw-font-title); font-weight: 500; letter-spacing: 0.04em; }
+.sp-stamp {
+  padding: 4px 16px; border: 3px solid var(--pw-success); border-radius: var(--pw-radius-xs); color: var(--pw-success);
+  font-size: var(--pw-font-lg); font-weight: 500; letter-spacing: 0.1em; transform: rotate(-4deg);
+}
+
+.sp-top { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.sp-party__label { color: var(--pw-text-secondary); font-size: var(--pw-font-xs); text-transform: uppercase; letter-spacing: 0.04em; }
+.sp-party__name { font-size: var(--pw-font-md); font-weight: 500; }
+.sp-meta { display: grid; gap: 4px; margin: 0; }
+.sp-meta > div { display: grid; grid-template-columns: 34mm minmax(0, 1fr); gap: 8px; }
+.sp-meta dt { color: var(--pw-text-secondary); }
+.sp-meta dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+
+.sp-table { width: 100%; border-collapse: collapse; }
+.sp-table th, .sp-table td { padding: 4px 8px; border: 1px solid var(--pw-outline-control); text-align: left; vertical-align: top; }
+.sp-table th { background: var(--pw-surface-container); font-size: var(--pw-font-xs); font-weight: 500; text-transform: uppercase; letter-spacing: 0.03em; }
+.sp-table .is-num, .sp-totals td { text-align: right; font-variant-numeric: tabular-nums; }
+.sp-table tr { break-inside: avoid; }
+.sp-nowrap { white-space: nowrap; }
+
+.sp-summary { display: grid; grid-template-columns: minmax(0, 1fr) minmax(60mm, auto); gap: 16px; align-items: start; }
+.sp-summary__words { padding-top: 4px; }
+.sp-totals { border-collapse: collapse; justify-self: end; min-width: 60mm; }
+.sp-totals th, .sp-totals td { padding: 4px 8px; border-bottom: 1px solid var(--pw-divider); }
+.sp-totals th { text-align: left; font-weight: 400; color: var(--pw-text-strong); }
+.sp-totals .is-strong th, .sp-totals .is-strong td { font-weight: 500; color: var(--pw-text-input); border-bottom: 2px solid var(--pw-text-input); }
+
+.sp-bank { padding: 8px 12px; border: 1px solid var(--pw-outline-control); border-radius: var(--pw-radius-xs); }
+.sp-prewrap { white-space: pre-wrap; }
+.sp-notes p { margin: 0 0 4px; white-space: pre-wrap; }
+.sp-small { margin: 0; color: var(--pw-text-secondary); font-size: var(--pw-font-xs); }
+
+.sp-receipt { width: 100%; border-collapse: collapse; }
+.sp-receipt th, .sp-receipt td { padding: 8px 0; border-bottom: 1px dotted var(--pw-outline-control); text-align: left; vertical-align: top; }
+.sp-receipt th { width: 42mm; font-weight: 400; color: var(--pw-text-secondary); }
+.sp-receipt__words { font-style: italic; font-weight: 500; }
+.sp-amount { align-self: flex-start; padding: 8px 16px; border: 2px solid var(--pw-text-input); font-size: var(--pw-font-lg); font-weight: 500; }
+
+.sp-signatures { display: flex; justify-content: space-between; gap: 16px; margin-top: auto; padding-top: 16px; break-inside: avoid; }
+.sp-signatures:has(> :only-child) { justify-content: flex-end; }
+.sp-signature { flex: 0 1 55mm; text-align: center; }
+.sp-signature__line { margin-top: 22mm; }
+
+.sp-footer { padding-top: 8px; border-top: 1px solid var(--pw-divider); color: var(--pw-text-meta); font-size: var(--pw-font-xs); }
+
+@media (max-width: 600px) {
+  .sp-wrap { padding: 8px; }
+  .sp-sheet { min-height: 0; padding: 16px; }
+  .sp-top, .sp-summary { grid-template-columns: minmax(0, 1fr); }
+  .sp-signatures { flex-wrap: wrap; }
+}
+
+@media print {
+  .sp-wrap { padding: 0; background: var(--pw-surface); }
+  .sp-toolbar, .sp-message { display: none; }
+  .sp-sheet { max-width: none; min-height: calc(297mm - 24mm); padding: 0; box-shadow: none; }
+  /* A4 is narrower than the phone breakpoint: keep the paper layout on paper. */
+  .sp-top { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+  .sp-summary { grid-template-columns: minmax(0, 1fr) minmax(60mm, auto); }
+  .sp-signatures { flex-wrap: nowrap; }
+  /* The app's floating AI button and snackbars never reach paper. */
+  body * { visibility: hidden; }
+  .sp-sheet, .sp-sheet * { visibility: visible; }
+  .sp-sheet { position: absolute; inset: 0 auto auto 0; width: 100%; }
+}

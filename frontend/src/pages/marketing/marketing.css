@@ -1,0 +1,31 @@
+/* Marketing: Produk & channel and Kampanye (migration 119). */
+.mkt__actions { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.mkt__actions .pw-field { min-width: 160px; }
+.mkt__kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: 16px; }
+.mkt__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr)); gap: 16px; }
+.mkt__grid > * { min-width: 0; }
+
+.mkt__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.mkt__error { color: var(--pw-error); font-size: var(--pw-font-xs); line-height: 16px; }
+
+/* Campaign performance in the side sheet. */
+.mkt__perf { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.mkt__perf-item { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border-radius: var(--pw-radius-xl); background: var(--pw-surface-tint); }
+.mkt__perf-label { color: var(--pw-text-header); font-size: var(--pw-font-xs); line-height: 16px; letter-spacing: .3px; }
+.mkt__perf-value { color: var(--pw-text-stat); font-family: var(--pw-font-sans); font-size: var(--pw-font-title); font-weight: 400; line-height: 28px; font-variant-numeric: tabular-nums; }
+.mkt__perf-note { color: var(--pw-text-meta); font-size: var(--pw-font-xs); line-height: 16px; overflow-wrap: anywhere; }
+/* On-tint scope (tokens.css) for the tinted performance tiles. */
+.mkt__perf-item {
+  --pw-text-meta: var(--pw-text-meta-on-tint);
+  --pw-text-muted: var(--pw-text-muted-on-tint);
+  --pw-error: var(--pw-error-on-tint);
+  --pw-warning: var(--pw-warning-on-tint);
+  --pw-info: var(--pw-info-on-tint);
+  --pw-success: var(--pw-success-on-tint);
+}
+
+.mkt__sheet-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 600px) {
+  .mkt__perf { grid-template-columns: 1fr; }
+}

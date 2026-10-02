@@ -1,7 +1,7 @@
 const OpenAI = require('openai');
 
-async function generate({ system, prompt, model, params }) {
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+async function generate({ system, prompt, model, params, config }) {
+  const client = new OpenAI({ apiKey: config?.apiKey || process.env.OPENAI_API_KEY });
   const r = await client.chat.completions.create({
     model,
     messages: [

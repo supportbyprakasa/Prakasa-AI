@@ -1,0 +1,70 @@
+/* EmptyState / LoadingState (docs/ui-guideline.md §4.15): centred, a 48px
+   --pw-text-muted icon without a background circle, Roboto 14/20. The
+   compact variant (inside a grid, a card or a sheet) keeps a 24px icon: a 48px
+   glyph would outweigh the rows around it (§4.15 "varian ringkas … ikon 24"). Loaded
+   after styles/patterns.css, so these rules replace its older .pw-empty-state
+   look property by property. */
+.pw-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 16px;
+  color: var(--pw-text-muted);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+  line-height: 20px;
+  text-align: center;
+}
+.pw-empty-state.is-compact { gap: 4px; padding: 24px 16px; }
+.pw-empty-state__glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+  padding-bottom: 8px;
+  color: var(--pw-text-muted);
+}
+.pw-empty-state.is-compact .pw-empty-state__glyph { padding-bottom: 4px; }
+.pw-empty-state--error .pw-empty-state__glyph { color: var(--pw-error); }
+/* Title: Roboto 14 --pw-text-muted 400 (§4.15), the same voice as the text. */
+.pw-empty-state__title {
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-body);
+  font-weight: 400;
+  line-height: 20px;
+}
+.pw-empty-state__text {
+  max-width: 420px;
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-body);
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+.pw-empty-state__action { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0; padding-top: 8px; }
+
+.pw-loading-state { padding: 48px 16px; }
+.pw-loading-state.is-compact { padding: 16px; }
+.pw-empty-state__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* LoadingState with a skeleton, and the "still loading" line shown after
+   SLOW_LOADING_MS (EmptyState.jsx). */
+.pw-loading-state--skeleton { display: flex; flex-direction: column; gap: 16px; padding: 0; }
+.pw-loading-skeleton { display: flex; flex-direction: column; gap: 16px; }
+.pw-loading-skeleton__cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+.pw-loading-state__hint-row { display: flex; justify-content: center; }
+.pw-loading-state__hint {
+  color: var(--pw-text-muted);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+  line-height: 20px;
+}

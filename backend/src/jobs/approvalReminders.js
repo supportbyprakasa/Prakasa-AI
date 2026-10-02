@@ -1,6 +1,7 @@
 require('dotenv').config();
 const runner = require('../services/approvalReminder.service');
 const pool = require('../db/pool');
+const { drainAndEnd } = require('../utils/pendingWork');
 const logger = require('../utils/logger');
 
 (async () => {
@@ -16,6 +17,6 @@ const logger = require('../utils/logger');
     console.error(error);
     process.exitCode = 1;
   } finally {
-    await pool.end();
+    await drainAndEnd(pool);
   }
 })();

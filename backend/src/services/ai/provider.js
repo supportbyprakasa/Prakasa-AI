@@ -1,10 +1,9 @@
 const pool = require('../../db/pool');
 const integrationLog = require('../integrationLog.service');
-const {
-  getClaudeTeamSettings,
-  loadUserIdentity,
-  isClaudeTeamAllowed,
-} = require('./providerSettings');
+const { getAllProviderConfigs, getProviderConfig } = require('./providerSettings');
+const { loadUserIdentity, resolveEngineForUser } = require('./aiRouting.service');
+const { getAccount: getClaudeTeamAccount } = require('./claudeTeamAccounts.service');
+const { AGENT_RULES, languageRule } = require('./agent/agentRun');
 
 const providers = {
   openai: require('./openai'),
@@ -17,47 +16,36 @@ const providers = {
 const providerDefinitions = {
   claude_team: {
     label: 'Claude Team',
-    configured: (ctx = {}) => Boolean(ctx.claudeTeamAccess),
-    model: (_moduleContext, ctx = {}) => ctx.claudeTeamSettings?.model || 'sonnet',
+    configured: (ctx = {}) => Boolean(ctx.claudeTeamAccount?.enabled),
+    model: (_moduleContext, ctx = {}) => ctx.claudeTeamAccount?.model || 'sonnet',
     authMode: 'subscription_local',
     billingMode: 'team_subscription_usage',
   },
   claude: {
     label: 'Claude API',
-    configured: () => Boolean(process.env.ANTHROPIC_API_KEY),
-    model: (moduleContext) =>
-      process.env.CLAUDE_MODEL ||
-      (moduleContext.provider === 'claude' ? moduleContext.model : null) ||
-      'claude-sonnet-5',
+    configured: (ctx = {}) => Boolean(ctx.providerConfigs?.claude?.enabled && ctx.providerConfigs.claude.hasApiKey),
+    model: (_moduleContext, ctx = {}) => ctx.providerConfigs?.claude?.model || null,
     authMode: 'api_key',
     billingMode: 'separate_api',
   },
   gemini: {
     label: 'Gemini API',
-    configured: () => Boolean(process.env.GEMINI_API_KEY),
-    model: (moduleContext) =>
-      process.env.GEMINI_MODEL ||
-      (moduleContext.provider === 'gemini' ? moduleContext.model : null) ||
-      'gemini-3.8-flash',
+    configured: (ctx = {}) => Boolean(ctx.providerConfigs?.gemini?.enabled && ctx.providerConfigs.gemini.hasApiKey),
+    model: (_moduleContext, ctx = {}) => ctx.providerConfigs?.gemini?.model || null,
     authMode: 'api_key',
     billingMode: 'provider_tier',
   },
   openai: {
     label: 'OpenAI API',
-    configured: () => Boolean(process.env.OPENAI_API_KEY),
-    model: (moduleContext) =>
-      process.env.OPENAI_MODEL ||
-      (moduleContext.provider === 'openai' ? moduleContext.model : null),
+    configured: (ctx = {}) => Boolean(ctx.providerConfigs?.openai?.enabled && ctx.providerConfigs.openai.hasApiKey),
+    model: (_moduleContext, ctx = {}) => ctx.providerConfigs?.openai?.model || null,
     authMode: 'api_key',
     billingMode: 'separate_api',
   },
   n8n: {
     label: 'n8n AI Gateway',
-    configured: () => Boolean(process.env.N8N_AI_GATEWAY_URL),
-    model: (moduleContext) =>
-      process.env.N8N_AI_MODEL ||
-      (moduleContext.provider === 'n8n' ? moduleContext.model : null) ||
-      'n8n-gateway',
+    configured: (ctx = {}) => Boolean(ctx.providerConfigs?.n8n?.enabled && ctx.providerConfigs.n8n.hasGatewayUrl),
+    model: (_moduleContext, ctx = {}) => ctx.providerConfigs?.n8n?.model || 'n8n-gateway',
     authMode: 'server_gateway',
     billingMode: 'gateway_managed',
   },
@@ -75,7 +63,7 @@ Selama mode ini aktif, aturan berikut MENGGANTIKAN aturan "gunakan hanya konteks
 8. Jangan memasukkan data internal non-publik (angka internal, isi dokumen terlampir, nama pelanggan dari dokumen) ke kueri pencarian atau URL.`;
 
 function webToolsFor(selected, ctx) {
-  if (selected.name !== 'claude_team' || !ctx.webResearch || !ctx.claudeTeamSettings?.webResearch) {
+  if (selected.name !== 'claude_team' || !ctx.webResearch || !ctx.claudeTeamAccount?.webResearch) {
     return [];
   }
   return ctx.webResearch.allowFetch ? ['WebSearch', 'WebFetch'] : ['WebSearch'];
@@ -100,23 +88,35 @@ async function getModuleContext(module) {
   return rows[0];
 }
 
-// Loads the Claude Team settings and the caller's identity once per request so the
-// synchronous provider definitions can decide availability.
+// Loads everything a synchronous provider definition needs to decide availability:
+// the caller's identity, the engine their division resolves to (or the global
+// default), that engine's actual account/config row, and every other provider's
+// config (so an explicit session.provider override can still be checked).
 async function withAccessContext(ctx = {}) {
-  const claudeTeamSettings = await getClaudeTeamSettings();
-  const identity = claudeTeamSettings.enabled
-    ? await loadUserIdentity(ctx.userId)
-    : null;
+  const identity = await loadUserIdentity(ctx.userId);
+  const resolved = await resolveEngineForUser(identity);
+  const [claudeTeamAccount, providerConfigList] = await Promise.all([
+    resolved.claudeTeamAccountId ? getClaudeTeamAccount(resolved.claudeTeamAccountId, { includeSecret: true }) : null,
+    getAllProviderConfigs(),
+  ]);
+  const providerConfigs = Object.fromEntries(providerConfigList.map((entry) => [entry.provider, {
+    enabled: entry.enabled,
+    model: entry.model,
+    hasApiKey: Boolean(entry.config?.apiKey?.set),
+    hasGatewayUrl: Boolean(entry.config?.gatewayUrl),
+  }]));
+
   return {
     ...ctx,
     userEmail: identity?.email || ctx.userEmail || null,
-    claudeTeamSettings,
-    claudeTeamAccess: isClaudeTeamAllowed(claudeTeamSettings, identity),
+    resolvedProvider: resolved.provider,
+    claudeTeamAccount,
+    providerConfigs,
   };
 }
 
 function resolveProvider(moduleContext, requestedProvider, ctx = {}) {
-  const providerName = requestedProvider || moduleContext.provider;
+  const providerName = requestedProvider || ctx.resolvedProvider || moduleContext.provider;
   const definition = providerDefinitions[providerName];
   const implementation = providers[providerName];
 
@@ -129,9 +129,9 @@ function resolveProvider(moduleContext, requestedProvider, ctx = {}) {
   }
 
   if (!definition.configured(ctx)) {
-    if (providerName === 'claude_team' && ctx.claudeTeamSettings?.enabled) {
+    if (providerName === 'claude_team') {
       throw providerError(
-        'Claude Team tidak tersedia untuk akun atau divisi Anda',
+        'Engine Claude Team yang ditetapkan untuk divisi Anda sedang nonaktif. Hubungi Super Admin.',
         'AI_PROVIDER_FORBIDDEN',
         403
       );
@@ -169,8 +169,8 @@ async function listProviders(module, rawCtx = {}) {
       label: definition.label,
       available: Boolean(available && model),
       model: available ? model : null,
-      webResearch: Boolean(available && name === 'claude_team' && ctx.claudeTeamSettings?.webResearch),
-      isDefault: name === moduleContext.provider,
+      webResearch: Boolean(available && name === 'claude_team' && ctx.claudeTeamAccount?.webResearch),
+      isDefault: name === ctx.resolvedProvider,
       authMode: definition.authMode,
       billingMode: definition.billingMode,
     };
@@ -188,14 +188,34 @@ async function runModule(module, prompt, ctx = {}) {
     providerName = selected.name;
 
     const webTools = webToolsFor(selected, accessCtx);
+    const account = selected.name === 'claude_team' ? accessCtx.claudeTeamAccount : null;
+    // Real secrets are fetched only for the one provider actually being called,
+    // right before the call — never held in the broader access context.
+    const providerConfig = ['openai', 'gemini', 'claude', 'n8n'].includes(selected.name)
+      ? (await getProviderConfig(selected.name, { includeSecrets: true })).config
+      : null;
+
+    // Prakasa tools (the agent) run on Claude Team: through this server's own
+    // CLI login, or through a Runner v2 gateway, which calls back to this API.
+    const agent = ctx.agent && selected.name === 'claude_team' ? ctx.agent : null;
 
     // onDelta/onStatus are optional: providers that cannot stream ignore them.
     const result = await selected.implementation.generate({
-      system: webTools.length
-        ? [moduleContext.systemPrompt, WEB_RESEARCH_RULES].filter(Boolean).join('\n\n')
-        : moduleContext.systemPrompt,
+      system: [
+        moduleContext.systemPrompt,
+        webTools.length ? WEB_RESEARCH_RULES : null,
+        agent ? AGENT_RULES : null,
+        // Rules for one answer only (the attachment rules, when a message
+        // carries a document): never without the agent rules they extend.
+        agent && typeof ctx.extraRules === 'string' && ctx.extraRules ? ctx.extraRules : null,
+        // The user's interface language, when the caller knows it (AI Command sessions).
+        ctx.language ? languageRule(ctx.language) : null,
+      ].filter(Boolean).join('\n\n'),
+      agent,
       prompt,
       model: selected.model,
+      account,
+      config: providerConfig,
       tools: webTools,
       onDelta: typeof ctx.onDelta === 'function' ? ctx.onDelta : null,
       onStatus: typeof ctx.onStatus === 'function' ? ctx.onStatus : null,
@@ -209,7 +229,7 @@ async function runModule(module, prompt, ctx = {}) {
         subjectType: ctx.subjectType || null,
         subjectId: ctx.subjectId || null,
         userEmail: accessCtx.userEmail || null,
-        accessGranted: selected.name === 'claude_team' && accessCtx.claudeTeamAccess,
+        accessGranted: selected.name === 'claude_team' ? Boolean(account?.enabled) : true,
       },
     });
 
@@ -232,6 +252,7 @@ async function runModule(module, prompt, ctx = {}) {
         tokensOut: result?.tokensOut ?? result?.usage?.output_tokens ?? null,
         webTools: webTools.length ? webTools : undefined,
         webToolCalls: result?.toolCalls ?? undefined,
+        agentTools: agent ? agent.tools.map((t) => t.name) : undefined,
       },
     });
 
@@ -240,6 +261,7 @@ async function runModule(module, prompt, ctx = {}) {
       provider: providerName,
       model: selected.model,
       webResearch: webTools.length > 0,
+      agentUsed: Boolean(agent),
     };
   } catch (error) {
     await integrationLog.log({
@@ -266,4 +288,5 @@ module.exports = {
   getModuleContext,
   listProviders,
   resolveProvider,
+  withAccessContext,
 };

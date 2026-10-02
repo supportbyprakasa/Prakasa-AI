@@ -1,86 +1,260 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../../api/client';
+import Banner from '../../components/Banner';
 import Button from '../../components/Button';
-import { toast } from '../../components/Toast';
+import Card from '../../components/Card';
+import Chip from '../../components/Chip';
+import IconButton from '../../components/IconButton';
+import Page from '../../components/Page';
+import PageHeader from '../../components/PageHeader';
+import StatCard from '../../components/StatCard';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { useAuth } from '../../context/AuthContext';
+import {
+  apiError, daysAgoText, formatCount, formatRupiahShort, monthBars, soldQty, todayIso,
+} from './salesModel';
+import SalesScopeBanner, { AccurateHoldBanner, useTransactionsReliable } from './SalesScopeBanner';
+import SalesTodo from './SalesTodo';
+import SalesTargets from './SalesTargets';
+import './sales.css';
+import { Translate } from '../../i18n/NoTranslate';
 
-const STAGES = [
-  { key: 'new_inquiry', label: 'New Inquiry' },
-  { key: 'contacted', label: 'Contacted' },
-  { key: 'need_follow_up', label: 'Need Follow-up' },
-  { key: 'sample_requested', label: 'Sample Requested' },
-  { key: 'quotation_sent', label: 'Quotation Sent' },
-  { key: 'negotiation', label: 'Negotiation' },
-  { key: 'won', label: 'Won' },
-  { key: 'lost', label: 'Lost' },
-  { key: 'on_hold', label: 'On Hold' },
+// The pipeline is derived, never dragged: a visited outlet is a prospect, its
+// first order makes it a new customer, and the days since its last order move
+// it to Aktif, Dormant or Lost. Each stage pages on the server.
+const DEFAULT_STAGE = 'dormant';
+const PAGE_SIZE = 25;
+
+function RevenueBars({ months, unitShort }) {
+  const rows = useMemo(() => monthBars(months, { count: 9 }), [months]);
+  return (
+    <ul className="sales-bars" aria-label="Omzet per bulan, sebelum PPN">
+      {rows.map((r) => (
+        <li key={r.month} className="sales-bars__row">
+          <span className="sales-bars__label">{r.label}</span>
+          <span className="sales-bars__track" aria-hidden="true">
+            <span className="sales-bars__fill" style={{ width: `${r.pct}%` }} />
+          </span>
+          <span className="sales-bars__value">
+            {r.revenue ? formatRupiahShort(r.revenue) : '—'}
+            <span className="pw-muted"> · {formatCount(r.orders)} {unitShort} · {formatCount(r.newCustomers)} NOO</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const TOP_PRODUCT_COLUMNS = [
+  {
+    key: 'name', header: 'Produk',
+    render: (r) => <span className="pw-cell"><span data-no-translate="" className="pw-cell__title">{r.name}</span><span data-no-translate="" className="pw-cell__meta">{r.code}</span></span>,
+    exportValue: (r) => r.name,
+  },
+  {
+    key: 'qty', header: 'Terjual', align: 'end',
+    render: (r) => { const s = soldQty(r); return s.detail ? <span className="pw-cell"><span className="pw-cell__title pw-nowrap">{s.main}</span><span className="pw-cell__meta">{s.detail}</span></span> : s.main; },
+    exportValue: (r) => soldQty(r).main,
+  },
+  { key: 'revenue', header: 'Omzet', type: 'money' },
 ];
 
+// Orders without a salesperson are the imported e-Commerce marketplace orders.
+// Counted in SOs (recap) or invoices (Tahap B, approved Accurate data).
+const peopleColumns = (unitShort) => [
+  { key: 'name', header: 'Sales', render: (r) => r.name || <Translate className="pw-muted">Tanpa nama (e-Commerce)</Translate>, exportValue: (r) => r.name || 'Tanpa nama' },
+  { key: 'monthOrders', header: `${unitShort} bulan ini`, type: 'number' },
+  { key: 'monthRevenue', header: 'Omzet bulan ini (sebelum PPN)', type: 'money' },
+  { key: 'yearOrders', header: `${unitShort} tahun ini`, type: 'number' },
+  { key: 'yearRevenue', header: 'Omzet tahun ini (sebelum PPN)', type: 'money' },
+  { key: 'customers', header: 'Pelanggan', type: 'number' },
+];
+
+function stageColumns(stage) {
+  const name = {
+    key: 'name',
+    header: stage === 'prospek' ? 'Outlet' : 'Pelanggan',
+    render: (r) => (
+      <span className="pw-cell">
+        <span data-no-translate="" className="pw-cell__title">{r.name}</span>
+        {r.code ? <span data-no-translate="" className="pw-cell__meta">{r.code}</span> : null}
+      </span>
+    ),
+    exportValue: (r) => r.name,
+  };
+  const sales = { key: 'salesPersonName', header: 'Sales' };
+  if (stage === 'prospek') {
+    return [
+      name,
+      { key: 'channel', header: 'Area' },
+      sales,
+      { key: 'lastVisitDate', header: 'Kunjungan terakhir', type: 'date' },
+      { key: 'daysSinceVisit', header: 'Sejak kunjungan', align: 'end', translate: true, render: (r) => (r.lastVisitDate ? daysAgoText(r.daysSinceVisit) : 'Belum dikunjungi') },
+    ];
+  }
+  return [
+    name,
+    { key: 'channel', header: 'Channel' },
+    sales,
+    { key: 'nooDate', header: 'Order pertama', type: 'date' },
+    { key: 'lastOrderDate', header: 'Order terakhir', type: 'date' },
+    { key: 'daysSinceOrder', header: 'Sejak order', align: 'end', translate: true, render: (r) => daysAgoText(r.daysSinceOrder) },
+  ];
+}
+
+const EMPTY_META = { page: 1, limit: PAGE_SIZE, total: 0 };
+
 export default function SalesPipeline() {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const canSeeOrders = (user?.permissions || []).includes('sales.order.view');
+  const reliable = useTransactionsReliable();
+  const [params, setParams] = useSearchParams();
+  const stageParam = params.get('tahap') || DEFAULT_STAGE;
+  const [q, setQ] = useState('');
+  const [page, setPage] = useState(1);
+  const [overview, setOverview] = useState({ loading: true, error: '', data: null });
+  const [state, setState] = useState({ loading: true, error: '', stages: [], stage: stageParam, items: [], meta: EMPTY_META });
 
-  const load = async () => {
-    setLoading(true);
+  useEffect(() => { setPage(1); }, [stageParam, q]);
+
+  const loadOverview = useCallback(() => {
+    setOverview((o) => ({ ...o, loading: true, error: '' }));
+    api.get('/sales/overview')
+      .then((r) => setOverview({ loading: false, error: '', data: r.data.data?.customers ? r.data.data : null }))
+      .catch((err) => setOverview({ loading: false, error: apiError(err), data: null }));
+  }, []);
+  const loadStage = useCallback(async () => {
+    setState((s) => ({ ...s, loading: true, error: '' }));
     try {
-      const r = await api.get('/sales/pipeline');
-      setRows(r.data.data);
-    } finally { setLoading(false); }
-  };
-
-  useEffect(() => { load(); }, []);
-
-  const moveStage = async (id, stage) => {
-    try {
-      await api.patch(`/sales/pipeline/${id}/stage`, { stage });
-      toast('Stage dipindah', 'success');
-      load();
+      const r = await api.get('/sales/funnel', { params: { stage: stageParam, q: q || undefined, page, limit: PAGE_SIZE } });
+      const d = r.data.data || {};
+      setState({
+        loading: false, error: '', stages: d.stages || [], stage: d.stage || stageParam, items: d.items || [], meta: r.data.meta || EMPTY_META,
+      });
     } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
+      setState((s) => ({ ...s, loading: false, error: apiError(err) }));
     }
-  };
+  }, [stageParam, q, page]);
+  useEffect(() => { loadOverview(); }, [loadOverview]);
+  useEffect(() => { loadStage(); }, [loadStage]);
+
+  const stage = state.stages.find((s) => s.key === state.stage);
+  const pickStage = (key) => setParams((p) => { const next = new URLSearchParams(p); next.set('tahap', key); return next; }, { replace: true });
+
+  const ov = overview.data;
+  const thisMonth = ov?.sales?.months?.at(-1);
+  const currentMonth = todayIso().slice(0, 7);
+  const unitShort = ov?.sales?.unit === 'faktur' ? 'faktur' : 'SO';
 
   return (
-    <div>
-      <h2>Sales Pipeline</h2>
-      {loading && <div style={{ color: 'var(--color-text-muted)' }}>Memuat…</div>}
-      {!loading && !rows.length && (
-        <div style={{ color: 'var(--color-text-muted)' }}>Belum ada deal. Buat pipeline baru dari halaman Customer.</div>
-      )}
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${STAGES.length}, minmax(220px, 1fr))`, gap: 12, overflowX: 'auto' }}>
-        {STAGES.map((s) => (
-          <div key={s.key} style={{ background: '#f1f5f9', borderRadius: 12, padding: 10, minHeight: 220 }}>
-            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>
-              {s.label} <span style={{ color: 'var(--color-text-muted)' }}>
-                ({rows.filter((r) => r.stage === s.key).length})
-              </span>
-            </div>
-            {rows.filter((r) => r.stage === s.key).map((d) => (
-              <div key={d.id} style={{
-                background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)',
-                borderRadius: 8, padding: 10, marginBottom: 6, fontSize: 13,
-              }}>
-                <div style={{ fontWeight: 500 }}>{d.dealTitle}</div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{d.customerName}</div>
-                {d.estimatedValue && (
-                  <div style={{ fontSize: 12, marginTop: 4 }}>
-                    Rp {Number(d.estimatedValue).toLocaleString('id-ID')}
-                  </div>
-                )}
-                <select
-                  value={d.stage}
-                  onChange={(e) => moveStage(d.id, e.target.value)}
-                  style={{ marginTop: 6, fontSize: 11, width: '100%' }}
-                >
-                  {STAGES.map((x) => <option key={x.key} value={x.key}>{x.label}</option>)}
-                </select>
-              </div>
-            ))}
-            {!rows.some((r) => r.stage === s.key) && (
-              <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Kosong</div>
-            )}
-          </div>
-        ))}
+    <Page>
+      <PageHeader
+        title="Pipeline sales"
+        description="Otomatis dari kunjungan dan sales order; tidak ada kartu yang perlu digeser manual. Angka omzet mencakup seluruh perusahaan, termasuk marketplace (Retail Commerce)."
+        actions={<Button variant="secondary" icon="refresh" onClick={() => { loadOverview(); loadStage(); }} disabled={state.loading}>Muat ulang</Button>}
+      />
+
+      <SalesScopeBanner />
+      <AccurateHoldBanner />
+      {overview.error ? (
+        <Banner tone="error" title="Ringkasan pipeline belum bisa dimuat" action={<Button variant="text" onClick={loadOverview}>Coba lagi</Button>}>
+          {overview.error}
+        </Banner>
+      ) : null}
+
+      {ov ? (
+        <div className="pw-cols-4">
+          <StatCard label="Pelanggan aktif" value={formatCount(ov.customers.aktif)} note={`Order < ${ov.rules.activeDays} hari`} />
+          <StatCard
+            label="Dormant"
+            value={formatCount(ov.customers.dormant)}
+            note={`Hubungi sebelum ${ov.rules.lostDays} hari (Lost)`}
+            alert={reliable && ov.customers.dormant > 0}
+          />
+          <StatCard label="Lost" value={formatCount(ov.customers.lost)} note={`${formatCount(ov.customers.neverOrdered)} belum pernah order`} />
+          {ov.sales ? (
+            <StatCard
+              label="Omzet bulan ini (sebelum PPN)"
+              value={thisMonth?.month === currentMonth ? formatRupiahShort(thisMonth.revenue) : 'Rp 0'}
+              note={thisMonth?.month === currentMonth ? `${formatCount(thisMonth.orders)} ${ov.sales.unit || 'sales order'} · ${formatCount(thisMonth.newCustomers)} pelanggan baru` : 'Belum ada order bulan ini'}
+            />
+          ) : (
+            <StatCard label="Prospek belum order" value={formatCount(ov.leads.open)} note={`${formatCount(ov.leads.needsVisit)} perlu dikunjungi ulang`} />
+          )}
+        </div>
+      ) : null}
+
+      <SalesTodo />
+      <SalesTargets />
+
+      <div className="pw-stack">
+        <DataGrid
+          key={state.stage}
+          title={stage ? `Tahap ${stage.label}` : 'Tahap pelanggan'}
+          columns={stageColumns(state.stage)}
+          rows={state.items}
+          loading={state.loading}
+          error={state.error}
+          onRetry={loadStage}
+          meta={state.meta}
+          onPageChange={setPage}
+          search={q}
+          onSearchChange={setQ}
+          searchPlaceholder="Cari nama, kode, atau sales di tahap ini"
+          filters={state.stages.length ? state.stages.map((s) => (
+            <Chip key={s.key} selected={s.key === state.stage} onClick={() => pickStage(s.key)} tooltip={s.hint}>
+              {s.label} ({formatCount(s.count)})
+            </Chip>
+          )) : null}
+          exportName={`sales-pipeline-${state.stage}`}
+          rowActions={(r) => (
+            <>
+              <IconButton size="sm" icon="visibility" label="Lihat detail" to={r.kind === 'lead' ? `/sales/leads?lead=${r.id}` : `/sales/customers/${r.id}`} />
+              {r.kind === 'customer' && r.lastOrderDate && canSeeOrders ? (
+                <IconButton size="sm" icon="receipt_long" label="Lihat order" to={`/sales/customers/${r.id}?tab=orders`} />
+              ) : null}
+            </>
+          )}
+          empty={stage ? `Tidak ada di tahap "${stage.label}"` : 'Tidak ada data'}
+        />
+        {stage?.hint ? <p className="pw-text-helper">{stage.label}: {stage.hint}</p> : null}
       </div>
-    </div>
+
+      {ov?.bySalesperson?.length ? (
+        <DataGrid
+          title="Omzet per sales (sebelum PPN)"
+          columns={peopleColumns(ov.sales?.unit === 'faktur' ? 'Faktur' : 'SO')}
+          rows={ov.bySalesperson.map((r) => ({ ...r, id: r.name || '-' }))}
+          exportName="omzet-per-sales"
+          searchable={false}
+        />
+      ) : null}
+
+      {ov?.sales?.topProducts?.length ? (
+        <DataGrid
+          title="Produk terlaris bulan ini (sebelum PPN)"
+          columns={TOP_PRODUCT_COLUMNS}
+          rows={ov.sales.topProducts.map((r) => ({ ...r, id: r.code || r.name }))}
+          exportName="produk-terlaris"
+          searchable={false}
+        />
+      ) : null}
+
+      {ov?.sales ? (
+        <Card title="Omzet per bulan (sebelum PPN)" variant="chart">
+          <div className="pw-stack sales-chart">
+            <RevenueBars months={ov.sales.months} unitShort={unitShort} />
+            <p className="pw-text-helper">
+              Omzet dihitung dari DPP (sebelum PPN), sama seperti laporan Penjualan per Pelanggan di Accurate; ongkir tidak termasuk.
+              {' '}
+              {ov.sales.unit === 'faktur'
+                ? 'Dari faktur Accurate yang sudah disetujui, menurut tanggal faktur, seluruh perusahaan termasuk marketplace (Retail Commerce; ditagih bulanan, satu faktur rekap per akhir bulan). Saldo awal Accurate (faktur 31 Des 2025 tanpa baris barang) bukan penjualan: tetap di piutang, tidak dihitung sebagai omzet maupun NOO. NOO = pelanggan Accurate (per nomor pelanggan) yang pertama kali difakturkan di bulan itu.'
+                : 'Tanggal transaksi mengikuti tanggal kirim (ETD), atau tanggal order bila belum ada. NOO = pelanggan yang order pertama kali di bulan itu.'}
+            </p>
+          </div>
+        </Card>
+      ) : null}
+    </Page>
   );
 }

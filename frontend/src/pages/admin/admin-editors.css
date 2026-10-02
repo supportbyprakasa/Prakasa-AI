@@ -1,0 +1,179 @@
+/* Administration pages: the full-screen user / role forms (shared
+   FullScreenDialog), their choice lists and confirmation summaries, the role
+   comparison and technical codes in cells. Page-specific layout only. */
+
+/* A form that wraps several FullScreenSection cards keeps the dialog's 24px
+   rhythm between them. */
+.admin-dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+/* Checkbox lists (roles of a user, permissions of a role): two columns like
+   the dialog's fields, one on phones. */
+.admin-choice-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 24px;
+  min-width: 0;
+}
+
+/* The box lines up with the column edge; a label of any length starts level
+   with it (centred in the 40px touch row). */
+.admin-choice-list > .pw-choice { align-items: flex-start; margin-left: -12px; }
+.admin-choice-list > .pw-choice .pw-choice__label { display: flex; align-items: center; min-height: 40px; }
+/* A role row: the checkbox, then its ⓘ level with the role name. */
+.admin-choice-row { display: flex; align-items: flex-start; gap: 4px; min-width: 0; }
+.admin-choice-row > .pw-choice { align-items: flex-start; margin-left: -12px; min-width: 0; }
+.admin-choice-row > .pw-choice .pw-choice__label { display: flex; align-items: center; min-height: 40px; }
+.admin-choice-row > .pw-info-tip { margin-top: 4px; }
+
+.admin-code {
+  font-family: var(--pw-font-mono);
+}
+
+/* Role editor: summary line and collapsible permission groups. */
+.admin-role-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 24px;
+  color: var(--pw-text-muted);
+}
+
+.admin-role-summary__count {
+  color: var(--pw-text);
+  font-weight: 500;
+}
+
+.admin-role-summary__diff.is-changed { color: var(--pw-warning); }
+
+.admin-permission-groups {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-top: 1px solid var(--pw-divider);
+}
+
+.admin-permission-group { border-bottom: 1px solid var(--pw-divider); }
+
+.admin-permission-group__summary {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: var(--pw-row-height);
+  padding: 0 8px;
+  color: var(--pw-text);
+  font-weight: 500;
+  list-style: none;
+  cursor: pointer;
+}
+
+.admin-permission-group__summary::-webkit-details-marker { display: none; }
+.admin-permission-group__label { flex: 1 1 auto; min-width: 0; }
+
+.admin-permission-group__count {
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-xs);
+  font-weight: 400;
+}
+
+.admin-permission-group__chevron {
+  color: var(--pw-text-muted);
+  transition: transform var(--pw-dur-sm) var(--pw-ease-standard);
+}
+
+.admin-permission-group[open] .admin-permission-group__chevron { transform: rotate(180deg); }
+.admin-permission-group > .admin-choice-list { padding: 0 0 12px; }
+
+/* Confirmation messages listing what a save changes. */
+.admin-confirm-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-confirm-summary p { margin: 0; }
+
+.admin-confirm-summary div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-confirm-summary__codes {
+  max-height: 96px;
+  overflow: auto;
+  font-family: var(--pw-font-mono);
+  font-size: var(--pw-font-xs);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1023px) {
+  .admin-compare { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .admin-dialog-form { gap: 16px; }
+  .admin-choice-list { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Approval matrix: the matrix settings in each grid's filter bar, and a
+   section title that carries its own action (Rule n + delete). */
+.admin-matrix-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+}
+
+.admin-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-dialog-text { margin: 0; }
+
+/* Settings cards: two columns of fields, one on phones. */
+.admin-settings-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 24px;
+  max-width: 944px;
+}
+
+/* Accurate: the read-only permissions (scopes), two columns of labels. */
+.admin-scope-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  gap: 8px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-scope-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-scope-list__icon { color: var(--pw-text-muted); }
+.admin-scope-list__icon.is-granted { color: var(--pw-success); }
+
+@media (max-width: 600px) {
+  .admin-settings-fields { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* FilterChips: the wrapper a chip's value menu is anchored to. */
+.admin-filter-anchor { display: inline-flex; }
+
+/* Workspace Sync: a candidate's two actions, always visible on one line. */
+.admin-row-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; white-space: nowrap; }

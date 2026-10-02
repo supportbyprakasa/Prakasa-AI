@@ -1,11 +1,16 @@
 const crypto = require('crypto');
 const pool = require('../db/pool');
 const { log: activityLog } = require('./activityLog.service');
-const { runModule, listProviders, getModuleContext } = require('./ai/provider');
+const aiProvider = require('./ai/provider');
 const { STANDARD_BUDGET, contextBudgetFor } = require('./ai/contextBudget');
 const aiAccess = require('./aiSessionAccess.service');
 const aiContext = require('./aiContext.service');
 const generationRegistry = require('./aiGenerationRegistry');
+const agentRun = require('./ai/agent/agentRun');
+const agentTools = require('./ai/agent/agentTools');
+const clientBridge = require('./ai/agent/clientBridge');
+const clientTools = require('./ai/agent/clientTools');
+const messageAttachments = require('./aiMessageAttachments.service');
 
 const MAX_MESSAGE_CHARS = 20000;
 const MAX_ASSISTANT_CHARS = 200000;
@@ -89,7 +94,7 @@ async function ensureProviderAvailable(
 ) {
   if (!provider) return null;
 
-  const options = await listProviders(module, {
+  const options = await aiProvider.listProviders(module, {
     userEmail: user?.email || null,
     userId: user?.sub || null,
   });
@@ -325,6 +330,41 @@ async function listTargetDivisions(user) {
   };
 }
 
+// A conversation where Prakasa AI read stock, PO or notification data with the
+// owner's own permissions stays private: shared or exported, it would show that
+// data to people whose permissions may not allow it (program 4.1). Nor does it
+// get web research: the chat history would go to a model that searches the web.
+// Two records say so: the answer's steps, and the server's own audit of every
+// tool call (in case a step event was ever lost from the stream).
+const PRIVATE_DATA_MESSAGE = 'Percakapan ini berisi data yang dibaca Prakasa AI dengan hak akses Anda (stok, PO, notifikasi pribadi, atau halaman dan formulir yang dibuka untuk Anda), jadi tidak bisa dibagikan. Buat percakapan baru untuk dibagikan.';
+const PRIVATE_DATA_WEB_MESSAGE = 'Percakapan ini berisi data yang dibaca dengan hak akses Anda (stok, PO, notifikasi pribadi, atau halaman dan formulir yang dibuka untuk Anda), jadi riset web tidak bisa dinyalakan. Buat percakapan baru untuk riset web.';
+const PRIVATE_DATA_WEB_NOTICE = 'Riset web tidak dipakai: percakapan ini berisi data yang dibaca dengan hak akses Anda (stok, PO, notifikasi pribadi, atau halaman dan formulir yang dibuka untuk Anda). Buat percakapan baru untuk riset web.';
+
+async function sessionHasPrivateData(sessionId, db = pool) {
+  // A file the owner attached to a message (a receipt, a photo, a delivery
+  // note) is private in the same way: never shared, exported or searched with.
+  if (await messageAttachments.sessionHasAttachments(sessionId, db)) return true;
+  if (!agentTools.PRIVATE_ONLY_TOOLS.length) return false;
+  const [[step]] = await db.query(
+    'SELECT 1 AS hit FROM ai_message_steps WHERE session_id = ? AND tool IN (?) LIMIT 1',
+    [sessionId, agentTools.PRIVATE_ONLY_TOOLS],
+  );
+  if (step) return true;
+  const [[audit]] = await db.query(
+    `SELECT 1 AS hit FROM activity_logs
+      WHERE subject_type = 'ai_session' AND subject_id = ? AND action = 'ai_tool.call'
+        AND JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.tool')) COLLATE utf8mb4_unicode_ci IN (?)
+      LIMIT 1`,
+    [sessionId, agentTools.PRIVATE_ONLY_TOOLS],
+  );
+  return Boolean(audit);
+}
+
+async function assertShareable(session) {
+  if (await messageAttachments.sessionHasAttachments(session.id)) throw serviceError(messageAttachments.SHARE_MESSAGE, 409, 'SESSION_HAS_PRIVATE_DATA');
+  if (await sessionHasPrivateData(session.id)) throw serviceError(PRIVATE_DATA_MESSAGE, 409, 'SESSION_HAS_PRIVATE_DATA');
+}
+
 async function updateSession({ session, user, patch }) {
   aiAccess.assertSessionAccess({
     user,
@@ -360,6 +400,14 @@ async function updateSession({ session, user, patch }) {
       error.code = 'VALIDATION_ERROR';
       throw error;
     }
+    if (patch.visibility !== 'private' && patch.visibility !== session.visibility) {
+      // While an answer is still being written its tool steps are not saved
+      // yet: sharing now could let private data land in a shared chat.
+      if (session.generation_status === 'generating' && !generationIsStale(session)) {
+        throw serviceError('Tunggu sampai Prakasa AI selesai menjawab sebelum membagikan percakapan ini.', 409, 'SESSION_GENERATING');
+      }
+      await assertShareable(session);
+    }
     updates.push('visibility=?');
     args.push(patch.visibility);
   }
@@ -385,6 +433,15 @@ async function updateSession({ session, user, patch }) {
   }
 
   if (patch.webResearch !== undefined) {
+    // Same rule as sharing: an answer still being written has not saved its
+    // steps yet, and a chat holding private data never gets web research.
+    // sendMessage checks again, for chats switched on before this rule.
+    if (patch.webResearch && !session.web_research) {
+      if (session.generation_status === 'generating' && !generationIsStale(session)) {
+        throw serviceError('Tunggu sampai Prakasa AI selesai menjawab sebelum menyalakan riset web.', 409, 'SESSION_GENERATING');
+      }
+      if (await sessionHasPrivateData(session.id)) throw serviceError(PRIVATE_DATA_WEB_MESSAGE, 409, 'SESSION_HAS_PRIVATE_DATA');
+    }
     updates.push('web_research=?');
     args.push(patch.webResearch ? 1 : 0);
   }
@@ -525,8 +582,16 @@ async function listMessages({ session, page = 1, limit = 50 }) {
     [session.id]
   );
 
+  // The steps an answer took (tools the agent used), shown above the answer.
+  const steps = await agentRun.stepsFor(descending.filter((m) => m.role === 'assistant').map((m) => Number(m.id)));
+  // The files a user's message carried (name, type, size), shown as chips under it.
+  const attached = await messageAttachments.attachmentsFor(session.id, descending.filter((m) => m.role === 'user').map((m) => Number(m.id)));
   return {
-    rows: descending.reverse(),
+    rows: descending.reverse().map((m) => ({
+      ...m,
+      ...(steps.has(Number(m.id)) ? { steps: steps.get(Number(m.id)) } : {}),
+      ...(attached.has(Number(m.id)) ? { attachments: attached.get(Number(m.id)) } : {}),
+    })),
     total: Number(total),
     page,
     limit,
@@ -635,7 +700,17 @@ async function discardFromMessage({ conn, session, user, editMessageId }) {
   return { editedFromMessageId: target.id, hiddenCount: hidden.affectedRows };
 }
 
-async function sendMessage({ sessionId, userMessage, user, onDelta = null, onStatus = null, editMessageId = null }) {
+// `surface` + `onClientTool` (Wave C): where the answer is shown ('panel' = the
+// side panel on a page, 'full' = the Command Center) and how a page tool reaches
+// that browser. Page tools are offered only to a streamed answer that names its
+// surface; `route` is the page the panel is on.
+// `attachmentIds`: files the user attached to THIS message (uploaded to the
+// conversation first, like any Command Center upload). Their text reaches the
+// model as untrusted data — aiMessageAttachments.service.js.
+async function sendMessage({
+  sessionId, userMessage, user, onDelta = null, onStatus = null, editMessageId = null, surface = null, route = null, onClientTool = null,
+  attachmentIds = null,
+}) {
   const messageText = String(userMessage || '').trim();
   if (!messageText) {
     const error = new Error('Pesan kosong');
@@ -656,6 +731,7 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
   let session;
   let userMessageId;
   let editInfo = null;
+  let attachments = [];
 
   try {
     await conn.beginTransaction();
@@ -693,6 +769,10 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
       throw error;
     }
 
+    // Refused before anything is written: too many, not this user's upload to
+    // this conversation, or a conversation that is not private.
+    attachments = await messageAttachments.resolveForMessage({ session, user, attachmentIds, db: conn });
+
     if (editMessageId) {
       editInfo = await discardFromMessage({ conn, session, user, editMessageId });
     }
@@ -711,6 +791,10 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
       ]
     );
     userMessageId = inserted.insertId;
+
+    // Which files this message carried (name, type, size — never content):
+    // committed with the message, so an attachment is never read unaudited.
+    await messageAttachments.record(conn, { session, user, messageId: userMessageId, attachments });
 
     await conn.query(
       `UPDATE ai_sessions
@@ -745,7 +829,7 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
 
   try {
     const moduleName = session.ai_module || 'ai_command_center';
-    const answeringProvider = session.provider || (await getModuleContext(moduleName)).provider;
+    const answeringProvider = session.provider || (await aiProvider.getModuleContext(moduleName)).provider;
     const budget = contextBudgetFor(answeringProvider);
 
     // Gemini free tier may process submitted content for product improvement.
@@ -758,7 +842,7 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
           { text: '', messageCount: 0, totalChars: 0 },
         ]
       : await Promise.all([
-          aiContext.resolveContext({ session, user, budget }),
+          aiContext.resolveContext({ session, user, budget, excludeDocumentIds: attachments.map((item) => item.documentId) }),
           buildConversationContext(session.id, userMessageId, budget),
         ]);
 
@@ -796,7 +880,54 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
     if (history.text) {
       promptParts.push(`CHAT HISTORY:\n${history.text}`);
     }
+    // The attachments of this message: untrusted data, each between markers
+    // made for this one prompt. Gemini (free tier) never gets file content.
+    const attachmentBlock = isGeminiSession ? '' : messageAttachments.promptBlock(attachments);
+    if (attachmentBlock) promptParts.push(attachmentBlock);
     promptParts.push(`LATEST USER MESSAGE:\n${messageText}`);
+
+    // No web research next to data read with the owner's permissions: the chat
+    // history (earlier stock, PO or notification answers) would go to a model
+    // that searches the web. Also covers chats switched on before updateSession
+    // refused it, or while an answer was being written.
+    const webLocked = Boolean(session.web_research) && await sessionHasPrivateData(session.id);
+    if (webLocked && typeof onStatus === 'function') {
+      try { onStatus({ type: 'notice', message: PRIVATE_DATA_WEB_NOTICE }); } catch { /* best effort */ }
+    }
+
+    // Agent mode: the answer may read Prakasa data through tools, with this
+    // user's permissions. Its steps are streamed as they happen and saved with
+    // the answer.
+    const agentDecision = isGeminiSession
+      ? { ok: false, reason: 'provider' }
+      : await agentRun.decide({ user, session, provider: answeringProvider });
+    if (agentDecision.notice && typeof onStatus === 'function') {
+      try { onStatus({ type: 'notice', message: agentDecision.notice }); } catch { /* best effort */ }
+    }
+    const answerSurface = typeof onClientTool === 'function' && ['panel', 'full'].includes(surface) ? surface : null;
+    const agent = agentDecision.ok ? await agentRun.prepare({ user, session, surface: answerSurface }) : null;
+    // Page tools of this answer reach the browser through its own stream, and
+    // only while it is being written.
+    // A conversation that carries (or carried) an attachment: identifiers copied
+    // from a document are refused in every field (clientTools.js).
+    const fromDocument = attachments.length > 0 || await messageAttachments.sessionHasAttachments(session.id);
+    const closeClientChannel = agent?.clientTools && answerSurface === 'panel'
+      ? clientBridge.open({
+        answerId: agent.answerId, sessionId: session.id, userId: user.sub, route: clientTools.parseRoute(route)?.pathname || null,
+        emit: (call) => onClientTool(call), fromDocument,
+      })
+      : null;
+    // The answer is written in the user's interface language (users.language).
+    const language = await agentRun.userLanguage(user.sub);
+    const stepLog = agentRun.collectSteps();
+    const captureStatus = (raw) => {
+      const event = clientTools.describeStep(raw, { answerId: agent?.answerId });
+      stepLog.add(event);
+      if (typeof onStatus === 'function') onStatus(event);
+    };
+
+    // "Membaca lampiran: struk.jpg" — shown before the page and form steps.
+    for (const step of messageAttachments.steps(isGeminiSession ? [] : attachments)) captureStatus(step);
 
     // Keep the text written so far, so a stopped reply can still be saved.
     let partialText = '';
@@ -808,7 +939,7 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
     const signal = generationRegistry.register(session.id, generationToken);
     let result;
     try {
-      result = await runModule(
+      result = await aiProvider.runModule(
         moduleName,
         promptParts.join('\n\n---\n\n'),
         {
@@ -819,20 +950,27 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
           provider: session.provider || null,
           userEmail: user.email || null,
           onDelta: captureDelta,
-          onStatus,
+          onStatus: captureStatus,
           signal,
-          // Opening arbitrary URLs is only allowed when no internal documents are in
-          // context, so a malicious page cannot trick the model into leaking them.
-          webResearch: session.web_research
-            ? { allowFetch: context.linkCount === 0 }
+          agent,
+          language,
+          // The attachment rules ride along only when a document is in reach.
+          extraRules: agent && fromDocument ? agentRun.ATTACHMENT_RULES : null,
+          // Opening arbitrary URLs is only allowed when no internal data is in
+          // reach — no attached documents and no Prakasa tools — so a malicious
+          // page cannot trick the model into leaking it.
+          webResearch: session.web_research && !webLocked
+            ? { allowFetch: context.linkCount === 0 && !agent }
             : null,
         }
       );
     } catch (error) {
       if (error.code !== 'GENERATION_STOPPED') throw error;
-      result = { content: partialText, provider: answeringProvider, model: null, stopped: true };
+      result = { content: partialText, provider: answeringProvider, model: null, stopped: true, agentUsed: Boolean(agent) };
     } finally {
       generationRegistry.release(session.id, generationToken);
+      if (closeClientChannel) closeClientChannel();
+      if (agent) await agent.cleanup();
     }
 
     if (result.stopped && !String(result.content || '').trim()) {
@@ -873,7 +1011,7 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
       await persist.beginTransaction();
 
       const [currentRows] = await persist.query(
-        `SELECT generation_status, generation_token, status, deleted_at
+        `SELECT generation_status, generation_token, status, deleted_at, visibility
            FROM ai_sessions
           WHERE id=?
           LIMIT 1 FOR UPDATE`,
@@ -893,6 +1031,13 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
         error.status = 409;
         error.code = 'GENERATION_SUPERSEDED';
         throw error;
+      }
+
+      // Stock, PO or notification data read with the owner's permissions is never
+      // saved into a chat that became shared while the answer was being written.
+      if (current.visibility !== 'private' && stepLog.steps.some((st) => agentTools.PRIVATE_ONLY_TOOLS.includes(st.tool))) {
+        await persist.rollback();
+        throw serviceError(PRIVATE_DATA_MESSAGE, 409, 'SESSION_HAS_PRIVATE_DATA');
       }
 
       const [assistant] = await persist.query(
@@ -930,6 +1075,23 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
         ]
       );
 
+      await agentRun.saveSteps(persist, { sessionId: session.id, messageId: assistant.insertId, steps: stepLog.steps });
+      if (result.agentUsed) {
+        // Counts toward the user's daily agent limit.
+        await insertUsage({
+          sessionId: session.id,
+          messageId: assistant.insertId,
+          entityId: session.entity_id,
+          departmentId: session.department_id,
+          userId: user.sub,
+          module: session.ai_module || 'ai_command_center',
+          provider: result.provider || null,
+          model: result.model || null,
+          eventType: 'agent_message',
+          metadata: { steps: stepLog.steps.length, tools: [...new Set(stepLog.steps.map((st) => st.tool))] },
+        }, persist);
+      }
+
       await insertUsage({
         sessionId: session.id,
         messageId: assistant.insertId,
@@ -950,7 +1112,8 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
           contextChars: context.totalChars,
           responseChars: boundedAssistantContent.length,
           webResearch: Boolean(result.webResearch),
-          webToolCalls: result.toolCalls ?? null,
+          webToolCalls: result.webResearch ? stepLog.steps.filter((st) => st.tool === 'WebSearch' || st.tool === 'WebFetch').length : null,
+          agentSteps: result.agentUsed ? stepLog.steps.length : null,
           stopped: Boolean(result.stopped),
         },
       }, persist);
@@ -983,6 +1146,7 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
           model: result.model || null,
           tokensIn: result.tokensIn ?? null,
           tokensOut: result.tokensOut ?? null,
+          steps: stepLog.steps.map((st) => ({ id: st.id, tool: st.tool, label: st.label, target: st.target, status: st.status })),
         },
         stopped: Boolean(result.stopped),
         editedFromMessageId: editInfo?.editedFromMessageId || null,
@@ -1026,6 +1190,16 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
       throw denied;
     }
 
+    // Our own Claude Team guard messages are written for users (quota window,
+    // queue, login): pass them through; anything else stays generic.
+    if (['AI_RATE_LIMITED', 'AI_BUSY', 'AI_PROVIDER_LOGGED_OUT'].includes(error.code)) {
+      const known = new Error(error.message);
+      known.status = error.status;
+      known.code = error.code;
+      if (error.retryAt) known.retryAt = error.retryAt;
+      throw known;
+    }
+
     const safe = new Error('Gagal memproses pesan AI. Coba lagi.');
     safe.status =
       error.status === 504 ? 504 :
@@ -1037,6 +1211,8 @@ async function sendMessage({ sessionId, userMessage, user, onDelta = null, onSta
 }
 
 module.exports = {
+  PRIVATE_DATA_MESSAGE,
+  sessionHasPrivateData,
   createSession,
   getSessionById,
   listSessions,

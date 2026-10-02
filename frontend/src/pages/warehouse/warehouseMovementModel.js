@@ -1,3 +1,4 @@
+import { numberLocale } from '../../i18n/language.js';
 // Pure helpers for the Warehouse movement screens. The server re-validates everything;
 // these give people exact feedback before they submit.
 
@@ -13,8 +14,9 @@ const STATUS_COPY = {
 };
 
 export const MOVEMENT_TYPE_COPY = {
-  inbound: { label: 'Barang Masuk', partyLabel: 'Supplier', partyPlaceholder: 'Nama supplier' },
-  outbound: { label: 'Barang Keluar', partyLabel: 'Tujuan', partyPlaceholder: 'Cabang, customer, atau alamat tujuan' },
+  inbound: { label: 'Barang masuk', partyLabel: 'Supplier', partyPlaceholder: 'Nama supplier' },
+  // Never an address (D5): it would be stored and shown in the reconciliation.
+  outbound: { label: 'Barang keluar', partyLabel: 'Tujuan', partyPlaceholder: 'Cabang atau nama pelanggan (tanpa alamat)', partyHint: 'Alamat lengkap ada di surat jalan Accurate.' },
 };
 
 let keySeed = 0;
@@ -86,6 +88,42 @@ export function movementValidationSummary(input) {
   return messages;
 }
 
+// The same checks as movementValidationSummary, keyed by field so each message
+// shows on its own field (docs/ui-guideline.md §4.3): { movementDate, items:
+// [{ sku, product, quantity, unit }] }. A duplicate SKU marks the later row.
+export function movementFieldErrors(input) {
+  const errors = { items: [] };
+  if (!input?.movementDate) errors.movementDate = 'Tanggal transaksi wajib diisi.';
+  const seen = new Map();
+  (input?.items || []).forEach((raw, index) => {
+    const item = normalizeMovementItem(raw);
+    const row = {};
+    if (!item.product) row.product = 'Produk wajib diisi.';
+    if (!Number.isFinite(item.quantity) || item.quantity <= 0) row.quantity = 'Jumlah harus lebih dari 0.';
+    if (!item.unit) row.unit = 'Satuan wajib diisi.';
+    if (item.sku) {
+      const key = [item.sku, item.batchNo || '', item.location || ''].join('|').toLowerCase();
+      if (seen.has(key)) row.sku = `Sama dengan baris ${seen.get(key) + 1} (batch dan lokasi sama).`;
+      else seen.set(key, index);
+    }
+    errors.items[index] = row;
+  });
+  return errors;
+}
+
+// What would refuse a fill by Prakasa AI (usePrakasaAIForm `validate`): the same
+// checks as movementFieldErrors, keyed by the registered field. A missing
+// quantity is not reported: the quantity is the physical count, typed by the
+// user after the AI filled the other columns.
+export function movementAiErrors(input) {
+  const found = movementFieldErrors(input);
+  const errors = {};
+  if (found.movementDate) errors.movementDate = found.movementDate;
+  const duplicates = found.items.map((row, index) => (row?.sku ? `Baris ${index + 1}: ${row.sku}` : '')).filter(Boolean);
+  if (duplicates.length) errors.items = duplicates.join(' ');
+  return errors;
+}
+
 export function movementStatusLabel(status) {
   return STATUS_COPY[status] || { label: status || 'Tidak diketahui', tone: 'default' };
 }
@@ -151,7 +189,9 @@ export function todayLocal() {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+const QUANTITY = new Intl.NumberFormat(numberLocale(), { maximumFractionDigits: 3 });
+
 export function formatQuantity(value) {
   const number = Number(value);
-  return Number.isFinite(number) ? number.toLocaleString('id-ID', { maximumFractionDigits: 3 }) : String(value ?? '');
+  return Number.isFinite(number) ? QUANTITY.format(number) : String(value ?? '');
 }

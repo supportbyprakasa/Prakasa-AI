@@ -1,73 +1,165 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import api from '../../api/client';
-import DataTable from '../../components/DataTable';
 import Button from '../../components/Button';
-import Modal from '../../components/Modal';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { apiErrorMessage, fieldErrorsFromApi } from '../../components/datagrid/gridModel';
+import FormActions from '../../components/FormActions';
 import Input from '../../components/Input';
+import Modal from '../../components/Modal';
+import Select from '../../components/Select';
+import Page from '../../components/Page';
+import PageHeader from '../../components/PageHeader';
 import { toast } from '../../components/Toast';
+import './admin-editors.css';
+
+const EMPTY_FORM = { entityId: '', departmentId: '', documentType: '', driveFolderId: '', priority: '100' };
+
+// Entity and division show by name (the rule stores their ids); an id that
+// is no longer in the list still shows, as "#id".
+const nameOf = (list, id) => {
+  if (id === null || id === undefined || id === '') return '';
+  return list.find((item) => String(item.id) === String(id))?.name || `#${id}`;
+};
+const columnsFor = (entities, departments) => [
+  { key: 'entityId', header: 'Entitas', render: (row) => nameOf(entities, row.entityId), sortValue: (row) => nameOf(entities, row.entityId) },
+  { key: 'departmentId', header: 'Divisi', translate: true, render: (row) => (row.departmentId ? nameOf(departments, row.departmentId) : 'Semua divisi'), sortValue: (row) => nameOf(departments, row.departmentId) },
+  { key: 'documentType', header: 'Tipe dokumen', render: (row) => (row.documentType ? <code className="admin-code">{row.documentType}</code> : '') },
+  { key: 'driveFolderId', header: 'ID folder Drive', render: (row) => (row.driveFolderId ? <code className="admin-code">{row.driveFolderId}</code> : '') },
+  { key: 'priority', header: 'Prioritas', type: 'number' },
+];
+
+function validate(form) {
+  const errors = {};
+  if (!form.entityId) errors.entityId = 'Pilih entitas.';
+  if (!form.documentType.trim()) errors.documentType = 'Isi tipe dokumen.';
+  if (!form.driveFolderId.trim()) errors.driveFolderId = 'Isi ID folder Drive.';
+  return errors;
+}
 
 export default function FolderMappingRules() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [entities, setEntities] = useState([]);
+  const [departments, setDepartments] = useState([]);
 
-  const load = () => {
+  useEffect(() => {
+    api.get('/entities', { params: { page: 1, limit: 100 } })
+      .then((r) => setEntities(r.data.data || []))
+      .catch(() => setEntities([]));
+    api.get('/departments', { params: { page: 1, limit: 100 } })
+      .then((r) => setDepartments(r.data.data || []))
+      .catch(() => setDepartments([]));
+  }, []);
+  const columns = useMemo(() => columnsFor(entities, departments), [entities, departments]);
+  const departmentOptions = departments
+    .filter((d) => !form.entityId || !d.entityId || String(d.entityId) === String(form.entityId))
+    .map((d) => ({ value: d.id, label: d.name }));
+
+  const load = useCallback(() => {
     setLoading(true);
+    setLoadError('');
     api.get('/folder-mapping-rules')
-      .then((r) => setRows(r.data.data))
+      .then((r) => setRows(r.data.data || []))
+      .catch((error) => setLoadError(apiErrorMessage(error, 'Daftar aturan tidak dapat dimuat.')))
       .finally(() => setLoading(false));
-  };
-  useEffect(load, []);
+  }, []);
+  useEffect(() => { load(); }, [load]);
 
-  const submit = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
+  const openCreate = () => {
+    setForm(EMPTY_FORM);
+    setErrors({});
+    setOpen(true);
+  };
+  const close = () => { if (!saving) setOpen(false); };
+  const setField = (key, value) => {
+    setForm((current) => ({ ...current, [key]: value }));
+    setErrors((current) => ({ ...current, [key]: undefined }));
+  };
+
+  const submit = async (event) => {
+    event.preventDefault();
+    const nextErrors = validate(form);
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors);
+      return;
+    }
     const body = {
-      entityId: Number(fd.get('entityId')),
-      departmentId: fd.get('departmentId') ? Number(fd.get('departmentId')) : null,
-      documentType: fd.get('documentType'),
-      driveFolderId: fd.get('driveFolderId'),
-      priority: Number(fd.get('priority') || 100),
+      entityId: Number(form.entityId),
+      departmentId: form.departmentId ? Number(form.departmentId) : null,
+      documentType: form.documentType,
+      driveFolderId: form.driveFolderId,
+      priority: Number(form.priority || 100),
     };
+    setSaving(true);
     try {
       await api.post('/folder-mapping-rules', body);
-      toast('Rule ditambahkan', 'success');
-      setOpen(false); load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
+      toast('Aturan ditambahkan', 'success');
+      setOpen(false);
+      load();
+    } catch (error) {
+      const fieldErrors = fieldErrorsFromApi(error);
+      if (Object.keys(fieldErrors).length) setErrors(fieldErrors);
+      else toast(apiErrorMessage(error, 'Aturan gagal disimpan.'), 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Folder Mapping Rules</h2>
-        <Button onClick={() => setOpen(true)}>+ Rule</Button>
-      </div>
-      <DataTable
-        loading={loading}
-        rows={rows}
-        columns={[
-          { key: 'entityId', title: 'Entity' },
-          { key: 'departmentId', title: 'Department' },
-          { key: 'documentType', title: 'Tipe Dokumen' },
-          { key: 'driveFolderId', title: 'Drive Folder ID' },
-          { key: 'priority', title: 'Prioritas' },
-        ]}
+    <Page>
+      <PageHeader
+        title="Aturan folder"
+        description="Folder Shared Drive tujuan untuk setiap tipe dokumen, per entitas dan divisi."
+        actions={<Button icon="add" onClick={openCreate}>Tambah aturan</Button>}
       />
-      <Modal open={open} onClose={() => setOpen(false)} title="Tambah Rule">
-        <form onSubmit={submit}>
-          <Input label="Entity ID" name="entityId" type="number" required />
-          <Input label="Department ID (opsional)" name="departmentId" type="number" />
-          <Input label="Tipe Dokumen" name="documentType" required />
-          <Input label="Drive Folder ID" name="driveFolderId" required />
-          <Input label="Prioritas (default 100)" name="priority" type="number" defaultValue={100} />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button variant="secondary" type="button" onClick={() => setOpen(false)}>Batal</Button>
-            <Button type="submit">Simpan</Button>
+      <DataGrid
+        title="Semua aturan"
+        exportName="folder-rules"
+        columns={columns}
+        rows={rows}
+        loading={loading}
+        error={loadError}
+        onRetry={load}
+        empty="Belum ada aturan folder"
+      />
+      <Modal open={open} onClose={close} title="Tambah aturan">
+        <form className="pw-stack" onSubmit={submit} noValidate>
+          <div className="pw-form-grid">
+            <Select
+              label="Entitas"
+              placeholder="Pilih entitas"
+              options={entities.map((entity) => ({ value: entity.id, label: entity.name }))}
+              dataOptions
+              value={form.entityId}
+              error={errors.entityId}
+              onChange={(event) => { setField('entityId', event.target.value); setField('departmentId', ''); }}
+              required
+              autoFocus
+            />
+            <Select
+              label="Divisi"
+              placeholder="Semua divisi"
+              options={departmentOptions}
+              hint="Opsional. Kosongkan untuk semua divisi."
+              value={form.departmentId}
+              error={errors.departmentId}
+              onChange={(event) => setField('departmentId', event.target.value)}
+            />
           </div>
+          <Input label="Tipe dokumen" mono value={form.documentType} error={errors.documentType} hint="Kode tipe dokumen, contoh invoice." onChange={(event) => setField('documentType', event.target.value)} required />
+          <Input label="ID folder Drive" mono value={form.driveFolderId} error={errors.driveFolderId} onChange={(event) => setField('driveFolderId', event.target.value)} required />
+          <Input label="Prioritas" type="number" inputMode="numeric" hint="Angka kecil didahulukan. Default 100." value={form.priority} error={errors.priority} onChange={(event) => setField('priority', event.target.value)} />
+          <FormActions>
+            <Button variant="text" type="button" onClick={close} disabled={saving}>Batal</Button>
+            <Button type="submit" loading={saving}>Simpan aturan</Button>
+          </FormActions>
         </form>
       </Modal>
-    </div>
+    </Page>
   );
 }

@@ -1,16 +1,32 @@
-import { Layers, Pencil, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import api from '../../api/client';
-import Badge from '../../components/Badge';
+import Banner from '../../components/Banner';
 import Button from '../../components/Button';
-import Card from '../../components/Card';
+import Checkbox from '../../components/Checkbox';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { apiErrorMessage, fieldErrorsFromApi } from '../../components/datagrid/gridModel';
+import EmptyState from '../../components/EmptyState';
+import FullScreenDialog, { FullScreenSection } from '../../components/FullScreenDialog';
+import IconButton from '../../components/IconButton';
 import Input from '../../components/Input';
-import Modal from '../../components/Modal';
+import Page from '../../components/Page';
+import PageHeader from '../../components/PageHeader';
+import Select from '../../components/Select';
+import StatusBadge from '../../components/StatusBadge';
 import { SkeletonCard } from '../../components/Skeleton';
 import { toast } from '../../components/Toast';
-import { RoleSelect, UserSelect } from '../../components/UserRoleSelects';
-import ApprovalMatrixEditor from './ApprovalMatrixEditor';
+import { formatMoney, formatNumber } from '../../components/format';
+import ApprovalMatrixEditor, { MATRIX_EDITOR_FORM_ID } from './ApprovalMatrixEditor';
+import {
+  FLOW_LABELS, FLOW_OPTIONS, RuleFields, humanizeCode, isKnownRequestType, requestTypeLabel, validateRule,
+} from './approvalMatrixParts';
+import { DEFAULT_CURRENCY, isDefaultCurrency, normalizeCurrency } from './approvalMatrixModel';
+import './admin-editors.css';
+import { Translate } from '../../i18n/NoTranslate';
+
+const CONFIG_FORM_ID = 'approval-matrix-config-form';
+const RULE_FORM_ID = 'approval-matrix-rule-form';
 
 function toNumberOrNull(value) {
   if (value === '' || value === null || value === undefined) return null;
@@ -21,6 +37,69 @@ function resolveName(items, id) {
   return items.find((item) => Number(item.id) === Number(id))?.name || null;
 }
 
+function amountRange(group) {
+  const currency = normalizeCurrency(group.currency);
+  const format = (value) => (isDefaultCurrency(currency) ? formatMoney(value) : `${currency} ${formatNumber(value)}`);
+  const min = group.amountMin != null ? format(group.amountMin) : null;
+  const max = group.amountMax != null ? format(group.amountMax) : null;
+  if (min && max) return `${min} – ${max}`;
+  if (min) return `mulai ${min}`;
+  if (max) return `sampai ${max}`;
+  return 'semua nominal';
+}
+
+// A person's name is record data; a role name or the "#id" fallback is a label.
+function personOrRole(userName, roleName, userId, roleId) {
+  if (userName) return userName;
+  const label = roleName || (userId ? `Pengguna #${userId}` : roleId ? `Role #${roleId}` : '');
+  return label ? <Translate>{label}</Translate> : '';
+}
+
+function docCode(docTypes, id) {
+  const code = docTypes.find((item) => String(item.id) === String(id))?.code;
+  return code ? `Kode ${code}` : undefined;
+}
+
+const hours = (value) => (value == null || value === '' ? '—' : `${formatNumber(value)} jam`);
+
+const RULE_COLUMNS = [
+  {
+    key: 'orderIndex',
+    header: 'Urutan',
+    translate: true,
+    render: (rule) => (
+      <span className="pw-cell">
+        <span className="pw-cell__title">{rule.orderIndex}</span>
+        <span className="pw-cell__meta">Level {rule.level}</span>
+      </span>
+    ),
+  },
+  { key: 'parallelGroup', header: 'Grup paralel', render: (rule) => (rule.parallelGroup ? humanizeCode(rule.parallelGroup) : ''), sortValue: (rule) => rule.parallelGroup || '', exportValue: (rule) => rule.parallelGroup || '' },
+  {
+    key: 'approver',
+    header: 'Approver',
+    render: (rule) => personOrRole(rule.approverUserName, rule.approverRoleName, rule.approverUserId, rule.approverRoleId),
+  },
+  {
+    key: 'signer',
+    header: 'Penanda tangan',
+    render: (rule) => personOrRole(rule.signerUserName, rule.signerRoleName, rule.signerUserId, rule.signerRoleId),
+  },
+  {
+    key: 'reminder',
+    header: 'Pengingat / eskalasi',
+    render: (rule) => (
+      <span className="pw-cell">
+        <span data-translate="" className="pw-cell__title">{hours(rule.reminderAfterHours)} / {hours(rule.escalateAfterHours)}</span>
+        {rule.escalationUserName || rule.escalationRoleName ? (
+          <span className="pw-cell__meta"><Translate>ke</Translate> {rule.escalationUserName || <Translate>{rule.escalationRoleName}</Translate>}</span>
+        ) : null}
+      </span>
+    ),
+  },
+  { key: 'isOptional', header: 'Tipe', translate: true, render: (rule) => (rule.isOptional ? 'Opsional' : 'Wajib') },
+];
+
 export default function ApprovalMatrix() {
   const [rules, setRules] = useState([]);
   const [users, setUsers] = useState([]);
@@ -28,15 +107,18 @@ export default function ApprovalMatrix() {
   const [docTypes, setDocTypes] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [editMatrix, setEditMatrix] = useState(null);
   const [editRule, setEditRule] = useState(null);
+  const [formSaving, setFormSaving] = useState(false);
   const [deleteRuleTarget, setDeleteRuleTarget] = useState(null);
   const [deleteMatrixTarget, setDeleteMatrixTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const [matrixRes, usersRes, rolesRes, docTypesRes, departmentsRes] =
         await Promise.all([
@@ -53,15 +135,15 @@ export default function ApprovalMatrix() {
       setDocTypes(docTypesRes.data.data || []);
       setDepartments(departmentsRes.data.data || []);
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal memuat approval matrix', 'error');
+      setLoadError(apiErrorMessage(error, 'Approval matrix tidak dapat dimuat.'));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const groups = useMemo(() => {
     const grouped = new Map();
@@ -109,7 +191,7 @@ export default function ApprovalMatrix() {
       setDeleteRuleTarget(null);
       await load();
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal menghapus rule', 'error');
+      toast(apiErrorMessage(error, 'Rule gagal dihapus.'), 'error');
     } finally {
       setDeleting(false);
     }
@@ -126,352 +208,179 @@ export default function ApprovalMatrix() {
       setDeleteMatrixTarget(null);
       await load();
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal menghapus matrix', 'error');
+      toast(apiErrorMessage(error, 'Matrix gagal dihapus.'), 'error');
     } finally {
       setDeleting(false);
     }
   };
 
-  return (
-    <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 12,
-          gap: 12,
-          flexWrap: 'wrap',
-        }}
-      >
-        <div>
-          <h2 style={{ margin: 0 }}>Approval Matrix</h2>
-          <div
-            style={{
-              fontSize: 13,
-              color: 'var(--color-text-muted)',
-              marginTop: 4,
-            }}
-          >
-            Konfigurasi approval berdasarkan entity, department, request type,
-            document type, amount, sequential/parallel stage, delegation,
-            reminder, dan escalation.
-          </div>
-        </div>
+  const closeDialog = (setter) => () => { if (!formSaving) setter(null); };
+  const closeCreate = () => { if (!formSaving) setCreateOpen(false); };
+  const dialogActions = (formId, label, onCancel) => (
+    <>
+      <Button variant="text" type="button" onClick={onCancel} disabled={formSaving}>Batal</Button>
+      <Button type="submit" form={formId} loading={formSaving}>{label}</Button>
+    </>
+  );
 
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus size={14} />
-          Matrix Baru
-        </Button>
-      </div>
-
-      {loading && <SkeletonCard lines={7} />}
-
-      {!loading && !groups.length && (
-        <Card>
-          <div
-            style={{
-              padding: 28,
-              textAlign: 'center',
-              color: 'var(--color-text-muted)',
-            }}
-          >
-            Belum ada approval matrix.
-          </div>
-        </Card>
-      )}
-
-      {!loading &&
-        groups.map((group) => (
-          <div key={group.matrixKey} style={{ marginBottom: 14 }}>
-            <Card
-              title={
-                <span
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <Layers size={16} />
-                  {group.matrixName || group.matrixKey}
-                  <code
-                    style={{
-                      fontSize: 11,
-                      color: 'var(--color-text-muted)',
-                    }}
-                  >
-                    {group.matrixKey}
-                  </code>
-                </span>
-              }
-              actions={
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <Button variant="secondary" onClick={() => setEditMatrix(group)}>
-                    <Pencil size={14} />
-                    Config
-                  </Button>
-                  <Button variant="danger" onClick={() => setDeleteMatrixTarget(group)}>
-                    <Trash2 size={14} />
-                  </Button>
-                </div>
-              }
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 10,
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                  marginBottom: 12,
-                  fontSize: 12,
-                  color: 'var(--color-text-muted)',
-                }}
-              >
-                <Badge tone={group.flowType === 'parallel' ? 'warning' : 'info'}>
-                  {group.flowType || 'sequential'}
-                </Badge>
-                <Badge tone={group.isActive ? 'success' : 'default'}>
-                  {group.isActive ? 'Aktif' : 'Nonaktif'}
-                </Badge>
-
-                {group.departmentId && (
-                  <span>
-                    Department:{' '}
-                    <b>{resolveName(departments, group.departmentId) || `#${group.departmentId}`}</b>
-                  </span>
-                )}
-                {group.requestType && (
-                  <span>
-                    Request: <b>{group.requestType}</b>
-                  </span>
-                )}
-                {group.documentTypeId && (
-                  <span>
-                    Document:{' '}
-                    <b>{resolveName(docTypes, group.documentTypeId) || `#${group.documentTypeId}`}</b>
-                  </span>
-                )}
-                <span>
-                  Amount:{' '}
-                  <b>
-                    {group.currency || 'IDR'}{' '}
-                    {group.amountMin != null
-                      ? Number(group.amountMin).toLocaleString('id-ID')
-                      : '−∞'}
-                    {' – '}
-                    {group.amountMax != null
-                      ? Number(group.amountMax).toLocaleString('id-ID')
-                      : '+∞'}
-                  </b>
-                </span>
-                <span>
-                  Priority: <b>{group.priority ?? 100}</b>
-                </span>
-              </div>
-
-              <div style={{ overflowX: 'auto' }}>
-                <table
-                  style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    fontSize: 13,
-                  }}
-                >
-                  <thead>
-                    <tr
-                      style={{
-                        textAlign: 'left',
-                        background: '#f8fafc',
-                      }}
-                    >
-                      <th style={{ padding: 8 }}>Order</th>
-                      <th style={{ padding: 8 }}>Group</th>
-                      <th style={{ padding: 8 }}>Approver</th>
-                      <th style={{ padding: 8 }}>Signer</th>
-                      <th style={{ padding: 8 }}>Reminder / Escalation</th>
-                      <th style={{ padding: 8 }}>Type</th>
-                      <th style={{ padding: 8, width: 96 }}>Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {group.rules.map((rule) => (
-                      <tr
-                        key={rule.id}
-                        style={{ boxShadow: 'inset 0 1px 0 0 var(--color-border)' }}
-                      >
-                        <td style={{ padding: 8 }}>
-                          <b>#{rule.orderIndex}</b>
-                          <div
-                            style={{
-                              fontSize: 11,
-                              color: 'var(--color-text-muted)',
-                            }}
-                          >
-                            level {rule.level}
-                          </div>
-                        </td>
-                        <td style={{ padding: 8 }}>{rule.parallelGroup || '—'}</td>
-                        <td style={{ padding: 8 }}>
-                          {rule.approverUserName ||
-                            rule.approverRoleName ||
-                            (rule.approverUserId
-                              ? `User #${rule.approverUserId}`
-                              : rule.approverRoleId
-                                ? `Role #${rule.approverRoleId}`
-                                : '—')}
-                        </td>
-                        <td style={{ padding: 8 }}>
-                          {rule.signerUserName ||
-                            rule.signerRoleName ||
-                            (rule.signerUserId
-                              ? `User #${rule.signerUserId}`
-                              : rule.signerRoleId
-                                ? `Role #${rule.signerRoleId}`
-                                : '—')}
-                        </td>
-                        <td style={{ padding: 8 }}>
-                          <div>
-                            Reminder:{' '}
-                            <b>
-                              {rule.reminderAfterHours == null
-                                ? '—'
-                                : `${rule.reminderAfterHours}h`}
-                            </b>
-                          </div>
-                          <div>
-                            Escalate:{' '}
-                            <b>
-                              {rule.escalateAfterHours == null
-                                ? '—'
-                                : `${rule.escalateAfterHours}h`}
-                            </b>
-                          </div>
-                          {(rule.escalationUserName || rule.escalationRoleName) && (
-                            <div
-                              style={{
-                                fontSize: 11,
-                                color: 'var(--color-text-muted)',
-                              }}
-                            >
-                              ke {rule.escalationUserName || rule.escalationRoleName}
-                            </div>
-                          )}
-                        </td>
-                        <td style={{ padding: 8 }}>
-                          {rule.isOptional ? (
-                            <Badge tone="info">Optional</Badge>
-                          ) : (
-                            <Badge tone="default">Required</Badge>
-                          )}
-                        </td>
-                        <td style={{ padding: 8 }}>
-                          <div style={{ display: 'flex', gap: 4 }}>
-                            <Button
-                              variant="secondary"
-                              title="Edit rule"
-                              onClick={() => setEditRule(rule)}
-                            >
-                              <Pencil size={14} />
-                            </Button>
-                            <Button
-                              variant="danger"
-                              title="Hapus rule"
-                              onClick={() => setDeleteRuleTarget(rule)}
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          </div>
-        ))}
-
-      <Modal
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        title="Approval Matrix Baru"
-        maxWidth={980}
-      >
-        <ApprovalMatrixEditor
-          users={users}
-          roles={roles}
-          docTypes={docTypes}
-          departments={departments}
-          onCancel={() => setCreateOpen(false)}
-          onSaved={async () => {
-            setCreateOpen(false);
-            await load();
-          }}
+  let content;
+  if (loading) content = <SkeletonCard lines={7} />;
+  else if (loadError) {
+    content = (
+      <EmptyState
+        tone="error"
+        title="Approval matrix gagal dimuat"
+        description={loadError}
+        action={<Button variant="text" type="button" onClick={load}>Coba lagi</Button>}
+      />
+    );
+  } else if (!groups.length) {
+    content = (
+      <EmptyState
+        icon="grid_view"
+        title="Belum ada approval matrix"
+        description="Buat matrix pertama dengan tombol Tambah matrix untuk mengatur alur approval."
+      />
+    );
+  } else {
+    content = groups.map((group) => {
+      const departmentName = group.departmentId ? (resolveName(departments, group.departmentId) || `#${group.departmentId}`) : null;
+      const documentName = group.documentTypeId ? (resolveName(docTypes, group.documentTypeId) || `#${group.documentTypeId}`) : null;
+      return (
+        <DataGrid
+          key={group.matrixKey}
+          title={group.matrixName || humanizeCode(group.matrixKey)}
+          dataTitle={!group.matrixName}
+          filters={(
+            <span className="admin-matrix-meta">
+              <StatusBadge status={group.isActive ? 'active' : 'inactive'} />
+              <span>{FLOW_LABELS[group.flowType] || FLOW_LABELS.sequential}</span>
+              {departmentName ? <span>Divisi {departmentName}</span> : null}
+              {group.requestType ? <span>Permintaan <span data-no-translate={isKnownRequestType(group.requestType) ? undefined : ''}>{requestTypeLabel(group.requestType)}</span></span> : null}
+              {documentName ? <span>Dokumen {documentName}</span> : null}
+              <span>Nominal {amountRange(group)}</span>
+              <span>Prioritas {group.priority ?? 100}</span>
+            </span>
+          )}
+          toolbarActions={(
+            <>
+              <Button variant="secondary" icon="tune" onClick={() => setEditMatrix(group)}>Ubah konfigurasi</Button>
+              <IconButton icon="delete" label="Hapus matrix" tone="danger" onClick={() => setDeleteMatrixTarget(group)} />
+            </>
+          )}
+          columns={RULE_COLUMNS}
+          rows={group.rules}
+          searchable={false}
+          exportable={false}
+          empty="Belum ada rule pada matrix ini"
+          onRowClick={(rule) => setEditRule(rule)}
+          rowActions={(rule) => (
+            <>
+              <IconButton size="sm" icon="edit" label="Ubah rule" onClick={() => setEditRule(rule)} />
+              <IconButton size="sm" icon="delete" label="Hapus rule" tone="danger" onClick={() => setDeleteRuleTarget(rule)} />
+            </>
+          )}
         />
-      </Modal>
+      );
+    });
+  }
 
-      <Modal
-        open={Boolean(editMatrix)}
-        onClose={() => setEditMatrix(null)}
-        title="Edit Matrix Configuration"
-        maxWidth={760}
+  return (
+    <Page>
+      <PageHeader
+        title="Matriks approval"
+        description="Alur approval per entitas, divisi, jenis permintaan, tipe dokumen, dan nominal: berurutan atau paralel, dengan delegasi, pengingat, dan eskalasi."
+        actions={<Button icon="add" onClick={() => setCreateOpen(true)}>Tambah matrix</Button>}
+      />
+
+      {content}
+
+      <FullScreenDialog
+        open={createOpen}
+        onClose={closeCreate}
+        title="Tambah approval matrix"
+        card={false}
+        actions={dialogActions(MATRIX_EDITOR_FORM_ID, 'Buat matrix', closeCreate)}
       >
-        {editMatrix && (
+        {createOpen ? (
+          <ApprovalMatrixEditor
+            users={users}
+            roles={roles}
+            docTypes={docTypes}
+            departments={departments}
+            onSavingChange={setFormSaving}
+            onSaved={async () => {
+              setCreateOpen(false);
+              await load();
+            }}
+          />
+        ) : null}
+      </FullScreenDialog>
+
+      <FullScreenDialog
+        open={Boolean(editMatrix)}
+        onClose={closeDialog(setEditMatrix)}
+        title="Ubah konfigurasi matrix"
+        card={false}
+        actions={dialogActions(CONFIG_FORM_ID, 'Simpan konfigurasi', closeDialog(setEditMatrix))}
+      >
+        {editMatrix ? (
           <MatrixConfigForm
+            key={editMatrix.matrixKey}
             group={editMatrix}
             docTypes={docTypes}
             departments={departments}
-            onCancel={() => setEditMatrix(null)}
+            onSavingChange={setFormSaving}
             onSaved={async () => {
               setEditMatrix(null);
               await load();
             }}
           />
-        )}
-      </Modal>
+        ) : null}
+      </FullScreenDialog>
 
-      <Modal
+      <FullScreenDialog
         open={Boolean(editRule)}
-        onClose={() => setEditRule(null)}
-        title="Edit Approval Rule"
-        maxWidth={820}
+        onClose={closeDialog(setEditRule)}
+        title="Ubah approval rule"
+        card={false}
+        actions={dialogActions(RULE_FORM_ID, 'Simpan rule', closeDialog(setEditRule))}
       >
-        {editRule && (
+        {editRule ? (
           <RuleForm
+            key={editRule.id}
             rule={editRule}
             users={users}
             roles={roles}
-            onCancel={() => setEditRule(null)}
+            onSavingChange={setFormSaving}
             onSaved={async () => {
               setEditRule(null);
               await load();
             }}
           />
-        )}
-      </Modal>
+        ) : null}
+      </FullScreenDialog>
 
       <ConfirmDialog
         open={Boolean(deleteRuleTarget)}
         title="Hapus approval rule?"
-        message="Rule akan di-soft-delete. Approval request yang sudah berjalan tetap menyimpan step hasil resolusi sebelumnya."
-        confirmLabel="Ya, hapus"
+        message={`Rule urutan ${deleteRuleTarget?.orderIndex ?? ''} (${deleteRuleTarget?.approverUserName || deleteRuleTarget?.approverRoleName || 'approver'}) akan dihapus. Approval yang sudah berjalan tetap menyimpan langkah yang sudah ditetapkan.`}
+        confirmLabel="Hapus rule"
         loading={deleting}
         onConfirm={removeRule}
-        onClose={() => setDeleteRuleTarget(null)}
+        onClose={() => { if (!deleting) setDeleteRuleTarget(null); }}
       />
 
       <ConfirmDialog
         open={Boolean(deleteMatrixTarget)}
         title="Hapus seluruh matrix?"
-        message={`Seluruh rule pada matrix “${deleteMatrixTarget?.matrixKey || ''}” akan di-soft-delete.`}
-        confirmLabel="Ya, hapus matrix"
+        message={`Semua rule pada matrix “${deleteMatrixTarget?.matrixName || deleteMatrixTarget?.matrixKey || ''}” akan dihapus.`}
+        confirmLabel="Hapus matrix"
         loading={deleting}
         onConfirm={removeMatrix}
-        onClose={() => setDeleteMatrixTarget(null)}
+        onClose={() => { if (!deleting) setDeleteMatrixTarget(null); }}
       />
-    </div>
+    </Page>
   );
 }
 
@@ -479,7 +388,7 @@ function MatrixConfigForm({
   group,
   docTypes,
   departments,
-  onCancel,
+  onSavingChange,
   onSaved,
 }) {
   const [form, setForm] = useState({
@@ -489,27 +398,27 @@ function MatrixConfigForm({
     requestType: group.requestType || '',
     amountMin: group.amountMin ?? '',
     amountMax: group.amountMax ?? '',
-    currency: group.currency || 'IDR',
+    currency: group.currency || DEFAULT_CURRENCY,
     flowType: group.flowType || 'sequential',
     priority: group.priority ?? 100,
     isActive: Boolean(group.isActive),
   });
-  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  const set = (key, value) =>
+  const set = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
+    setErrors((current) => ({ ...current, [key]: undefined }));
+  };
 
-  const save = async () => {
-    if (!form.matrixName.trim()) {
-      toast('Matrix name wajib', 'error');
-      return;
+  const save = async (event) => {
+    event.preventDefault();
+    const nextErrors = {};
+    if (!form.matrixName.trim()) nextErrors.matrixName = 'Isi nama matrix.';
+    if (form.amountMin !== '' && form.amountMax !== '' && Number(form.amountMin) > Number(form.amountMax)) {
+      nextErrors.amountMax = 'Nominal maksimum harus sama atau lebih besar dari minimum.';
     }
-    if (
-      form.amountMin !== '' &&
-      form.amountMax !== '' &&
-      Number(form.amountMin) > Number(form.amountMax)
-    ) {
-      toast('Amount min tidak boleh lebih besar dari amount max', 'error');
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors);
       return;
     }
 
@@ -525,159 +434,114 @@ function MatrixConfigForm({
       requestType: form.requestType.trim() || null,
       amountMin: toNumberOrNull(form.amountMin),
       amountMax: toNumberOrNull(form.amountMax),
-      currency: form.currency.trim().toUpperCase() || 'IDR',
+      currency: normalizeCurrency(form.currency),
       flowType: form.flowType,
       priority: Number(form.priority || 100),
       isActive: Boolean(form.isActive),
     };
 
-    setSaving(true);
+    onSavingChange(true);
     try {
       await api.patch(
         `/approval-matrix/matrix/${encodeURIComponent(group.matrixKey)}`,
         payload
       );
-      toast('Matrix configuration diperbarui', 'success');
+      toast('Konfigurasi matrix diperbarui', 'success');
+      onSavingChange(false);
       onSaved();
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal memperbarui matrix', 'error');
-    } finally {
-      setSaving(false);
+      onSavingChange(false);
+      const fieldErrors = fieldErrorsFromApi(error);
+      if (Object.keys(fieldErrors).length) setErrors(fieldErrors);
+      else toast(apiErrorMessage(error, 'Matrix gagal diperbarui.'), 'error');
     }
   };
 
   return (
-    <div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 12,
-        }}
-      >
-        <Input
-          label="Matrix Name"
-          value={form.matrixName}
-          onChange={(event) => set('matrixName', event.target.value)}
-        />
-
-        <Select
-          label="Flow Type"
-          value={form.flowType}
-          onChange={(value) => set('flowType', value)}
-          options={[
-            { value: 'sequential', label: 'Sequential' },
-            { value: 'parallel', label: 'Parallel' },
-          ]}
-        />
-
-        <Select
-          label="Department"
-          value={form.departmentId}
-          onChange={(value) => set('departmentId', value)}
-          allowEmpty
-          options={departments.map((item) => ({
-            value: item.id,
-            label: item.name,
-          }))}
-        />
-
-        <Select
-          label="Document Type"
-          value={form.documentTypeId}
-          onChange={(value) => set('documentTypeId', value)}
-          allowEmpty
-          options={docTypes.map((item) => ({
-            value: item.id,
-            label: item.name,
-          }))}
-        />
-
-        <Input
-          label="Request Type"
-          value={form.requestType}
-          onChange={(event) => set('requestType', event.target.value)}
-        />
-        <Input
-          label="Amount Min"
-          type="number"
-          min="0"
-          value={form.amountMin}
-          onChange={(event) => set('amountMin', event.target.value)}
-        />
-        <Input
-          label="Amount Max"
-          type="number"
-          min="0"
-          value={form.amountMax}
-          onChange={(event) => set('amountMax', event.target.value)}
-        />
-        <Input
-          label="Currency"
-          value={form.currency}
-          onChange={(event) => set('currency', event.target.value)}
-        />
-        <Input
-          label="Priority"
-          type="number"
-          min="0"
-          value={form.priority}
-          onChange={(event) => set('priority', event.target.value)}
-        />
-      </div>
-
-      <label
-        style={{
-          display: 'flex',
-          gap: 7,
-          alignItems: 'center',
-          fontSize: 13,
-          marginTop: 2,
-        }}
-      >
-        <input
-          type="checkbox"
-          checked={form.isActive}
-          onChange={(event) => set('isActive', event.target.checked)}
-        />
-        Matrix aktif
-      </label>
-
-      <div
-        style={{
-          marginTop: 12,
-          padding: 10,
-          borderRadius: 8,
-          background: '#f8fafc',
-          fontSize: 12,
-          color: 'var(--color-text-muted)',
-        }}
-      >
-        Perubahan flow type divalidasi backend. Matrix tidak dapat diubah ke
-        sequential jika masih memiliki order stage duplikat, dan parallel
-        membutuhkan parallel group yang konsisten.
-      </div>
-
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 8,
-          marginTop: 16,
-        }}
-      >
-        <Button variant="secondary" onClick={onCancel} disabled={saving}>
-          Batal
-        </Button>
-        <Button onClick={save} disabled={saving}>
-          {saving ? 'Menyimpan…' : 'Simpan Config'}
-        </Button>
-      </div>
-    </div>
+    <form id={CONFIG_FORM_ID} className="admin-dialog-form" onSubmit={save} noValidate>
+      <FullScreenSection title={`Konfigurasi ${group.matrixName || humanizeCode(group.matrixKey)}`}>
+        <div className="pw-fsdialog__fields">
+          <Input
+            label="Nama matrix"
+            required
+            value={form.matrixName}
+            error={errors.matrixName}
+            onChange={(event) => set('matrixName', event.target.value)}
+            autoFocus
+          />
+          <Select
+            label="Jenis alur"
+            value={form.flowType}
+            error={errors.flowType}
+            onChange={(event) => set('flowType', event.target.value)}
+            options={FLOW_OPTIONS}
+          />
+          <Select
+            label="Divisi"
+            value={form.departmentId}
+            onChange={(event) => set('departmentId', event.target.value)}
+            placeholder="Semua divisi"
+            options={departments.map((item) => ({ value: item.id, label: item.name }))}
+          />
+          <Select
+            label="Tipe dokumen"
+            value={form.documentTypeId}
+            onChange={(event) => set('documentTypeId', event.target.value)}
+            placeholder="Semua tipe dokumen"
+            options={docTypes.map((item) => ({ value: item.id, label: item.name }))}
+            hint={docCode(docTypes, form.documentTypeId)}
+          />
+          <Input
+            label="Jenis permintaan"
+            mono
+            value={form.requestType}
+            hint="Contoh payment_request."
+            onChange={(event) => set('requestType', event.target.value)}
+          />
+          <Input
+            label="Nominal minimum"
+            type="number"
+            min="0"
+            inputMode="numeric"
+            value={form.amountMin}
+            error={errors.amountMin}
+            onChange={(event) => set('amountMin', event.target.value)}
+          />
+          <Input
+            label="Nominal maksimum"
+            type="number"
+            min="0"
+            inputMode="numeric"
+            value={form.amountMax}
+            error={errors.amountMax}
+            onChange={(event) => set('amountMax', event.target.value)}
+          />
+          <Input
+            label="Mata uang"
+            value={form.currency}
+            onChange={(event) => set('currency', event.target.value)}
+          />
+          <Input
+            label="Prioritas"
+            type="number"
+            min="0"
+            inputMode="numeric"
+            hint="Angka kecil didahulukan."
+            value={form.priority}
+            onChange={(event) => set('priority', event.target.value)}
+          />
+        </div>
+        <Checkbox label="Matrix aktif" checked={form.isActive} onChange={(event) => set('isActive', event.target.checked)} />
+        <Banner tone="info">
+          Server memeriksa perubahan jenis alur: matrix tidak bisa menjadi berurutan bila masih ada urutan
+          ganda, dan alur paralel butuh grup paralel yang konsisten.
+        </Banner>
+      </FullScreenSection>
+    </form>
   );
 }
 
-function RuleForm({ rule, users, roles, onCancel, onSaved }) {
+function RuleForm({ rule, users, roles, onSavingChange, onSaved }) {
   const [form, setForm] = useState({
     level: rule.level ?? 1,
     orderIndex: rule.orderIndex ?? 1,
@@ -692,30 +556,18 @@ function RuleForm({ rule, users, roles, onCancel, onSaved }) {
     reminderAfterHours: rule.reminderAfterHours ?? '',
     escalateAfterHours: rule.escalateAfterHours ?? '',
   });
-  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  const set = (key, value) =>
+  const set = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
+    setErrors({});
+  };
 
-  const save = async () => {
-    if (!form.approverUserId && !form.approverRoleId) {
-      toast('Approver user atau role wajib', 'error');
-      return;
-    }
-    if (form.approverUserId && form.approverRoleId) {
-      toast('Pilih approver user atau role, bukan keduanya', 'error');
-      return;
-    }
-    if (form.signerUserId && form.signerRoleId) {
-      toast('Pilih signer user atau role, bukan keduanya', 'error');
-      return;
-    }
-    if (
-      form.reminderAfterHours !== '' &&
-      form.escalateAfterHours !== '' &&
-      Number(form.escalateAfterHours) < Number(form.reminderAfterHours)
-    ) {
-      toast('Waktu eskalasi harus >= waktu reminder', 'error');
+  const save = async (event) => {
+    event.preventDefault();
+    const nextErrors = validateRule(form);
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors);
       return;
     }
 
@@ -734,160 +586,25 @@ function RuleForm({ rule, users, roles, onCancel, onSaved }) {
       escalateAfterHours: toNumberOrNull(form.escalateAfterHours),
     };
 
-    setSaving(true);
+    onSavingChange(true);
     try {
       await api.patch(`/approval-matrix/rules/${rule.id}`, payload);
       toast('Approval rule diperbarui', 'success');
+      onSavingChange(false);
       onSaved();
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal memperbarui rule', 'error');
-    } finally {
-      setSaving(false);
+      onSavingChange(false);
+      const fieldErrors = fieldErrorsFromApi(error);
+      if (Object.keys(fieldErrors).length) setErrors(fieldErrors);
+      else toast(apiErrorMessage(error, 'Rule gagal diperbarui.'), 'error');
     }
   };
 
   return (
-    <div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: 12,
-        }}
-      >
-        <Input
-          label="Level"
-          type="number"
-          min="1"
-          value={form.level}
-          onChange={(event) => set('level', event.target.value)}
-        />
-        <Input
-          label="Order Index"
-          type="number"
-          min="1"
-          value={form.orderIndex}
-          onChange={(event) => set('orderIndex', event.target.value)}
-        />
-        <Input
-          label="Parallel Group"
-          value={form.parallelGroup}
-          onChange={(event) => set('parallelGroup', event.target.value)}
-        />
-
-        <UserSelect
-          label="Approver User"
-          value={form.approverUserId}
-          onChange={(value) => set('approverUserId', value)}
-          users={users}
-        />
-        <RoleSelect
-          label="Approver Role"
-          value={form.approverRoleId}
-          onChange={(value) => set('approverRoleId', value)}
-          roles={roles}
-        />
-        <UserSelect
-          label="Signer User"
-          value={form.signerUserId}
-          onChange={(value) => set('signerUserId', value)}
-          users={users}
-        />
-        <RoleSelect
-          label="Signer Role"
-          value={form.signerRoleId}
-          onChange={(value) => set('signerRoleId', value)}
-          roles={roles}
-        />
-        <UserSelect
-          label="Escalation User"
-          value={form.escalationUserId}
-          onChange={(value) => set('escalationUserId', value)}
-          users={users}
-        />
-        <RoleSelect
-          label="Escalation Role"
-          value={form.escalationRoleId}
-          onChange={(value) => set('escalationRoleId', value)}
-          roles={roles}
-        />
-
-        <Input
-          label="Reminder after (jam)"
-          type="number"
-          min="0"
-          value={form.reminderAfterHours}
-          onChange={(event) => set('reminderAfterHours', event.target.value)}
-        />
-        <Input
-          label="Escalate after (jam)"
-          type="number"
-          min="0"
-          value={form.escalateAfterHours}
-          onChange={(event) => set('escalateAfterHours', event.target.value)}
-        />
-      </div>
-
-      <label
-        style={{
-          display: 'flex',
-          gap: 7,
-          alignItems: 'center',
-          fontSize: 13,
-          marginTop: 4,
-        }}
-      >
-        <input
-          type="checkbox"
-          checked={form.isOptional}
-          onChange={(event) => set('isOptional', event.target.checked)}
-        />
-        Optional step
-      </label>
-
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 8,
-          marginTop: 16,
-        }}
-      >
-        <Button variant="secondary" onClick={onCancel} disabled={saving}>
-          Batal
-        </Button>
-        <Button onClick={save} disabled={saving}>
-          {saving ? 'Menyimpan…' : 'Simpan Rule'}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function Select({ label, value, onChange, options, allowEmpty = false }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-      <label style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-        {label}
-      </label>
-      <select
-        value={value || ''}
-        onChange={(event) => onChange(event.target.value)}
-        style={{
-          padding: '8px 10px',
-          borderRadius: 8,
-          boxShadow: 'inset 0 0 0 1px var(--color-border)',
-          background: 'var(--color-surface)',
-          color: 'var(--color-text)',
-        }}
-      >
-        {allowEmpty && <option value="">Semua / tidak dibatasi</option>}
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
+    <form id={RULE_FORM_ID} className="admin-dialog-form" onSubmit={save} noValidate>
+      <FullScreenSection title={`Rule urutan ${rule.orderIndex ?? ''}`}>
+        <RuleFields rule={form} errors={errors} users={users} roles={roles} onChange={set} />
+      </FullScreenSection>
+    </form>
   );
 }

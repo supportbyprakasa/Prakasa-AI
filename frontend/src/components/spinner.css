@@ -1,0 +1,36 @@
+/* Spinner (docs/ui-guideline.md §4.11): Material circular indeterminate
+   progress, --pw-tab, 3px stroke, 24 / 40px. The arc grows and shrinks while
+   the circle turns; one cycle is --pw-dur-loop (1350ms, Material's 1333ms). The circle uses pathLength="100", so the dash values below are a
+   percentage of the circumference at either size. */
+.pw-spinner {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--pw-tab);
+}
+.pw-spinner--lg { width: 40px; height: 40px; }
+.pw-spinner__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: pw-spin var(--pw-dur-loop) linear infinite;
+}
+.pw-spinner__arc {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-dasharray: 1 100;
+  stroke-dashoffset: 0;
+  transform-origin: center;
+  animation: pw-spinner-dash var(--pw-dur-loop) var(--pw-ease-standard) infinite;
+}
+
+@keyframes pw-spinner-dash {
+  0% { stroke-dasharray: 1 100; stroke-dashoffset: 0; }
+  50% { stroke-dasharray: 70 100; stroke-dashoffset: -15; }
+  100% { stroke-dasharray: 70 100; stroke-dashoffset: -99; }
+}

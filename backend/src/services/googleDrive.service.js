@@ -60,7 +60,21 @@ async function ensureFolder({ name, parentId, sharedDriveId }, ctx = {}) {
   });
 }
 
-async function uploadFile({ name, mimeType, buffer, parentId }, ctx = {}) {
+// Company files live in the Shared Drive only: without a target folder a file
+// goes to the Shared Drive root, and without a configured Shared Drive nothing
+// is uploaded (never into the service account's own Drive).
+function sharedDriveTarget(parentId) {
+  const target = parentId || String(process.env.GOOGLE_SHARED_DRIVE_ID || '').trim();
+  if (!target) {
+    throw Object.assign(new Error('Google Shared Drive belum dikonfigurasi. Isi GOOGLE_SHARED_DRIVE_ID atau folder mapping.'), {
+      status: 503, code: 'GOOGLE_DRIVE_NOT_CONFIGURED',
+    });
+  }
+  return target;
+}
+
+async function uploadFile({ name, mimeType, buffer, parentId: requestedParent }, ctx = {}) {
+  const parentId = sharedDriveTarget(requestedParent);
   return integrationLog.wrap({
     entityId: ctx.entityId || null,
     userId: ctx.userId || null,
@@ -84,7 +98,7 @@ async function uploadFile({ name, mimeType, buffer, parentId }, ctx = {}) {
     const drive = driveClient();
     const { Readable } = require('stream');
     const created = await drive.files.create({
-      requestBody: { name, parents: parentId ? [parentId] : undefined },
+      requestBody: { name, parents: [parentId] },
       media: { mimeType, body: Readable.from(buffer) },
       fields: 'id,name,mimeType,size,webViewLink,owners(emailAddress)',
       supportsAllDrives: true,
@@ -134,7 +148,7 @@ async function getFileMeta(fileId, ctx = {}) {
     const drive = driveClient();
     const response = await drive.files.get({
       fileId,
-      fields: 'id,name,mimeType,size,webViewLink,owners(emailAddress),modifiedTime',
+      fields: 'id,name,mimeType,size,webViewLink,owners(emailAddress),modifiedTime,parents',
       supportsAllDrives: true,
     });
     return response.data;
@@ -192,6 +206,103 @@ async function downloadFileBuffer(fileId, ctx = {}) {
   });
 }
 
+async function listFiles({ folderId, sharedDriveId }, ctx = {}) {
+  return integrationLog.wrap({
+    entityId: ctx.entityId || null,
+    userId: ctx.userId || null,
+    provider: 'google_drive',
+    operation: 'listFiles',
+    subjectType: ctx.subjectType || null,
+    subjectId: ctx.subjectId || null,
+    requestMeta: { folderId },
+    responseMeta: (result) => ({ count: result?.length || 0 }),
+  }, async () => {
+    const drive = driveClient();
+    const response = await drive.files.list({
+      q: `'${folderId}' in parents and trashed=false`,
+      fields: 'files(id,name,mimeType,webViewLink,iconLink,thumbnailLink,modifiedTime,owners(displayName,emailAddress))',
+      orderBy: 'modifiedTime desc',
+      pageSize: 100,
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
+      corpora: sharedDriveId ? 'drive' : 'user',
+      driveId: sharedDriveId || undefined,
+    });
+    return response.data.files || [];
+  });
+}
+
+async function createNativeFile({ name, mimeType, folderId }, ctx = {}) {
+  return integrationLog.wrap({
+    entityId: ctx.entityId || null,
+    userId: ctx.userId || null,
+    provider: 'google_drive',
+    operation: 'createNativeFile',
+    subjectType: ctx.subjectType || null,
+    subjectId: ctx.subjectId || null,
+    requestMeta: { name, mimeType, folderId },
+    responseMeta: (result) => ({ id: result?.id, name: result?.name }),
+  }, async () => {
+    const drive = driveClient();
+    const created = await drive.files.create({
+      requestBody: { name, mimeType, parents: folderId ? [folderId] : undefined },
+      fields: 'id,name,mimeType,webViewLink,iconLink',
+      supportsAllDrives: true,
+    });
+    return created.data;
+  });
+}
+
+// Lists who already has direct access to a folder, so ensureFolderMember can
+// skip adding someone twice — Drive doesn't dedupe permissions.create by
+// email/role, it'll just create a second permission for the same person.
+async function listFolderMembers(folderId, ctx = {}) {
+  return integrationLog.wrap({
+    entityId: ctx.entityId || null,
+    userId: ctx.userId || null,
+    provider: 'google_drive',
+    operation: 'listFolderMembers',
+    requestMeta: { folderId },
+    responseMeta: (result) => ({ count: result?.length || 0 }),
+  }, async () => {
+    const drive = driveClient();
+    const response = await drive.permissions.list({
+      fileId: folderId,
+      supportsAllDrives: true,
+      fields: 'permissions(id,emailAddress,role)',
+    });
+    return response.data.permissions || [];
+  });
+}
+
+// Adds someone as a direct member of a division's Shared Drive folder (not
+// just reachable through the app's own Division Storage UI) — 'fileOrganizer'
+// is the API name for what the Shared Drive UI calls "Content Manager".
+async function ensureFolderMember({ folderId, email, role = 'fileOrganizer' }, ctx = {}) {
+  return integrationLog.wrap({
+    entityId: ctx.entityId || null,
+    userId: ctx.userId || null,
+    provider: 'google_drive',
+    operation: 'ensureFolderMember',
+    requestMeta: { folderId, email, role },
+    responseMeta: (result) => ({ added: result?.added }),
+  }, async () => {
+    const existing = await listFolderMembers(folderId, ctx);
+    const already = existing.find((permission) => permission.emailAddress?.toLowerCase() === email.toLowerCase());
+    if (already) return { added: false, reason: 'already_member', role: already.role };
+
+    const drive = driveClient();
+    await drive.permissions.create({
+      fileId: folderId,
+      supportsAllDrives: true,
+      sendNotificationEmail: false,
+      requestBody: { type: 'user', role, emailAddress: email },
+      fields: 'id',
+    });
+    return { added: true };
+  });
+}
+
 async function deleteFile(fileId, ctx = {}) {
   return integrationLog.wrap({
     entityId: ctx.entityId || null,
@@ -204,8 +315,81 @@ async function deleteFile(fileId, ctx = {}) {
     responseMeta: () => ({ deleted: true }),
   }, async () => {
     const drive = driveClient();
-    await drive.files.delete({ fileId, supportsAllDrives: true });
+    // A hard delete 404s for the service account on Shared Drive items even
+    // with Content Manager access — trashing is what that role can actually
+    // do, and it removes the file from every listing here just the same.
+    await drive.files.update({ fileId, requestBody: { trashed: true }, supportsAllDrives: true });
     return { deleted: true };
+  });
+}
+
+// ------------------------------------------------------------ Word ↔ Google Docs
+// Documents made from templates (migration 115) travel as .docx: a Google Doc
+// is exported to Word, joined with a division's kop, and imported back.
+const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const GOOGLE_DOC_MIME = 'application/vnd.google-apps.document';
+
+/** A Google Doc as a .docx Buffer. */
+async function exportDocx(fileId, ctx = {}) {
+  return integrationLog.wrap({
+    entityId: ctx.entityId || null,
+    userId: ctx.userId || null,
+    provider: 'google_drive',
+    operation: 'exportDocx',
+    subjectType: ctx.subjectType || null,
+    subjectId: ctx.subjectId || null,
+    requestMeta: { fileId },
+    responseMeta: (result) => ({ size: result?.length || 0 }),
+  }, async () => {
+    const response = await driveClient().files.export({ fileId, mimeType: DOCX_MIME }, { responseType: 'arraybuffer' });
+    return Buffer.from(response.data);
+  });
+}
+
+/** A .docx Buffer imported as a new Google Doc in a Shared Drive folder. */
+async function importDocx({ name, buffer, parentId: requestedParent }, ctx = {}) {
+  const parentId = sharedDriveTarget(requestedParent);
+  return integrationLog.wrap({
+    entityId: ctx.entityId || null,
+    userId: ctx.userId || null,
+    provider: 'google_drive',
+    operation: 'importDocx',
+    subjectType: ctx.subjectType || null,
+    subjectId: ctx.subjectId || null,
+    requestMeta: { name, parentId, size: buffer?.length || 0 },
+    responseMeta: (result) => ({ id: result?.id, name: result?.name }),
+  }, async () => {
+    const { Readable } = require('stream');
+    const created = await driveClient().files.create({
+      requestBody: { name, mimeType: GOOGLE_DOC_MIME, parents: [parentId] },
+      media: { mimeType: DOCX_MIME, body: Readable.from(buffer) },
+      fields: 'id,name,mimeType,webViewLink',
+      supportsAllDrives: true,
+    });
+    return created.data;
+  });
+}
+
+/** Replaces the content of an existing Google Doc with a .docx (same file, same link). */
+async function replaceDocContent({ fileId, buffer }, ctx = {}) {
+  return integrationLog.wrap({
+    entityId: ctx.entityId || null,
+    userId: ctx.userId || null,
+    provider: 'google_drive',
+    operation: 'replaceDocContent',
+    subjectType: ctx.subjectType || null,
+    subjectId: ctx.subjectId || null,
+    requestMeta: { fileId, size: buffer?.length || 0 },
+    responseMeta: (result) => ({ id: result?.id }),
+  }, async () => {
+    const { Readable } = require('stream');
+    const updated = await driveClient().files.update({
+      fileId,
+      media: { mimeType: DOCX_MIME, body: Readable.from(buffer) },
+      fields: 'id,name,webViewLink',
+      supportsAllDrives: true,
+    });
+    return updated.data;
   });
 }
 
@@ -216,5 +400,13 @@ module.exports = {
   getFileMeta,
   downloadFileBuffer,
   deleteFile,
+  listFiles,
+  createNativeFile,
+  exportDocx,
+  importDocx,
+  replaceDocContent,
+  sharedDriveTarget,
+  listFolderMembers,
+  ensureFolderMember,
   driveClient,
 };

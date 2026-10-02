@@ -1,0 +1,14 @@
+[
+ {
+  "kind": "grid-column",
+  "source": "frontend/src/pages/marketing/MarketingCampaigns.jsx:80",
+  "name": "'Channel'",
+  "value": "(r) => (r.channels === 'all' ? <Translate>{channelsText(r.channels)}</Translate> : channelsText(r.channels))"
+ },
+ {
+  "kind": "grid-column",
+  "source": "frontend/src/pages/marketing/MarketingInsights.jsx:41",
+  "name": "'Channel'",
+  "value": "(r) => (r.id === NO_CHANNEL || r.id === 'Export' ? <Translate>{r.channel}</Translate> : r.channel)"
+ }
+]

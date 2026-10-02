@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { approvalActionUrl } = require('../services/approvalLink');
 const { ok, fail } = require('../utils/response');
 const { log: activityLog } = require('../services/activityLog.service');
 const approvalAudit = require('../services/approvalAudit.service');
@@ -89,6 +90,9 @@ async function list(req, res, next) {
     if (req.query.requestType) { where.push('a.request_type=?'); args.push(req.query.requestType); }
     if (req.query.subjectType) { where.push('a.subject_type=?'); args.push(req.query.subjectType); }
     if (req.query.subjectId) { where.push('a.subject_id=?'); args.push(req.query.subjectId); }
+    // Division scope (same rule as detail and global search).
+    const visible = engine.approvalVisibilitySql(req.user, 'a');
+    where.push(visible.sql); args.push(...visible.args);
 
     const [rows] = await pool.query(
       `SELECT a.id, a.entity_id AS entityId, a.department_id AS departmentId,
@@ -130,6 +134,7 @@ async function list(req, res, next) {
 
 async function detail(req, res, next) {
   try {
+    const visible = engine.approvalVisibilitySql(req.user, 'a');
     const [rows] = await pool.query(
       `SELECT a.id, a.entity_id AS entityId,
               a.department_id AS departmentId,
@@ -155,9 +160,9 @@ async function detail(req, res, next) {
               a.updated_at AS updatedAt
          FROM approval_requests a
          JOIN users u ON u.id=a.requested_by
-        WHERE a.id=? AND a.entity_id=?
+        WHERE a.id=? AND a.entity_id=? AND ${visible.sql}
         LIMIT 1`,
-      [req.params.id, req.entityScope.entityId]
+      [req.params.id, req.entityScope.entityId, ...visible.args]
     );
     if (!rows[0]) return fail(res, 'NOT_FOUND', 'Approval tidak ditemukan', 404);
 
@@ -311,6 +316,7 @@ async function resolveTargetStep({
       entityId: approval.entity_id,
       requestType: approval.request_type,
       documentTypeId: approval.document_type_id,
+      approval,
       conn,
     })) {
       candidates.push(step);
@@ -366,6 +372,13 @@ async function decide(req, res, next) {
       note: req.body.note,
       conn,
     });
+
+    // Nobody decides their own request (module hooks above may already have
+    // refused with a domain-specific message).
+    if (engine.isRequester(approval, req.user.sub)) {
+      await conn.rollback();
+      return fail(res, 'SELF_APPROVAL_FORBIDDEN', engine.SELF_DECISION_MESSAGE, 403);
+    }
 
     const targetStepId = await resolveTargetStep({
       approval,
@@ -453,15 +466,19 @@ async function decide(req, res, next) {
         result.status === 'rejected' ||
         result.status === 'revision_requested') {
       try {
+        // An Accurate batch is read on its own page (the approvals page is not open to divisions).
+        const accurateBatch = approval.subject_type === 'sales_accurate_batch';
         await notif.create({
           userId: approval.requested_by,
           entityId,
-          title: `Approval ${result.status}`,
+          title: accurateBatch
+            ? `Data Accurate ${result.status === 'approved' ? 'disetujui & diterapkan' : 'ditolak'}`
+            : `Approval ${result.status}`,
           body: approval.title,
           event: `approval.${result.status}`,
           subjectType: 'approval_request',
           subjectId: approval.id,
-          actionUrl: `/approvals/${approval.id}`,
+          actionUrl: approvalActionUrl({ id: approval.id, subjectType: approval.subject_type, subjectId: approval.subject_id }),
         });
       } catch { /* no-op */ }
     }
@@ -492,11 +509,12 @@ async function decide(req, res, next) {
 
 async function myPendingSteps(req, res, next) {
   try {
+    const visible = engine.approvalVisibilitySql(req.user, 'a');
     const [requests] = await pool.query(
-      `SELECT * FROM approval_requests
-        WHERE id=? AND entity_id=?
+      `SELECT a.* FROM approval_requests a
+        WHERE a.id=? AND a.entity_id=? AND ${visible.sql}
         LIMIT 1`,
-      [req.params.id, req.entityScope.entityId]
+      [req.params.id, req.entityScope.entityId, ...visible.args]
     );
     const approval = requests[0];
     if (!approval) return fail(res, 'NOT_FOUND', 'Approval tidak ditemukan', 404);
@@ -517,6 +535,7 @@ async function myPendingSteps(req, res, next) {
         entityId: approval.entity_id,
         requestType: approval.request_type,
         documentTypeId: approval.document_type_id,
+        approval,
       })) {
         result.push({
           id: step.id,

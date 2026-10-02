@@ -1,0 +1,87 @@
+/* Card and panel surfaces (docs/ui-guideline.md §4.10; referensi §3).
+   Colour, border and shadow sit at single-class specificity so a page class
+   can still refine them. Padding and radius are written as .pw-card.pw-card--x
+   because styles/patterns.css (loaded after this file) still sets an older
+   padding and radius on .pw-card. */
+.pw-card {
+  min-width: 0;
+  border: 1px solid transparent;
+  background: var(--pw-surface-tint);
+  box-shadow: none;
+  color: var(--pw-text);
+}
+
+/* Default: generation B summary card — #F0F4F9, radius 12, no shadow. */
+.pw-card--tint { border-color: transparent; background: var(--pw-surface-tint); }
+.pw-card.pw-card--tint { padding: 24px; border-radius: var(--pw-radius-xl); }
+
+/* On-tint scope: meta, helper and status text inside a tinted card takes the
+   darker on-tint tokens (tokens.css) so it keeps 4.5:1 on #F0F4F9. */
+.pw-card:not(.pw-card--panel):not(.pw-card--chart) {
+  --pw-text-meta: var(--pw-text-meta-on-tint);
+  --pw-text-muted: var(--pw-text-muted-on-tint);
+  --pw-error: var(--pw-error-on-tint);
+  --pw-warning: var(--pw-warning-on-tint);
+  --pw-info: var(--pw-info-on-tint);
+  --pw-success: var(--pw-success-on-tint);
+}
+
+/* Panel: white list / form surface — 1px rgba(0,0,0,.12), radius 3. */
+.pw-card--panel { border-color: var(--pw-outline-panel); background: var(--pw-surface); }
+.pw-card.pw-card--panel { padding: 24px; border-radius: var(--pw-radius-sm); }
+
+/* Chart: the Reporting chart card — white, radius 2, elevation 2. */
+.pw-card--chart { border: 0; background: var(--pw-surface); box-shadow: var(--pw-elev-2); }
+.pw-card.pw-card--chart { padding: 24px 24px 0; border-radius: var(--pw-radius-xs); }
+
+/* noPadding: the body runs to the edges; the header keeps the 24px inset. */
+.pw-card.pw-card--flush { padding: 0; overflow: hidden; }
+.pw-card.pw-card--flush > .pw-card__header { padding: 24px 24px 0; }
+
+.pw-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  margin-bottom: 16px;
+}
+.pw-card__heading { display: flex; flex: 1 1 auto; flex-direction: column; gap: 4px; min-width: 0; }
+.pw-card__title {
+  margin: 0;
+  color: var(--pw-text-title);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-title);
+  font-weight: 400;
+  line-height: 28px;
+  letter-spacing: normal;
+  overflow-wrap: anywhere;
+}
+.pw-card__subtitle {
+  margin: 0;
+  color: var(--pw-text-secondary);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-body);
+  line-height: 20px;
+}
+.pw-card__actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* size="sm": section title, Roboto 18/24 --pw-text-secondary. */
+.pw-card--sm .pw-card__title {
+  color: var(--pw-text-secondary);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-lg);
+  line-height: 24px;
+}
+/* Chart card title: Roboto 20 / 500. */
+.pw-card--chart .pw-card__title {
+  color: var(--pw-text);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-xl);
+  font-weight: 500;
+  line-height: 28px;
+}
+
+@media (max-width: 600px) {
+  .pw-card__header { flex-wrap: wrap; }
+}

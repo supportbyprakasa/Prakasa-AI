@@ -1,7 +1,11 @@
 const pool = require('../db/pool');
 const {
+  GLOBAL_ROLE_KEYS,
   permissionsForStandardRole,
 } = require('../config/standardOrganization');
+
+const SUPER_ADMIN = 'system.super_admin';
+const SYSTEM_ADMIN = 'system.admin';
 
 function policyError(message, code = 'ROLE_ASSIGNMENT_INVALID', status = 400) {
   const error = new Error(message);
@@ -22,9 +26,9 @@ function validateRoleAssignment({ entityId, departmentId, roleRows = [] }) {
     }
 
     if (role.department_id == null) {
-      const isSuperAdmin = role.role_key === 'system.super_admin'
+      const isGlobal = GLOBAL_ROLE_KEYS.includes(role.role_key)
         && role.role_level === 'admin';
-      if (!isSuperAdmin) {
+      if (!isGlobal) {
         throw policyError(`Role ${label} tidak memiliki kebijakan global yang valid`);
       }
       continue;
@@ -63,12 +67,12 @@ async function getAssignableRoles({ entityId, departmentId, connection = pool })
         AND r.deleted_at IS NULL
         AND (
           (r.department_id = ? AND d.deleted_at IS NULL)
-          OR (r.department_id IS NULL AND r.role_key='system.super_admin')
+          OR (r.department_id IS NULL AND r.role_key IN (?))
         )
       ORDER BY r.department_id IS NULL DESC,
                FIELD(r.role_level, 'member', 'supervisor', 'head', 'admin', 'custom'),
                r.name`,
-    [entityId, departmentId ?? null],
+    [entityId, departmentId ?? null, GLOBAL_ROLE_KEYS],
   );
   return rows;
 }
@@ -105,6 +109,21 @@ async function loadAssignedRoles({ connection, userId }) {
   return rows;
 }
 
+// Run inside the same transaction as the write, after it, so the count sees the new state.
+async function countActiveSuperAdmins({ connection }) {
+  const [[row]] = await connection.query(
+    `SELECT COUNT(DISTINCT u.id) AS total
+       FROM user_roles ur
+       JOIN roles r ON r.id = ur.role_id
+       JOIN users u ON u.id = ur.user_id
+      WHERE r.role_key = 'system.super_admin'
+        AND r.deleted_at IS NULL
+        AND u.deleted_at IS NULL
+        AND u.status = 'active'`,
+  );
+  return Number(row?.total || 0);
+}
+
 async function resetStandardRole({ roleId, actor, connection = null }) {
   const ownsConnection = !connection;
   const db = connection || await pool.getConnection();
@@ -123,7 +142,7 @@ async function resetStandardRole({ roleId, actor, connection = null }) {
     }
     if (!role.is_system_template
       || !role.role_key
-      || role.role_key === 'system.super_admin') {
+      || GLOBAL_ROLE_KEYS.includes(role.role_key)) {
       throw policyError(
         'Hanya role standar divisi yang dapat dikembalikan ke default',
         'ROLE_RESET_NOT_ALLOWED',
@@ -204,7 +223,90 @@ async function resetStandardRole({ roleId, actor, connection = null }) {
   }
 }
 
+// --------------------------------------------------------------- admin guards
+// Only a Super Admin may touch Super Admin accounts or the two global roles,
+// and nobody below Super Admin changes their own access. This is what keeps
+// an Administrator Sistem from granting themselves a division role (and with
+// it that division's data). Every change is still in the activity log.
+
+async function isSuperAdmin(userId, connection = pool) {
+  const [rows] = await connection.query(
+    `SELECT 1 FROM user_roles ur
+       JOIN roles r ON r.id = ur.role_id AND r.deleted_at IS NULL
+      WHERE ur.user_id = ? AND r.role_key = ?
+      LIMIT 1`,
+    [userId, SUPER_ADMIN],
+  );
+  return Boolean(rows[0]);
+}
+
+const hasKey = (rows, key) => rows.some((row) => row.role_key === key);
+const isGlobalRole = (row) => GLOBAL_ROLE_KEYS.includes(row?.role_key);
+
+// The level of a role row: role_level when loaded from the database, otherwise
+// the suffix of a standard role key (sales.head → head).
+function roleLevelOf(row) {
+  if (row?.role_level) return String(row.role_level);
+  const key = String(row?.role_key || '');
+  return key.includes('.') ? key.split('.').pop() : '';
+}
+
+const roleIdentity = (row) => (row?.id != null ? `id:${row.id}` : `key:${row?.role_key}`);
+
+// targetRoles: the account's current roles; nextRoles: the roles it would get
+// (null when roles are not being changed). changesDivision: the account's
+// division would change.
+//
+// Below Super Admin (i.e. an Administrator Sistem) the rules are:
+//   - no change to an account holding a global role (Super Admin or another
+//     Administrator Sistem), except one's own name/email;
+//   - no global role is granted (Super Admin nor Administrator Sistem);
+//   - no change to one's own roles or division;
+//   - only member-level division roles are newly granted. Head, Supervisor or a
+//     custom role carries the division's data, so granting it is Super Admin
+//     only; otherwise an administrator could create a puppet account, give it
+//     a Head role and read that division through it. Roles the account
+//     already holds may stay or be removed.
+async function assertCanChangeAccount({ connection = pool, actorId, targetUserId, targetRoles = [], nextRoles = null, changesDivision = false }) {
+  if (await isSuperAdmin(actorId, connection)) return;
+  const self = targetUserId != null && Number(actorId) === Number(targetUserId);
+  if (hasKey(targetRoles, SUPER_ADMIN) || (nextRoles && hasKey(nextRoles, SUPER_ADMIN))) {
+    throw policyError('Akun Super Admin hanya bisa diubah oleh Super Admin.', 'SUPER_ADMIN_ONLY', 403);
+  }
+  if (self && (nextRoles || changesDivision)) {
+    throw policyError('Peran dan divisi akun Anda sendiri hanya bisa diubah oleh Super Admin.', 'SELF_ACCESS_CHANGE', 403);
+  }
+  if ((!self && targetRoles.some(isGlobalRole)) || (nextRoles && nextRoles.some(isGlobalRole))) {
+    throw policyError('Peran Administrator Sistem hanya bisa diberikan atau diubah oleh Super Admin.', 'SUPER_ADMIN_ONLY', 403);
+  }
+  if (nextRoles) {
+    const held = new Set(targetRoles.map(roleIdentity));
+    const granted = nextRoles.filter((row) => !held.has(roleIdentity(row)));
+    const senior = granted.find((row) => roleLevelOf(row) !== 'member');
+    if (senior) {
+      throw policyError(
+        `Peran ${senior.name || senior.role_key || 'ini'} (Head, Supervisor atau khusus) hanya bisa diberikan oleh Super Admin. Administrator Sistem hanya memberi peran Anggota.`,
+        'SUPER_ADMIN_ONLY',
+        403,
+      );
+    }
+  }
+}
+
+async function assertCanChangeRole({ connection = pool, actorId, roleKey }) {
+  if (!GLOBAL_ROLE_KEYS.includes(roleKey)) return;
+  if (await isSuperAdmin(actorId, connection)) return;
+  throw policyError('Peran Super Admin dan Administrator Sistem hanya bisa diubah oleh Super Admin.', 'SUPER_ADMIN_ONLY', 403);
+}
+
 module.exports = {
+  SUPER_ADMIN,
+  SYSTEM_ADMIN,
+  assertCanChangeAccount,
+  assertCanChangeRole,
+  isSuperAdmin,
+  roleLevelOf,
+  countActiveSuperAdmins,
   getAssignableRoles,
   loadAssignedRoles,
   loadRolesForAssignment,

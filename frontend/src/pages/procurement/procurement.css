@@ -1,0 +1,14 @@
+/* Procurement — page layout only. Fields, buttons, statuses, cards, banners,
+   tabs, tables and the title/meta table cell (.pw-cell) come from the shared
+   components and styles/patterns.css. */
+
+/* Text and select filters next to the chips in a DataGrid filter bar:
+   compact, without the empty helper line under the field. */
+.pc-filter-field { flex: 0 1 200px; min-width: 160px; padding-bottom: 0; }
+.pc-filter-field > .pw-field__assist:empty { min-height: 0; }
+
+/* A PO past its expected date says so in the error colour. */
+.pc-late { color: var(--pw-error); }
+
+/* "Hari ini": the key figures, 24px apart (§3.4). */
+.pc-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; }

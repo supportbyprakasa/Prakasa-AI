@@ -1,0 +1,60 @@
+/* IconButton (docs/ui-guideline.md §4.2): round, 48×48 (40×40 with size="sm"),
+   icon 24 in --pw-text-muted, `background 300ms`. Imported by IconButton.jsx.
+   The badge may stick out of the circle, so the button does not clip: the
+   ripple has its own clipping box. */
+.pw-icon-button {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: var(--pw-icon-button);
+  height: var(--pw-icon-button);
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: var(--pw-radius-full);
+  background: transparent;
+  color: var(--pw-text-muted);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--pw-dur-icon), color var(--pw-dur-icon);
+}
+.pw-icon-button::before { transition: opacity var(--pw-dur-icon) linear; }
+.pw-icon-button--sm { width: var(--pw-icon-button-sm); height: var(--pw-icon-button-sm); }
+.pw-icon-button > .pw-icon { font-size: var(--pw-icon-lg); }
+.pw-icon-button > svg {
+  width: var(--pw-icon-lg);
+  height: var(--pw-icon-lg);
+}
+.pw-icon-button--primary { color: var(--pw-primary); }
+.pw-icon-button--danger { color: var(--pw-error); }
+.pw-icon-button.is-selected { background: var(--pw-selected); color: var(--pw-accent); }
+.pw-icon-button--filled { --pw-state-layer-hover: var(--pw-state-hover-filled); background: var(--pw-primary); color: var(--pw-on-primary); }
+
+.pw-icon-button:disabled,
+.pw-icon-button[aria-disabled="true"] {
+  background: transparent;
+  color: var(--pw-disabled-text);
+  cursor: not-allowed;
+}
+.pw-icon-button--filled:disabled,
+.pw-icon-button--filled[aria-disabled="true"] { background: var(--pw-disabled-bg); }
+
+/* Badge slot: a CountBadge pill or dot on the icon's top-right corner. */
+.pw-icon-button__badge {
+  position: absolute;
+  top: 4px;
+  left: calc(50% + 2px);
+  display: flex;
+  pointer-events: none;
+}
+.pw-icon-button--sm .pw-icon-button__badge { top: 0; }
+.pw-icon-button__badge--dot { top: 10px; left: calc(50% + 6px); }
+.pw-icon-button--sm .pw-icon-button__badge--dot { top: 6px; }
+
+/* loading: the shared spinner in place of the icon (24px). */
+.pw-icon-button__spinner.pw-spinner { width: var(--pw-icon-lg); height: var(--pw-icon-lg); }

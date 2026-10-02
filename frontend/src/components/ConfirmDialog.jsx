@@ -1,8 +1,12 @@
-import { useEffect, useId, useRef } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { useId, useRef } from 'react';
 import Button from './Button';
-import { shouldCloseDialogOnKey } from './confirmDialogModel';
+import { DialogBase } from './Modal';
+import { confirmInitialFocus, shouldCloseDialogOnKey } from './confirmDialogModel';
 
+// Confirmation before a destructive or important action (docs/ui-guideline.md
+// §4.13–4.14): the small-dialog base at 480px, title, message, then Batal (text)
+// and the action on the right. While `loading`, Escape and the scrim do nothing.
+// A destructive confirmation opens with focus on Batal, so Enter never deletes.
 export default function ConfirmDialog({
   open,
   title = 'Yakin?',
@@ -14,127 +18,46 @@ export default function ConfirmDialog({
   onConfirm,
   onClose,
 }) {
-  const dialogRef = useRef(null);
-  const closeRef = useRef(onClose);
-  const loadingRef = useRef(loading);
-  const titleId = useId();
   const messageId = useId();
-
-  closeRef.current = onClose;
+  const loadingRef = useRef(loading);
+  const closeRef = useRef(onClose);
   loadingRef.current = loading;
+  closeRef.current = onClose;
 
-  useEffect(() => {
-    if (!open) return undefined;
-    const previousFocus = document.activeElement;
-    const dialog = dialogRef.current;
-    const focusableSelector = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-    const focusInitial = window.requestAnimationFrame(() => {
-      const focusable = dialog?.querySelectorAll(focusableSelector) || [];
-      (focusable[focusable.length - 1] || dialog)?.focus();
-    });
-
-    const handleKeyDown = (event) => {
-      if (shouldCloseDialogOnKey({ key: event.key, loading: loadingRef.current })) {
-        event.preventDefault();
-        closeRef.current?.();
-        return;
-      }
-      if (event.key !== 'Tab' || !dialog) return;
-      const focusable = [...dialog.querySelectorAll(focusableSelector)];
-      if (!focusable.length) {
-        event.preventDefault();
-        dialog.focus();
-        return;
-      }
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.cancelAnimationFrame(focusInitial);
-      document.removeEventListener('keydown', handleKeyDown);
-      if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
-    };
-  }, [open]);
-
-  if (!open) return null;
-  const accent =
-    tone === 'danger'
-      ? 'var(--pw-error)'
-      : tone === 'warning'
-      ? 'var(--pw-warning)'
-      : 'var(--pw-primary)';
+  const close = () => { if (!loadingRef.current) closeRef.current?.(); };
+  const onEscape = () => {
+    if (shouldCloseDialogOnKey({ key: 'Escape', loading: loadingRef.current })) closeRef.current?.();
+  };
+  const initialFocus = (root) => root.querySelector(`[data-confirm-focus="${confirmInitialFocus(tone)}"]`);
 
   return (
-    <div
-      className="pw-scrim"
-      onClick={() => { if (!loading) onClose?.(); }}
-      role="presentation"
-      style={{ zIndex: 300 }}
-    >
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={message ? messageId : undefined}
-        tabIndex={-1}
-        className="pw-dialog"
-        onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: 480 }}
-      >
-        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 'var(--pw-radius-full)',
-              flexShrink: 0,
-              background: `color-mix(in srgb, ${accent} 12%, transparent)`,
-              color: accent,
-              display: 'grid',
-              placeItems: 'center',
-            }}
-          >
-            <AlertTriangle size={20} aria-hidden="true" />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h3 id={titleId} className="pw-dialog__title" style={{ marginBottom: 8 }}>{title}</h3>
-            <div
-              id={messageId}
-              style={{
-                fontSize: 14,
-                lineHeight: 1.5,
-                color: 'var(--pw-on-surface-variant)',
-                whiteSpace: 'pre-wrap',
-                overflowWrap: 'anywhere',
-              }}
-            >
-              {message}
-            </div>
-          </div>
-        </div>
-        <div className="pw-dialog__footer">
-          <Button variant="text" onClick={onClose} disabled={loading}>
+    <DialogBase
+      open={open}
+      size="sm"
+      title={title}
+      onClose={close}
+      onEscape={onEscape}
+      closeButton={false}
+      className="pw-confirm"
+      describedBy={message ? messageId : undefined}
+      initialFocus={initialFocus}
+      footer={(
+        <>
+          <Button variant="text" onClick={close} disabled={loading} data-confirm-focus="cancel">
             {cancelLabel}
           </Button>
           <Button
             variant={tone === 'danger' ? 'danger' : 'primary'}
             onClick={onConfirm}
             loading={loading}
+            data-confirm-focus="confirm"
           >
             {confirmLabel}
           </Button>
-        </div>
-      </div>
-    </div>
+        </>
+      )}
+    >
+      {message ? <div id={messageId} className="pw-confirm__message">{message}</div> : null}
+    </DialogBase>
   );
 }

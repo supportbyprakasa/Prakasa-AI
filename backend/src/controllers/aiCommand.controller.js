@@ -3,6 +3,7 @@ const { ok, fail } = require('../utils/response');
 const aiAccess = require('../services/aiSessionAccess.service');
 const aiContext = require('../services/aiContext.service');
 const aiCommand = require('../services/aiCommand.service');
+const clientBridge = require('../services/ai/agent/clientBridge');
 const aiAction = require('../services/aiActionProposal.service');
 const aiDocumentStorage = require('../services/aiDocumentStorage.service');
 const aiInbox = require('../services/aiInbox.service');
@@ -12,11 +13,11 @@ const { log: activityLog } = require('../services/activityLog.service');
 const { listProviders } = require('../services/ai/provider');
 const logger = require('../utils/logger');
 
-const KNOWN_ERROR_STATUSES = [400, 403, 404, 409, 502, 503, 504];
+const KNOWN_ERROR_STATUSES = [400, 403, 404, 409, 429, 502, 503, 504];
 const SSE_HEARTBEAT_MS = 15000;
 
 function handleServiceError(error, res, next) {
-  if ([400, 403, 404, 409, 502, 503, 504].includes(error.status)) {
+  if (KNOWN_ERROR_STATUSES.includes(error.status)) {
     return fail(
       res,
       error.code || (error.status === 403 ? 'FORBIDDEN' : 'VALIDATION_ERROR'),
@@ -210,9 +211,24 @@ async function sendMessage(req, res, next) {
       userMessage: req.body.message,
       user: req.user,
       editMessageId: req.body.editMessageId || null,
+      attachmentIds: req.body.attachmentIds || null,
     });
 
     return ok(res, result, undefined, 201);
+  } catch (error) {
+    return handleServiceError(error, res, next);
+  }
+}
+
+// The browser's answer to one page-tool request of a streaming answer. Bound to
+// the signed-in user and this session, single use (services/ai/agent/clientBridge.js).
+async function toolResult(req, res, next) {
+  try {
+    clientBridge.resolve({
+      sessionId: Number(req.params.id), userId: req.user.sub, callId: req.body.callId,
+      ok: req.body.ok, result: req.body.result || null, error: req.body.error || null,
+    });
+    return ok(res, { received: true });
   } catch (error) {
     return handleServiceError(error, res, next);
   }
@@ -244,6 +260,7 @@ async function toolContext(req, res, next) {
       pathname: req.body.pathname,
       search: req.body.search || '',
       visibleState: req.body.visibleState || null,
+      page: req.body.page || null,
     });
 
     let attachedSessionId = null;
@@ -311,6 +328,15 @@ async function streamMessage(req, res) {
       editMessageId: req.body.editMessageId || null,
       onDelta: (text) => send('delta', { text }),
       onStatus: (status) => send('status', status),
+      // Page tools (Wave C): the browser is asked to open a page or fill a
+      // registered form, and answers on POST /sessions/:id/tool-results.
+      surface: req.body.surface || null,
+      route: req.body.route || null,
+      attachmentIds: req.body.attachmentIds || null,
+      onClientTool: (call) => {
+        if (clientGone || res.writableEnded) throw new Error('browser gone');
+        send('client_tool', call);
+      },
     });
     send('done', result);
   } catch (error) {
@@ -352,6 +378,11 @@ async function generateArtifact(req, res, next) {
     if (!session) return fail(res, 'NOT_FOUND', 'Session tidak ditemukan', 404);
 
     aiAccess.assertSessionAccess({ user: req.user, session, action: 'send_message' });
+    // The export lands in the division's Shared Drive folder and the company
+    // document list: never for a chat holding stock, PO or notification data (program 4.1).
+    if (await aiCommand.sessionHasPrivateData(session.id)) {
+      return fail(res, 'SESSION_HAS_PRIVATE_DATA', 'Percakapan ini berisi data yang dibaca dengan hak akses Anda (stok, PO, notifikasi pribadi, atau halaman dan formulir yang dibuka untuk Anda), jadi jawabannya tidak disimpan ke Shared Drive/Dokumen divisi. Salin bagian yang perlu dibagikan secara manual.', 409);
+    }
     const result = await aiDocumentStorage.generateFromMessage({
       session,
       user: req.user,
@@ -379,6 +410,8 @@ async function downloadArtifact(req, res, next) {
     });
     const fallback = String(file.fileName || 'document').replace(/[^a-zA-Z0-9._-]/g, '_');
     res.setHeader('Content-Type', file.mimeType || 'application/octet-stream');
+    // helmet sets this globally too; kept here so a stored file is never sniffed as HTML.
+    res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Length', file.buffer.length);
     res.setHeader(
       'Content-Disposition',
@@ -549,6 +582,9 @@ async function confirmAction(req, res, next) {
       session,
       action: 'confirm_action',
     });
+    if (proposal.action_type === 'create_document' && await aiCommand.sessionHasPrivateData(session.id)) {
+      return fail(res, 'SESSION_HAS_PRIVATE_DATA', 'Dokumen dari percakapan yang berisi data yang dibaca dengan hak akses Anda (stok, PO, notifikasi pribadi, atau halaman dan formulir yang dibuka untuk Anda) tidak dibuat di daftar Dokumen bersama.', 409);
+    }
 
     const result = await aiAction.confirmProposal({
       proposalId: Number(req.params.id),
@@ -640,12 +676,13 @@ async function usage(req, res, next) {
       where.push('provider=?');
       args.push(req.query.provider);
     }
+    // From/to are WIB wall-clock values; created_at is read in UTC.
     if (req.query.from) {
-      where.push('created_at>=?');
+      where.push('created_at >= ? - INTERVAL 7 HOUR');
       args.push(req.query.from);
     }
     if (req.query.to) {
-      where.push('created_at<=?');
+      where.push('created_at <= ? - INTERVAL 7 HOUR');
       args.push(req.query.to);
     }
 
@@ -716,6 +753,7 @@ module.exports = {
   listMessages,
   sendMessage,
   streamMessage,
+  toolResult,
   stopGeneration,
   inbox,
   uploadSessionFile,

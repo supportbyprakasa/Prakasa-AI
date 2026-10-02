@@ -11,7 +11,7 @@ import {
 } from '../src/components/ai/aiToolModel.js';
 
 const tools = [
-  { key: 'dashboard', title: 'Beranda', patterns: ['/', '/hub/:slug'], queryKeys: ['tab'], starters: ['a', 'b'] },
+  { key: 'dashboard', title: 'Beranda', patterns: ['/'], queryKeys: ['tab'], starters: ['a', 'b'] },
   { key: 'warehouse', title: 'Warehouse', patterns: ['/warehouse', '/warehouse/movements/:type/new', '/warehouse/movements/:type/:id'], queryKeys: ['tab', 'status', 'q'], starters: ['Ekstrak baris', 'Ringkas', '', 'Ringkas'] },
   { key: 'signature-asset', title: 'Tanda tangan saya', patterns: ['/signatures/asset'], queryKeys: [] },
   { key: 'signatures', title: 'Tanda tangan', patterns: ['/signatures', '/signatures/:id'], queryKeys: [] },
@@ -55,8 +55,14 @@ test('risk tiers have clear labels and controlled decisions never look executabl
 
 test('panel mode follows viewport width', () => {
   assert.equal(panelModeForWidth(1440), 'desktop');
-  assert.equal(panelModeForWidth(1024), 'tablet');
+  assert.equal(panelModeForWidth(768), 'tablet');
   assert.equal(panelModeForWidth(390), 'mobile');
+  // Same three breakpoints as the CSS (docs/ui-guideline.md §1.9): phone <=600,
+  // compact 601-1023, desktop >=1024.
+  assert.equal(panelModeForWidth(1024), 'desktop');
+  assert.equal(panelModeForWidth(1023), 'tablet');
+  assert.equal(panelModeForWidth(601), 'tablet');
+  assert.equal(panelModeForWidth(600), 'mobile');
 });
 
 test('context key separates tools and records but ignores unrelated query noise', () => {

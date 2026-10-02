@@ -1,29 +1,29 @@
+import { noTranslate, strictTranslate } from '../../i18n/NoTranslate';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Bell,
-  CheckCheck,
-  ClipboardCheck,
-  Inbox,
-  Loader2,
-  Menu,
-  RefreshCw,
-  Sparkles,
-} from 'lucide-react';
 import api from '../../api/client';
 import { toast } from '../Toast';
+import Badge from '../Badge';
+import Button from '../Button';
 import ConfirmDialog from '../ConfirmDialog';
+import EmptyState from '../EmptyState';
+import Icon from '../Icon';
+import IconButton from '../IconButton';
+import Spinner from '../Spinner';
+import './ai-components.css';
 import {
   confirmationDialogCopy,
   confirmationSuccessMessage,
   shouldShowInboxEmpty,
 } from './aiInboxModel';
+import { safeInAppPath } from '../safeHref.js';
+import { numberLocale, dateLocale } from '../../i18n/language.js';
 
 const errorMessage = (error, fallback) => error.response?.data?.error?.message || fallback;
 
 function formatDate(value) {
   if (!value) return '';
-  return new Date(value).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return new Date(value).toLocaleString(dateLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
 function formatAmount(amount, currency) {
@@ -31,13 +31,13 @@ function formatAmount(amount, currency) {
   const value = Number(amount);
   if (!Number.isFinite(value)) return '';
   try {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: currency || 'IDR', maximumFractionDigits: 0 }).format(value);
+    return new Intl.NumberFormat(numberLocale(), { style: 'currency', currency: currency || 'IDR', maximumFractionDigits: 0 }).format(value);
   } catch {
-    return `${currency || ''} ${value.toLocaleString('id-ID')}`;
+    return `${currency || ''} ${value.toLocaleString(numberLocale())}`;
   }
 }
 
-const isInternalUrl = (url) => typeof url === 'string' && url.startsWith('/') && !url.startsWith('//');
+const isInternalUrl = (url) => Boolean(safeInAppPath(url));
 
 export default function AIInbox({ onOpenSession, onChanged, onOpenSidebar }) {
   const navigate = useNavigate();
@@ -46,6 +46,7 @@ export default function AIInbox({ onOpenSession, onChanged, onOpenSidebar }) {
   const [loadError, setLoadError] = useState('');
   const [busyKey, setBusyKey] = useState('');
   const [confirmTarget, setConfirmTarget] = useState(null);
+  const [rejectTarget, setRejectTarget] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -92,6 +93,8 @@ export default function AIInbox({ onOpenSession, onChanged, onOpenSidebar }) {
       toast('Proposal ditolak', 'success');
     } catch (error) {
       toast(errorMessage(error, 'Gagal menolak proposal'), 'error');
+    } finally {
+      setRejectTarget(null);
     }
   });
 
@@ -126,22 +129,11 @@ export default function AIInbox({ onOpenSession, onChanged, onOpenSidebar }) {
     <div className="ai-conversation">
       <header className="ai-topbar">
         {onOpenSidebar && (
-          <button type="button" className="ai-icon-button ai-ripple" onClick={onOpenSidebar} aria-label="Buka navigasi">
-            <Menu size={20} />
-          </button>
+          <IconButton label="Buka navigasi" icon="menu" onClick={onOpenSidebar} />
         )}
-        <span className="ai-title-text">Kotak aksi</span>
+        <span className="ai-title"><span className="ai-title-text">Kotak aksi</span></span>
         <div className="ai-topbar-actions">
-          <button
-            type="button"
-            className="ai-icon-button ai-ripple"
-            onClick={load}
-            disabled={loading}
-            aria-label="Muat ulang kotak aksi"
-            title="Muat ulang"
-          >
-            {loading ? <Loader2 className="ai-spin" size={19} /> : <RefreshCw size={19} />}
-          </button>
+          <IconButton label="Muat ulang kotak aksi" icon={loading ? <Spinner label={null} /> : 'refresh'} onClick={load} disabled={loading} />
         </div>
       </header>
 
@@ -150,44 +142,46 @@ export default function AIInbox({ onOpenSession, onChanged, onOpenSidebar }) {
           <p className="ai-inbox-intro">Hal yang menunggu keputusan Anda, dikumpulkan dari AI, approval, dan notifikasi.</p>
 
           {loadError && (
-            <div className="ai-inbox-error" role="alert">
-              <strong>Kotak aksi belum dapat dimuat</strong>
-              <span>{loadError}</span>
-              <button type="button" className="ai-tonal-button ai-ripple" onClick={load} disabled={loading}>
-                {loading ? <Loader2 className="ai-spin" size={15} /> : <RefreshCw size={15} />}
-                Coba lagi
-              </button>
-            </div>
+            <EmptyState
+              tone="error"
+              title="Kotak aksi belum dapat dimuat"
+              description={loadError}
+              action={(
+                <Button variant="secondary" icon="refresh" onClick={load} loading={loading}>
+                  Coba lagi
+                </Button>
+              )}
+            />
           )}
 
           {empty && (
-            <div className="ai-inbox-empty">
-              <Inbox size={32} />
-              <strong>Semua beres</strong>
-              <span>Tidak ada proposal, approval, atau notifikasi yang menunggu Anda.</span>
-            </div>
+            <EmptyState
+              icon="inbox"
+              title="Semua beres"
+              description="Tidak ada proposal, approval, atau notifikasi yang menunggu Anda."
+            />
           )}
 
           {proposals.length > 0 && (
             <section className="ai-inbox-section" aria-label="Proposal aksi dari AI">
-              <h2><Sparkles size={18} /> Proposal aksi dari AI <span className="ai-count">{proposals.length}</span></h2>
+              <h2><Icon name="auto_awesome" /> Proposal aksi dari AI <Badge>{proposals.length}</Badge></h2>
               {proposals.map((item) => (
                 <article key={item.id} className="ai-inbox-card">
                   <div className="ai-inbox-card-main">
-                    <span className="ai-inbox-tag">{item.actionLabel}</span>
-                    <strong>{item.title}</strong>
-                    <small>Dari percakapan “{item.sessionTitle}” · {formatDate(item.createdAt)}</small>
+                    <span className="ai-inbox-tag"><Badge tone="info">{item.actionLabel}</Badge></span>
+                    <span className="ai-inbox-title" {...noTranslate}>{item.title}</span>
+                    <span className="ai-inbox-meta">Dari percakapan “<span {...noTranslate}>{item.sessionTitle}</span>” · {formatDate(item.createdAt)}</span>
                   </div>
                   <div className="ai-inbox-card-actions">
-                    <button type="button" className="ai-tonal-button ai-ripple" disabled={Boolean(busyKey)} onClick={() => setConfirmTarget(item)}>
-                      Konfirmasi
-                    </button>
-                    <button type="button" className="ai-text-button ai-ripple" disabled={Boolean(busyKey)} onClick={() => rejectProposal(item)}>
-                      {busyKey === `reject-${item.id}` ? <Loader2 className="ai-spin" size={15} /> : 'Tolak'}
-                    </button>
-                    <button type="button" className="ai-text-button ai-ripple" onClick={() => onOpenSession(item.sessionId)}>
+                    <Button variant="text" onClick={() => onOpenSession(item.sessionId)}>
                       Buka percakapan
-                    </button>
+                    </Button>
+                    <Button variant="danger" disabled={Boolean(busyKey)} onClick={() => setRejectTarget(item)}>
+                      Tolak
+                    </Button>
+                    <Button disabled={Boolean(busyKey)} onClick={() => setConfirmTarget(item)}>
+                      Konfirmasi
+                    </Button>
                   </div>
                 </article>
               ))}
@@ -196,21 +190,21 @@ export default function AIInbox({ onOpenSession, onChanged, onOpenSidebar }) {
 
           {approvals.length > 0 && (
             <section className="ai-inbox-section" aria-label="Approval menunggu keputusan Anda">
-              <h2><ClipboardCheck size={18} /> Approval menunggu keputusan Anda <span className="ai-count">{approvals.length}</span></h2>
+              <h2><Icon name="assignment_turned_in" /> Approval menunggu keputusan Anda <Badge>{approvals.length}</Badge></h2>
               {approvals.map((item) => (
                 <article key={item.id} className="ai-inbox-card">
                   <div className="ai-inbox-card-main">
-                    {item.requestType && <span className="ai-inbox-tag">{item.requestType}</span>}
-                    <strong>{item.title}</strong>
-                    <small>
+                    {item.requestType && <span className="ai-inbox-tag"><Badge tone="info">{item.requestType}</Badge></span>}
+                    <span className="ai-inbox-title" {...noTranslate}>{item.title}</span>
+                    <span className="ai-inbox-meta">
                       {[item.requesterName && `Diajukan ${item.requesterName}`, formatAmount(item.amount, item.currency), formatDate(item.createdAt)]
                         .filter(Boolean).join(' · ')}
-                    </small>
+                    </span>
                   </div>
                   <div className="ai-inbox-card-actions">
-                    <button type="button" className="ai-tonal-button ai-ripple" onClick={() => navigate('/approvals')}>
+                    <Button variant="secondary" onClick={() => navigate('/approvals')}>
                       Buka di Approval
-                    </button>
+                    </Button>
                   </div>
                 </article>
               ))}
@@ -220,25 +214,27 @@ export default function AIInbox({ onOpenSession, onChanged, onOpenSidebar }) {
           {notifications.length > 0 && (
             <section className="ai-inbox-section" aria-label="Notifikasi belum dibaca">
               <h2>
-                <Bell size={18} /> Notifikasi belum dibaca <span className="ai-count">{data.counts.notifications}</span>
-                <button type="button" className="ai-text-button ai-ripple ai-inbox-section-action" disabled={Boolean(busyKey)} onClick={markAllRead}>
-                  <CheckCheck size={15} /> Tandai semua dibaca
-                </button>
+                <Icon name="notifications" /> Notifikasi belum dibaca <Badge>{data.counts.notifications}</Badge>
+                <span className="ai-inbox-section-action">
+                  <Button variant="text" icon="done_all" disabled={Boolean(busyKey)} loading={busyKey === 'read-all'} onClick={markAllRead}>
+                    Tandai semua dibaca
+                  </Button>
+                </span>
               </h2>
               {notifications.map((item) => (
                 <article key={item.id} className="ai-inbox-card">
                   <div className="ai-inbox-card-main">
-                    <strong>{item.title}</strong>
-                    {item.body && <span className="ai-inbox-body">{item.body}</span>}
-                    <small>{formatDate(item.createdAt)}</small>
+                    <span className="ai-inbox-title">{item.title}</span>
+                    {item.body && <span className="ai-inbox-body" {...strictTranslate}>{item.body}</span>}
+                    <span className="ai-inbox-meta">{formatDate(item.createdAt)}</span>
                   </div>
                   <div className="ai-inbox-card-actions">
-                    {isInternalUrl(item.actionUrl) && (
-                      <button type="button" className="ai-tonal-button ai-ripple" onClick={() => openNotification(item)}>Buka</button>
-                    )}
-                    <button type="button" className="ai-text-button ai-ripple" disabled={Boolean(busyKey)} onClick={() => markRead(item)}>
+                    <Button variant="text" disabled={Boolean(busyKey)} onClick={() => markRead(item)}>
                       Tandai dibaca
-                    </button>
+                    </Button>
+                    {isInternalUrl(item.actionUrl) && (
+                      <Button variant="secondary" onClick={() => openNotification(item)}>Buka notifikasi</Button>
+                    )}
                   </div>
                 </article>
               ))}
@@ -256,6 +252,17 @@ export default function AIInbox({ onOpenSession, onChanged, onOpenSidebar }) {
         loading={Boolean(confirmTarget) && busyKey === `confirm-${confirmTarget.id}`}
         onConfirm={confirmProposal}
         onClose={() => setConfirmTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={Boolean(rejectTarget)}
+        title="Tolak proposal ini?"
+        message={rejectTarget ? `${rejectTarget.actionLabel}: “${rejectTarget.title}” akan ditolak dan tidak dijalankan.` : ''}
+        confirmLabel="Tolak proposal"
+        tone="danger"
+        loading={Boolean(rejectTarget) && busyKey === `reject-${rejectTarget.id}`}
+        onConfirm={() => rejectProposal(rejectTarget)}
+        onClose={() => setRejectTarget(null)}
       />
     </div>
   );

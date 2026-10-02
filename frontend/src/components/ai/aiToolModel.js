@@ -81,9 +81,10 @@ export function actionAvailabilityText(action) {
   return 'Disiapkan sebagai draft atau rekomendasi; tidak dijalankan otomatis.';
 }
 
+// docs/ui-guideline.md §1.9: desktop >=1024, compact 601-1023, phone <=600.
 export function panelModeForWidth(width) {
-  if (width >= 1200) return 'desktop';
-  if (width >= 760) return 'tablet';
+  if (width >= 1024) return 'desktop';
+  if (width > 600) return 'tablet';
   return 'mobile';
 }
 

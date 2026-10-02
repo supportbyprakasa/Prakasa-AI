@@ -1,14 +1,23 @@
 import axios from 'axios';
-import { CheckCircle2, Clock3, FileCheck2, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import Badge from '../../components/Badge';
+import Banner from '../../components/Banner';
+import Button from '../../components/Button';
 import Card from '../../components/Card';
+import EmptyState from '../../components/EmptyState';
+import Icon from '../../components/Icon';
+import KeyValue from '../../components/KeyValue';
+import StatusBadge from '../../components/StatusBadge';
 import { SkeletonCard } from '../../components/Skeleton';
+import { formatDateTime } from '../../components/format';
 import { publicVerificationBaseUrl } from '../../api/endpoint';
+import './verify-document.css';
 
+// Public page behind a signature QR code (no app shell, no login): a white
+// panel with the verdict and the safe verification metadata.
 export default function VerifyDocument() {
   const { code } = useParams();
+  const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState({
     loading: true,
     data: null,
@@ -45,118 +54,73 @@ export default function VerifyDocument() {
     return () => {
       active = false;
     };
-  }, [code]);
+  }, [code, attempt]);
 
   if (state.loading) {
     return (
-      <div style={{ maxWidth: 760, margin: '56px auto', padding: '0 20px' }}>
+      <main className="verify-doc">
+        <h1 className="pw-visually-hidden">Verifikasi dokumen</h1>
         <SkeletonCard lines={7} />
-      </div>
+      </main>
     );
   }
 
   if (state.error) {
     return (
-      <div style={{ maxWidth: 760, margin: '56px auto', padding: '0 20px' }}>
-        <Card>
-          <div style={{ textAlign: 'center', padding: '28px 12px' }}>
-            <XCircle size={44} color="var(--color-error)" />
-            <h2 style={{ marginBottom: 8 }}>Verifikasi tidak ditemukan</h2>
-            <div style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>
-              {state.error}
-            </div>
-          </div>
+      <main className="verify-doc">
+        <h1 className="pw-visually-hidden">Verifikasi dokumen</h1>
+        <Card variant="panel">
+          <EmptyState
+            tone="error"
+            icon="cancel"
+            title="Verifikasi tidak ditemukan"
+            description={state.error}
+            action={<Button variant="secondary" onClick={() => setAttempt((value) => value + 1)}>Coba lagi</Button>}
+          />
         </Card>
-      </div>
+      </main>
     );
   }
 
-  const data = state.data;
-  const valid = Boolean(data?.valid);
+  const data = state.data || {};
+  const valid = Boolean(data.valid);
 
   return (
-    <div style={{ maxWidth: 760, margin: '56px auto', padding: '0 20px' }}>
-      <Card>
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          {valid ? (
-            <CheckCircle2 size={48} color="#166534" />
-          ) : (
-            <Clock3 size={48} color="#92400e" />
-          )}
-          <h1 style={{ margin: '10px 0 6px', fontSize: 24 }}>
-            Verifikasi Dokumen
-          </h1>
-          <Badge tone={valid ? 'success' : 'warning'}>
-            {valid ? 'Valid' : 'Expired'}
-          </Badge>
-        </div>
+    <main className="verify-doc">
+      <Card variant="panel">
+        <div className="verify-doc__body">
+          <div className="verify-doc__head">
+            <Icon name="verified_user" size="xl" className="verify-doc__mark" />
+            <h1 className="pw-title-page">Verifikasi dokumen</h1>
+          </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(150px, 220px) 1fr',
-            gap: '10px 16px',
-            fontSize: 14,
-          }}
-        >
-          <b>Kode Verifikasi</b>
-          <code>{data.verificationCode}</code>
+          <Banner tone={valid ? 'success' : 'error'} title={valid ? 'Tanda tangan valid' : 'Tanda tangan sudah tidak berlaku'}>
+            {valid
+              ? 'Dokumen ini terdaftar dan tanda tangannya masih berlaku.'
+              : 'Dokumen ini terdaftar, tetapi tanda tangannya sudah tidak berlaku.'}
+          </Banner>
 
-          <b>Judul Dokumen</b>
-          <span>{data.documentTitle || '—'}</span>
+          <KeyValue
+            items={[
+              { label: 'Status', value: valid ? <StatusBadge status="verified" label="Valid" /> : <StatusBadge status="expired" /> },
+              { label: 'Kode verifikasi', value: data.verificationCode ? <code data-no-translate="" className="verify-doc__code">{data.verificationCode}</code> : null },
+              { label: 'Judul dokumen', value: data.documentTitle },
+              { label: 'Tipe dokumen', translate: true, value: data.documentType },
+              { label: 'Hash dokumen', value: data.documentHash ? <code className="verify-doc__code">{data.documentHash}</code> : null },
+              { label: 'Algoritma hash', value: data.hashAlgorithm },
+              { label: 'Penanda tangan', value: data.signedByName },
+              { label: 'Ditandatangani', value: data.signedAt ? formatDateTime(data.signedAt) : null },
+              { label: 'Berlaku sampai', translate: true, value: data.validUntil ? formatDateTime(data.validUntil) : 'Tidak dibatasi' },
+              { label: 'Terdaftar', value: data.registeredAt ? formatDateTime(data.registeredAt) : null },
+            ]}
+          />
 
-          <b>Tipe Dokumen</b>
-          <span>{data.documentType || '—'}</span>
-
-          <b>Document Hash</b>
-          <code style={{ wordBreak: 'break-all', fontSize: 12 }}>
-            {data.documentHash || '—'}
-          </code>
-
-          <b>Hash Algorithm</b>
-          <span>{data.hashAlgorithm || '—'}</span>
-
-          <b>Signer</b>
-          <span>{data.signedByName || '—'}</span>
-
-          <b>Ditandatangani</b>
-          <span>
-            {data.signedAt
-              ? new Date(data.signedAt).toLocaleString('id-ID')
-              : '—'}
-          </span>
-
-          <b>Berlaku Sampai</b>
-          <span>
-            {data.validUntil
-              ? new Date(data.validUntil).toLocaleString('id-ID')
-              : 'Tidak dibatasi'}
-          </span>
-
-          <b>Terdaftar</b>
-          <span>
-            {data.registeredAt
-              ? new Date(data.registeredAt).toLocaleString('id-ID')
-              : '—'}
-          </span>
-        </div>
-
-        <div
-          style={{
-            marginTop: 22,
-            paddingTop: 16,
-            boxShadow: 'inset 0 1px 0 0 var(--color-border)',
-            display: 'flex',
-            gap: 8,
-            alignItems: 'center',
-            color: 'var(--color-text-muted)',
-            fontSize: 12,
-          }}
-        >
-          <FileCheck2 size={15} />
-          Halaman ini hanya menampilkan metadata verifikasi yang aman.
+          <p className="verify-doc__note">
+            <Icon name="lock" size="sm" />
+            Halaman ini hanya menampilkan metadata verifikasi yang aman.
+          </p>
         </div>
       </Card>
-    </div>
+    </main>
   );
 }

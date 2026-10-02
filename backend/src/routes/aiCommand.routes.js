@@ -4,6 +4,7 @@ const requireAuth = require('../middleware/requireAuth');
 const requirePermission = require('../middleware/requirePermission');
 const validate = require('../middleware/validate');
 const upload = require('../middleware/upload');
+const { aiMessageLimiter } = require('../middleware/rateLimits');
 const ctrl = require('../controllers/aiCommand.controller');
 
 const idParams = z.object({
@@ -53,6 +54,20 @@ const messageListQuery = z.object({
 const sendMessageBody = z.object({
   message: z.string().min(1).max(20000),
   editMessageId: z.number().int().positive().optional(),
+  // Wave C: where the conversation is shown and, in the side panel, on which page.
+  surface: z.enum(['panel', 'full']).optional(),
+  route: z.string().max(300).optional(),
+  // Files attached to this message: ids returned by POST /sessions/:id/files.
+  // The service enforces the real limit (3) with a message for the user.
+  attachmentIds: z.array(z.number().int().positive()).max(20).optional(),
+});
+
+// The browser's result of one page-tool request (buka_halaman, baca_formulir, isi_form).
+const toolResultBody = z.object({
+  callId: z.string().uuid(),
+  ok: z.boolean(),
+  result: z.record(z.any()).optional(),
+  error: z.string().max(300).optional(),
 });
 
 const generateArtifactBody = z.object({
@@ -136,6 +151,15 @@ router.post(
     pathname: z.string().min(1).max(300),
     search: z.string().max(500).optional(),
     visibleState: z.record(z.union([z.string().max(500), z.number(), z.boolean(), z.null()])).optional(),
+    // The standard page context (frontend components/ai/aiPageContext.js); sanitised again in the service.
+    page: z.object({
+      route: z.string().max(300).optional(),
+      title: z.string().max(300).optional(),
+      filters: z.record(z.union([z.string().max(500), z.number(), z.boolean(), z.null()])).optional(),
+      selection: z.object({ type: z.string().max(80), id: z.union([z.string().max(80), z.number()]), name: z.string().max(300).optional() }).nullable().optional(),
+      counts: z.record(z.number()).optional(),
+      formState: z.object({ id: z.string().max(80), dirty: z.boolean().optional() }).nullable().optional(),
+    }).strict().nullable().optional(),
     sessionId: z.number().int().positive().optional(),
   }).strict()),
   ctrl.toolContext
@@ -214,6 +238,7 @@ router.get(
 router.post(
   '/sessions/:id/messages',
   requirePermission('ai_command.use'),
+  aiMessageLimiter,
   validate(idParams, 'params'),
   validate(sendMessageBody),
   ctrl.sendMessage
@@ -227,9 +252,18 @@ router.post(
 router.post(
   '/sessions/:id/messages/stream',
   requirePermission('ai_command.use'),
+  aiMessageLimiter,
   validate(idParams, 'params'),
   validate(sendMessageBody),
   ctrl.streamMessage
+);
+
+router.post(
+  '/sessions/:id/tool-results',
+  requirePermission('ai_command.use'),
+  validate(idParams, 'params'),
+  validate(toolResultBody),
+  ctrl.toolResult
 );
 
 router.post(

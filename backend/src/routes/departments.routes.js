@@ -11,8 +11,10 @@ const body = z.object({
 });
 
 router.use(requireAuth);
+router.get('/options', ctrl.options);
 router.get('/', requirePermission('department.manage'), ctrl.list);
 router.post('/', requirePermission('department.manage'), validate(body), ctrl.create);
+router.post('/import', requirePermission('department.manage'), ctrl.importRows);
 router.patch('/:id', requirePermission('department.manage'), validate(body.partial()), ctrl.update);
 router.delete('/:id', requirePermission('department.manage'), ctrl.remove);
 module.exports = router;

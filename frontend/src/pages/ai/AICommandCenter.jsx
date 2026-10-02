@@ -1,15 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import {
-  ClipboardList,
-  FileText,
-  Inbox,
-  Link2,
-  PanelLeftClose,
-  PanelLeftOpen,
-  SquarePen,
-  X,
-} from 'lucide-react';
 import AISessionList from '../../components/ai/AISessionList';
 import AIConversation from '../../components/ai/AIConversation';
 import AIContextPanel from '../../components/ai/AIContextPanel';
@@ -18,7 +8,8 @@ import AIDocumentWorkspace from '../../components/ai/AIDocumentWorkspace';
 import AIAccountMenu from '../../components/ai/AIAccountMenu';
 import AISessionSettings from '../../components/ai/AISessionSettings';
 import AIInbox from '../../components/ai/AIInbox';
-import usePointerRipple from '../../components/ai/usePointerRipple';
+import IconButton from '../../components/IconButton';
+import TabBar from '../../components/TabBar';
 import api from '../../api/client';
 import { toast } from '../../components/Toast';
 import {
@@ -57,8 +48,13 @@ function useViewport() {
   return { width, mode: resolveResponsiveMode(width) };
 }
 
+const SUPPORT_TABS = [
+  { k: 'documents', l: 'Dokumen' },
+  { k: 'context', l: 'Konteks' },
+  { k: 'actions', l: 'Aksi' },
+];
+
 export default function AICommandCenter() {
-  const rootRef = useRef(null);
   const { width: viewportWidth, mode } = useViewport();
   const isDesktop = mode === 'desktop';
 
@@ -92,8 +88,6 @@ export default function AICommandCenter() {
     normalizeStoredPanelWidth(readStored(PANEL_WIDTH_STORAGE_KEY), typeof window === 'undefined' ? 1440 : window.innerWidth)
   ));
   const resizeStart = useRef({ pointerX: 0, width: panelWidth });
-
-  usePointerRipple(rootRef);
 
   useEffect(() => {
     let cancelled = false;
@@ -235,8 +229,13 @@ export default function AICommandCenter() {
   };
 
   const showWorkspace = view === 'chat' && Boolean(selectedSessionId) && (isDesktop ? workspaceOpen : workspaceDrawerOpen);
+  // Sidebar width comes from the nav tokens (256 / 64 rail); the document panel is resizable.
   const appStyle = isDesktop ? {
-    gridTemplateColumns: `${sidebarCollapsed ? 68 : 280}px minmax(0, 1fr) ${showWorkspace ? `${panelWidth}px` : ''}`.trim(),
+    gridTemplateColumns: [
+      sidebarCollapsed ? 'var(--pw-nav-rail-width)' : 'var(--pw-nav-width)',
+      'minmax(0, 1fr)',
+      showWorkspace ? `${panelWidth}px` : '',
+    ].join(' ').trim(),
   } : undefined;
 
   const sidebar = (drawer) => (
@@ -271,8 +270,7 @@ export default function AICommandCenter() {
 
   return (
     <div
-      ref={rootRef}
-      className={`ai-app is-${mode}${isResizing ? ' is-resizing' : ''}`}
+      className={`ai-app ai-workspace is-${mode}${isResizing ? ' is-resizing' : ''}`}
       style={appStyle}
     >
       {isDesktop ? (
@@ -374,7 +372,7 @@ function SidebarContent({
   onSelectSession,
   refreshKey,
 }) {
-  const ToggleIcon = drawer ? X : (collapsed ? PanelLeftOpen : PanelLeftClose);
+  const toggleIcon = drawer ? 'close' : (collapsed ? 'left_panel_open' : 'left_panel_close');
   const toggleLabel = drawer
     ? 'Tutup navigasi'
     : collapsed ? 'Perlebar sidebar' : 'Ringkas sidebar';
@@ -383,43 +381,29 @@ function SidebarContent({
     <>
       <div className="ai-sidebar-header">
         {!collapsed && (
-          <Link to="/" className="ai-brand" title="Kembali ke Prakasa Workspace">
-            <img className="ai-brand-mark" src="/logo-ai.png" alt="" aria-hidden="true" />
-            <span>Prakasa AI</span>
-          </Link>
+          <span className="pw-tooltip-anchor ai-brand-anchor" data-pw-tooltip="Kembali ke Prakasa Workspace">
+            <Link to="/" className="ai-brand">
+              <img className="ai-brand-mark" src="/logo-ai.png" alt="" aria-hidden="true" />
+              <span>Prakasa AI</span>
+            </Link>
+          </span>
         )}
-        <button
-          type="button"
-          className="ai-icon-button ai-ripple"
-          onClick={onToggle}
-          aria-label={toggleLabel}
-          title={toggleLabel}
-        >
-          <ToggleIcon size={20} />
-        </button>
+        <IconButton label={toggleLabel} icon={toggleIcon} onClick={onToggle} />
       </div>
 
       {collapsed ? (
         <div className="ai-rail">
-          <button
-            type="button"
-            className="ai-icon-button ai-ripple"
-            onClick={onNewChat}
-            aria-label="Percakapan baru"
-            title="Percakapan baru"
-          >
-            <SquarePen size={20} />
-          </button>
-          <button
-            type="button"
-            className={`ai-icon-button ai-ripple ai-rail-inbox${inboxActive ? ' is-active' : ''}`}
+          <IconButton label="Percakapan baru" icon="edit_square" onClick={onNewChat} />
+          <IconButton
+            label="Kotak aksi"
+            icon="inbox"
+            selected={inboxActive}
+            badge={inboxCount > 0 ? true : undefined}
             onClick={onOpenInbox}
+            aria-current={inboxActive ? 'page' : undefined}
+            aria-pressed={undefined}
             aria-label={inboxCount ? `Kotak aksi, ${inboxCount} menunggu` : 'Kotak aksi'}
-            title="Kotak aksi"
-          >
-            <Inbox size={20} />
-            {inboxCount > 0 && <span className="ai-rail-dot" aria-hidden="true" />}
-          </button>
+          />
         </div>
       ) : (
         <AISessionList
@@ -448,22 +432,19 @@ function SupportingPane({ supportTab, setSupportTab, sessionId, session, refresh
   return (
     <aside className="ai-support-pane" aria-label="Dokumen, konteks, dan aksi">
       <div className="ai-support-header">
-        <div className="ai-support-tabs" role="tablist" aria-label="Panel pendukung">
-          <SupportTab active={supportTab === 'documents'} onClick={() => setSupportTab('documents')} icon={FileText} label="Dokumen" />
-          <SupportTab active={supportTab === 'context'} onClick={() => setSupportTab('context')} icon={Link2} label="Konteks" />
-          <SupportTab active={supportTab === 'actions'} onClick={() => setSupportTab('actions')} icon={ClipboardList} label="Aksi" />
+        <div className="ai-support-tabs">
+          <TabBar
+            tabs={SUPPORT_TABS}
+            value={supportTab}
+            onChange={setSupportTab}
+            label="Panel pendukung"
+            idPrefix="ai-support-tab"
+            panelId="ai-support-panel"
+          />
         </div>
-        <button
-          type="button"
-          className="ai-icon-button ai-ripple"
-          onClick={onClose}
-          aria-label="Tutup panel"
-          title="Tutup panel"
-        >
-          <X size={19} />
-        </button>
+        <IconButton label="Tutup panel" icon="close" onClick={onClose} />
       </div>
-      <div className="ai-support-content" role="tabpanel">
+      <div className="ai-support-content" role="tabpanel" id="ai-support-panel" aria-labelledby={`ai-support-tab-${supportTab}`}>
         {supportTab === 'documents' && (
           <AIDocumentWorkspace
             sessionId={sessionId}
@@ -479,20 +460,5 @@ function SupportingPane({ supportTab, setSupportTab, sessionId, session, refresh
         )}
       </div>
     </aside>
-  );
-}
-
-function SupportTab({ active, onClick, icon: Icon, label }) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      className={`ai-support-tab ai-ripple${active ? ' is-active' : ''}`}
-      onClick={onClick}
-    >
-      <Icon size={16} />
-      <span>{label}</span>
-    </button>
   );
 }

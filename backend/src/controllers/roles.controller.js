@@ -1,6 +1,7 @@
 const pool = require('../db/pool');
 const { ok, fail } = require('../utils/response');
 const { log } = require('../services/activityLog.service');
+const { invalidateAuth } = require('../middleware/requireAuth');
 const rolePolicy = require('../services/rolePolicy.service');
 
 async function list(req, res, next) {
@@ -103,6 +104,7 @@ async function create(req, res, next) {
         [r.insertId, pid]);
     }
     await conn.commit();
+    invalidateAuth();
     await log({
       entityId, userId: req.user.sub,
       action: 'role.create', subjectType: 'role', subjectId: r.insertId,
@@ -121,7 +123,7 @@ async function update(req, res, next) {
     await conn.beginTransaction();
 
     const [[currentRole]] = await conn.query(
-      `SELECT id, entity_id, name
+      `SELECT id, entity_id, name, role_key
          FROM roles
         WHERE id=? AND deleted_at IS NULL
         FOR UPDATE`,
@@ -131,6 +133,7 @@ async function update(req, res, next) {
       await conn.rollback();
       return fail(res, 'NOT_FOUND', 'Role tidak ditemukan', 404);
     }
+    await rolePolicy.assertCanChangeRole({ connection: conn, actorId: req.user.sub, roleKey: currentRole.role_key });
 
     const fields = [];
     const values = [];
@@ -156,6 +159,8 @@ async function update(req, res, next) {
       }
     }
     await conn.commit();
+    // A role's permissions changed for everyone holding it.
+    invalidateAuth();
     const effectiveEntityId = entityId ?? currentRole.entity_id;
     await log({
       entityId: effectiveEntityId, userId: req.user.sub,
@@ -170,10 +175,13 @@ async function update(req, res, next) {
 async function remove(req, res, next) {
   try {
     const { id } = req.params;
+    const [[role]] = await pool.query('SELECT role_key FROM roles WHERE id=? AND deleted_at IS NULL', [id]);
+    if (role) await rolePolicy.assertCanChangeRole({ actorId: req.user.sub, roleKey: role.role_key });
     const [r] = await pool.query(
       `UPDATE roles SET deleted_at = NOW() WHERE id=? AND deleted_at IS NULL`, [id]
     );
     if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'Role tidak ditemukan', 404);
+    invalidateAuth();
     await log({
       entityId: null, userId: req.user.sub,
       action: 'role.delete', subjectType: 'role', subjectId: Number(id),
@@ -191,6 +199,7 @@ async function resetStandard(req, res, next) {
         entityId: req.user.entityId ?? null,
       },
     });
+    invalidateAuth();
     return ok(res, result);
   } catch (error) {
     next(error);

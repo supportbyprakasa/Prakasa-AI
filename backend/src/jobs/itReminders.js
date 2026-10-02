@@ -1,5 +1,6 @@
 require('dotenv').config();
 const pool = require('../db/pool');
+const { drainAndEnd } = require('../utils/pendingWork');
 const notif = require('../services/notification.service');
 const logger = require('../utils/logger');
 
@@ -26,7 +27,7 @@ async function main() {
               d.warranty_end AS warrantyEnd, d.current_assignee_id AS assigneeId
          FROM devices d
         WHERE d.deleted_at IS NULL AND d.warranty_end IS NOT NULL
-          AND d.warranty_end BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)`
+          AND d.warranty_end BETWEEN DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR) AND DATE_ADD(DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR), INTERVAL 30 DAY)`
     );
     for (const w of warranty) {
       const userId = w.assigneeId;
@@ -48,7 +49,7 @@ async function main() {
               renewal_date AS renewalDate, pic_user_id AS picUserId
          FROM software_subscriptions
         WHERE deleted_at IS NULL AND status IN ('active','expiring')
-          AND renewal_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)`
+          AND renewal_date BETWEEN DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR) AND DATE_ADD(DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR), INTERVAL 30 DAY)`
     );
     for (const r of renewals) {
       await pool.query(
@@ -115,7 +116,7 @@ async function main() {
          FROM subscription_licenses l
          JOIN software_subscriptions s ON s.id = l.subscription_id
         WHERE l.status='assigned'
-          AND (l.last_used_at IS NULL OR l.last_used_at <= DATE_SUB(CURDATE(), INTERVAL 60 DAY))
+          AND (l.last_used_at IS NULL OR l.last_used_at <= DATE_SUB(DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR), INTERVAL 60 DAY) - INTERVAL 7 HOUR)
           AND s.pic_user_id IS NOT NULL`
     );
     for (const l of idle) {
@@ -139,7 +140,7 @@ async function main() {
          JOIN devices d ON d.id = a.device_id
         WHERE a.status='active'
           AND a.expected_return_date IS NOT NULL
-          AND a.expected_return_date < CURDATE()`
+          AND a.expected_return_date < DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR)`
     );
     for (const a of lateReturns) {
       await notif.create({
@@ -160,7 +161,7 @@ async function main() {
     console.error(e);
     process.exitCode = 1;
   } finally {
-    await pool.end();
+    await drainAndEnd(pool);
   }
 }
 

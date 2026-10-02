@@ -14,8 +14,10 @@ const components = {
 };
 
 export default function AIMarkdown({ children }) {
+  // AI answers and quoted documents are content, not interface text: the
+  // language switch leaves them alone.
   return (
-    <div className="ai-markdown">
+    <div className="ai-markdown" data-no-translate="">
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components} skipHtml>
         {children || ''}
       </ReactMarkdown>

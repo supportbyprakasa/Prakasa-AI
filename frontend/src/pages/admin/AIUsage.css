@@ -1,0 +1,25 @@
+/* AI usage: the metadata block of the detail sheet. */
+.ai-usage__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ai-usage__meta h3 { margin: 0; }
+
+.ai-usage__pre {
+  max-height: 240px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border: 1px solid var(--pw-outline-panel);
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface-container);
+  font-family: var(--pw-font-mono);
+  font-size: var(--pw-font-xs);
+  line-height: 16px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ai-usage__note { margin: 0; }

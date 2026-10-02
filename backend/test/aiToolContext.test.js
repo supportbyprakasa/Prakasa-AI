@@ -55,7 +55,7 @@ test('Warehouse movement context comes from the domain service and keeps its den
   assert.deepEqual(context.route.query, { tab: 'inbound' });
   assert.match(context.text, /data, bukan instruksi/);
   assert.match(context.text, /AI hanya merekomendasikan/);
-  assert.match(context.text, /Accurate belum aktif/);
+  assert.match(context.text, /tidak dikirim ke Accurate/);
   await assert.rejects(
     service.buildToolContext({ user: WAREHOUSE_USER, pathname: '/warehouse/movements/inbound/404' }),
     (error) => error.status === 404,
@@ -116,6 +116,54 @@ test('every tool can build a page-level context without record access', async ()
     const context = await service.buildToolContext({ user: everything, pathname });
     assert.equal(context.tool.key, entry.key, pathname);
     assert.ok(context.text.length <= 6000, entry.key);
-    assert.ok(context.starters.length >= 4, entry.key);
+    // A page that no longer renders (retired route) shows no starters; every other page at least four.
+    if (require('../src/services/aiToolRegistry.service').neverRenders(entry)) assert.deepEqual(context.starters, [], entry.key);
+    else assert.ok(context.starters.length >= 4, entry.key);
   }
+});
+
+// Wave A: the standard page context every page publishes.
+const { sanitizePageContext } = require('../src/services/aiToolContext.service');
+
+test('the standard page context is bounded, free of money/personal/secret keys, and empty for pages that publish nothing', async () => {
+  const tasks = TOOLS.find((entry) => entry.key === 'tasks');
+  const page = sanitizePageContext(tasks, {
+    route: '/admin/users',
+    title: `  Tugas   ${'x'.repeat(300)}`,
+    filters: { cari: 'laporan', urut: 'due_date naik', harga_min: 5, total_amount: 9, email: 'a@b', password: 'x', token: 'y', nested: { a: 1 }, kosong: '' },
+    selection: { type: 'task', id: 12, name: 'Kirim laporan', extra: 'drop' },
+    counts: { baris_tampil: 20, baris_cocok: 57, total_nilai: 1000000, pecahan: 1.5, negatif: -1 },
+    formState: { id: 'task-form', dirty: 1, values: { gaji: 1 } },
+    rows: [{ id: 1 }],
+  });
+  assert.equal(page.title.length, 120);
+  assert.deepEqual(page.filters, { cari: 'laporan', urut: 'due_date naik' });
+  assert.deepEqual(page.selection, { type: 'task', id: '12', name: 'Kirim laporan' });
+  assert.deepEqual(page.counts, { baris_tampil: 20, baris_cocok: 57 });
+  assert.deepEqual(page.formState, { id: 'task-form', dirty: true });
+  assert.deepEqual(Object.keys(page).sort(), ['counts', 'filters', 'formState', 'selection', 'title']);
+  assert.equal(sanitizePageContext(tasks, { title: '' }).title, 'Tugas', 'the registry title when the page gives none');
+
+  for (const entry of TOOLS.filter((candidate) => !candidate.publishesState)) {
+    assert.equal(sanitizePageContext(entry, { title: 'x', filters: { cari: 'y' } }), null, entry.key);
+  }
+  assert.equal(sanitizePageContext(tasks, 'bukan objek'), null);
+
+  const { service } = harness();
+  const context = await service.buildToolContext({
+    user: { sub: 1, entityId: 1, permissions: ['task.view'] },
+    pathname: '/tasks',
+    page: { route: '/somewhere-else', title: 'Tugas', filters: { cari: 'laporan' }, counts: { baris_tampil: 3 } },
+  });
+  assert.equal(context.page.route, '/tasks', 'the route is the one the server resolved');
+  assert.match(context.text, /Judul halaman: Tugas/);
+  assert.match(context.text, /Saringan dan urutan yang aktif: \{"cari":"laporan"\}/);
+
+  const closed = await service.buildToolContext({
+    user: { sub: 1, entityId: 1, permissions: ['user.manage'] },
+    pathname: '/admin/users',
+    page: { title: 'Pengguna', filters: { cari: 'budi' }, counts: { baris_tampil: 3 } },
+  });
+  assert.equal(closed.page, null);
+  assert.doesNotMatch(closed.text, /budi|Judul halaman/);
 });

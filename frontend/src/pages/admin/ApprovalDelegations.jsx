@@ -1,26 +1,42 @@
-import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import api from '../../api/client';
-import Badge from '../../components/Badge';
 import Button from '../../components/Button';
+import Checkbox from '../../components/Checkbox';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import DataTable from '../../components/DataTable';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { apiErrorMessage, fieldErrorsFromApi } from '../../components/datagrid/gridModel';
+import DateInput from '../../components/DateInput';
+import FullScreenDialog, { FullScreenSection } from '../../components/FullScreenDialog';
+import IconButton from '../../components/IconButton';
 import Input from '../../components/Input';
-import Modal from '../../components/Modal';
+import KeyValue from '../../components/KeyValue';
+import Page from '../../components/Page';
+import PageHeader from '../../components/PageHeader';
+import Select from '../../components/Select';
+import StatusBadge from '../../components/StatusBadge';
 import { toast } from '../../components/Toast';
 import { UserSelect } from '../../components/UserRoleSelects';
+import './admin-editors.css';
+import { Translate } from '../../i18n/NoTranslate';
 
+const FORM_ID = 'approval-delegation-form';
+
+// Retired route (navigation.js BLOCKED_ROUTES); kept on the shared components
+// so it looks like the rest of Administrasi if it is opened again.
 export default function ApprovalDelegations() {
   const [rows, setRows] = useState([]);
   const [users, setUsers] = useState([]);
   const [docTypes, setDocTypes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [formTarget, setFormTarget] = useState(null);
+  const [formSaving, setFormSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const [delegationsRes, usersRes, docTypesRes] = await Promise.all([
         api.get('/approval-delegations'),
@@ -32,15 +48,15 @@ export default function ApprovalDelegations() {
       setUsers(usersRes.data.data || []);
       setDocTypes(docTypesRes.data.data || []);
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal memuat delegasi', 'error');
+      setLoadError(apiErrorMessage(error, 'Delegasi tidak dapat dimuat.'));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const remove = async () => {
     if (!deleteTarget) return;
@@ -51,140 +67,92 @@ export default function ApprovalDelegations() {
       setDeleteTarget(null);
       await load();
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal menghapus delegasi', 'error');
+      toast(apiErrorMessage(error, 'Delegasi gagal dihapus.'), 'error');
     } finally {
       setDeleting(false);
     }
   };
 
-  return (
-    <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 12,
-          gap: 12,
-          flexWrap: 'wrap',
-        }}
-      >
-        <div>
-          <h2 style={{ margin: 0 }}>Approval Delegations</h2>
-          <div
-            style={{
-              marginTop: 4,
-              fontSize: 13,
-              color: 'var(--color-text-muted)',
-            }}
-          >
-            Delegasi approver berlaku hanya pada entity, scope, dan periode yang
-            dikonfigurasi.
-          </div>
-        </div>
-        <Button onClick={() => setFormTarget({ mode: 'create' })}>
-          <Plus size={14} />
-          Delegasi Baru
-        </Button>
-      </div>
+  const closeForm = () => { if (!formSaving) setFormTarget(null); };
+  const editingRow = formTarget?.mode === 'edit' ? formTarget.row : null;
 
-      <DataTable
-        loading={loading}
-        rows={rows}
-        empty="Belum ada approval delegation"
-        columns={[
-          { key: 'fromUserName', title: 'Dari' },
-          { key: 'toUserName', title: 'Ke' },
-          {
-            key: 'appliesToRequestType',
-            title: 'Request Type',
-            render: (row) => row.appliesToRequestType || 'Semua',
-          },
-          {
-            key: 'appliesToDocumentTypeName',
-            title: 'Document Type',
-            render: (row) => row.appliesToDocumentTypeName || 'Semua',
-          },
-          {
-            key: 'startsAt',
-            title: 'Mulai',
-            render: (row) =>
-              row.startsAt ? new Date(row.startsAt).toLocaleString('id-ID') : '—',
-          },
-          {
-            key: 'endsAt',
-            title: 'Berakhir',
-            render: (row) =>
-              row.endsAt ? new Date(row.endsAt).toLocaleString('id-ID') : '—',
-          },
-          {
-            key: 'isActive',
-            title: 'Status',
-            render: (row) => (
-              <Badge tone={row.isActive ? 'success' : 'default'}>
-                {row.isActive ? 'Aktif' : 'Nonaktif'}
-              </Badge>
-            ),
-          },
-          {
-            key: 'actions',
-            title: 'Aksi',
-            render: (row) => (
-              <div style={{ display: 'flex', gap: 4 }}>
-                <Button
-                  variant="secondary"
-                  title="Edit"
-                  onClick={() => setFormTarget({ mode: 'edit', row })}
-                >
-                  <Pencil size={14} />
-                </Button>
-                <Button
-                  variant="danger"
-                  title="Hapus"
-                  onClick={() => setDeleteTarget(row)}
-                >
-                  <Trash2 size={14} />
-                </Button>
-              </div>
-            ),
-          },
-        ]}
+  const columns = [
+    { key: 'fromUserName', header: 'Dari' },
+    { key: 'toUserName', header: 'Ke' },
+    { key: 'appliesToRequestType', header: 'Jenis permintaan', render: (row) => row.appliesToRequestType || <Translate>Semua</Translate> },
+    { key: 'appliesToDocumentTypeName', header: 'Tipe dokumen', translate: true, render: (row) => row.appliesToDocumentTypeName || 'Semua' },
+    { key: 'startsAt', header: 'Mulai', type: 'datetime' },
+    { key: 'endsAt', header: 'Berakhir', type: 'datetime' },
+    { key: 'isActive', header: 'Status', render: (row) => <StatusBadge status={row.isActive ? 'active' : 'inactive'} /> },
+  ];
+
+  return (
+    <Page>
+      <PageHeader
+        title="Approval Delegations"
+        description="Delegasi approver berlaku hanya pada entitas, cakupan, dan periode yang diatur."
+        actions={<Button icon="add" onClick={() => setFormTarget({ mode: 'create' })}>Tambah delegasi</Button>}
       />
 
-      <Modal
+      <DataGrid
+        title="Semua delegasi"
+        exportName="delegasi-approval"
+        columns={columns}
+        rows={rows}
+        loading={loading}
+        error={loadError}
+        onRetry={load}
+        empty="Belum ada delegasi approval"
+        onRowClick={(row) => setFormTarget({ mode: 'edit', row })}
+        rowActions={(row) => (
+          <>
+            <IconButton size="sm" icon="edit" label="Ubah" onClick={() => setFormTarget({ mode: 'edit', row })} />
+            <IconButton size="sm" icon="delete" label="Hapus" tone="danger" onClick={() => setDeleteTarget(row)} />
+          </>
+        )}
+      />
+
+      <FullScreenDialog
         open={Boolean(formTarget)}
-        onClose={() => setFormTarget(null)}
-        title={formTarget?.mode === 'edit' ? 'Edit Delegasi' : 'Delegasi Baru'}
-        maxWidth={720}
+        onClose={closeForm}
+        title={editingRow ? 'Ubah delegasi' : 'Tambah delegasi'}
+        card={false}
+        actions={(
+          <>
+            <Button variant="text" type="button" onClick={closeForm} disabled={formSaving}>Batal</Button>
+            <Button type="submit" form={FORM_ID} loading={formSaving}>Simpan delegasi</Button>
+          </>
+        )}
       >
-        {formTarget && (
+        {formTarget ? (
           <DelegationForm
-            editing={formTarget.mode === 'edit' ? formTarget.row : null}
+            key={editingRow?.id || 'new'}
+            editing={editingRow}
             users={users}
             docTypes={docTypes}
-            onCancel={() => setFormTarget(null)}
+            onSavingChange={setFormSaving}
             onSaved={async () => {
               setFormTarget(null);
               await load();
             }}
           />
-        )}
-      </Modal>
+        ) : null}
+      </FullScreenDialog>
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         title="Hapus delegasi?"
-        message="Delegasi akan dinonaktifkan dan di-soft-delete."
-        confirmLabel="Ya, hapus"
+        message={`Delegasi ${deleteTarget?.fromUserName || ''} → ${deleteTarget?.toUserName || ''} akan dinonaktifkan dan dihapus.`}
+        confirmLabel="Hapus delegasi"
         loading={deleting}
         onConfirm={remove}
-        onClose={() => setDeleteTarget(null)}
+        onClose={() => { if (!deleting) setDeleteTarget(null); }}
       />
-    </div>
+    </Page>
   );
 }
 
-function DelegationForm({ editing, users, docTypes, onCancel, onSaved }) {
+function DelegationForm({ editing, users, docTypes, onSavingChange, onSaved }) {
   const [form, setForm] = useState({
     fromUserId: editing?.fromUserId || '',
     toUserId: editing?.toUserId || '',
@@ -195,24 +163,22 @@ function DelegationForm({ editing, users, docTypes, onCancel, onSaved }) {
     reason: editing?.reason || '',
     isActive: editing ? Boolean(editing.isActive) : true,
   });
-  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  const set = (key, value) =>
+  const set = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
+    setErrors((current) => ({ ...current, [key]: undefined }));
+  };
 
-  const save = async () => {
-    if (!editing && (!form.fromUserId || !form.toUserId)) {
-      toast('User asal dan user penerima delegasi wajib dipilih', 'error');
-      return;
+  const save = async (event) => {
+    event.preventDefault();
+    const nextErrors = {};
+    if (!editing && !form.fromUserId) nextErrors.fromUserId = 'Pilih pengguna asal.';
+    if (!editing && !form.toUserId) nextErrors.toUserId = 'Pilih pengguna penerima.';
+    if (!editing && form.fromUserId && String(form.fromUserId) === String(form.toUserId)) {
+      nextErrors.toUserId = 'Delegasi ke diri sendiri tidak diperbolehkan.';
     }
-    if (!editing && String(form.fromUserId) === String(form.toUserId)) {
-      toast('Delegasi ke diri sendiri tidak diperbolehkan', 'error');
-      return;
-    }
-    if (!form.endsAt) {
-      toast('Tanggal berakhir wajib', 'error');
-      return;
-    }
+    if (!form.endsAt) nextErrors.endsAt = 'Isi waktu berakhir.';
 
     const startsAt = form.startsAt
       ? new Date(form.startsAt)
@@ -220,13 +186,11 @@ function DelegationForm({ editing, users, docTypes, onCancel, onSaved }) {
         ? new Date(editing.startsAt)
         : new Date();
     const endsAt = new Date(form.endsAt);
-
-    if (
-      Number.isNaN(startsAt.getTime()) ||
-      Number.isNaN(endsAt.getTime()) ||
-      endsAt.getTime() <= startsAt.getTime()
-    ) {
-      toast('Periode delegasi tidak valid', 'error');
+    if (form.endsAt && (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime()) || endsAt.getTime() <= startsAt.getTime())) {
+      nextErrors.endsAt = 'Waktu berakhir harus setelah waktu mulai.';
+    }
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors);
       return;
     }
 
@@ -240,7 +204,7 @@ function DelegationForm({ editing, users, docTypes, onCancel, onSaved }) {
       reason: form.reason.trim() || null,
     };
 
-    setSaving(true);
+    onSavingChange(true);
     try {
       if (editing) {
         await api.patch(`/approval-delegations/${editing.id}`, {
@@ -256,148 +220,76 @@ function DelegationForm({ editing, users, docTypes, onCancel, onSaved }) {
         });
         toast('Delegasi dibuat', 'success');
       }
+      onSavingChange(false);
       onSaved();
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal menyimpan delegasi', 'error');
-    } finally {
-      setSaving(false);
+      onSavingChange(false);
+      const fieldErrors = fieldErrorsFromApi(error);
+      if (Object.keys(fieldErrors).length) setErrors(fieldErrors);
+      else toast(apiErrorMessage(error, 'Delegasi gagal disimpan.'), 'error');
     }
   };
 
   return (
-    <div>
-      {!editing && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 12,
-            marginBottom: 12,
-          }}
-        >
-          <UserSelect
-            label="Dari User *"
-            value={form.fromUserId}
-            onChange={(value) => set('fromUserId', value)}
-            users={users}
+    <form id={FORM_ID} className="admin-dialog-form" onSubmit={save} noValidate>
+      <FullScreenSection title="Pengguna">
+        {editing ? (
+          <KeyValue
+            items={[
+              { label: 'Dari', value: editing.fromUserName },
+              { label: 'Ke', value: editing.toUserName },
+            ]}
           />
-          <UserSelect
-            label="Ke User *"
-            value={form.toUserId}
-            onChange={(value) => set('toUserId', value)}
-            users={users}
+        ) : (
+          <div className="pw-fsdialog__fields">
+            <UserSelect label="Dari pengguna" required placeholder="Pilih pengguna" value={form.fromUserId} error={errors.fromUserId} onChange={(value) => set('fromUserId', value)} users={users} />
+            <UserSelect label="Ke pengguna" required placeholder="Pilih pengguna" value={form.toUserId} error={errors.toUserId} onChange={(value) => set('toUserId', value)} users={users} />
+          </div>
+        )}
+      </FullScreenSection>
+
+      <FullScreenSection title="Cakupan dan periode">
+        <div className="pw-fsdialog__fields">
+          <Input
+            label="Jenis permintaan"
+            mono
+            value={form.appliesToRequestType}
+            hint="Kosongkan untuk semua jenis."
+            onChange={(event) => set('appliesToRequestType', event.target.value)}
+          />
+          <Select
+            label="Tipe dokumen"
+            value={form.appliesToDocumentTypeId || ''}
+            onChange={(event) => set('appliesToDocumentTypeId', event.target.value)}
+            placeholder="Semua tipe dokumen"
+            options={docTypes.map((item) => ({ value: item.id, label: item.name }))}
+          />
+          <DateInput
+            label="Mulai"
+            type="datetime-local"
+            value={form.startsAt}
+            error={errors.startsAt}
+            hint="Kosongkan untuk mulai sekarang."
+            onChange={(event) => set('startsAt', event.target.value)}
+          />
+          <DateInput
+            label="Berakhir"
+            required
+            type="datetime-local"
+            value={form.endsAt}
+            error={errors.endsAt}
+            onChange={(event) => set('endsAt', event.target.value)}
+          />
+          <Input
+            label="Alasan"
+            value={form.reason}
+            error={errors.reason}
+            onChange={(event) => set('reason', event.target.value)}
           />
         </div>
-      )}
-
-      {editing && (
-        <div
-          style={{
-            padding: 10,
-            background: '#f8fafc',
-            borderRadius: 8,
-            marginBottom: 12,
-            fontSize: 13,
-          }}
-        >
-          <b>{editing.fromUserName}</b> → <b>{editing.toUserName}</b>
-        </div>
-      )}
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 12,
-        }}
-      >
-        <Input
-          label="Request Type"
-          value={form.appliesToRequestType}
-          onChange={(event) => set('appliesToRequestType', event.target.value)}
-          placeholder="Kosong = semua"
-        />
-
-        <SelectDocumentType
-          value={form.appliesToDocumentTypeId}
-          onChange={(value) => set('appliesToDocumentTypeId', value)}
-          items={docTypes}
-        />
-
-        <Input
-          label="Starts At"
-          type="datetime-local"
-          value={form.startsAt}
-          onChange={(event) => set('startsAt', event.target.value)}
-        />
-        <Input
-          label="Ends At *"
-          type="datetime-local"
-          value={form.endsAt}
-          onChange={(event) => set('endsAt', event.target.value)}
-        />
-      </div>
-
-      <Input
-        label="Alasan"
-        value={form.reason}
-        onChange={(event) => set('reason', event.target.value)}
-      />
-
-      {editing && (
-        <label style={{ display: 'flex', gap: 7, alignItems: 'center', fontSize: 13 }}>
-          <input
-            type="checkbox"
-            checked={form.isActive}
-            onChange={(event) => set('isActive', event.target.checked)}
-          />
-          Delegasi aktif
-        </label>
-      )}
-
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 8,
-          marginTop: 16,
-        }}
-      >
-        <Button variant="secondary" onClick={onCancel} disabled={saving}>
-          Batal
-        </Button>
-        <Button onClick={save} disabled={saving}>
-          {saving ? 'Menyimpan…' : 'Simpan'}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function SelectDocumentType({ value, onChange, items }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-      <label style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-        Document Type
-      </label>
-      <select
-        value={value || ''}
-        onChange={(event) => onChange(event.target.value)}
-        style={{
-          padding: '8px 10px',
-          borderRadius: 8,
-          boxShadow: 'inset 0 0 0 1px var(--color-border)',
-          background: 'var(--color-surface)',
-        }}
-      >
-        <option value="">Semua</option>
-        {items.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.name}
-          </option>
-        ))}
-      </select>
-    </div>
+        {editing ? <Checkbox label="Delegasi aktif" checked={form.isActive} onChange={(event) => set('isActive', event.target.checked)} /> : null}
+      </FullScreenSection>
+    </form>
   );
 }
 

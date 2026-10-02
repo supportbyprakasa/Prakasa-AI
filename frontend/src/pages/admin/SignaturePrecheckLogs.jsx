@@ -1,36 +1,44 @@
-import { Eye, PlayCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import api from '../../api/client';
-import Badge from '../../components/Badge';
 import Button from '../../components/Button';
-import DataTable from '../../components/DataTable';
-import FilterBar from '../../components/FilterBar';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { apiErrorMessage, fieldErrorsFromApi } from '../../components/datagrid/gridModel';
+import FormActions from '../../components/FormActions';
 import Input from '../../components/Input';
 import Modal from '../../components/Modal';
+import Page from '../../components/Page';
+import PageHeader from '../../components/PageHeader';
+import SideSheet from '../../components/SideSheet';
 import SignaturePrecheckPanel from '../../components/SignaturePrecheckPanel';
+import StatusBadge from '../../components/StatusBadge';
 import { toast } from '../../components/Toast';
+import { formatNumber } from '../../components/format';
+import FilterChips from './FilterChips';
+import { AI_PROVIDER_LABELS, aiProviderLabel } from './aiLabels';
+import { Translate } from '../../i18n/NoTranslate';
 
-const STATUS_TONE = {
-  passed: 'success',
-  warning: 'warning',
-  failed: 'error',
-  skipped: 'default',
+const STATUS_LABELS = {
+  passed: 'Lolos',
+  warning: 'Peringatan',
+  failed: 'Gagal',
+  skipped: 'Dilewati',
 };
+const NO_FILTERS = { status: '', documentId: '' };
 
 export default function SignaturePrecheckLogs() {
   const [rows, setRows] = useState([]);
   const [meta, setMeta] = useState(null);
-  const [filters, setFilters] = useState({
-    status: '',
-    documentId: '',
-  });
+  const [filters, setFilters] = useState(NO_FILTERS);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [selected, setSelected] = useState(null);
   const [runOpen, setRunOpen] = useState(false);
+  const [running, setRunning] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       const response = await api.get('/signature-precheck', {
         params: {
@@ -42,181 +50,123 @@ export default function SignaturePrecheckLogs() {
       });
       setRows(response.data.data || []);
       setMeta(response.data.meta || null);
-    } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal memuat precheck log', 'error');
+    } catch (requestError) {
+      setError(apiErrorMessage(requestError, 'Log cek awal tidak dapat dimuat.'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, filters.status, filters.documentId]);
 
   useEffect(() => {
     load();
-  }, [page, filters.status, filters.documentId]);
+  }, [load]);
 
   const openDetail = async (row) => {
     try {
       const response = await api.get(`/signature-precheck/${row.id}`);
       setSelected(response.data.data);
-    } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal membuka precheck', 'error');
+    } catch (requestError) {
+      toast(apiErrorMessage(requestError, 'Detail cek awal gagal dibuka.'), 'error');
     }
   };
 
+  const columns = [
+    { key: 'id', header: 'ID', type: 'number', width: 72 },
+    { key: 'documentId', header: 'ID dokumen', type: 'number' },
+    { key: 'status', header: 'Status', render: (row) => <StatusBadge status={row.status} label={STATUS_LABELS[row.status]} /> },
+    {
+      key: 'provider',
+      header: 'Penyedia / model',
+      render: (row) => (row.provider ? <>{AI_PROVIDER_LABELS[row.provider] ? <Translate>{aiProviderLabel(row.provider)}</Translate> : aiProviderLabel(row.provider)}{row.model ? ` · ${row.model}` : ''}</> : ''),
+    },
+    { key: 'durationMs', header: 'Durasi', render: (row) => (row.durationMs == null ? '' : `${formatNumber(row.durationMs)} ms`) },
+    { key: 'createdAt', header: 'Waktu', type: 'datetime' },
+  ];
+
   return (
-    <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          gap: 12,
-          alignItems: 'center',
-          marginBottom: 12,
-          flexWrap: 'wrap',
-        }}
-      >
-        <div>
-          <h2 style={{ margin: 0 }}>Signature Precheck</h2>
-          <div
-            style={{
-              color: 'var(--color-text-muted)',
-              fontSize: 13,
-              marginTop: 4,
-            }}
-          >
-            Log AI precheck bersifat advisory dan tidak menggantikan keputusan approval.
-          </div>
-        </div>
-        <Button onClick={() => setRunOpen(true)}>
-          <PlayCircle size={14} />
-          Run Precheck
-        </Button>
-      </div>
-
-      <FilterBar
-        filters={[
-          {
-            name: 'status',
-            label: 'Status',
-            type: 'select',
-            options: [
-              { value: 'passed', label: 'Passed' },
-              { value: 'warning', label: 'Warning' },
-              { value: 'failed', label: 'Failed' },
-              { value: 'skipped', label: 'Skipped' },
-            ],
-          },
-          {
-            name: 'documentId',
-            label: 'Document ID',
-            type: 'text',
-            placeholder: 'Contoh: 15',
-          },
-        ]}
-        values={filters}
-        onChange={(next) => {
-          setPage(1);
-          setFilters(next);
-        }}
-        onReset={() => {
-          setPage(1);
-          setFilters({ status: '', documentId: '' });
-        }}
+    <Page>
+      <PageHeader
+        title="Cek awal tanda tangan"
+        description="Log cek awal AI bersifat saran dan tidak menggantikan keputusan approval."
+        actions={<Button icon="play_circle" onClick={() => setRunOpen(true)}>Jalankan cek awal</Button>}
       />
 
-      <DataTable
-        loading={loading}
+      <DataGrid
+        title="Log cek awal"
+        exportName="signature-precheck"
+        columns={columns}
         rows={rows}
-        meta={meta}
+        loading={loading}
+        error={error}
+        onRetry={load}
+        meta={meta || { page, limit: 20, total: rows.length }}
         onPageChange={setPage}
-        empty="Belum ada signature precheck log"
-        columns={[
-          { key: 'id', title: 'ID' },
-          { key: 'documentId', title: 'Document' },
-          {
-            key: 'status',
-            title: 'Status',
-            render: (row) => (
-              <Badge tone={STATUS_TONE[row.status] || 'default'}>{row.status}</Badge>
-            ),
-          },
-          {
-            key: 'provider',
-            title: 'Provider / Model',
-            render: (row) =>
-              row.provider
-                ? `${row.provider}${row.model ? ` · ${row.model}` : ''}`
-                : '—',
-          },
-          {
-            key: 'durationMs',
-            title: 'Duration',
-            render: (row) =>
-              row.durationMs == null ? '—' : `${row.durationMs} ms`,
-          },
-          {
-            key: 'createdAt',
-            title: 'Waktu',
-            render: (row) =>
-              row.createdAt
-                ? new Date(row.createdAt).toLocaleString('id-ID')
-                : '—',
-          },
-          {
-            key: 'actions',
-            title: 'Aksi',
-            render: (row) => (
-              <Button variant="secondary" onClick={() => openDetail(row)}>
-                <Eye size={14} />
-                Detail
-              </Button>
-            ),
-          },
-        ]}
+        filters={(
+          <FilterChips
+            label="Filter log cek awal"
+            values={filters}
+            onChange={(next) => {
+              setPage(1);
+              setFilters(next);
+            }}
+            fields={[
+              { key: 'status', label: 'Status', type: 'select', options: Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label })) },
+              { key: 'documentId', label: 'ID dokumen', type: 'number', hint: 'Contoh 15.' },
+            ]}
+          />
+        )}
+        empty="Belum ada log cek awal tanda tangan"
+        onRowClick={openDetail}
       />
 
-      <Modal
-        open={Boolean(selected)}
-        onClose={() => setSelected(null)}
-        title={selected ? `Precheck #${selected.id}` : 'Precheck'}
-        maxWidth={820}
-      >
-        {selected && <SignaturePrecheckPanel precheck={selected} />}
-      </Modal>
+      <SideSheet open={Boolean(selected)} onClose={() => setSelected(null)} title={selected?.id ? `Cek awal #${selected.id}` : 'Cek awal'}>
+        {selected ? <SignaturePrecheckPanel precheck={selected} /> : null}
+      </SideSheet>
 
       <Modal
         open={runOpen}
-        onClose={() => setRunOpen(false)}
-        title="Run Signature Precheck"
-        maxWidth={640}
+        onClose={() => { if (!running) setRunOpen(false); }}
+        title="Jalankan cek awal tanda tangan"
+        size="sm"
       >
-        <RunPrecheckForm
-          onCancel={() => setRunOpen(false)}
-          onDone={async (result) => {
-            setRunOpen(false);
-            setSelected(result);
-            await load();
-          }}
-        />
+        {runOpen ? (
+          <RunPrecheckForm
+            running={running}
+            onRunningChange={setRunning}
+            onCancel={() => setRunOpen(false)}
+            onDone={async (result) => {
+              setRunOpen(false);
+              setSelected(result);
+              await load();
+            }}
+          />
+        ) : null}
       </Modal>
-    </div>
+    </Page>
   );
 }
 
-function RunPrecheckForm({ onCancel, onDone }) {
+function RunPrecheckForm({ running, onRunningChange, onCancel, onDone }) {
   const [form, setForm] = useState({
     documentId: '',
     signatureRequestId: '',
     approvalRequestId: '',
   });
-  const [running, setRunning] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  const run = async () => {
+  const set = (key, value) => {
+    setForm((current) => ({ ...current, [key]: value }));
+    setErrors((current) => ({ ...current, [key]: undefined }));
+  };
+
+  const run = async (event) => {
+    event.preventDefault();
     if (!form.documentId) {
-      toast('Document ID wajib', 'error');
+      setErrors({ documentId: 'Isi ID dokumen.' });
       return;
     }
 
-    setRunning(true);
+    onRunningChange(true);
     try {
       const response = await api.post('/signature-precheck/run', {
         documentId: Number(form.documentId),
@@ -227,66 +177,55 @@ function RunPrecheckForm({ onCancel, onDone }) {
           ? Number(form.approvalRequestId)
           : null,
       });
-      toast('Precheck selesai', 'success');
+      toast('Cek awal selesai', 'success');
+      onRunningChange(false);
       onDone(response.data.data);
-    } catch (error) {
-      toast(error.response?.data?.error?.message || 'Precheck gagal dijalankan', 'error');
-    } finally {
-      setRunning(false);
+    } catch (requestError) {
+      onRunningChange(false);
+      const fieldErrors = fieldErrorsFromApi(requestError);
+      if (Object.keys(fieldErrors).length) setErrors(fieldErrors);
+      else toast(apiErrorMessage(requestError, 'Cek awal gagal dijalankan.'), 'error');
     }
   };
 
   return (
-    <div>
+    <form className="pw-stack" onSubmit={run} noValidate>
       <Input
-        label="Document ID *"
+        label="ID dokumen"
+        required
         type="number"
         min="1"
+        inputMode="numeric"
         value={form.documentId}
-        onChange={(event) =>
-          setForm((current) => ({ ...current, documentId: event.target.value }))
-        }
+        error={errors.documentId}
+        onChange={(event) => set('documentId', event.target.value)}
+        autoFocus
       />
       <Input
-        label="Signature Request ID"
+        label="ID permintaan tanda tangan"
         type="number"
         min="1"
+        inputMode="numeric"
+        hint="Opsional."
         value={form.signatureRequestId}
-        onChange={(event) =>
-          setForm((current) => ({
-            ...current,
-            signatureRequestId: event.target.value,
-          }))
-        }
+        error={errors.signatureRequestId}
+        onChange={(event) => set('signatureRequestId', event.target.value)}
       />
       <Input
-        label="Approval Request ID"
+        label="ID permintaan approval"
         type="number"
         min="1"
+        inputMode="numeric"
+        hint="Opsional."
         value={form.approvalRequestId}
-        onChange={(event) =>
-          setForm((current) => ({
-            ...current,
-            approvalRequestId: event.target.value,
-          }))
-        }
+        error={errors.approvalRequestId}
+        onChange={(event) => set('approvalRequestId', event.target.value)}
       />
 
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 8,
-          marginTop: 12,
-        }}
-      >
-        <Button variant="secondary" onClick={onCancel} disabled={running}>
-          Batal
-        </Button>
-        <Button onClick={run} disabled={running}>
-          {running ? 'Memproses…' : 'Run Precheck'}
-        </Button>
-      </div>
-    </div>
+      <FormActions>
+        <Button variant="text" type="button" onClick={onCancel} disabled={running}>Batal</Button>
+        <Button type="submit" loading={running}>Jalankan cek awal</Button>
+      </FormActions>
+    </form>
   );
 }

@@ -9,6 +9,7 @@ const drive = require('../services/googleDrive.service');
 const { resolveFolder } = require('./folderMappingRules.controller');
 const precheckSvc = require('../services/signaturePrecheck.service');
 const qrSvc = require('../services/qrCode.service');
+const { signatureVisibilitySql } = require('../services/divisionAccess');
 
 function normalizeRule(row) {
   if (!row) return null;
@@ -326,7 +327,7 @@ async function create(req, res, next) {
 
     if (!(await approvalMeetsRule(approvalRequestId, entityId, rule, conn))) {
       await conn.rollback();
-      return fail(res, 'CONFLICT', 'Approval belum memenuhi minimum signature rule', 409);
+      return fail(res, 'CONFLICT', 'Approval belum memenuhi minimum aturan tanda tangan', 409);
     }
 
     // Resolve signer from the exact matrix rules used by this approval.
@@ -809,7 +810,7 @@ async function sign(req, res, next) {
 
       if (!(await approvalMeetsRule(approval.id, entityId, effectiveRule, conn))) {
         await conn.rollback();
-        return fail(res, 'CONFLICT', 'Approval tidak lagi memenuhi signature rule', 409);
+        return fail(res, 'CONFLICT', 'Approval tidak lagi memenuhi aturan tanda tangan', 409);
       }
 
       const folderId = effectiveRule?.archiveFolderDriveId || await resolveFolder({
@@ -971,6 +972,9 @@ async function list(req, res, next) {
       where.push('s.status=?');
       args.push(req.query.status);
     }
+    // Division scope; requester, signers and approvers always keep access.
+    const visible = signatureVisibilitySql(req.user, 's');
+    where.push(visible.sql); args.push(...visible.args);
 
     const [rows] = await pool.query(
       `SELECT s.id, s.entity_id AS entityId,
@@ -1001,6 +1005,7 @@ async function list(req, res, next) {
 
 async function detail(req, res, next) {
   try {
+    const visible = signatureVisibilitySql(req.user, 's');
     const [rows] = await pool.query(
       `SELECT s.id, s.entity_id AS entityId,
               s.department_id AS departmentId,
@@ -1025,9 +1030,9 @@ async function detail(req, res, next) {
          LEFT JOIN users au ON au.id=s.assigned_signer_user_id
          LEFT JOIN roles ar ON ar.id=s.assigned_signer_role_id
          LEFT JOIN users su ON su.id=s.signed_by
-        WHERE s.id=? AND s.entity_id=?
+        WHERE s.id=? AND s.entity_id=? AND ${visible.sql}
         LIMIT 1`,
-      [req.params.id, req.entityScope.entityId]
+      [req.params.id, req.entityScope.entityId, ...visible.args]
     );
     if (!rows[0]) return fail(res, 'NOT_FOUND', 'Signature request tidak ditemukan', 404);
 

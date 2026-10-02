@@ -1,39 +1,105 @@
-import { useEffect, useState } from 'react';
-import { RefreshCw, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import api from '../../api/client';
-import Card from '../../components/Card';
+import Banner from '../../components/Banner';
 import Button from '../../components/Button';
-import DataTable from '../../components/DataTable';
-import Badge from '../../components/Badge';
-import FilterBar from '../../components/FilterBar';
-import Modal from '../../components/Modal';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { apiErrorMessage } from '../../components/datagrid/gridModel';
+import EmptyState, { LoadingState } from '../../components/EmptyState';
+import KeyValue from '../../components/KeyValue';
+import Page from '../../components/Page';
+import PageHeader from '../../components/PageHeader';
+import SideSheet from '../../components/SideSheet';
+import StatCard from '../../components/StatCard';
+import StatusBadge from '../../components/StatusBadge';
+import TabBar from '../../components/TabBar';
 import { toast } from '../../components/Toast';
+import { formatDateTime, formatNumber } from '../../components/format';
+import FilterChips from './FilterChips';
+import { NoTranslate } from '../../i18n/NoTranslate';
+import './IntegrationLogs.css';
 
-const PROVIDERS = [
-  'google_drive','google_docs','google_sheets','google_slides',
-  'google_calendar','google_meet','google_chat','gmail','google_tasks',
-  'openai','gemini','claude','n8n','jurnal','kantorku','internal',
+const PROVIDER_LABELS = {
+  google_drive: 'Google Drive',
+  google_docs: 'Google Docs',
+  google_sheets: 'Google Sheets',
+  google_slides: 'Google Slides',
+  google_calendar: 'Google Calendar',
+  google_calendar_user: 'Google Calendar (akun pengguna)',
+  google_meet: 'Google Meet',
+  google_chat: 'Google Chat',
+  google_chat_user: 'Google Chat (akun pengguna)',
+  google_chat_drive: 'Google Chat · lampiran Drive',
+  gmail: 'Gmail',
+  google_gmail: 'Gmail',
+  google_gmail_user: 'Gmail (akun pengguna)',
+  google_mydrive: 'My Drive',
+  google_groups: 'Google Groups',
+  google_directory: 'Direktori Google Workspace',
+  google_analytics: 'Google Analytics',
+  google_tasks: 'Google Tasks',
+  openai: 'OpenAI',
+  gemini: 'Gemini',
+  claude: 'Claude',
+  n8n: 'n8n',
+  claude_team: 'Claude Team',
+  accurate: 'Accurate',
+  simplidots: 'SimpliDOTS',
+  jurnal: 'Jurnal',
+  kantorku: 'KantorKu',
+  internal: 'Internal',
+};
+// A provider the list does not know shows its raw code: record data, never translated.
+const providerNode = (provider) => (PROVIDER_LABELS[provider] ? PROVIDER_LABELS[provider] : <NoTranslate>{provider}</NoTranslate>);
+
+const LOG_STATUS_LABELS = { success: 'Berhasil', failed: 'Gagal', skipped: 'Dilewati' };
+const TABS = [
+  { k: 'health', l: 'Kesehatan 24 jam', icon: 'monitor_heart' },
+  { k: 'logs', l: 'Log detail', icon: 'list_alt' },
 ];
+const NO_FILTERS = { provider: '', status: '', from: '', to: '' };
+
+function LogStatusBadge({ status }) {
+  return <StatusBadge status={status} label={LOG_STATUS_LABELS[status]} />;
+}
+
+const parseMeta = (value) => {
+  if (typeof value !== 'string') return value;
+  try { return JSON.parse(value); } catch { return value; }
+};
+
+function MetaBlock({ title, value }) {
+  const data = parseMeta(value);
+  return (
+    <section className="intlog-meta">
+      <h3 className="pw-overline">{title}</h3>
+      <pre className="intlog-meta__code" data-no-translate="">{typeof data === 'string' ? data : JSON.stringify(data, null, 2)}</pre>
+    </section>
+  );
+}
 
 export default function IntegrationLogs() {
   const [tab, setTab] = useState('health');
   const [health, setHealth] = useState([]);
+  const [healthError, setHealthError] = useState('');
   const [rows, setRows] = useState([]);
   const [meta, setMeta] = useState({ page: 1, total: 0 });
+  const [logsError, setLogsError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState({ provider: '', status: '', from: '', to: '' });
+  const [filters, setFilters] = useState(NO_FILTERS);
   const [detail, setDetail] = useState(null);
 
-  const loadHealth = () => {
+  const loadHealth = useCallback(() => {
     setLoading(true);
+    setHealthError('');
     api.get('/integration-logs/health')
       .then((r) => setHealth(r.data.data || []))
-      .catch((e) => toast(e.response?.data?.error?.message || 'Gagal memuat', 'error'))
+      .catch((e) => setHealthError(apiErrorMessage(e, 'Kesehatan integrasi tidak dapat dimuat.')))
       .finally(() => setLoading(false));
-  };
+  }, []);
 
-  const loadLogs = async (page = 1) => {
+  const loadLogs = useCallback(async (page = 1) => {
     setLoading(true);
+    setLogsError('');
     try {
       const params = { page, limit: 20 };
       if (filters.provider) params.provider = filters.provider;
@@ -44,201 +110,148 @@ export default function IntegrationLogs() {
       setRows(r.data.data || []);
       setMeta(r.data.meta || { page, total: r.data.data?.length || 0 });
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal memuat', 'error');
+      setLogsError(apiErrorMessage(e, 'Log integrasi tidak dapat dimuat.'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   useEffect(() => {
     if (tab === 'health') loadHealth();
     else loadLogs(1);
-    /* eslint-disable-next-line */
-  }, [tab, filters.provider, filters.status]);
+  }, [tab, loadHealth, loadLogs]);
 
   const showDetail = async (id) => {
     try {
       const r = await api.get(`/integration-logs/${id}`);
       setDetail(r.data.data);
     } catch (e) {
-      toast('Gagal memuat detail', 'error');
+      toast(apiErrorMessage(e, 'Detail log gagal dimuat.'), 'error');
     }
   };
 
+  const columns = [
+    { key: 'createdAt', header: 'Waktu', type: 'datetime' },
+    { key: 'provider', header: 'Layanan', translate: true, render: (r) => providerNode(r.provider) },
+    { key: 'operation', header: 'Operasi', render: (r) => (r.operation ? <code data-no-translate="" className="intlog-code">{r.operation}</code> : '') },
+    { key: 'status', header: 'Status', render: (r) => <LogStatusBadge status={r.status} /> },
+    { key: 'durationMs', header: 'Durasi (ms)', type: 'number' },
+    { key: 'errorMessage', header: 'Kesalahan', render: (r) => (r.errorMessage ? <span data-no-translate="" className="intlog-error">{r.errorMessage}</span> : '') },
+  ];
+
+  let healthBody;
+  if (loading) healthBody = <LoadingState />;
+  else if (healthError) {
+    healthBody = (
+      <EmptyState
+        tone="error"
+        title="Kesehatan integrasi gagal dimuat"
+        description={healthError}
+        action={<Button variant="text" type="button" onClick={loadHealth}>Coba lagi</Button>}
+      />
+    );
+  } else if (!health.length) {
+    healthBody = <EmptyState icon="monitor_heart" title="Tidak ada aktivitas integrasi dalam 24 jam terakhir." />;
+  } else {
+    healthBody = (
+      <div className="intlog-health">
+        {health.map((h) => {
+          const success = Number(h.success || 0);
+          const failed = Number(h.failed || 0);
+          const skipped = Number(h.skipped || 0);
+          const total = success + failed + skipped;
+          const successRate = total > 0 ? Math.round((success / total) * 100) : 0;
+          return (
+            <StatCard
+              key={h.provider}
+              label={providerNode(h.provider)}
+              value={`${successRate}%`}
+              empty={total === 0}
+              note={(
+                <span className="intlog-health__note">
+                  <span>
+                    {formatNumber(success)} berhasil · <span className={failed > 0 ? 'intlog-failed' : undefined}>{formatNumber(failed)} gagal</span> · {formatNumber(skipped)} dilewati
+                  </span>
+                  <span>
+                    {h.avgDurationMs ? `Rata-rata ${formatNumber(Math.round(Number(h.avgDurationMs)))} ms · ` : ''}
+                    Terakhir {h.lastCall ? formatDateTime(h.lastCall) : '—'}
+                  </span>
+                </span>
+              )}
+            />
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h2 style={{ margin: 0 }}>Integration Logs</h2>
-        <Button variant="secondary" onClick={() => tab === 'health' ? loadHealth() : loadLogs(1)}>
-          <RefreshCw size={14} /> Refresh
-        </Button>
-      </div>
-
-      <div style={{
-        display: 'flex', gap: 4, marginBottom: 12,
-        boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
-      }}>
-        {[
-          { k: 'health', l: 'Health (24h)' },
-          { k: 'logs', l: 'Detail Logs' },
-        ].map((t) => (
-          <button key={t.k} onClick={() => setTab(t.k)} style={{
-            padding: '10px 16px', background: 'transparent', border: 'none',
-            boxShadow: tab === t.k ? 'inset 0 -2px 0 0 var(--color-primary)' : 'inset 0 -2px 0 0 transparent',
-            color: tab === t.k ? 'var(--color-primary)' : 'var(--color-text-muted)',
-            fontSize: 14, fontWeight: 500, cursor: 'pointer',
-          }}>{t.l}</button>
-        ))}
-      </div>
-
-      {tab === 'health' && (
-        <>
-          {loading && <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Memuat…</div>}
-          {!loading && !health.length && (
-            <Card>
-              <div style={{ padding: 24, textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 13 }}>
-                Tidak ada aktivitas integrasi dalam 24 jam terakhir.
-              </div>
-            </Card>
-          )}
-          {!loading && health.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
-              {health.map((h) => {
-                const total = Number(h.success || 0) + Number(h.failed || 0) + Number(h.skipped || 0);
-                const successRate = total > 0 ? Math.round((Number(h.success) / total) * 100) : 0;
-                return (
-                  <Card key={h.provider}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <b style={{ fontSize: 14 }}>{h.provider}</b>
-                      <Badge tone={
-                        h.failed > 0 ? 'warning' : (Number(h.success) > 0 ? 'success' : 'default')
-                      }>
-                        {successRate}% OK
-                      </Badge>
-                    </div>
-                    <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 13 }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <CheckCircle2 size={14} style={{ color: 'var(--color-success)' }} />
-                        {h.success || 0}
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <XCircle size={14} style={{ color: 'var(--color-error)' }} />
-                        {h.failed || 0}
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <AlertCircle size={14} style={{ color: 'var(--color-warning)' }} />
-                        {h.skipped || 0}
-                      </span>
-                    </div>
-                    {h.avgDurationMs && (
-                      <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 6 }}>
-                        avg {Math.round(Number(h.avgDurationMs))} ms
-                      </div>
-                    )}
-                    <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
-                      Terakhir: {h.lastCall ? new Date(h.lastCall).toLocaleString('id-ID') : '—'}
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </>
-      )}
-
-      {tab === 'logs' && (
-        <>
-          <FilterBar
-            filters={[
-              {
-                name: 'provider', label: 'Provider', type: 'select',
-                options: PROVIDERS.map((p) => ({ value: p, label: p })),
-              },
-              {
-                name: 'status', label: 'Status', type: 'select',
-                options: [
-                  { value: 'success', label: 'success' },
-                  { value: 'failed', label: 'failed' },
-                  { value: 'skipped', label: 'skipped' },
-                ],
-              },
-              { name: 'from', label: 'Dari', type: 'text', placeholder: 'YYYY-MM-DD' },
-              { name: 'to', label: 'Sampai', type: 'text', placeholder: 'YYYY-MM-DD' },
-            ]}
-            values={filters}
-            onChange={setFilters}
-            onReset={() => setFilters({ provider: '', status: '', from: '', to: '' })}
-          >
-            <Button variant="secondary" onClick={() => loadLogs(1)}>Terapkan</Button>
-          </FilterBar>
-
-          <DataTable
-            loading={loading}
-            rows={rows}
-            meta={meta}
-            onPageChange={loadLogs}
-            empty="Tidak ada log"
-            onRowClick={(r) => showDetail(r.id)}
-            columns={[
-              { key: 'createdAt', title: 'Waktu',
-                render: (r) => new Date(r.createdAt).toLocaleString('id-ID') },
-              { key: 'provider', title: 'Provider' },
-              { key: 'operation', title: 'Operation' },
-              {
-                key: 'status', title: 'Status',
-                render: (r) => <Badge tone={
-                  r.status === 'success' ? 'success'
-                  : r.status === 'failed' ? 'error' : 'default'
-                }>{r.status}</Badge>,
-              },
-              { key: 'durationMs', title: 'Durasi (ms)' },
-              { key: 'errorMessage', title: 'Error',
-                render: (r) => r.errorMessage ? r.errorMessage.slice(0, 40) + '…' : '—' },
-            ]}
-          />
-        </>
-      )}
-
-      <Modal open={!!detail} onClose={() => setDetail(null)}
-        title={detail ? `Log #${detail.id}` : ''}>
-        {detail && (
-          <div style={{ fontSize: 13, lineHeight: 1.6 }}>
-            <div><b>Provider:</b> {detail.provider}</div>
-            <div><b>Operation:</b> {detail.operation}</div>
-            <div><b>Status:</b> <Badge tone={
-              detail.status === 'success' ? 'success'
-              : detail.status === 'failed' ? 'error' : 'default'
-            }>{detail.status}</Badge></div>
-            <div><b>Duration:</b> {detail.durationMs || 0} ms</div>
-            <div><b>Entity:</b> {detail.entityId || '—'}</div>
-            <div><b>User:</b> {detail.userId || '—'}</div>
-            <div><b>Subject:</b> {detail.subjectType || '—'} #{detail.subjectId || '—'}</div>
-            {detail.errorMessage && (
-              <div style={{ color: 'var(--color-error)' }}>
-                <b>Error:</b> {detail.errorMessage}
-              </div>
-            )}
-            {detail.requestMeta && (
-              <div style={{ marginTop: 8 }}>
-                <b>Request Meta:</b>
-                <pre style={{
-                  background: '#f8fafc', padding: 8, borderRadius: 6,
-                  fontSize: 11, overflowX: 'auto', maxHeight: 200,
-                }}>{JSON.stringify(typeof detail.requestMeta === 'string' ? JSON.parse(detail.requestMeta) : detail.requestMeta, null, 2)}</pre>
-              </div>
-            )}
-            {detail.responseMeta && (
-              <div style={{ marginTop: 8 }}>
-                <b>Response Meta:</b>
-                <pre style={{
-                  background: '#f8fafc', padding: 8, borderRadius: 6,
-                  fontSize: 11, overflowX: 'auto', maxHeight: 200,
-                }}>{JSON.stringify(typeof detail.responseMeta === 'string' ? JSON.parse(detail.responseMeta) : detail.responseMeta, null, 2)}</pre>
-              </div>
-            )}
-          </div>
+    <Page>
+      <PageHeader
+        title="Log integrasi"
+        description="Panggilan ke layanan luar: kesehatan 24 jam terakhir dan log per panggilan."
+        actions={(
+          <Button variant="secondary" icon="refresh" onClick={() => (tab === 'health' ? loadHealth() : loadLogs(1))}>
+            Muat ulang
+          </Button>
         )}
-      </Modal>
-    </div>
+      />
+
+      <div className="pw-stack pw-stack--lg">
+        <TabBar tabs={TABS} value={tab} onChange={setTab} label="Tampilan log integrasi" idPrefix="intlog-tab" panelId="intlog-panel" />
+        <div id="intlog-panel" role="tabpanel" aria-labelledby={`intlog-tab-${tab}`}>
+          {tab === 'health' ? healthBody : (
+            <DataGrid
+              title="Log integrasi"
+              exportName="integration-logs"
+              columns={columns}
+              rows={rows}
+              loading={loading}
+              error={logsError}
+              onRetry={() => loadLogs(meta.page || 1)}
+              meta={meta}
+              onPageChange={loadLogs}
+              filters={(
+                <FilterChips
+                  label="Filter log"
+                  values={filters}
+                  onChange={setFilters}
+                  fields={[
+                    { key: 'provider', label: 'Layanan', type: 'select', options: Object.entries(PROVIDER_LABELS).map(([value, label]) => ({ value, label })) },
+                    { key: 'status', label: 'Status', type: 'select', options: Object.entries(LOG_STATUS_LABELS).map(([value, label]) => ({ value, label })) },
+                    { key: 'from', label: 'Dari tanggal', type: 'date' },
+                    { key: 'to', label: 'Sampai tanggal', type: 'date' },
+                  ]}
+                />
+              )}
+              empty="Tidak ada log"
+              onRowClick={(r) => showDetail(r.id)}
+            />
+          )}
+        </div>
+      </div>
+
+      <SideSheet open={!!detail} onClose={() => setDetail(null)} title={detail ? `Log #${detail.id}` : ''}>
+        {detail ? (
+          <div className="pw-stack">
+            <KeyValue
+              items={[
+                { label: 'Layanan', value: providerNode(detail.provider), translate: true },
+                { label: 'Operasi', value: detail.operation },
+                { label: 'Status', value: <LogStatusBadge status={detail.status} /> },
+                { label: 'Durasi', value: `${formatNumber(detail.durationMs || 0)} ms` },
+                { label: 'Waktu', value: detail.createdAt ? formatDateTime(detail.createdAt) : null },
+                { label: 'Entitas', value: detail.entityId },
+                { label: 'Pengguna', value: detail.userId },
+                { label: 'Subjek', value: detail.subjectType || detail.subjectId ? `${detail.subjectType || '—'} #${detail.subjectId || '—'}` : null },
+              ]}
+            />
+            {detail.errorMessage ? <Banner tone="error" title="Kesalahan"><NoTranslate>{detail.errorMessage}</NoTranslate></Banner> : null}
+            {detail.requestMeta ? <MetaBlock title="Meta permintaan" value={detail.requestMeta} /> : null}
+            {detail.responseMeta ? <MetaBlock title="Meta respons" value={detail.responseMeta} /> : null}
+          </div>
+        ) : null}
+      </SideSheet>
+    </Page>
   );
 }

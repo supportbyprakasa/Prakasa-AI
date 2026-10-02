@@ -1,88 +1,53 @@
-import { RefreshCw, Calendar, Filter } from 'lucide-react';
-import Button from '../Button';
-import Input from '../Input';
+import DateInput from '../DateInput';
+import Icon from '../Icon';
+import IconButton from '../IconButton';
+import Segmented from '../Segmented';
+import Spinner from '../Spinner';
+import './gantt.css';
 
 const ZOOMS = [
   { value: 'week', label: 'Minggu' },
   { value: 'month', label: 'Bulan' },
 ];
 
+// Date window + zoom for a Gantt page. It used to carry Department/Board/Entity
+// ID fields for the old Timeline page; the only caller left (Peta Program)
+// scopes itself from the account, so those would be editable filters that do
+// nothing. A page that needs extra controls passes them as children (they sit
+// after the zoom). The zoom switch shows only with onZoomChange, so a list view
+// can leave it out.
 export default function GanttToolbar({
-  filters, onChange, onRefresh, loading, canCrossEntity, zoom, onZoomChange,
+  filters, onChange, onRefresh, loading, zoom, onZoomChange, children,
 }) {
   const set = (k, v) => onChange({ ...filters, [k]: v });
 
   return (
-    <div style={{
-      display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end',
-      padding: 12, background: 'var(--color-surface)',
-      boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
-    }}>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-        <Input
+    <div className="gantt-toolbar">
+      <div className="gantt-toolbar__fields">
+        <DateInput
           label="Dari"
-          type="date"
           value={filters.from}
           onChange={(e) => set('from', e.target.value)}
-          style={{ margin: 0, width: 150 }}
         />
-        <Input
+        <DateInput
           label="Sampai"
-          type="date"
           value={filters.to}
           onChange={(e) => set('to', e.target.value)}
-          style={{ margin: 0, width: 150 }}
         />
-        <Input
-          label="Department ID"
-          type="number"
-          value={filters.departmentId}
-          onChange={(e) => set('departmentId', e.target.value)}
-          placeholder="opsional"
-          style={{ margin: 0, width: 130 }}
-        />
-        <Input
-          label="Board ID"
-          type="number"
-          value={filters.boardId}
-          onChange={(e) => set('boardId', e.target.value)}
-          placeholder="opsional"
-          style={{ margin: 0, width: 120 }}
-        />
-        {canCrossEntity && (
-          <Input
-            label="Entity ID"
-            type="number"
-            value={filters.entityId}
-            onChange={(e) => set('entityId', e.target.value)}
-            placeholder="kosong = milik Anda"
-            style={{ margin: 0, width: 150 }}
-          />
-        )}
       </div>
 
-      <div style={{ display: 'flex', gap: 4, marginLeft: 'auto', alignItems: 'center' }}>
-        <span style={{ fontSize: 12, color: 'var(--color-text-muted)', marginRight: 4 }}>Zoom:</span>
-        {ZOOMS.map((z) => (
-          <button
-            key={z.value}
-            type="button"
-            onClick={() => onZoomChange(z.value)}
-            style={{
-              padding: '6px 10px', fontSize: 12,
-              boxShadow: `inset 0 0 0 1px ${zoom === z.value ? 'var(--color-primary)' : 'var(--color-border)'}`,
-              borderRadius: 6,
-              background: zoom === z.value ? 'rgba(31,78,216,.08)' : 'transparent',
-              color: zoom === z.value ? 'var(--color-primary)' : 'var(--color-text)',
-              cursor: 'pointer',
-            }}
-          >
-            {z.label}
-          </button>
-        ))}
-        <Button variant="secondary" onClick={onRefresh} disabled={loading}>
-          <RefreshCw size={14} className={loading ? 'spin' : ''} />
-        </Button>
+      <div className="gantt-toolbar__end">
+        {onZoomChange ? (
+          <Segmented options={ZOOMS} value={zoom} onChange={onZoomChange} label="Skala linimasa" />
+        ) : null}
+        {children}
+        {/* Optional: a page that already has a "Muat ulang" button in its header
+            should not get a second control doing the same thing. */}
+        {onRefresh ? (
+          <IconButton label="Muat ulang" onClick={onRefresh} disabled={loading} aria-busy={loading || undefined}>
+            {loading ? <Spinner label={null} /> : <Icon name="refresh" />}
+          </IconButton>
+        ) : null}
       </div>
     </div>
   );

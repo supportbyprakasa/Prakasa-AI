@@ -1,0 +1,62 @@
+/* SearchField (docs/ui-guideline.md §4.4): pill 46px, --pw-surface-container,
+   radius 28, search icon 24 in a 56px slot, placeholder --pw-text-muted.
+   Focus turns it white and lifts it (--pw-elev-appbar, sementara). */
+.pw-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: var(--pw-search-height);
+  border-radius: var(--pw-radius-search);
+  outline: 1px solid transparent;
+  background: var(--pw-surface-container);
+  color: var(--pw-text-secondary);
+  transition:
+    background-color var(--pw-dur-xs) var(--pw-ease-accelerate),
+    box-shadow var(--pw-dur-xs) var(--pw-ease-accelerate),
+    width var(--pw-dur-xs) var(--pw-ease-decelerate);
+}
+.pw-search:focus-within { background: var(--pw-surface); box-shadow: var(--pw-elev-appbar); }
+.pw-search__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 56px;
+  height: 100%;
+  color: var(--pw-text-secondary);
+  pointer-events: none;
+}
+.pw-search__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0 16px 0 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--pw-text-secondary);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-md);
+  font-weight: 400;
+  appearance: none;
+}
+.pw-search__input::placeholder { color: var(--pw-text-muted); opacity: 1; }
+.pw-search__input::-webkit-search-cancel-button,
+.pw-search__input::-webkit-search-decoration { appearance: none; display: none; }
+.pw-search.is-filled .pw-search__input { padding-right: 0; }
+.pw-search > .pw-tooltip-anchor { flex: 0 0 auto; margin-right: 3px; }
+.pw-search.is-disabled { color: var(--pw-disabled-text); }
+.pw-search.is-disabled .pw-search__input { color: var(--pw-disabled-text); cursor: not-allowed; }
+
+/* variant="panel" (DataGrid toolbar): generation A text — Roboto 14, the
+   table's --pw-text / --pw-text-muted — in the same 46px pill. */
+.pw-search--panel,
+.pw-search--panel .pw-search__icon { color: var(--pw-text-muted); }
+.pw-search--panel .pw-search__input {
+  color: var(--pw-text);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ShieldAlert } from 'lucide-react';
 import Button from '../components/Button';
+import Icon from '../components/Icon';
 import { useAuth } from '../context/AuthContext';
 import { LoginShell } from './Login';
 
@@ -17,15 +17,15 @@ export default function AccessNotReady() {
 
   return (
     <LoginShell>
-      <span className="pw-login__status-icon" aria-hidden="true"><ShieldAlert size={24} /></span>
+      <span className="pw-login__status-icon" aria-hidden="true"><Icon name="gpp_maybe" /></span>
       <h2 className="pw-login__title">Akses belum disiapkan</h2>
       <p className="pw-login__subtitle">
-        Anda sudah masuk sebagai <strong>{user?.email}</strong>, tetapi akun ini belum memiliki divisi
+        Anda sudah masuk sebagai <span data-no-translate="" className="pw-strong">{user?.email}</span>, tetapi akun ini belum memiliki divisi
         dan role yang aktif. Minta Super Admin menetapkan divisi dan role Anda, lalu periksa lagi.
       </p>
       <div className="pw-login__actions">
-        <Button variant="primary" onClick={checkAgain} loading={checking}>Periksa lagi</Button>
         <Button variant="text" onClick={logout}>Keluar</Button>
+        <Button onClick={checkAgain} loading={checking}>Periksa lagi</Button>
       </div>
     </LoginShell>
   );

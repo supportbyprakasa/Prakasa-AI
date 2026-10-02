@@ -4,7 +4,9 @@ const { promisify } = require('util');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { Document, HeadingLevel, Packer, Paragraph, TextRun } = require('docx');
 const JSZip = require('jszip');
-const pdfParse = require('pdf-parse');
+// The library entry, not the package index: pdf-parse's index.js runs a debug
+// self-test (reads a sample PDF from disk) when it thinks it is the main module.
+const pdfParse = require('pdf-parse/lib/pdf-parse.js');
 
 const gzip = promisify(zlib.gzip);
 const gunzip = promisify(zlib.gunzip);

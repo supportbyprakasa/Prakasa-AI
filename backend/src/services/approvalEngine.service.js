@@ -1,5 +1,6 @@
 const pool = require('../db/pool');
 const matrixSvc = require('./approvalMatrix.service');
+const { spansDivisions, sameDivision } = require('./divisionAccess');
 
 const FLOW = {
   SEQUENTIAL: 'sequential',
@@ -251,6 +252,67 @@ async function delegationStillValid({
   return Boolean(rows[0]);
 }
 
+/**
+ * SQL predicate for which approval requests a user may see (list, detail,
+ * search). Cross-division roles see every request of the entity; everyone
+ * else sees requests of their own division (or without a division), their
+ * own requests, and requests where they are — or could be — a decider of a
+ * step: named approver, holder of the approver role, escalation target,
+ * past decider, or the delegate of a step's approver.
+ * The caller still filters the entity.
+ */
+function approvalVisibilitySql(user, alias = 'a') {
+  if (spansDivisions(user)) return { sql: '1=1', args: [] };
+  const uid = Number(user?.sub) || 0;
+  const dept = user?.departmentId == null ? null : Number(user.departmentId);
+  return {
+    sql: `(${alias}.department_id IS NULL OR ${alias}.department_id = ?
+           OR ${alias}.requested_by = ?
+           OR EXISTS (
+             SELECT 1 FROM approval_steps s_acl
+              WHERE s_acl.approval_request_id = ${alias}.id
+                AND (s_acl.approver_user_id = ? OR s_acl.escalated_to_user_id = ? OR s_acl.decided_by = ?
+                     OR s_acl.approver_role_id IN (SELECT ur_acl.role_id FROM user_roles ur_acl WHERE ur_acl.user_id = ?)
+                     OR s_acl.escalated_to_role_id IN (SELECT ur_acl2.role_id FROM user_roles ur_acl2 WHERE ur_acl2.user_id = ?)
+                     OR EXISTS (
+                       SELECT 1 FROM approval_delegations d_acl
+                        WHERE d_acl.entity_id = ${alias}.entity_id AND d_acl.to_user_id = ?
+                          AND d_acl.from_user_id = s_acl.approver_user_id
+                          AND d_acl.is_active = 1 AND d_acl.deleted_at IS NULL
+                          AND d_acl.starts_at <= NOW() AND d_acl.ends_at >= NOW()))))`,
+    args: [dept, uid, uid, uid, uid, uid, uid, uid],
+  };
+}
+
+const SELF_DECISION_MESSAGE = 'Anda tidak bisa memutuskan pengajuan Anda sendiri';
+
+function isRequester(approval, userId) {
+  return Boolean(approval) && approval.requested_by != null &&
+    Number(approval.requested_by) === Number(userId);
+}
+
+/** The request a step belongs to (requester + division), unless the caller passed it. */
+async function requestFactsFor(step, approval, conn) {
+  if (approval && approval.requested_by !== undefined) return approval;
+  if (!step?.approval_request_id) return null;
+  const [rows] = await conn.query(
+    'SELECT id, entity_id, department_id, requested_by FROM approval_requests WHERE id=? LIMIT 1',
+    [step.approval_request_id]
+  );
+  return rows[0] || null;
+}
+
+async function userDepartmentOf(userId, userDepartmentId, conn) {
+  if (userDepartmentId !== undefined) return userDepartmentId;
+  const [rows] = await conn.query('SELECT department_id FROM users WHERE id=? LIMIT 1', [userId]);
+  return rows[0] ? rows[0].department_id : null;
+}
+
+/**
+ * Whether the user may decide this step. `approval` (the request row) and
+ * `userDepartmentId` are optional; when omitted they are read from the DB.
+ * The requester never decides their own request, whatever the step says.
+ */
 async function canDecide({
   step,
   userId,
@@ -259,8 +321,13 @@ async function canDecide({
   entityId,
   requestType = null,
   documentTypeId = null,
+  approval = null,
+  userDepartmentId = undefined,
   conn = pool,
 }) {
+  const request = await requestFactsFor(step, approval, conn);
+  if (isRequester(request, userId)) return false;
+
   if (step.escalated_to_user_id &&
       Number(step.escalated_to_user_id) === Number(userId)) {
     return true;
@@ -291,11 +358,16 @@ async function canDecide({
     return true;
   }
 
-  // Legacy Phase-3 requests can contain an unassigned fallback step.
-  // The route already requires approval.decide; preserve that legacy behavior
-  // only for this unassigned fallback. Matrix-backed steps must stay assigned.
+  // Legacy Phase-3 requests can contain an unassigned fallback step. Only an
+  // approval.decide holder of the request's division (or a cross-division
+  // role) may decide it; the requester is already excluded above.
+  // Matrix-backed steps must stay assigned.
   if (!step.matrix_rule_id && !step.approver_user_id && !step.approver_role_id) {
-    return userPermissions.includes('approval.decide');
+    if (!userPermissions.includes('approval.decide')) return false;
+    if (!request) return false;
+    if (spansDivisions({ permissions: userPermissions })) return true;
+    const departmentId = await userDepartmentOf(userId, userDepartmentId, conn);
+    return sameDivision({ departmentId }, request.department_id);
   }
 
   return false;
@@ -330,6 +402,10 @@ async function decideStep({
     throw appError('Approval step belum aktif', 409, 'CONFLICT');
   }
 
+  if (isRequester(approvalRequest, userId)) {
+    throw appError(SELF_DECISION_MESSAGE, 403, 'FORBIDDEN');
+  }
+
   if (action === 'skip' && !step.is_optional) {
     throw appError('Hanya step opsional yang dapat di-skip', 400, 'VALIDATION_ERROR');
   }
@@ -345,6 +421,7 @@ async function decideStep({
     entityId: approvalRequest.entity_id,
     requestType: approvalRequest.request_type,
     documentTypeId: approvalRequest.document_type_id,
+    approval: approvalRequest,
     conn,
   });
   if (!allowed) {
@@ -516,6 +593,9 @@ async function requestRevision({
   if (!step || step.status !== 'pending' || !step.activated_at) {
     throw appError('Step aktif tidak ditemukan', 409, 'CONFLICT');
   }
+  if (isRequester(approvalRequest, userId)) {
+    throw appError(SELF_DECISION_MESSAGE, 403, 'FORBIDDEN');
+  }
 
   const allowed = await canDecide({
     step,
@@ -525,6 +605,7 @@ async function requestRevision({
     entityId: approvalRequest.entity_id,
     requestType: approvalRequest.request_type,
     documentTypeId: approvalRequest.document_type_id,
+    approval: approvalRequest,
     conn,
   });
   if (!allowed) {
@@ -551,14 +632,50 @@ async function requestRevision({
   };
 }
 
+/**
+ * The requester takes a pending request back (People & Culture wave 2,
+ * §2.1.3): the request becomes `cancelled` and its pending steps `skipped`,
+ * on the caller's connection. A note is required. 409 when no longer pending.
+ */
+async function withdrawRequest({ approvalRequestId, actorUserId, note, conn }) {
+  if (!String(note || '').trim()) {
+    throw appError('Tulis alasan menarik pengajuan', 400, 'VALIDATION_ERROR');
+  }
+  const [[request]] = await conn.query(
+    'SELECT id, status FROM approval_requests WHERE id=? LIMIT 1 FOR UPDATE',
+    [approvalRequestId]
+  );
+  if (!request) throw appError('Approval request tidak ditemukan', 404, 'NOT_FOUND');
+  if (request.status !== 'pending') {
+    throw appError('Pengajuan ini sudah diputuskan, jadi tidak bisa ditarik', 409, 'CONFLICT');
+  }
+  const cleanNote = String(note).trim().slice(0, 500);
+  await conn.query(
+    `UPDATE approval_steps SET status='skipped', note=?
+      WHERE approval_request_id=? AND status='pending'`,
+    [cleanNote, approvalRequestId]
+  );
+  await conn.query(
+    `UPDATE approval_requests
+        SET status='cancelled', decided_by=?, decided_at=NOW(), decision_note=?
+      WHERE id=?`,
+    [actorUserId, cleanNote, approvalRequestId]
+  );
+  return { id: Number(approvalRequestId), status: 'cancelled' };
+}
+
 module.exports = {
   FLOW,
   createApprovalRequest,
   createStepsFromMatrix,
   getActiveSteps,
   canDecide,
+  isRequester,
+  SELF_DECISION_MESSAGE,
+  approvalVisibilitySql,
   decideStep,
   activateOrder,
   advanceAfterDecision,
   requestRevision,
+  withdrawRequest,
 };

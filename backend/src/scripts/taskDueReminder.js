@@ -1,5 +1,6 @@
 require('dotenv').config();
 const pool = require('../db/pool');
+const { drainAndEnd } = require('../utils/pendingWork');
 const taskNotification = require('../services/taskNotification.service');
 const logger = require('../utils/logger');
 
@@ -33,15 +34,15 @@ async function notifyRows(rows, event, title, dateKey) {
 
 async function runOnce() {
   const [[dates]] = await pool.query(
-    `SELECT DATE_FORMAT(CURDATE(), '%Y-%m-%d') AS today,
-            DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d') AS tomorrow`
+    `SELECT DATE_FORMAT(DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR), '%Y-%m-%d') AS today,
+            DATE_FORMAT(DATE_ADD(DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR), INTERVAL 1 DAY), '%Y-%m-%d') AS tomorrow`
   );
 
   const [dueSoonRows] = await pool.query(
     `SELECT t.*
        FROM tasks t
       WHERE t.deleted_at IS NULL
-        AND t.due_date = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+        AND t.due_date = DATE_ADD(DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR), INTERVAL 1 DAY)
         AND t.status NOT IN ('done','closed','completed','cancelled')`
   );
 
@@ -49,7 +50,7 @@ async function runOnce() {
     `SELECT t.*
        FROM tasks t
       WHERE t.deleted_at IS NULL
-        AND t.due_date < CURDATE()
+        AND t.due_date < DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR)
         AND t.status NOT IN ('done','closed','completed','cancelled')`
   );
 
@@ -86,7 +87,7 @@ if (require.main === module) {
       console.error(error);
       process.exitCode = 1;
     } finally {
-      await pool.end();
+      await drainAndEnd(pool);
     }
   })();
 }

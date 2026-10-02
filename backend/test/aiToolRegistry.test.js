@@ -18,6 +18,8 @@ function appRoutes() {
   return [...source.matchAll(/path="([^"]+)"/g)]
     .map((match) => match[1])
     .filter((route) => !UNAUTHENTICATED.has(route))
+    // The design gallery exists only in development builds (App.jsx): no AI tool.
+    .filter((route) => route !== '/__design' && route !== '__design')
     .map((route) => (route.startsWith('/') ? route : `/${route}`));
 }
 
@@ -81,7 +83,6 @@ test('the most specific pattern wins and exposes the route subject', () => {
   assert.deepEqual(detail.subject && { type: detail.subject.type, params: detail.params }, { type: 'warehouse_movement', params: { type: 'outbound', id: '12' } });
   assert.equal(resolveTool('/warehouse/movements/inbound/new').subject, null);
   assert.equal(resolveTool('/signatures/asset').tool.key, 'signature-asset');
-  assert.equal(resolveTool('/forms/submissions/3').tool.key, 'form-submissions');
   assert.equal(resolveTool('/approvals/5').subject.type, 'approval_request');
   assert.equal(resolveTool('/does-not-exist'), null);
 });

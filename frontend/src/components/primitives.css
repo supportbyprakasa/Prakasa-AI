@@ -1,0 +1,39 @@
+/* Shared small components: ErrorBoundary, Signature precheck, NotificationItem
+   and SearchResultCard. Colours come from styles/tokens.css only. Badge,
+   snackbar (toast), skeleton and dialog rules live next to their components
+   (badge.css, snackbar.css, skeleton.css, dialog.css); button, tabs and filter
+   bar rules in button.css, tabs.css and datagrid/datagrid.css. */
+
+/* Error boundary (content is an EmptyState tone="error") */
+.pw-error-boundary { max-width: 640px; margin: 48px auto; padding: 0 16px; overflow-wrap: anywhere; }
+
+/* Signature precheck panel */
+.pw-precheck { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pw-precheck__note { color: var(--pw-text-muted); font-size: var(--pw-font-xs); line-height: 1.5; }
+.pw-precheck__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.pw-precheck__meta-text { color: var(--pw-text-muted); font-size: var(--pw-font-xs); }
+.pw-precheck__meta-text--end { margin-left: auto; }
+.pw-precheck__summary {
+  padding: 12px;
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface-container);
+  font-size: var(--pw-font-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  box-shadow: inset 0 0 0 1px var(--pw-divider);
+}
+.pw-precheck__findings { display: flex; flex-direction: column; gap: 4px; }
+.pw-precheck__heading { margin-bottom: 4px; color: var(--pw-text-muted); font-size: var(--pw-font-xs); }
+.pw-precheck__finding {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface);
+  font-size: var(--pw-font-sm);
+  box-shadow: inset 0 0 0 1px var(--pw-divider);
+}
+.pw-precheck__finding-body { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.pw-precheck__ref { margin-top: 4px; color: var(--pw-text-muted); font-size: var(--pw-font-xs); }
+

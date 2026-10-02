@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
+import { dragCarriesFiles, filesFromDrop, namePastedFile } from './aiFiles';
 
-const carriesFiles = (event) => Array.from(event.dataTransfer?.types || []).includes('Files');
+const carriesFiles = (event) => dragCarriesFiles(event.dataTransfer);
 
 // Drag-and-drop of files onto a whole area. Returns the props to spread on the drop target
 // and whether files are currently dragged over it (to show an overlay).
@@ -32,7 +33,7 @@ export default function useFileDrop(onFiles, enabled = true) {
       event.preventDefault();
       depth.current = 0;
       setDragging(false);
-      const files = Array.from(event.dataTransfer.files || []);
+      const files = filesFromDrop(event.dataTransfer);
       if (files.length) onFiles(files);
     },
   };
@@ -40,10 +41,5 @@ export default function useFileDrop(onFiles, enabled = true) {
   return { dragging, dropProps };
 }
 
-// Screenshots pasted from the clipboard are all called "image.png"; give them a unique name.
-export function namePastedFile(file) {
-  if (file.name && file.name !== 'image.png') return file;
-  const extension = (file.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
-  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  return new File([file], `tempelan-${stamp}.${extension}`, { type: file.type });
-}
+// Kept here for its callers; the function lives with the other file helpers.
+export { namePastedFile };

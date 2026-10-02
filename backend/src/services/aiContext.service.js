@@ -26,30 +26,6 @@ function assertUnderlyingPermission(user, codes) {
   return true;
 }
 
-function isSensitiveFieldKey(key) {
-  const normalized = String(key || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
-
-  return [
-    'password',
-    'passwd',
-    'pwd',
-    'secret',
-    'token',
-    'accesstoken',
-    'refreshtoken',
-    'idtoken',
-    'apikey',
-    'privatekey',
-    'clientsecret',
-    'authorization',
-    'jwt',
-    'signature',
-  ].some((needle) => normalized.includes(needle));
-}
-
-
 function canAccessScopedRow(user, row) {
   const rowEntityId = Number(row.entity_id ?? row.entityId);
   const rowDepartmentId = row.department_id ?? row.departmentId ?? null;
@@ -72,19 +48,6 @@ function canAccessScopedRow(user, row) {
   }
 
   return hasPerm(user, 'ai_command.admin.view');
-}
-
-async function loadRoleIds(user, entityId) {
-  const [rows] = await pool.query(
-    `SELECT ur.role_id AS roleId
-       FROM user_roles ur
-       JOIN roles r ON r.id=ur.role_id
-      WHERE ur.user_id=?
-        AND r.entity_id=?
-        AND r.deleted_at IS NULL`,
-    [user.sub, entityId]
-  );
-  return rows.map((row) => Number(row.roleId));
 }
 
 function formatBlock(type, id, title, body, maxChars = MAX_CONTEXT_CHARS) {
@@ -189,40 +152,6 @@ const RESOLVERS = {
     };
   },
 
-  async meeting({ entityId, contextId, user }) {
-    if (!assertUnderlyingPermission(user, ['meeting.view'])) return null;
-
-    const [rows] = await pool.query(
-      `SELECT id, entity_id, department_id, title, description, agenda,
-              start_time, end_time, status
-         FROM meetings
-        WHERE id=? AND deleted_at IS NULL
-        LIMIT 1`,
-      [contextId]
-    );
-    const row = rows[0];
-    if (!row || Number(row.entity_id) !== Number(entityId)) return null;
-    if (!canAccessScopedRow(user, row)) return null;
-
-    return {
-      type: 'meeting',
-      id: row.id,
-      title: row.title,
-      text: formatBlock(
-        'meeting',
-        row.id,
-        row.title,
-        [
-          `Status: ${row.status}`,
-          `Start: ${row.start_time}`,
-          `End: ${row.end_time}`,
-          row.agenda ? `Agenda: ${row.agenda}` : '',
-          row.description ? `Description: ${row.description}` : '',
-        ].filter(Boolean).join('\n')
-      ),
-    };
-  },
-
   async approval_request({ entityId, contextId, user }) {
     if (!assertUnderlyingPermission(user, ['approval.view'])) return null;
 
@@ -258,181 +187,6 @@ const RESOLVERS = {
     };
   },
 
-  async form_submission({ entityId, contextId, user }) {
-    const [rows] = await pool.query(
-      `SELECT fs.id, fs.entity_id, fs.department_id,
-              fs.submission_number, fs.status, fs.title, fs.notes,
-              fs.submitted_by, f.name AS formName
-         FROM form_submissions fs
-         JOIN forms f ON f.id=fs.form_id
-        WHERE fs.id=? AND fs.deleted_at IS NULL
-        LIMIT 1`,
-      [contextId]
-    );
-    const row = rows[0];
-    if (!row || Number(row.entity_id) !== Number(entityId)) return null;
-
-    const own = Number(row.submitted_by) === Number(user.sub);
-    if (
-      !own &&
-      !assertUnderlyingPermission(user, [
-        'form_submission.view',
-        'form_submission.manage',
-      ])
-    ) {
-      return null;
-    }
-    if (!canAccessScopedRow(user, row) && !own) return null;
-
-    const [values] = await pool.query(
-      `SELECT field_key AS fieldKey, value_text AS valueText,
-              value_number AS valueNumber, value_date AS valueDate,
-              value_json AS valueJson
-         FROM form_submission_values
-        WHERE submission_id=?
-        ORDER BY id ASC
-        LIMIT 30`,
-      [row.id]
-    );
-
-    const valueLines = values.map((value) => {
-      if (isSensitiveFieldKey(value.fieldKey)) {
-        return `${value.fieldKey}: [REDACTED]`;
-      }
-
-      let rendered =
-        value.valueText ??
-        value.valueNumber ??
-        value.valueDate ??
-        value.valueJson ??
-        '';
-      if (typeof rendered === 'object') {
-        try { rendered = JSON.stringify(rendered); } catch { rendered = ''; }
-      }
-      return `${value.fieldKey}: ${truncate(rendered, 500)}`;
-    });
-
-    return {
-      type: 'form_submission',
-      id: row.id,
-      title: row.title || row.submission_number,
-      text: formatBlock(
-        'form_submission',
-        row.id,
-        row.title || row.submission_number,
-        [
-          `Submission: ${row.submission_number}`,
-          `Form: ${row.formName}`,
-          `Status: ${row.status}`,
-          row.notes ? `Notes: ${row.notes}` : '',
-          valueLines.length ? `Values:\n${valueLines.join('\n')}` : '',
-        ].filter(Boolean).join('\n')
-      ),
-    };
-  },
-
-  async decision_log({ entityId, contextId, user }) {
-    if (!assertUnderlyingPermission(user, ['decision_log.view'])) return null;
-
-    const [rows] = await pool.query(
-      `SELECT id, entity_id, department_id, title, decision,
-              rationale, impact, category, status
-         FROM decision_logs
-        WHERE id=? AND deleted_at IS NULL
-        LIMIT 1`,
-      [contextId]
-    );
-    const row = rows[0];
-    if (!row || Number(row.entity_id) !== Number(entityId)) return null;
-    if (!canAccessScopedRow(user, row)) return null;
-
-    return {
-      type: 'decision_log',
-      id: row.id,
-      title: row.title,
-      text: formatBlock(
-        'decision_log',
-        row.id,
-        row.title,
-        [
-          `Category: ${row.category || '-'}`,
-          `Status: ${row.status}`,
-          `Decision: ${row.decision}`,
-          row.rationale ? `Rationale: ${row.rationale}` : '',
-          row.impact ? `Impact: ${row.impact}` : '',
-        ].filter(Boolean).join('\n')
-      ),
-    };
-  },
-
-  async kb_document({ entityId, contextId, user }) {
-    if (!assertUnderlyingPermission(user, ['kb.view', 'kb.query', 'kb.manage'])) {
-      return null;
-    }
-
-    const [rows] = await pool.query(
-      `SELECT id, entity_id, department_id, title, category,
-              extracted_text, visibility, allowed_role_ids, uploaded_by
-         FROM kb_documents
-        WHERE id=? AND deleted_at IS NULL AND is_active=1
-        LIMIT 1`,
-      [contextId]
-    );
-    const row = rows[0];
-    if (!row || Number(row.entity_id) !== Number(entityId)) return null;
-
-    const sameEntity =
-      Number(user.entityId) === Number(row.entity_id);
-    const crossEntity =
-      !sameEntity &&
-      hasPerm(user, 'entity.cross_access') &&
-      hasPerm(user, 'ai_command.admin.view');
-
-    if (!sameEntity && !crossEntity) return null;
-
-    if (row.visibility === 'department') {
-      if (
-        Number(row.department_id) !== Number(user.departmentId) &&
-        !hasPerm(user, 'ai_command.admin.view')
-      ) {
-        return null;
-      }
-    } else if (row.visibility === 'role') {
-      const allowed = Array.isArray(row.allowed_role_ids)
-        ? row.allowed_role_ids
-        : (() => {
-            try { return JSON.parse(row.allowed_role_ids || '[]'); }
-            catch { return []; }
-          })();
-      const roleIds = await loadRoleIds(user, row.entity_id);
-      if (
-        allowed.length &&
-        !allowed.some((id) => roleIds.includes(Number(id))) &&
-        !hasPerm(user, 'kb.manage')
-      ) {
-        return null;
-      }
-    } else if (row.visibility === 'private') {
-      if (
-        Number(row.uploaded_by) !== Number(user.sub) &&
-        !hasPerm(user, 'kb.manage')
-      ) {
-        return null;
-      }
-    }
-
-    return {
-      type: 'kb_document',
-      id: row.id,
-      title: row.title,
-      text: formatBlock(
-        'kb_document',
-        row.id,
-        row.title,
-        `Category: ${row.category || '-'}\nContent:\n${truncate(row.extracted_text || '', 5200)}`
-      ),
-    };
-  },
 };
 
 const SUPPORTED_CONTEXT_TYPES = Object.freeze(Object.keys(RESOLVERS));
@@ -509,7 +263,10 @@ async function attachContext({
   };
 }
 
-async function resolveContext({ session, user, budget = STANDARD_BUDGET }) {
+// `excludeDocumentIds`: documents the caller puts into the prompt itself (the
+// attachments of the message being answered), so they are not sent twice.
+async function resolveContext({ session, user, budget = STANDARD_BUDGET, excludeDocumentIds = [] }) {
+  const excluded = new Set(excludeDocumentIds.map(Number));
   const [links] = await pool.query(
     `SELECT id, context_type AS contextType,
             context_id AS contextId, relation
@@ -526,6 +283,7 @@ async function resolveContext({ session, user, budget = STANDARD_BUDGET }) {
   let truncatedCount = 0;
 
   for (const link of links) {
+    if (link.contextType === 'document' && excluded.has(Number(link.contextId))) continue;
     let resolved = null;
     try {
       resolved = await resolveOne({

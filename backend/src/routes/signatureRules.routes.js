@@ -8,7 +8,6 @@ const ctrl = require('../controllers/signatureRules.controller');
 
 const body = z.object({
   documentTypeId: z.number().int().positive().nullable().optional(),
-  appliesToFormId: z.number().int().positive().nullable().optional(),
   minApprovalLevel: z.number().int().nonnegative().optional(),
   requiredSignerRoleId: z.number().int().positive().nullable().optional(),
   requiredSignerUserId: z.number().int().positive().nullable().optional(),

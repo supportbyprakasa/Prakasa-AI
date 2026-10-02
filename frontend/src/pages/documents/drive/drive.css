@@ -1,0 +1,89 @@
+/* Drive browser (Penyimpanan divisi, My Drive, Dokumen): toolbar row, file
+   groups, file card and the preview. The admin console has no file browser,
+   so the closest Google product (Drive) is followed with the admin console
+   tokens (audit §5). Layout only; buttons, menus and cards are shared. */
+
+/* Row above the files: scope or folder path on the left, "Buat baru" right. */
+.drive-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  min-width: 0;
+}
+.drive-toolbar__start { display: flex; flex: 1 1 320px; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.drive-toolbar__select { flex: 0 1 280px; min-width: 0; }
+.drive-new { display: inline-flex; }
+
+/* Folder path (My Drive): Home › Folder › Subfolder. */
+.drive-path { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.drive-path__step { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.drive-path__sep { color: var(--pw-text-muted); }
+.drive-path__current {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 12px;
+  color: var(--pw-text);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-lg);
+  line-height: 24px;
+  overflow-wrap: anywhere;
+}
+
+/* Groups and grid. */
+.drive-group { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.drive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+  gap: 16px;
+}
+
+/* File card: the open button fills the card; the delete IconButton sits on top
+   of its end, so the two controls never nest. */
+.drive-card { position: relative; min-width: 0; }
+.drive-card > .pw-card.drive-card__open {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 48px 12px 12px;
+  border-radius: var(--pw-radius-xl);
+  color: var(--pw-text);
+  text-align: left;
+  cursor: pointer;
+}
+.drive-card__icon,
+.drive-card__thumb {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--pw-radius-lg);
+}
+.drive-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pw-surface);
+  color: var(--pw-text-muted);
+}
+.drive-card__thumb { object-fit: cover; background: var(--pw-surface); }
+.drive-card__text { display: flex; flex: 1 1 auto; flex-direction: column; gap: 4px; min-width: 0; }
+.drive-card__name,
+.drive-card__meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drive-card__name { color: var(--pw-text); font-size: var(--pw-font-body); font-weight: 500; line-height: 20px; }
+.drive-card__meta { color: var(--pw-text-meta); font-size: var(--pw-font-xs); line-height: 16px; }
+.drive-card__action { position: absolute; top: 50%; right: 8px; transform: translateY(-50%); }
+
+/* Preview inside the full-screen dialog: the iframe fills the card. */
+.drive-preview { height: calc(100vh - 240px); min-height: 320px; }
+.drive-preview iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--pw-divider);
+  border-radius: var(--pw-radius-sm);
+}

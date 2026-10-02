@@ -1,5 +1,5 @@
 const pool = require('../db/pool');
-const { assertTaskAccess } = require('./taskAccess.service');
+const { assertTaskAccess, loadTask, canViewTask, taskDivisionSql } = require('./taskAccess.service');
 const activity = require('./taskActivity.service');
 
 function error(message, status = 400, code = 'VALIDATION_ERROR') {
@@ -38,7 +38,11 @@ async function wouldCreateCycle({ predecessorTaskId, successorTaskId }, conn = p
 }
 
 async function list({ task, user }) {
-  assertTaskAccess({ user, task, action: 'view' });
+  await assertTaskAccess({ user, task, action: 'view' });
+  // Linked tasks of divisions the user may not see are left out.
+  const tv = taskDivisionSql(user, 't');
+  const pv = taskDivisionSql(user, 'p');
+  const sv = taskDivisionSql(user, 's');
 
   const [blockedBy] = await pool.query(
     `SELECT d.id, d.predecessor_task_id AS taskId,
@@ -47,8 +51,8 @@ async function list({ task, user }) {
        JOIN tasks t ON t.id = d.predecessor_task_id
       WHERE d.successor_task_id = ?
         AND d.dependency_type = 'blocks'
-        AND t.deleted_at IS NULL`,
-    [task.id]
+        AND t.deleted_at IS NULL AND ${tv.sql}`,
+    [task.id, ...tv.args]
   );
   const [blocking] = await pool.query(
     `SELECT d.id, d.successor_task_id AS taskId,
@@ -57,8 +61,8 @@ async function list({ task, user }) {
        JOIN tasks t ON t.id = d.successor_task_id
       WHERE d.predecessor_task_id = ?
         AND d.dependency_type = 'blocks'
-        AND t.deleted_at IS NULL`,
-    [task.id]
+        AND t.deleted_at IS NULL AND ${tv.sql}`,
+    [task.id, ...tv.args]
   );
   const [related] = await pool.query(
     `SELECT d.id,
@@ -67,17 +71,17 @@ async function list({ task, user }) {
             d.successor_task_id AS successorTaskId,
             s.title AS successorTitle
        FROM task_dependencies d
-       JOIN tasks p ON p.id=d.predecessor_task_id AND p.deleted_at IS NULL
-       JOIN tasks s ON s.id=d.successor_task_id AND s.deleted_at IS NULL
+       JOIN tasks p ON p.id=d.predecessor_task_id AND p.deleted_at IS NULL AND ${pv.sql}
+       JOIN tasks s ON s.id=d.successor_task_id AND s.deleted_at IS NULL AND ${sv.sql}
       WHERE d.dependency_type='related'
         AND (d.predecessor_task_id=? OR d.successor_task_id=?)`,
-    [task.id, task.id]
+    [...pv.args, ...sv.args, task.id, task.id]
   );
   return { blockedBy, blocking, related };
 }
 
 async function add({ task, user, predecessorTaskId, successorTaskId, dependencyType = 'blocks' }) {
-  assertTaskAccess({ user, task, action: 'manage' });
+  await assertTaskAccess({ user, task, action: 'manage' });
   if (!['blocks', 'related'].includes(dependencyType)) {
     throw error('dependencyType tidak valid');
   }
@@ -90,6 +94,13 @@ async function add({ task, user, predecessorTaskId, successorTaskId, dependencyT
   if (pred === succ) throw error('Task tidak dapat bergantung ke dirinya sendiri');
   if (Number(task.id) !== pred && Number(task.id) !== succ) {
     throw error('Dependency harus melibatkan task pada URL');
+  }
+  // The other end of the link must be a task the actor may see too, otherwise
+  // a dependency would leak another division's task into this one.
+  const otherId = Number(task.id) === pred ? succ : pred;
+  const other = await loadTask(otherId);
+  if (!other || !(await canViewTask(user, other))) {
+    throw error('Salah satu task tidak ditemukan', 404, 'NOT_FOUND');
   }
 
   const conn = await pool.getConnection();
@@ -166,7 +177,7 @@ async function add({ task, user, predecessorTaskId, successorTaskId, dependencyT
 }
 
 async function remove({ task, user, dependencyId }) {
-  assertTaskAccess({ user, task, action: 'manage' });
+  await assertTaskAccess({ user, task, action: 'manage' });
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();

@@ -3,6 +3,8 @@ const notif = require('./notification.service');
 
 // Users who should hear about newly active approval steps. When the request belongs to a
 // department-scoped subject, role recipients are also limited to that department.
+const { approvalActionUrl } = require('./approvalLink');
+
 async function targetUsersForSteps(stepIds, entityId, { departmentId = null } = {}) {
   if (!stepIds?.length) return [];
 
@@ -68,7 +70,7 @@ async function notifySteps(stepIds, request, { departmentId = null, excludeUserI
         event: 'approval.step_activated',
         subjectType: 'approval_request',
         subjectId: request.id,
-        actionUrl: `/approvals/${request.id}`,
+        actionUrl: approvalActionUrl({ id: request.id, subjectType: request.subject_type, subjectId: request.subject_id }),
       });
     } catch {
       // Notification failure must not revert the committed approval state.

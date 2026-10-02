@@ -1,0 +1,34 @@
+/* Pusat Eskalasi — only the page's own layout. */
+
+/* Dashboard cards sit 24px apart (docs/ui-guideline.md §3.4); four small
+   counters still fit two by two on a phone. */
+.pw-cols-4.esc-kpis { gap: 24px; }
+
+/* Days late, coloured by the source's severity (escalationsModel.severityTone). */
+.esc-late { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.esc-late.is-error { color: var(--pw-error); }
+.esc-late.is-warning { color: var(--pw-warning); }
+
+/* "Per modul": one block per division module (the list comes from the API, so
+   the grid fills whatever count arrives) — its name and total, then a chip per
+   kind that holds something. */
+.esc-modules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.esc-module { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.esc-module__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  box-shadow: inset 0 -1px 0 0 var(--pw-divider);
+}
+.esc-module__name { color: var(--pw-text); font-weight: 500; overflow-wrap: anywhere; }
+.esc-module__count { color: var(--pw-text-muted); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 1023px) {
+  .esc-modules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .pw-cols-4.esc-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .esc-modules { grid-template-columns: minmax(0, 1fr); }
+}

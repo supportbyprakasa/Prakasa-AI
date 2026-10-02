@@ -1,66 +1,80 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, RefreshCw, ArrowLeft, Layers } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../api/client';
-import Card from '../../components/Card';
+import ActionMenu from '../../components/ActionMenu';
+import Banner from '../../components/Banner';
 import Button from '../../components/Button';
+import DateInput from '../../components/DateInput';
+import EmptyState, { LoadingState } from '../../components/EmptyState';
+import FullScreenDialog, { FullScreenSection } from '../../components/FullScreenDialog';
+import Icon from '../../components/Icon';
+import IconButton from '../../components/IconButton';
 import Input from '../../components/Input';
 import Modal from '../../components/Modal';
-import Badge from '../../components/Badge';
+import Page from '../../components/Page';
+import SearchField from '../../components/SearchField';
+import Select from '../../components/Select';
+import StatusBadge from '../../components/StatusBadge';
+import Textarea from '../../components/Textarea';
+import PriorityBadge from '../../components/PriorityBadge';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { formatDateTime } from '../../components/format';
+import { KanbanBoard, KanbanCard, KanbanColumn } from '../../components/tasks/Kanban';
 import TaskProgress from '../../components/tasks/TaskProgress';
-import { SkeletonCard } from '../../components/Skeleton';
+import {
+  FINAL_STATUSES, TASK_PRIORITY_OPTIONS, TASK_STATUS_OPTIONS, isDueToday, isOverdue, mergeAssignees, taskDate,
+  validateTaskForm,
+} from '../../components/tasks/taskModel';
+import { Mixed, NoTranslate, data as dataPart } from '../../i18n/NoTranslate';
 import { toast } from '../../components/Toast';
+import { defineAIForm, f } from '../../components/ai/aiFormFields';
+import usePrakasaAIForm from '../../components/ai/usePrakasaAIForm';
 import { useAuth } from '../../context/AuthContext';
+import './tasks.css';
+import { safeExternalHref } from '../../components/safeHref.js';
 
-const PRIORITY_TONE = {
-  low: 'default',
-  normal: 'info',
-  high: 'warning',
-  urgent: 'error',
-};
-const FINAL_STATUSES = new Set(['done', 'closed', 'completed', 'cancelled']);
+const errorMessage = (e, fallback) => (e.response?.data?.error?.code === 'FORBIDDEN'
+  ? 'Anda tidak memiliki akses untuk tindakan ini.'
+  : (e.response?.data?.error?.message || fallback));
 
-function localDateKey(date = new Date()) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function isOverdue(task) {
-  if (!task.dueDate || FINAL_STATUSES.has(task.status)) return false;
-  return String(task.dueDate).slice(0, 10) < localDateKey();
-}
-
-function isDueToday(task) {
-  if (!task.dueDate || FINAL_STATUSES.has(task.status)) return false;
-  return String(task.dueDate).slice(0, 10) === localDateKey();
-}
-
+// /tasks — the boards, as one list; /tasks?board=<id> — one board's kanban.
+// The chosen board lives in the URL, so the browser's back button and a
+// shared link both work.
 export default function TaskBoard() {
   const { user } = useAuth();
+  const [params, setParams] = useSearchParams();
   const [boards, setBoards] = useState([]);
   const [boardsLoading, setBoardsLoading] = useState(true);
-  const [selectedBoardId, setSelectedBoardId] = useState(null);
+  const [boardsError, setBoardsError] = useState('');
   const [createBoardOpen, setCreateBoardOpen] = useState(false);
 
   const canManageBoard = (user?.permissions || []).includes('board.manage');
   const canCreateTask = (user?.permissions || []).includes('task.create');
+  const selectedBoardId = Number(params.get('board')) || null;
+  const openBoard = (id) => setParams(id ? { board: String(id) } : {});
+  // "Tambah task" opens by URL too (/tasks?board=ID&baru=1 — a link, or Prakasa
+  // AI's buka_halaman); the parameter is removed once the form is open.
+  const createRequested = params.get('baru') === '1';
+  const createOpened = () => setParams((current) => { const next = new URLSearchParams(current); next.delete('baru'); return next; }, { replace: true });
+
+  // "Tambah board" opens by URL as well: /tasks?baru=papan.
+  const boardRequested = !selectedBoardId && params.get('baru') === 'papan';
+  useEffect(() => {
+    if (!boardRequested) return;
+    if (canManageBoard) setCreateBoardOpen(true);
+    createOpened();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boardRequested, canManageBoard]);
 
   const loadBoards = async () => {
     setBoardsLoading(true);
     try {
       const r = await api.get('/boards');
       setBoards(r.data.data || []);
+      setBoardsError('');
     } catch (e) {
-      const code = e.response?.data?.error?.code;
-      toast(
-        code === 'FORBIDDEN'
-          ? 'Anda tidak memiliki akses untuk tindakan ini.'
-          : (e.response?.data?.error?.message || 'Gagal memuat board'),
-        'error'
-      );
+      setBoardsError(errorMessage(e, 'Daftar board gagal dimuat.'));
     } finally {
       setBoardsLoading(false);
     }
@@ -71,86 +85,61 @@ export default function TaskBoard() {
   if (selectedBoardId) {
     return (
       <BoardWorkspace
+        key={selectedBoardId}
         boardId={selectedBoardId}
-        onBack={() => setSelectedBoardId(null)}
+        boards={boards}
+        onPickBoard={openBoard}
         canCreateTask={canCreateTask}
         canManageBoard={canManageBoard}
-        onBoardDeleted={() => { setSelectedBoardId(null); loadBoards(); }}
+        createRequested={createRequested}
+        onCreateOpened={createOpened}
+        onBoardDeleted={() => { openBoard(null); loadBoards(); }}
       />
     );
   }
 
+  const columns = [
+    {
+      key: 'name', header: 'Board', exportValue: (b) => b.name,
+      render: (b) => (
+        <span className="pw-cell">
+          <span data-no-translate="" className="pw-cell__title">{b.name}</span>
+          {b.description ? <span className="pw-cell__meta">{String(b.description).slice(0, 120)}</span> : null}
+        </span>
+      ),
+    },
+    {
+      key: 'isArchived', header: 'Status', sortValue: (b) => (b.isArchived ? 1 : 0),
+      exportValue: (b) => (b.isArchived ? 'Diarsipkan' : 'Aktif'),
+      render: (b) => <StatusBadge status={b.isArchived ? 'closed' : 'active'} label={b.isArchived ? 'Diarsipkan' : 'Aktif'} />,
+    },
+  ];
+
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h2 style={{ margin: 0 }}>Task Board</h2>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button variant="secondary" onClick={loadBoards}>
-            <RefreshCw size={14} />
-          </Button>
-          {canManageBoard && (
-            <Button onClick={() => setCreateBoardOpen(true)}>
-              <Plus size={14} /> Board
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {boardsLoading && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
-          <SkeletonCard lines={2} />
-          <SkeletonCard lines={2} />
-          <SkeletonCard lines={2} />
-        </div>
-      )}
-
-      {!boardsLoading && !boards.length && (
-        <Card>
-          <div style={{ padding: 24, textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 13 }}>
-            <Layers size={28} style={{ opacity: 0.5 }} />
-            <div style={{ marginTop: 8 }}>Belum ada board.</div>
-          </div>
-        </Card>
-      )}
-
-      {!boardsLoading && boards.length > 0 && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-          gap: 12,
-        }}>
-          {boards.map((b) => (
-            <button
-              key={b.id}
-              type="button"
-              onClick={() => setSelectedBoardId(b.id)}
-              style={{
-                textAlign: 'left', cursor: 'pointer', font: 'inherit',
-                background: 'var(--color-surface)',
-                boxShadow: 'inset 0 0 0 1px var(--color-border)',
-                borderRadius: 12, padding: 16, color: 'inherit',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <b style={{ fontSize: 15 }}>{b.name}</b>
-                {b.isArchived && <Badge tone="default">arsip</Badge>}
-              </div>
-              {b.description && (
-                <div style={{
-                  fontSize: 12, color: 'var(--color-text-muted)',
-                  marginTop: 6, lineHeight: 1.5,
-                }}>
-                  {String(b.description).slice(0, 120)}
-                </div>
-              )}
-              <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 8 }}>
-                Entity {b.entityId}
-                {b.departmentId ? ` · Dept ${b.departmentId}` : ''}
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
+    <Page
+      title="Papan tugas"
+      description="Board tugas per tim. Pilih board untuk membuka papan kanban-nya."
+      actions={canManageBoard ? <Button icon="add" onClick={() => setCreateBoardOpen(true)}>Tambah board</Button> : null}
+    >
+      <DataGrid
+        title="Board"
+        columns={columns}
+        rows={boards}
+        loading={boardsLoading}
+        error={boardsError}
+        onRetry={loadBoards}
+        exportName="task-board"
+        searchable={boards.length > 8}
+        onRowClick={(b) => openBoard(b.id)}
+        toolbarActions={<IconButton label="Muat ulang" icon="refresh" onClick={loadBoards} />}
+        empty={(
+          <EmptyState
+            icon="view_kanban"
+            title="Belum ada board"
+            description={canManageBoard ? 'Buat board pertama dengan tombol Tambah board.' : 'Board yang dibagikan ke Anda akan muncul di sini.'}
+          />
+        )}
+      />
 
       <CreateBoardModal
         open={createBoardOpen}
@@ -158,54 +147,107 @@ export default function TaskBoard() {
         onCreated={(id) => {
           setCreateBoardOpen(false);
           loadBoards();
-          setSelectedBoardId(id);
+          openBoard(id);
         }}
       />
-    </div>
+    </Page>
   );
 }
 
 /* ============================================================
-   Create board modal
+   Create board (long form: board + its columns)
    ============================================================ */
 
+const DEFAULT_COLUMNS = [
+  { name: 'Backlog', position: 0, wipLimit: '' },
+  { name: 'Dikerjakan', position: 1, wipLimit: '' },
+  { name: 'Selesai', position: 2, wipLimit: '' },
+];
+
+const EMPTY_BOARD = { name: '', description: '', departmentId: '' };
+const MAX_BOARD_COLUMNS = 12;
+// The form as it opens (the starting columns included): an untouched form is not "unsaved".
+const BOARD_START = { ...EMPTY_BOARD, columns: DEFAULT_COLUMNS };
+const emptyBoardColumn = () => ({ name: '', position: 0, wipLimit: '' });
+
+// Prakasa AI may fill a new board and add its columns; the user reviews them
+// and presses "Buat board" (docs/prakasa-ai-rencana.md §9.9). The three
+// starting columns count as the user's rows: the AI adds after them and never
+// removes one.
+const AI_BOARD = defineAIForm({
+  id: 'task-board',
+  title: 'Tambah board',
+  permission: 'board.manage',
+  submitLabel: 'Buat board',
+  fields: ({ departmentOptions, getColumns, setColumns }) => [
+    f.text('name', 'Nama board', { required: true }),
+    departmentOptions
+      ? f.select('departmentId', 'Divisi', departmentOptions, { hint: 'Opsional.' })
+      : f.userOnly('departmentId', 'ID divisi', 'number'),
+    f.textarea('description', 'Deskripsi'),
+    f.rows('columns', 'Kolom', [
+      f.text('name', 'Nama kolom', { required: true }),
+      f.number('wipLimit', 'Batas WIP', { min: 1, step: 1, hint: 'Kosong = tanpa batas.' }),
+    ], { required: true, maxRows: MAX_BOARD_COLUMNS, emptyRow: emptyBoardColumn, getRows: getColumns, setRows: setColumns }),
+  ],
+});
+
 function CreateBoardModal({ open, onClose, onCreated }) {
-  const [form, setForm] = useState({
-    name: '',
-    description: '',
-    departmentId: '',
-  });
-  const [columns, setColumns] = useState([
-    { name: 'Backlog', position: 0, wipLimit: '' },
-    { name: 'In Progress', position: 1, wipLimit: '' },
-    { name: 'Done', position: 2, wipLimit: '' },
-  ]);
+  const [form, setForm] = useState(EMPTY_BOARD);
+  const [columns, setColumns] = useState(DEFAULT_COLUMNS);
+  const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  // Divisions of the user's entity (GET /departments/options, open to every
+  // signed-in user). null = list unavailable → the ID field stays as before.
+  const [departments, setDepartments] = useState(null);
+
+  useEffect(() => {
+    if (!open) return;
+    setForm(EMPTY_BOARD);
+    setColumns(DEFAULT_COLUMNS);
+    setErrors({});
+    api.get('/departments/options')
+      .then((r) => setDepartments(r.data.data || []))
+      .catch(() => setDepartments(null));
+  }, [open]);
+
+  const dirty = Boolean(form.name.trim() || form.description.trim() || form.departmentId)
+    || JSON.stringify(columns) !== JSON.stringify(DEFAULT_COLUMNS);
+
+  const departmentOptions = useMemo(() => (departments ? departments.map((d) => ({ value: String(d.id), label: d.name })) : null), [departments]);
+  const ai = usePrakasaAIForm(AI_BOARD, {
+    enabled: open,
+    values: form,
+    setValues: setForm,
+    setErrors,
+    initialValues: BOARD_START,
+    context: { departmentOptions, getColumns: () => columns, setColumns },
+  });
 
   const setCol = (idx, key, value) => {
     const copy = [...columns];
     copy[idx] = { ...copy[idx], [key]: value };
     setColumns(copy);
+    if (errors[`col-${idx}-${key}`]) setErrors((e) => ({ ...e, [`col-${idx}-${key}`]: undefined }));
   };
 
-  const submit = async () => {
-    if (!form.name.trim()) { toast('Nama board wajib', 'error'); return; }
-    if (!columns.length) { toast('Minimal 1 kolom', 'error'); return; }
-    for (const c of columns) {
-      if (!c.name.trim()) { toast('Nama kolom wajib', 'error'); return; }
+  const submit = async (event) => {
+    event.preventDefault();
+    const found = {};
+    if (!form.name.trim()) found.name = 'Nama board wajib diisi.';
+    if (!columns.length) found.columns = 'Board perlu minimal 1 kolom.';
+    columns.forEach((c, idx) => {
+      if (!c.name.trim()) found[`col-${idx}-name`] = 'Nama kolom wajib diisi.';
       if (c.wipLimit !== '' && (!Number.isInteger(Number(c.wipLimit)) || Number(c.wipLimit) <= 0)) {
-        toast('WIP limit harus berupa angka positif atau dikosongkan', 'error');
-        return;
+        found[`col-${idx}-wipLimit`] = 'Angka positif atau kosong.';
       }
-    }
-
+    });
     if (form.departmentId) {
       const departmentId = Number(form.departmentId);
-      if (!Number.isInteger(departmentId) || departmentId <= 0) {
-        toast('Department ID tidak valid', 'error');
-        return;
-      }
+      if (!Number.isInteger(departmentId) || departmentId <= 0) found.departmentId = 'ID divisi tidak valid.';
     }
+    setErrors(found);
+    if (Object.keys(found).length) return;
 
     const payload = {
       name: form.name.trim(),
@@ -225,74 +267,115 @@ function CreateBoardModal({ open, onClose, onCreated }) {
       toast('Board dibuat', 'success');
       onCreated?.(r.data.data.id);
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal membuat board', 'error');
+      toast(e.response?.data?.error?.message || 'Board gagal dibuat.', 'error');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Board Baru" maxWidth={560}>
-      <Input
-        label="Nama Board *"
-        value={form.name}
-        onChange={(e) => setForm({ ...form, name: e.target.value })}
-      />
-      <Input
-        label="Deskripsi"
-        value={form.description}
-        onChange={(e) => setForm({ ...form, description: e.target.value })}
-      />
-      <Input
-        label="Department ID (opsional)"
-        type="number"
-        min="1"
-        step="1"
-        value={form.departmentId}
-        onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
-      />
-
-      <div style={{ marginTop: 12, marginBottom: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <b style={{ fontSize: 13 }}>Kolom</b>
-        <Button variant="secondary" onClick={() =>
-          setColumns([...columns, { name: '', position: columns.length, wipLimit: '' }])
-        }>
-          <Plus size={12} /> Kolom
-        </Button>
-      </div>
-
-      {columns.map((c, idx) => (
-        <div key={idx} style={{
-          display: 'grid', gridTemplateColumns: '1fr 90px auto',
-          gap: 8, alignItems: 'end', marginBottom: 6,
-        }}>
-          <Input
-            label={idx === 0 ? 'Nama' : ''}
-            value={c.name}
-            onChange={(e) => setCol(idx, 'name', e.target.value)}
-            style={{ margin: 0 }}
+    <FullScreenDialog
+      open={open}
+      onClose={saving ? () => {} : onClose}
+      dirty={dirty}
+      title="Tambah board"
+      card={false}
+      actions={(
+        <>
+          <Button variant="text" type="button" onClick={onClose} disabled={saving}>Batal</Button>
+          <Button type="submit" form="task-board-create" loading={saving}>Buat board</Button>
+        </>
+      )}
+    >
+      <form id="task-board-create" className="pw-stack pw-stack--lg" onSubmit={submit} noValidate>
+        {ai.notice}
+        <FullScreenSection title="Informasi board">
+          <div className="pw-form-grid">
+            <Input
+              label="Nama board"
+              required
+              value={form.name}
+              error={errors.name}
+              {...ai.field('name')}
+              onChange={(e) => { setForm({ ...form, name: e.target.value }); if (errors.name) setErrors((x) => ({ ...x, name: undefined })); }}
+            />
+            {departments ? (
+              <Select
+                label="Divisi"
+                value={form.departmentId}
+                placeholder="Tanpa divisi"
+                options={departmentOptions}
+                error={errors.departmentId}
+                hint="Opsional."
+                {...ai.field('departmentId')}
+                onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
+              />
+            ) : (
+              <Input
+                label="ID divisi"
+                type="number"
+                min="1"
+                step="1"
+                value={form.departmentId}
+                error={errors.departmentId}
+                hint="Opsional. Nomor ID divisi; daftar divisi tidak bisa dimuat saat ini."
+                onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
+              />
+            )}
+          </div>
+          <Textarea
+            label="Deskripsi"
+            rows={2}
+            value={form.description}
+            {...ai.field('description')}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
-          <Input
-            label={idx === 0 ? 'WIP' : ''}
-            type="number"
-            value={c.wipLimit}
-            onChange={(e) => setCol(idx, 'wipLimit', e.target.value)}
-            placeholder="—"
-            style={{ margin: 0 }}
-          />
-          <Button variant="danger" onClick={() =>
-            setColumns(columns.filter((_, i) => i !== idx))
-          } disabled={columns.length === 1}>×</Button>
-        </div>
-      ))}
+        </FullScreenSection>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-        <Button variant="secondary" onClick={onClose}>Batal</Button>
-        <Button onClick={submit} disabled={saving}>
-          {saving ? 'Membuat…' : 'Buat Board'}
-        </Button>
-      </div>
-    </Modal>
+        <FullScreenSection title="Kolom">
+          {errors.columns ? <Banner tone="error">{errors.columns}</Banner> : null}
+          <ul className="task-col-list">
+            {columns.map((c, idx) => (
+              // eslint-disable-next-line react/no-array-index-key
+              <li key={idx} className={ai.rowClass('columns', idx, 'task-col-row')}>
+                <Input
+                  label={`Nama kolom ${idx + 1}`}
+                  value={c.name}
+                  {...ai.row('columns', idx)}
+                  error={errors[`col-${idx}-name`]}
+                  onChange={(e) => setCol(idx, 'name', e.target.value)}
+                />
+                <Input
+                  label="Batas WIP"
+                  type="number"
+                  min="1"
+                  value={c.wipLimit}
+                  error={errors[`col-${idx}-wipLimit`]}
+                  hint="Kosong = tanpa batas."
+                  onChange={(e) => setCol(idx, 'wipLimit', e.target.value)}
+                />
+                <IconButton
+                  label={`Hapus kolom ${idx + 1}`}
+                  icon="delete"
+                  onClick={() => setColumns(columns.filter((_, i) => i !== idx))}
+                  disabled={columns.length === 1}
+                />
+              </li>
+            ))}
+          </ul>
+          <div>
+            <Button
+              variant="text"
+              type="button"
+              icon="add"
+              onClick={() => setColumns([...columns, { name: '', position: columns.length, wipLimit: '' }])}
+            >
+              Tambah kolom
+            </Button>
+          </div>
+        </FullScreenSection>
+      </form>
+    </FullScreenDialog>
   );
 }
 
@@ -300,17 +383,31 @@ function CreateBoardModal({ open, onClose, onCreated }) {
    Board workspace
    ============================================================ */
 
-function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoardDeleted }) {
+const NO_FILTERS = { assigneeId: '', priority: '', status: '' };
+
+function BoardWorkspace({ boardId, boards, onPickBoard, canCreateTask, canManageBoard, onBoardDeleted, createRequested = false, onCreateOpened }) {
   const nav = useNavigate();
   const { user } = useAuth();
   const canUpdateTask = (user?.permissions || []).includes('task.update');
   const [board, setBoard] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ assigneeId: '', priority: '', status: '' });
+  const [loadError, setLoadError] = useState('');
+  const [filters, setFilters] = useState(NO_FILTERS);
+  const [assignees, setAssignees] = useState([]);
   const [dragging, setDragging] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const boardReady = Boolean(board);
+  const boardArchived = Boolean(board?.isArchived);
+  useEffect(() => {
+    if (!createRequested || !boardReady) return;
+    if (canCreateTask && !boardArchived) setCreateOpen(true);
+    onCreateOpened?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createRequested, boardReady, boardArchived, canCreateTask]);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [spaceOpen, setSpaceOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState('');
 
   const load = async () => {
@@ -326,17 +423,13 @@ function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoar
       ]);
       setBoard(b.data.data);
       setTasks(t.data.data || []);
+      setAssignees((known) => mergeAssignees(known, t.data.data || []));
+      setLoadError('');
     } catch (e) {
-      const code = e.response?.data?.error?.code;
-      if (e.response?.status === 403) {
-        toast('Anda tidak memiliki akses untuk tindakan ini.', 'error');
-        onBack();
-      } else if (e.response?.status === 404) {
-        toast('Board tidak ditemukan.', 'error');
-        onBack();
-      } else {
-        toast(e.response?.data?.error?.message || 'Gagal memuat board', 'error');
-      }
+      const status = e.response?.status;
+      setLoadError(status === 403
+        ? 'Anda tidak memiliki akses ke board ini.'
+        : status === 404 ? 'Board tidak ditemukan.' : (e.response?.data?.error?.message || 'Board gagal dimuat.'));
     } finally {
       setLoading(false);
     }
@@ -383,11 +476,11 @@ function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoar
       const code = err.response?.data?.error?.code;
       setTasks(previous);
       if (code === 'WIP_LIMIT_EXCEEDED') {
-        toast('Kolom sudah mencapai WIP limit.', 'error');
+        toast('Kolom sudah mencapai batas WIP.', 'error');
       } else if (code === 'BOARD_ARCHIVED') {
         toast('Board ini sudah diarsipkan.', 'error');
       } else {
-        toast(err.response?.data?.error?.message || 'Gagal memindahkan task', 'error');
+        toast(err.response?.data?.error?.message || 'Task gagal dipindahkan.', 'error');
       }
       setDragging(null);
       // Reload authoritative state
@@ -396,181 +489,160 @@ function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoar
   };
 
   const doDeleteBoard = async () => {
+    setDeleting(true);
     try {
       await api.delete(`/boards/${boardId}`);
       toast('Board dihapus', 'success');
       onBoardDeleted?.();
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal menghapus board', 'error');
+      toast(e.response?.data?.error?.message || 'Board gagal dihapus.', 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
+  // The board picker doubles as the way back to every board.
+  const boardOptions = [
+    { value: '', label: 'Semua board', translate: true },
+    ...boards.map((b) => ({ value: String(b.id), label: b.name })),
+    ...(board && !boards.some((b) => b.id === board.id) ? [{ value: String(board.id), label: board.name }] : []),
+  ];
+  const picker = (
+    <Select
+      dense
+      label="Board"
+      value={String(boardId)}
+      options={boardOptions}
+      dataOptions
+      fieldClassName="task-filters__board"
+      onChange={(e) => onPickBoard(e.target.value ? Number(e.target.value) : null)}
+    />
+  );
+
   if (loading && !board) {
     return (
-      <div>
-        <Button variant="secondary" onClick={onBack}>
-          <ArrowLeft size={14} /> Semua Board
-        </Button>
-        <div style={{ marginTop: 16 }}>
-          <SkeletonCard lines={6} />
-        </div>
-      </div>
+      <Page eyebrow="Task board" title="Board">
+        <LoadingState label="Memuat board…" />
+      </Page>
+    );
+  }
+  if (!board) {
+    return (
+      <Page eyebrow="Task board" title="Board">
+        <div className="task-filters">{picker}</div>
+        <EmptyState
+          tone="error"
+          title="Board tidak bisa dibuka"
+          description={loadError}
+          action={<Button variant="secondary" onClick={load}>Coba lagi</Button>}
+        />
+      </Page>
     );
   }
 
-  if (!board) return null;
+  const filtered = Boolean(localSearch.trim() || filters.assigneeId || filters.priority || filters.status);
+  const menuItems = [
+    { label: 'Muat ulang', icon: 'refresh', onClick: load },
+    canManageBoard ? { label: 'Hapus board', icon: 'delete', tone: 'danger', onClick: () => setDeleteOpen(true) } : null,
+  ];
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
-        <div>
-          <Button variant="secondary" onClick={onBack}>
-            <ArrowLeft size={14} /> Semua Board
-          </Button>
-          <h2 style={{ margin: '8px 0 0' }}>{board.name}</h2>
-          {board.departmentId && (
-            <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-              Department #{board.departmentId}
-            </div>
-          )}
-        </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {canCreateTask && !board.isArchived && (
-            <Button onClick={() => setCreateOpen(true)}>
-              <Plus size={14} /> Task
-            </Button>
-          )}
-          <Button variant="secondary" onClick={load}><RefreshCw size={14} /></Button>
-          {canManageBoard && (
-            <Button variant="danger" onClick={() => setDeleteOpen(true)}>Hapus Board</Button>
-          )}
-        </div>
-      </div>
+    <Page
+      eyebrow="Task board"
+      dataTitle
+      title={board.name}
+      description={board.isArchived ? 'Board ini diarsipkan: task tidak bisa ditambah atau dipindahkan.' : (board.description ? <NoTranslate>{board.description}</NoTranslate> : undefined)}
+      actions={(
+        <>
+          <Button variant="secondary" icon="chat" onClick={() => setSpaceOpen(true)}>Buka Space</Button>
+          {canCreateTask && !board.isArchived ? (
+            <Button icon="add" onClick={() => setCreateOpen(true)}>Tambah task</Button>
+          ) : null}
+          <ActionMenu label="Aksi board" items={menuItems} />
+        </>
+      )}
+    >
+      {loadError ? <Banner tone="error" action={<Button variant="text" onClick={load}>Coba lagi</Button>}>{loadError}</Banner> : null}
 
-      {/* Filters */}
-      <div style={{
-        display: 'flex', gap: 8, marginBottom: 12,
-        flexWrap: 'wrap', alignItems: 'flex-end',
-      }}>
-        <div style={{ flex: '1 1 220px', minWidth: 180 }}>
-          <Input
-            placeholder="Cari judul (board ini saja)…"
-            value={localSearch}
-            onChange={(e) => setLocalSearch(e.target.value)}
-            style={{ margin: 0 }}
-          />
-        </div>
-        <div style={{ minWidth: 140 }}>
-          <select
-            value={filters.priority}
-            onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-            style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
-          >
-            <option value="">Semua prioritas</option>
-            <option value="low">Low</option>
-            <option value="normal">Normal</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
-          </select>
-        </div>
-        <div style={{ minWidth: 140 }}>
-          <select
-            value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
-          >
-            <option value="">Semua status</option>
-            <option value="open">Open</option>
-            <option value="in_progress">In Progress</option>
-            <option value="review">Review</option>
-            <option value="done">Done</option>
-            <option value="closed">Closed</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-        <Input
-          placeholder="Assignee ID"
-          type="number"
-          min="1"
-          value={filters.assigneeId}
-          onChange={(e) => setFilters({ ...filters, assigneeId: e.target.value })}
-          style={{ width: 140, margin: 0 }}
+      <div className="task-filters" role="group" aria-label="Filter task">
+        {picker}
+        <SearchField
+          className="task-filters__search"
+          label="Cari judul task"
+          placeholder="Cari judul di board ini"
+          value={localSearch}
+          onChange={(e) => setLocalSearch(e.target.value)}
         />
-        <Button variant="secondary" onClick={() => setFilters({ assigneeId: '', priority: '', status: '' })}>
-          Reset
-        </Button>
+        <Select
+          dense
+          label="Prioritas"
+          value={filters.priority}
+          placeholder="Semua prioritas"
+          options={TASK_PRIORITY_OPTIONS}
+          fieldClassName="task-filters__field"
+          onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+        />
+        <Select
+          dense
+          label="Status"
+          value={filters.status}
+          placeholder="Semua status"
+          options={TASK_STATUS_OPTIONS}
+          fieldClassName="task-filters__field"
+          onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+        />
+        <Select
+          dense
+          label="Penanggung jawab"
+          value={filters.assigneeId}
+          placeholder="Semua orang"
+          options={assignees}
+          dataOptions
+          fieldClassName="task-filters__field"
+          onChange={(e) => setFilters({ ...filters, assigneeId: e.target.value })}
+        />
+        {filtered ? (
+          <Button variant="text" icon="close" onClick={() => { setLocalSearch(''); setFilters(NO_FILTERS); }}>Hapus filter</Button>
+        ) : null}
       </div>
 
-      {/* Kanban */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${board.columns.length}, minmax(260px, 1fr))`,
-        gap: 12, overflowX: 'auto', paddingBottom: 8,
-      }}>
+      <KanbanBoard label={`Kolom board ${board.name}`}>
         {board.columns.map((col) => {
           const colTasks = filteredTasks.filter((t) => Number(t.columnId) === Number(col.id));
           const allColumnTasks = tasks.filter((t) => Number(t.columnId) === Number(col.id));
           const nonFinal = allColumnTasks.filter((t) => !FINAL_STATUSES.has(t.status)).length;
-          const wipExceeded = col.wipLimit != null && nonFinal >= Number(col.wipLimit);
+          const hasLimit = col.wipLimit != null;
+          const wipReached = hasLimit && nonFinal >= Number(col.wipLimit);
 
           return (
-            <div
+            <KanbanColumn
               key={col.id}
+              title={col.name}
+              dataTitle
+              count={colTasks.length}
+              countLabel={`${colTasks.length} task`}
+              note={hasLimit ? (wipReached ? `WIP ${nonFinal}/${col.wipLimit} · batas tercapai` : `WIP ${nonFinal}/${col.wipLimit}`) : null}
+              alert={wipReached}
+              dropTarget={Boolean(dragging) && Number(dragging.columnId) !== Number(col.id)}
+              empty={!colTasks.length ? (filtered ? 'Tidak ada yang cocok' : 'Kosong') : null}
               onDragOver={onDragOver}
               onDrop={(e) => onDrop(e, col.id)}
-              style={{
-                background: '#f1f5f9',
-                borderRadius: 12,
-                padding: 10,
-                minHeight: 260,
-                boxShadow: dragging && Number(dragging.columnId) !== Number(col.id)
-                  ? 'inset 0 0 0 2px var(--color-primary)'
-                  : 'inset 0 0 0 2px transparent',
-                transition: 'box-shadow 150ms',
-                display: 'flex', flexDirection: 'column',
-              }}
             >
-              <div style={{
-                display: 'flex', justifyContent: 'space-between',
-                alignItems: 'center', marginBottom: 8,
-              }}>
-                <div style={{ fontWeight: 600, fontSize: 13 }}>{col.name}</div>
-                <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                  {col.wipLimit != null && (
-                    <Badge tone={wipExceeded ? 'error' : 'default'}>
-                      WIP {nonFinal}/{col.wipLimit}
-                    </Badge>
-                  )}
-                  <Badge tone="info">{colTasks.length}</Badge>
-                </div>
-              </div>
-
-              <div style={{ flex: 1 }}>
-                {colTasks.map((t) => (
-                  <TaskCard
-                    key={t.id}
-                    task={t}
-                    dragging={dragging?.id === t.id}
-                    canDrag={canUpdateTask && !board.isArchived}
-                    onDragStart={onDragStart}
-                    onDragEnd={() => setDragging(null)}
-                    onClick={() => nav(`/tasks/${t.id}`)}
-                  />
-                ))}
-                {!colTasks.length && (
-                  <div style={{
-                    fontSize: 12, color: 'var(--color-text-muted)',
-                    padding: 12, textAlign: 'center',
-                  }}>
-                    Kosong
-                  </div>
-                )}
-              </div>
-            </div>
+              {colTasks.map((t) => (
+                <TaskCard
+                  key={t.id}
+                  task={t}
+                  dragging={dragging?.id === t.id}
+                  canDrag={canUpdateTask && !board.isArchived}
+                  onDragStart={onDragStart}
+                  onDragEnd={() => setDragging(null)}
+                  onOpen={() => nav(`/tasks/${t.id}`)}
+                />
+              ))}
+            </KanbanColumn>
           );
         })}
-      </div>
+      </KanbanBoard>
 
       <CreateTaskModal
         open={createOpen}
@@ -579,16 +651,134 @@ function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoar
         onCreated={() => { setCreateOpen(false); load(); }}
       />
 
+      <SpacePanel
+        open={spaceOpen}
+        onClose={() => setSpaceOpen(false)}
+        board={board}
+        canCreateTask={canCreateTask}
+        onConverted={load}
+      />
+
       <ConfirmDialog
         open={deleteOpen}
         title="Hapus board ini?"
-        message="Board akan di-soft-delete. Task di dalamnya tidak akan ditampilkan pada board."
-        confirmLabel="Ya, hapus"
+        message={`Board "${board.name}" akan dihapus. Task di dalamnya tidak lagi ditampilkan pada board.`}
+        confirmLabel="Hapus board"
         tone="danger"
+        loading={deleting}
         onConfirm={doDeleteBoard}
         onClose={() => setDeleteOpen(false)}
       />
-    </div>
+    </Page>
+  );
+}
+
+/* ============================================================
+   Space panel — this board's Google Chat Space
+   ============================================================ */
+
+function SpacePanel({ open, onClose, board, canCreateTask, onConverted }) {
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [text, setText] = useState('');
+  const [sending, setSending] = useState(false);
+  const [convertingName, setConvertingName] = useState(null);
+  const hasSpace = Boolean(board?.googleChatSpaceUrl);
+
+  const load = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await api.get(`/boards/${board.id}/chat/messages`);
+      setMessages(res.data.data?.messages || []);
+    } catch (e) {
+      setError(e.response?.data?.error?.message || 'Pesan Space gagal dimuat.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open && hasSpace) load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, board?.id]);
+
+  const send = async (event) => {
+    event.preventDefault();
+    if (!text.trim()) return;
+    setSending(true);
+    try {
+      await api.post(`/boards/${board.id}/chat/messages`, { text: text.trim() });
+      setText('');
+      load();
+    } catch (e) {
+      toast(e.response?.data?.error?.message || 'Pesan gagal dikirim.', 'error');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const convertToTask = async (message) => {
+    setConvertingName(message.name);
+    try {
+      await api.post(`/boards/${board.id}/chat/convert-to-task`, { messageName: message.name });
+      toast('Pesan dijadikan task', 'success');
+      onConverted?.();
+    } catch (e) {
+      toast(e.response?.data?.error?.message || 'Pesan gagal dijadikan task.', 'error');
+    } finally {
+      setConvertingName(null);
+    }
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={<Mixed separator=" " parts={['Space', dataPart(board?.name)]} />}
+      size="md"
+      footer={hasSpace ? (
+        <Button variant="secondary" icon="open_in_new" href={safeExternalHref(board.googleChatSpaceUrl) || undefined} target="_blank" rel="noreferrer">
+          Buka di Google Chat
+        </Button>
+      ) : undefined}
+    >
+      {!hasSpace ? (
+        <EmptyState
+          compact
+          icon="chat_bubble"
+          title="Space belum tersedia"
+          description="Space belum tersedia untuk board ini. Coba lagi nanti atau hubungi admin IT."
+        />
+      ) : (
+        <div className="pw-stack">
+          {error ? <Banner tone="error" action={<Button variant="text" onClick={load}>Coba lagi</Button>}>{error}</Banner> : null}
+          <ul className="task-chat-log">
+            {loading ? <li><LoadingState compact label="Memuat pesan…" /></li> : messages.length ? messages.map((m) => (
+              <li key={m.name} className="task-chat-msg">
+                <span className="pw-cell__meta">
+                  <span className="task-chat-msg__sender" data-no-translate={m.sender?.displayName || m.sender?.name ? '' : undefined}>{m.sender?.displayName || m.sender?.name || 'Anggota Space'}</span>
+                  {m.createTime ? ` · ${formatDateTime(m.createTime)}` : ''}
+                </span>
+                <p className="task-chat-msg__text" data-no-translate="">{m.text}</p>
+                {canCreateTask ? (
+                  <div>
+                    <Button variant="text" icon="add_task" onClick={() => convertToTask(m)} loading={convertingName === m.name}>
+                      Jadikan task
+                    </Button>
+                  </div>
+                ) : null}
+              </li>
+            )) : <li><EmptyState compact icon="chat_bubble" description="Belum ada pesan." /></li>}
+          </ul>
+          <form onSubmit={send} className="task-chat-form">
+            <Input label="Pesan" fieldClassName="pw-grow" value={text} onChange={(e) => setText(e.target.value)} />
+            <Button type="submit" icon="send" loading={sending} disabled={!text.trim()}>Kirim pesan</Button>
+          </form>
+        </div>
+      )}
+    </Modal>
   );
 }
 
@@ -596,109 +786,117 @@ function BoardWorkspace({ boardId, onBack, canCreateTask, canManageBoard, onBoar
    Task card
    ============================================================ */
 
-function TaskCard({ task, dragging, canDrag, onDragStart, onDragEnd, onClick }) {
+function TaskCard({ task, dragging, canDrag, onDragStart, onDragEnd, onOpen }) {
   const overdue = isOverdue(task);
   const dueToday = isDueToday(task);
   const done = FINAL_STATUSES.has(task.status);
 
   return (
-    <div
+    <KanbanCard
+      dragging={dragging}
+      muted={done && !dragging}
       draggable={canDrag}
       onDragStart={(e) => onDragStart(e, task)}
       onDragEnd={onDragEnd}
-      onClick={onClick}
-      style={{
-        background: 'var(--color-surface)',
-        boxShadow: 'inset 0 0 0 1px var(--color-border)',
-        borderRadius: 8,
-        padding: 10,
-        marginBottom: 6,
-        fontSize: 13,
-        cursor: canDrag ? 'grab' : 'pointer',
-        opacity: done && !dragging ? 0.7 : dragging ? 0.5 : 1,
-      }}
+      onClick={(event) => { if (!event.target.closest('a, button')) onOpen(); }}
     >
-      <div style={{ fontWeight: 600, marginBottom: 4, lineHeight: 1.3 }}>
-        {task.title}
+      <Link className="pw-kanban__title" to={`/tasks/${task.id}`} data-no-translate="">{task.title}</Link>
+
+      <div className="pw-kanban__tags">
+        <PriorityBadge priority={task.priority || 'normal'} />
+        {done ? <StatusBadge status="done" /> : null}
+        {overdue ? <StatusBadge status="overdue" /> : null}
+        {!overdue && dueToday ? <StatusBadge status="due_soon" label="Hari ini" /> : null}
       </div>
 
-      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
-        <Badge tone={PRIORITY_TONE[task.priority] || 'default'}>{task.priority || 'normal'}</Badge>
-        {done && <Badge tone="success">selesai</Badge>}
-        {overdue && <Badge tone="error">overdue</Badge>}
-        {!overdue && dueToday && <Badge tone="warning">hari ini</Badge>}
-      </div>
+      {task.progressPercent > 0 ? <TaskProgress percent={task.progressPercent} /> : null}
 
-      {task.progressPercent > 0 && (
-        <div style={{ marginBottom: 6 }}>
-          <TaskProgress percent={task.progressPercent} />
-        </div>
-      )}
-
-      <div style={{ fontSize: 11, color: 'var(--color-text-muted)', display: 'flex', justifyContent: 'space-between' }}>
-        <span>{task.assigneeName || 'Unassigned'}</span>
-        {task.dueDate && <span>{task.dueDate}</span>}
+      <div className="pw-kanban__meta">
+        <span className="pw-kanban__meta-item">
+          <Icon name="person" size="sm" /><span data-no-translate={task.assigneeName ? '' : undefined}>{task.assigneeName || 'Belum ditugaskan'}</span>
+        </span>
+        {task.dueDate ? (
+          <span className={`pw-kanban__meta-item${overdue ? ' is-error' : ''}`}>
+            <Icon name="calendar_today" size="sm" />{taskDate(task.dueDate)}
+          </span>
+        ) : null}
       </div>
-    </div>
+    </KanbanCard>
   );
 }
 
 /* ============================================================
-   Create task modal
+   Create task (long form)
    ============================================================ */
 
+const emptyTask = (board) => ({
+  title: '',
+  description: '',
+  columnId: board?.columns?.[0]?.id || '',
+  priority: 'normal',
+  assigneeId: '',
+  startDate: '',
+  dueDate: '',
+  progressPercent: '',
+});
+
 function CreateTaskModal({ open, onClose, board, onCreated }) {
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    columnId: board?.columns?.[0]?.id || '',
-    priority: 'normal',
-    assigneeId: '',
-    startDate: '',
-    dueDate: '',
-    progressPercent: '',
-  });
+  const [form, setForm] = useState(() => emptyTask(board));
+  const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setForm({
-        title: '',
-        description: '',
-        columnId: board?.columns?.[0]?.id || '',
-        priority: 'normal',
-        assigneeId: '',
-        startDate: '',
-        dueDate: '',
-        progressPercent: '',
-      });
+      setForm(emptyTask(board));
+      setErrors({});
     }
     /* eslint-disable-next-line */
   }, [open]);
 
-  const submit = async () => {
-    if (!form.title.trim()) { toast('Judul wajib', 'error'); return; }
-    if (form.startDate && form.dueDate && form.startDate > form.dueDate) {
-      toast('Tanggal mulai harus <= tanggal jatuh tempo', 'error'); return;
-    }
-    if (form.assigneeId) {
-      const assigneeId = Number(form.assigneeId);
-      if (!Number.isInteger(assigneeId) || assigneeId <= 0) {
-        toast('Assignee ID tidak valid', 'error'); return;
-      }
-    }
-    if (form.progressPercent !== '') {
-      const progress = Number(form.progressPercent);
-      if (!Number.isInteger(progress) || progress < 0 || progress > 100) {
-        toast('Progress harus berupa integer 0–100', 'error'); return;
-      }
-    }
+  const set = (key) => (e) => {
+    setForm((f) => ({ ...f, [key]: e.target.value }));
+    if (errors[key]) setErrors((x) => ({ ...x, [key]: undefined }));
+  };
+  const blank = emptyTask(board);
+  const dirty = Object.keys(blank).some((key) => String(form[key] ?? '') !== String(blank[key] ?? ''));
+
+  // Prakasa AI may fill a new task; the user reviews it and presses "Buat task"
+  // (docs/prakasa-ai-rencana.md §9.8). The assignee is an account ID the AI
+  // cannot look up: the user fills it.
+  const ai = usePrakasaAIForm({
+    id: 'task',
+    title: 'Tugas',
+    permission: 'task.create',
+    submitLabel: 'Buat task',
+    enabled: open,
+    initialValues: blank,
+    fields: [
+      { name: 'title', label: 'Judul', type: 'text', required: true },
+      { name: 'description', label: 'Deskripsi', type: 'textarea' },
+      { name: 'columnId', label: 'Kolom', type: 'select', options: (board?.columns || []).map((c) => ({ value: String(c.id), label: c.name })) },
+      { name: 'priority', label: 'Prioritas', type: 'select', options: TASK_PRIORITY_OPTIONS },
+      { name: 'assigneeId', label: 'ID penanggung jawab', type: 'number', aiFillable: false, hint: 'Nomor ID akun; diisi pengguna.' },
+      { name: 'progressPercent', label: 'Progres (%)', type: 'number', hint: 'Bilangan bulat 0–100.' },
+      { name: 'startDate', label: 'Tanggal mulai', type: 'date' },
+      { name: 'dueDate', label: 'Jatuh tempo', type: 'date' },
+    ],
+    getValues: () => form,
+    setValues: (patch) => {
+      setForm((f) => ({ ...f, ...patch }));
+      setErrors((x) => ({ ...x, ...Object.fromEntries(Object.keys(patch).map((key) => [key, undefined])) }));
+    },
+    validate: validateTaskForm,
+  });
+
+  const submit = async (event) => {
+    event.preventDefault();
+    const found = validateTaskForm(form);
     if (form.columnId) {
       const columnId = Number(form.columnId);
-      if (!Number.isInteger(columnId) || columnId <= 0) {
-        toast('Kolom tidak valid', 'error'); return;
-      }
+      if (!Number.isInteger(columnId) || columnId <= 0) found.columnId = 'Kolom tidak valid.';
     }
+    setErrors(found);
+    if (Object.keys(found).length) return;
 
     const payload = {
       departmentId: board.departmentId ?? null,
@@ -721,9 +919,9 @@ function CreateTaskModal({ open, onClose, board, onCreated }) {
     } catch (e) {
       const code = e.response?.data?.error?.code;
       if (code === 'WIP_LIMIT_EXCEEDED') {
-        toast('Kolom sudah mencapai WIP limit.', 'error');
+        setErrors({ columnId: 'Kolom ini sudah mencapai batas WIP.' });
       } else {
-        toast(e.response?.data?.error?.message || 'Gagal membuat task', 'error');
+        toast(e.response?.data?.error?.message || 'Task gagal dibuat.', 'error');
       }
     } finally {
       setSaving(false);
@@ -731,92 +929,59 @@ function CreateTaskModal({ open, onClose, board, onCreated }) {
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Task Baru" maxWidth={560}>
-      <Input
-        label="Judul *"
-        value={form.title}
-        onChange={(e) => setForm({ ...form, title: e.target.value })}
-      />
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Deskripsi</label>
-        <textarea
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          rows={3}
-          style={{
-            width: '100%', padding: 10, borderRadius: 8,
-            boxShadow: 'inset 0 0 0 1px var(--color-border)', fontSize: 13,
-          }}
-        />
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
-        <div>
-          <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Kolom</label>
-          <select
+    <FullScreenDialog
+      open={open}
+      onClose={saving ? () => {} : onClose}
+      dirty={dirty}
+      title="Tambah task"
+      sectionTitle="Informasi task"
+      actions={(
+        <>
+          <Button variant="text" type="button" onClick={onClose} disabled={saving}>Batal</Button>
+          <Button type="submit" form="task-create" loading={saving}>Buat task</Button>
+        </>
+      )}
+    >
+      <form id="task-create" className="pw-stack" onSubmit={submit} noValidate>
+        {ai.notice}
+        <Input label="Judul" required value={form.title} error={errors.title} {...ai.field('title')} onChange={set('title')} autoFocus />
+        <Textarea label="Deskripsi" value={form.description} {...ai.field('description')} onChange={set('description')} rows={3} />
+        <div className="pw-form-grid">
+          <Select
+            label="Kolom"
             value={form.columnId}
-            onChange={(e) => setForm({ ...form, columnId: e.target.value })}
-            style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
-          >
-            {board.columns.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+            {...ai.field('columnId')}
+            error={errors.columnId}
+            options={board.columns.map((c) => ({ value: c.id, label: c.name }))}
+            dataOptions
+            onChange={set('columnId')}
+          />
+          <Select label="Prioritas" value={form.priority} options={TASK_PRIORITY_OPTIONS} {...ai.field('priority')} onChange={set('priority')} />
+          <Input
+            label="ID penanggung jawab"
+            type="number"
+            min="1"
+            step="1"
+            value={form.assigneeId}
+            error={errors.assigneeId}
+            hint="Opsional. Nomor ID akun pengguna di entitas yang sama."
+            onChange={set('assigneeId')}
+          />
+          <Input
+            label="Progres (%)"
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            value={form.progressPercent}
+            {...ai.field('progressPercent')}
+            error={errors.progressPercent}
+            onChange={set('progressPercent')}
+          />
+          <DateInput label="Tanggal mulai" value={form.startDate} {...ai.field('startDate')} onChange={set('startDate')} />
+          <DateInput label="Jatuh tempo" value={form.dueDate} {...ai.field('dueDate')} error={errors.dueDate} min={form.startDate || undefined} onChange={set('dueDate')} />
         </div>
-        <div>
-          <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Priority</label>
-          <select
-            value={form.priority}
-            onChange={(e) => setForm({ ...form, priority: e.target.value })}
-            style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
-          >
-            <option value="low">Low</option>
-            <option value="normal">Normal</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
-          </select>
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
-        <Input
-          label="Assignee ID (opsional)"
-          type="number"
-          min="1"
-          step="1"
-          value={form.assigneeId}
-          onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}
-        />
-        <Input
-          label="Start Date"
-          type="date"
-          value={form.startDate}
-          onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-        />
-        <Input
-          label="Due Date"
-          type="date"
-          value={form.dueDate}
-          onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
-        />
-      </div>
-
-      <Input
-        label="Progress (%)"
-        type="number"
-        min={0}
-        max={100}
-        step={1}
-        value={form.progressPercent}
-        onChange={(e) => setForm({ ...form, progressPercent: e.target.value })}
-      />
-
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-        <Button variant="secondary" onClick={onClose}>Batal</Button>
-        <Button onClick={submit} disabled={saving}>
-          {saving ? 'Membuat…' : 'Buat Task'}
-        </Button>
-      </div>
-    </Modal>
+      </form>
+    </FullScreenDialog>
   );
 }

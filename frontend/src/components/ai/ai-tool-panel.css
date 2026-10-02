@@ -1,0 +1,277 @@
+/* Contextual Prakasa AI (moved from styles/layout.css): 400px resizable side
+   panel on desktop, overlay on tablet, full screen on mobile. The panel and its
+   scrim are a side sheet (z --pw-z-sheet), above the top bar and the drawer.
+   The page padding for the docked panel stays in styles/layout.css. */
+
+.pw-ai-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--pw-z-sheet);
+  background: var(--pw-scrim);
+}
+
+.pw-ai-panel {
+  position: fixed;
+  z-index: var(--pw-z-sheet);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--pw-surface);
+  color: var(--pw-text);
+}
+
+.pw-ai-panel.is-desktop {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  box-shadow: inset 1px 0 0 var(--pw-divider);
+}
+
+.pw-ai-panel.is-tablet {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(480px,100%);
+  box-shadow: var(--pw-elev-menu);
+  border-radius: var(--pw-radius-lg) 0 0 var(--pw-radius-lg);
+}
+
+.pw-ai-panel.is-mobile {
+  inset: 0;
+}
+
+.pw-ai-panel__resizer {
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 1;
+}
+
+.pw-ai-panel__resizer:hover,.pw-ai-panel__resizer:focus-visible {
+  background: color-mix(in srgb,var(--pw-primary) 24%,transparent);
+  outline: none;
+}
+
+.pw-ai-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 64px;
+  padding: 8px 8px 8px 16px;
+  box-shadow: inset 0 -1px 0 var(--pw-divider);
+  flex-shrink: 0;
+}
+
+.pw-ai-panel__mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  height: 32px;
+  margin-right: 8px;
+  border-radius: var(--pw-radius-full);
+  background: var(--pw-selected);
+  color: var(--pw-primary);
+}
+
+.pw-ai-panel__title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pw-ai-panel__title h2 {
+  margin: 0;
+  font-size: var(--pw-font-md);
+  font-weight: 500;
+  letter-spacing: 0;
+  outline: none;
+}
+
+.pw-ai-panel__title span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-xs);
+}
+
+.pw-ai-panel__context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 8px 16px;
+  background: var(--pw-surface-container);
+  font-size: var(--pw-font-xs);
+  flex-shrink: 0;
+}
+
+.pw-ai-panel__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--pw-text-muted);
+}
+
+.pw-ai-panel__status.is-error {
+  color: var(--pw-error);
+}
+
+.pw-ai-panel__rules {
+  flex-basis: 100%;
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pw-ai-panel__rules li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  line-height: 1.45;
+  color: var(--pw-text-muted);
+}
+
+.pw-ai-panel__rules strong {
+  color: var(--pw-text);
+  font-weight: 500;
+}
+
+.pw-ai-panel__starters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px 0;
+  flex-shrink: 0;
+}
+
+/* The embedded conversation reuses the AI Command Center styles inside the panel. */
+
+.ai-app.ai-app--embedded {
+  position: relative;
+  inset: auto;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--pw-surface);
+}
+
+.ai-app.ai-app--embedded > .ai-conversation {
+  flex: 1;
+  min-height: 0;
+}
+
+/* A 48px toolbar row (--pw-toolbar-height): 40px icon buttons + 4px. */
+.ai-app.ai-app--embedded .ai-topbar {
+  min-height: var(--pw-toolbar-height);
+  padding: 4px 12px;
+}
+
+.ai-app.ai-app--embedded .ai-thread {
+  padding: 12px 16px 24px;
+}
+
+.ai-app.ai-app--embedded .ai-new-chat {
+  padding: 12px 16px;
+}
+
+.ai-app.ai-app--embedded .ai-greeting {
+  font-size: var(--pw-font-title);
+}
+
+
+/* Inside the panel the page-specific starters replace the generic landing header and suggestions. */
+
+.ai-app.ai-app--embedded .ai-conversation > .ai-topbar:has(> .ai-topbar-brand:only-child) {
+  display: none;
+}
+
+.ai-app.ai-app--embedded .ai-suggestions {
+  display: none;
+}
+
+.ai-app.ai-app--embedded .ai-greeting-mark {
+  width: 32px;
+  height: 32px;
+}
+
+/* The panel itself takes focus only as the trap's fallback (useOverlay). */
+.pw-ai-panel:focus { outline: none; }
+
+/* Wave C2a — phone and tablet: Prakasa AI works on a form (PrakasaAIToolPanel.jsx).
+   is-raised: the conversation stays above the form's dialog; is-tucked: the
+   panel steps aside and the chip (a Button) floats over the form. */
+.pw-ai-panel.is-raised,
+.pw-ai-scrim:has(~ .pw-ai-panel.is-raised) {
+  z-index: var(--pw-z-menu);
+}
+
+.pw-ai-panel.is-tucked,
+.pw-ai-scrim:has(~ .pw-ai-panel.is-tucked) {
+  display: none;
+}
+
+.pw-ai-panel__form-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 8px 16px;
+  background: var(--pw-selected);
+  color: var(--pw-text);
+  font-size: var(--pw-font-sm);
+}
+
+.pw-ai-panel__form-bar > span {
+  flex: 1 1 180px;
+}
+
+.pw-button.pw-ai-chip {
+  position: fixed;
+  right: 12px;
+  bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  z-index: var(--pw-z-menu);
+  max-width: calc(100vw - 24px);
+  height: auto;
+  min-height: 48px;
+  padding-block: 6px;
+  box-shadow: var(--pw-elev-menu);
+  text-align: left;
+}
+
+/* Tablet and narrow windows (601–1023px: the panel's "is-tablet" mode,
+   aiToolModel.js): a small dialog is centred, so on a short screen its footer —
+   the form's own save button — would sit under the chip. While the chip shows
+   over such a dialog, the chip drops to the corner and the dialog keeps clear
+   of it (80px = 16px + the 48px chip + 16px). Phones are not affected: there a
+   dialog fills the screen and its footer is below the chip's 76px. */
+body:has(.pw-ai-panel.is-tablet):has(.pw-scrim > .pw-dialog:not(.pw-dialog--fullscreen)) .pw-button.pw-ai-chip {
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+body:has(.pw-ai-panel.is-tablet):has(.pw-ai-chip) .pw-scrim:has(> .pw-dialog:not(.pw-dialog--fullscreen)) {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+body:has(.pw-ai-panel.is-tablet):has(.pw-ai-chip) .pw-scrim > .pw-dialog:not(.pw-dialog--fullscreen) {
+  max-height: calc(100dvh - 24px - 80px - env(safe-area-inset-bottom, 0px));
+}
+
+.pw-ai-chip__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.pw-ai-chip__body > .pw-button__label {
+  white-space: normal;
+  font-size: var(--pw-font-xs);
+  font-weight: 400;
+}

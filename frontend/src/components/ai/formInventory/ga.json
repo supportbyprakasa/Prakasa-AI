@@ -1,0 +1,18 @@
+[
+  {"file":"pages/ga/GaForms.jsx","form":"GaCreateDialog (atk)","what":"Permintaan ATK","status":"registered","id":"ga-request-atk"},
+  {"file":"pages/ga/GaForms.jsx","form":"GaCreateDialog (facility_repair)","what":"Permintaan perbaikan fasilitas","status":"registered","id":"ga-request-facility_repair"},
+  {"file":"pages/ga/GaForms.jsx","form":"GaCreateDialog (other)","what":"Permintaan GA lainnya","status":"registered","id":"ga-request-other"},
+  {"file":"pages/ga/GaForms.jsx","form":"GaCreateDialog (room)","what":"Pinjam ruang rapat","status":"registered","id":"ga-booking-room"},
+  {"file":"pages/ga/GaForms.jsx","form":"GaCreateDialog (vehicle)","what":"Pinjam kendaraan","status":"excluded","reason":"Peminjaman kendaraan lewat TrackCar: menu Buat permintaan membuka TrackCar dan /ga?baru=vehicle tidak membuka form ini, jadi tidak ada form kendaraan yang bisa dibuka pengguna di halaman ini."},
+  {"file":"pages/ga/GaForms.jsx","form":"GaResourceDialog (tambah)","what":"Tambah ruang","status":"registered","id":"ga-resource"},
+  {"file":"pages/ga/GaForms.jsx","form":"GaResourceDialog (ubah)","what":"Ubah ruang","status":"registered","id":"ga-resource-edit"},
+  {"file":"pages/ga/GaOpsDialogs.jsx","form":"GaOpsFormDialog (maintenance, tambah)","what":"Tambah jadwal perawatan","status":"registered","id":"ga-ops-maintenance"},
+  {"file":"pages/ga/GaOpsDialogs.jsx","form":"GaOpsFormDialog (maintenance, ubah)","what":"Ubah jadwal perawatan","status":"registered","id":"ga-ops-maintenance-edit"},
+  {"file":"pages/ga/GaOpsDialogs.jsx","form":"GaOpsFormDialog (contracts, tambah)","what":"Tambah kontrak vendor","status":"registered","id":"ga-ops-contract"},
+  {"file":"pages/ga/GaOpsDialogs.jsx","form":"GaOpsFormDialog (contracts, ubah)","what":"Ubah kontrak vendor","status":"registered","id":"ga-ops-contract-edit"},
+  {"file":"pages/ga/GaOpsDialogs.jsx","form":"GaOpsFormDialog (bills, tambah)","what":"Catat tagihan utilitas","status":"registered","id":"ga-ops-bill"},
+  {"file":"pages/ga/GaOpsDialogs.jsx","form":"GaOpsFormDialog (bills, ubah)","what":"Ubah tagihan utilitas","status":"registered","id":"ga-ops-bill-edit"},
+  {"file":"pages/ga/GaOpsDialogs.jsx","form":"MaintenanceLogDialog","what":"Catat perawatan yang sudah dikerjakan","status":"registered","id":"ga-ops-maintenance-log"},
+  {"file":"pages/ga/GaRequestDetail.jsx","form":"GaRequestDetail (tugaskan)","what":"Tugaskan permintaan ke penanggung jawab","status":"registered","id":"ga-request-assign"},
+  {"file":"pages/ga/GaRequestDetail.jsx","form":"GaRequestDetail (lampirkan)","what":"Lampirkan foto atau PDF ke permintaan","status":"excluded","reason":"Hanya untuk memilih file yang diunggah; unggahan tetap dilakukan pengguna."}
+]

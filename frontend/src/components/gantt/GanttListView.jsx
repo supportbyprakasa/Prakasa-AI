@@ -1,95 +1,61 @@
-import { Network } from 'lucide-react';
-import TaskProgress from '../tasks/TaskProgress';
-import Badge from '../Badge';
+import EmptyState from '../EmptyState';
+import IconButton from '../IconButton';
+import ProgressBar from '../ProgressBar';
+import StatusBadge from '../StatusBadge';
+import { dateRangeText, isEstimated, pressProps } from './ganttModel';
+import './gantt.css';
 
 /**
- * Mobile fallback — Gantt tidak realistis di layar <700px.
+ * The same tasks as a list — what a phone shows by default, where a Gantt is
+ * not readable. canOpenTask(id) as in GanttChart: a row that leads nowhere is
+ * not a button.
  */
-export default function GanttListView({ tasks, onTaskClick, onGraphClick }) {
+export default function GanttListView({ tasks, onTaskClick, onGraphClick, canOpenTask }) {
   if (!tasks.length) {
-    return (
-      <div style={{
-        padding: 24, textAlign: 'center',
-        color: 'var(--color-text-muted)', fontSize: 13,
-      }}>
-        Tidak ada task pada rentang tanggal ini.
-      </div>
-    );
+    return <EmptyState icon="event_busy" title="Tidak ada task pada rentang tanggal ini" compact />;
   }
 
   return (
-    <div>
-      {tasks.map((t) => (
-        <div
-          key={t.id}
-          onClick={() => onTaskClick(t.id)}
-          style={{
-            padding: 12,
-            boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
-            cursor: 'pointer',
-            opacity: t.isCancelled ? 0.6 : 1,
-          }}
-        >
-          <div style={{
-            display: 'flex', justifyContent: 'space-between',
-            alignItems: 'flex-start', gap: 8, marginBottom: 4,
-          }}>
-            <div style={{
-              fontSize: 14, fontWeight: 600,
-              textDecoration: t.isCancelled ? 'line-through' : 'none',
-              flex: 1, minWidth: 0,
-            }}>
-              {t.title}
-            </div>
-            <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
-              <Badge tone={
-                t.status === 'done' || t.status === 'closed' || t.status === 'completed' ? 'success'
-                : t.status === 'cancelled' ? 'default'
-                : t.status === 'review' ? 'warning'
-                : 'info'
-              }>
-                {t.status}
-              </Badge>
-              {onGraphClick && (
-                <button
-                  type="button"
-                  title="Lihat dependency graph"
-                  aria-label="Lihat dependency graph"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onGraphClick(t.id);
-                  }}
-                  style={{
-                    width: 26, height: 26, padding: 0,
-                    background: 'transparent',
-                    boxShadow: 'inset 0 0 0 1px var(--color-border)',
-                    borderRadius: 6, cursor: 'pointer',
-                    color: 'var(--color-text-muted)',
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                >
-                  <Network size={13} />
-                </button>
-              )}
-            </div>
-          </div>
+    <ul className="gantt-list">
+      {tasks.map((t) => {
+        const open = onTaskClick && (!canOpenTask || canOpenTask(t.id)) ? () => onTaskClick(t.id) : null;
+        const pct = Math.max(0, Math.min(100, Math.round(Number(t.progressPercent) || 0)));
+        return (
+          <li key={t.id} className={`gantt-list__item${t.isCancelled ? ' gantt-list__item--cancelled' : ''}`}>
+            <div
+              {...pressProps(open, `Buka ${t.title}`)}
+              className={['gantt-list__main', open ? 'pw-state-layer' : ''].filter(Boolean).join(' ')}
+            >
+              <div className="gantt-list__head">
+                <span className="gantt-list__title" data-no-translate="">{t.title}</span>
+                <StatusBadge status={t.status} />
+              </div>
 
-          <div style={{
-            fontSize: 11, color: 'var(--color-text-muted)',
-            display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 6,
-          }}>
-            <span>{t.startDate} → {t.dueDate}</span>
-            {(t.isFallbackStart || t.isFallbackDue) && (
-              <span style={{ fontStyle: 'italic' }}>(estimasi)</span>
-            )}
-            {t.assigneeName && <span>· {t.assigneeName}</span>}
-          </div>
+              <div className="gantt-list__meta">
+                <span>{dateRangeText(t)}</span>
+                {isEstimated(t) ? <span>(estimasi)</span> : null}
+                {t.assigneeName ? <span data-no-translate="">· {t.assigneeName}</span> : null}
+              </div>
 
-          {t.progressPercent > 0 && (
-            <TaskProgress percent={t.progressPercent} />
-          )}
-        </div>
-      ))}
-    </div>
+              {pct > 0 ? (
+                <div className="gantt-list__progress">
+                  <ProgressBar value={pct} label={`Progres ${t.title}`} />
+                  <span className="pw-text-helper">{pct}%</span>
+                </div>
+              ) : null}
+            </div>
+            {onGraphClick ? (
+              <IconButton
+                label="Lihat graf dependensi"
+                size="sm"
+                icon="lan"
+                className="gantt-list__graph"
+                onClick={() => onGraphClick(t.id)}
+              />
+            ) : null}
+          </li>
+        );
+      })}
+    </ul>
   );
 }

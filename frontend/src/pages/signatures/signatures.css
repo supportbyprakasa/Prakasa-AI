@@ -1,0 +1,25 @@
+/* Signature pages — layout specifics only; fields, buttons, banners and cards
+   are shared. */
+
+.sig-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.sig-toolbar__select { flex: 0 1 280px; min-width: 0; }
+
+/* The browser's file picker inside the shared Field. */
+.sig-file { max-width: 100%; color: var(--pw-text-muted); font-size: var(--pw-font-body); }
+
+.sig-preview { display: inline-block; max-width: 100%; padding: 12px; border: 1px solid var(--pw-divider); border-radius: var(--pw-radius-sm); background: var(--pw-surface); }
+.sig-preview img { display: block; max-width: 100%; max-height: 100px; }
+.sig-preview--sm img { max-height: 80px; }
+
+/* Detail */
+.sig-code { font-family: var(--pw-font-mono); font-size: var(--pw-font-xs); overflow-wrap: anywhere; }
+.sig-code--hash { word-break: break-all; }
+.sig-link { align-self: flex-start; font-size: var(--pw-font-body); }
+.sig-note { margin: 12px 0 0; color: var(--pw-text-muted); font-size: var(--pw-font-xs); line-height: 16px; }
+.sig-qr { text-align: center; }
+.sig-qr img { width: min(240px, 100%); height: auto; aspect-ratio: 1; border: 1px solid var(--pw-divider); border-radius: var(--pw-radius-sm); }
+.sig-qr__code { margin-top: 12px; font-size: var(--pw-font-body); }
+.sig-qr__url { margin-top: 4px; color: var(--pw-text-muted); font-size: var(--pw-font-xs); word-break: break-all; }
+.sig-sign-intro { margin: 0; font-size: var(--pw-font-body); line-height: 20px; }
+.sig-findings { display: block; margin: 4px 0 0; padding-left: 24px; }
+.sig-findings__note { display: block; margin-top: 4px; }

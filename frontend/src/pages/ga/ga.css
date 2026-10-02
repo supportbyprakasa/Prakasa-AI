@@ -1,0 +1,57 @@
+/* Layanan GA — layout specifics only. Fields, buttons, grids, dialogs, cards
+   and status text come from the shared components. */
+
+/* "Lewat target" text in the Target column and the summary. */
+.ga-late { color: var(--pw-error); }
+
+/* ATK lines: name, quantity, unit and a remove button on one row (stacked on phones). */
+.ga-lines { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ga-line { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) minmax(0, 1.4fr) 40px; gap: 0 12px; align-items: start; }
+.ga-line > :nth-child(4) { margin-top: 12px; }
+.ga-error { margin: 0; color: var(--pw-error); font-size: var(--pw-font-xs); line-height: 16px; }
+
+/* Bookings already on the chosen resource, under the booking form. */
+.ga-busy { display: flex; flex-direction: column; gap: 4px; }
+.ga-busy__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.ga-busy__item { color: var(--pw-text-muted); font-size: var(--pw-font-sm); line-height: 20px; overflow-wrap: anywhere; }
+.ga-busy__item.is-clash { color: var(--pw-error); }
+
+/* Jadwal: view switch and day picker on one bar. */
+.ga-schedule__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.ga-schedule__day { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ga-schedule__date { width: 180px; max-width: 100%; }
+
+/* One card per room/vehicle, the day's bookings as an agenda list. */
+.ga-agenda { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 24px; }
+.ga-agenda__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+.ga-agenda__item { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pw-divider); }
+.ga-agenda__item:first-child { border-top: 0; }
+.ga-agenda__time { flex: 0 0 96px; color: var(--pw-text); font-size: var(--pw-font-body); line-height: 20px; font-variant-numeric: tabular-nums; }
+.ga-agenda__main { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.ga-agenda__title { color: var(--pw-text); font-size: var(--pw-font-body); line-height: 20px; overflow-wrap: anywhere; text-decoration: none; }
+a.ga-agenda__title { color: var(--pw-primary); }
+a.ga-agenda__title:hover { text-decoration: underline; }
+
+/* ATK items and the history / attachment lists of a detail page. */
+.ga-items { margin: 16px 0 0; padding: 0; list-style: none; }
+.ga-items__row { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; border-top: 1px solid var(--pw-divider); font-size: var(--pw-font-body); line-height: 20px; }
+.ga-items__qty { color: var(--pw-text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ga-history { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+.ga-history__item { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-top: 1px solid var(--pw-divider); font-size: var(--pw-font-body); line-height: 20px; overflow-wrap: anywhere; }
+.ga-history__item:first-child { border-top: 0; }
+.ga-history__item a { color: var(--pw-primary); }
+
+@media (max-width: 600px) {
+  .ga-line { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px; }
+  .ga-line > :first-child { grid-column: 1 / -1; }
+  .ga-schedule__day { flex-wrap: wrap; }
+  .ga-agenda__time { flex-basis: 80px; }
+}
+
+/* Operasional GA: upkeep history in the detail sheet, then its actions. */
+.ga-ops__history { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.ga-ops__history-item { display: flex; flex-direction: column; gap: 2px; padding: 12px 0; border-top: 1px solid var(--pw-divider); }
+.ga-ops__history-item:first-child { border-top: 0; }
+.ga-ops__history-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; color: var(--pw-text); font-size: var(--pw-font-body); line-height: 20px; }
+.ga-ops__history-meta { color: var(--pw-text-meta); font-size: var(--pw-font-xs); line-height: 18px; overflow-wrap: anywhere; }
+.ga-ops__sheet-actions { display: flex; flex-wrap: wrap; gap: 8px; }

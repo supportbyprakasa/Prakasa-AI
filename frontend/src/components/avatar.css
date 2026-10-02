@@ -1,0 +1,27 @@
+/* Avatar (Avatar.jsx): a solid token-colour circle with white Roboto 500
+   initials, or a photo. sm 24 / md 32 / lg 40. */
+.pw-avatar {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--pw-radius-full);
+  color: var(--pw-on-primary);
+  font-family: var(--pw-font-roboto);
+  font-weight: 500;
+  line-height: 1;
+  user-select: none;
+}
+.pw-avatar--sm { width: 24px; height: 24px; font-size: var(--pw-font-xs); }
+.pw-avatar--md { width: 32px; height: 32px; font-size: var(--pw-font-xs); }
+.pw-avatar--lg { width: 40px; height: 40px; font-size: var(--pw-font-body); }
+.pw-avatar--tile { border-radius: var(--pw-radius-lg); }
+.pw-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.pw-avatar--tint-0 { background: var(--pw-primary); }
+.pw-avatar--tint-1 { background: var(--pw-success); }
+.pw-avatar--tint-2 { background: var(--pw-error); }
+.pw-avatar--tint-3 { background: var(--pw-warning); }
+.pw-avatar--tint-4 { background: var(--pw-accent); }
+.pw-avatar--tint-5 { background: var(--pw-text-secondary); }
+.pw-avatar--muted { background: var(--pw-surface-container); color: var(--pw-text-muted); }

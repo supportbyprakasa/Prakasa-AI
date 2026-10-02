@@ -1,17 +1,24 @@
 import { useEffect, useState } from 'react';
-import { UserPlus, X, Eye } from 'lucide-react';
 import api from '../../api/client';
 import Card from '../Card';
 import Button from '../Button';
+import Icon from '../Icon';
+import IconButton from '../IconButton';
 import Input from '../Input';
 import Modal from '../Modal';
+import FormActions from '../FormActions';
+import EmptyState, { LoadingState } from '../EmptyState';
 import { toast } from '../Toast';
+import './tasks.css';
 import { useAuth } from '../../context/AuthContext';
 
+// People who get a notification when the task changes ("pemantau").
 export default function TaskWatchers({ task, canWatch, canManage, onChanged }) {
   const { user } = useAuth();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [toggling, setToggling] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 
   const load = async () => {
@@ -19,8 +26,9 @@ export default function TaskWatchers({ task, canWatch, canManage, onChanged }) {
     try {
       const r = await api.get(`/tasks/${task.id}/watchers`);
       setRows(r.data.data || []);
+      setLoadError('');
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal memuat watchers', 'error');
+      setLoadError(e.response?.data?.error?.message || 'Daftar pemantau gagal dimuat.');
     } finally {
       setLoading(false);
     }
@@ -31,6 +39,7 @@ export default function TaskWatchers({ task, canWatch, canManage, onChanged }) {
   const isSelfWatching = rows.some((w) => Number(w.userId) === Number(user?.id));
 
   const toggleSelf = async () => {
+    setToggling(true);
     try {
       if (isSelfWatching) {
         await api.delete(`/tasks/${task.id}/watchers/${user.id}`);
@@ -40,7 +49,9 @@ export default function TaskWatchers({ task, canWatch, canManage, onChanged }) {
       await load();
       onChanged?.();
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal', 'error');
+      toast(e.response?.data?.error?.message || 'Gagal mengubah pemantauan.', 'error');
+    } finally {
+      setToggling(false);
     }
   };
 
@@ -50,52 +61,48 @@ export default function TaskWatchers({ task, canWatch, canManage, onChanged }) {
       await load();
       onChanged?.();
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal', 'error');
+      toast(e.response?.data?.error?.message || 'Pemantau gagal dihapus.', 'error');
     }
   };
 
   return (
     <Card
-      title="Watchers"
-      actions={
-        canManage ? (
-          <Button variant="secondary" onClick={() => setAddOpen(true)}>
-            <UserPlus size={14} />
-          </Button>
-        ) : null
-      }
+      title="Pemantau"
+      actions={canManage ? <IconButton label="Tambah pemantau" icon="person_add" onClick={() => setAddOpen(true)} /> : null}
     >
-      {loading && <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Memuat…</div>}
+      <div className="pw-stack pw-stack--sm">
+        {loading && !rows.length ? <LoadingState compact label="Memuat pemantau…" /> : null}
 
-      {!loading && !rows.length && (
-        <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-          Belum ada watcher.
-        </div>
-      )}
+        {!loading && loadError ? (
+          <EmptyState compact tone="error" title="Pemantau gagal dimuat" description={loadError} action={<Button variant="secondary" onClick={load}>Coba lagi</Button>} />
+        ) : null}
 
-      {rows.map((w) => (
-        <div key={w.userId} style={{
-          display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', padding: '6px 0',
-          boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontSize: 13,
-        }}>
-          <span>👤 {w.userName}</span>
-          {canManage && Number(w.userId) !== Number(user?.id) && (
-            <button type="button" onClick={() => removeWatcher(w.userId)}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>
-              <X size={12} />
-            </button>
-          )}
-        </div>
-      ))}
+        {!loading && !loadError && !rows.length ? <EmptyState compact icon="visibility" description="Belum ada pemantau." /> : null}
 
-      {canWatch && (
-        <div style={{ marginTop: 10 }}>
-          <Button variant="secondary" onClick={toggleSelf}>
-            <Eye size={14} /> {isSelfWatching ? 'Unwatch' : 'Watch Task'}
-          </Button>
-        </div>
-      )}
+        {rows.length > 0 ? (
+          <ul className="task-list">
+            {rows.map((w) => (
+              <li key={w.userId} className="task-list__row">
+                <span className="task-list__main">
+                  <Icon name="person" size="md" className="task-list__icon" />
+                  <span data-no-translate="">{w.userName}</span>
+                </span>
+                {canManage && Number(w.userId) !== Number(user?.id) ? (
+                  <IconButton label={`Hapus ${w.userName || 'pemantau'}`} size="sm" icon="close" onClick={() => removeWatcher(w.userId)} />
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {canWatch ? (
+          <div>
+            <Button variant="secondary" icon={isSelfWatching ? 'visibility_off' : 'visibility'} loading={toggling} onClick={toggleSelf}>
+              {isSelfWatching ? 'Berhenti memantau' : 'Pantau task'}
+            </Button>
+          </div>
+        ) : null}
+      </div>
 
       <AddWatcherModal
         open={addOpen}
@@ -109,46 +116,50 @@ export default function TaskWatchers({ task, canWatch, canManage, onChanged }) {
 
 function AddWatcherModal({ open, onClose, taskId, onAdded }) {
   const [userId, setUserId] = useState('');
+  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const submit = async () => {
+  useEffect(() => { if (open) { setUserId(''); setError(''); } }, [open]);
+
+  const submit = async (event) => {
+    event.preventDefault();
     const parsedUserId = Number(userId);
     if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
-      toast('User ID tidak valid', 'error');
+      setError('Isi ID pengguna berupa bilangan bulat positif.');
       return;
     }
     setSaving(true);
     try {
       await api.post(`/tasks/${taskId}/watchers`, { userId: parsedUserId });
-      toast('Watcher ditambahkan', 'success');
+      toast('Pemantau ditambahkan', 'success');
       setUserId('');
       onAdded();
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal', 'error');
+      setError(e.response?.data?.error?.message || 'Pemantau gagal ditambahkan.');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Tambah Watcher" maxWidth={420}>
-      <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 12 }}>
-        Masukkan User ID. Backend memvalidasi bahwa user berada di entity yang sama.
-      </div>
-      <Input
-        label="User ID"
-        type="number"
-        min="1"
-        step="1"
-        value={userId}
-        onChange={(e) => setUserId(e.target.value)}
-      />
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-        <Button variant="secondary" onClick={onClose}>Batal</Button>
-        <Button onClick={submit} disabled={saving}>
-          {saving ? 'Menambahkan…' : 'Tambah'}
-        </Button>
-      </div>
+    <Modal open={open} onClose={onClose} title="Tambah pemantau" size="sm">
+      <form className="pw-stack" onSubmit={submit} noValidate>
+        <Input
+          label="ID pengguna"
+          type="number"
+          min="1"
+          step="1"
+          required
+          value={userId}
+          error={error}
+          onChange={(e) => { setUserId(e.target.value); if (error) setError(''); }}
+          hint="Pengguna harus berada di entitas yang sama dengan task ini."
+        />
+        <FormActions>
+          <Button type="button" variant="text" onClick={onClose}>Batal</Button>
+          <Button type="submit" loading={saving}>Tambah pemantau</Button>
+        </FormActions>
+      </form>
     </Modal>
   );
 }

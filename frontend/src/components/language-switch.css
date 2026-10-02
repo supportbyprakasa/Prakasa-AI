@@ -1,0 +1,50 @@
+/* Language switch "ID | EN": a compact segmented control (32px high, 36px per
+   option) so it sits in the 64px top bar beside the 48px icon buttons. On
+   phones only the active code shows, as one 36px round button. */
+.pw-lang {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  margin: 0 4px;
+}
+.pw-lang__option,
+.pw-lang__toggle {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--pw-outline-control);
+  background: transparent;
+  color: var(--pw-text-secondary);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-xs);
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--pw-dur-xs) var(--pw-ease-standard), color var(--pw-dur-xs) var(--pw-ease-standard);
+}
+.pw-lang__option {
+  width: 36px;
+  height: 32px;
+}
+.pw-lang__option + .pw-lang__option { margin-left: -1px; }
+.pw-lang__option:first-child { border-radius: var(--pw-radius-segment-start); }
+.pw-lang__option:nth-child(2) { border-radius: var(--pw-radius-segment-end); }
+.pw-lang__option:focus-visible { z-index: 1; }
+.pw-lang__option.is-selected {
+  background: var(--pw-secondary-container);
+  color: var(--pw-on-secondary-container);
+}
+.pw-lang__toggle {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--pw-radius-full);
+}
+
+@media (max-width: 600px) {
+  .pw-lang { margin: 0; }
+  .pw-lang__option { display: none; }
+  .pw-lang__toggle { display: inline-block; }
+}

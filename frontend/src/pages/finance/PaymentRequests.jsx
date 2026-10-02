@@ -1,210 +1,131 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../api/client';
-import DataTable from '../../components/DataTable';
 import Button from '../../components/Button';
-import Modal from '../../components/Modal';
-import Input from '../../components/Input';
-import Badge from '../../components/Badge';
-import FilterBar from '../../components/FilterBar';
-import { toast } from '../../components/Toast';
+import Chip from '../../components/Chip';
+import FilterMenuChip from '../../components/FilterMenuChip';
+import Page from '../../components/Page';
+import StatusBadge from '../../components/StatusBadge';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { formatDate, formatNumber } from '../../components/format';
+import { statusLabel } from '../../components/statusTone';
+import { useAuth } from '../../context/AuthContext';
+import PaymentRequestForm from './PaymentRequestForm';
+import { REQUEST_STATUSES, WORKFLOW_TYPES, financeMoney, workflowTypeLabel } from './financeModel';
 
-const statusTone = (s) =>
-  ({
-    draft: 'default',
-    pending_document_check: 'info',
-    pending_approval: 'warning',
-    approved: 'success',
-    rejected: 'error',
-    revision_requested: 'warning',
-    processing: 'info',
-    paid: 'success',
-    cancelled: 'error',
-  }[s] || 'default');
+const LIMIT = 20;
+const TYPE_OPTIONS = [{ value: '', label: 'Semua' }, ...WORKFLOW_TYPES];
+const apiMessage = (err) => err?.response?.data?.error?.message || 'Periksa koneksi, lalu coba lagi.';
 
+const COLUMNS = [
+  { key: 'requestNumber', header: 'Nomor', nowrap: true },
+  { key: 'workflowType', header: 'Jenis', translate: true, render: (r) => workflowTypeLabel(r.workflowType), exportValue: (r) => workflowTypeLabel(r.workflowType) },
+  { key: 'title', header: 'Judul' },
+  { key: 'payeeName', header: 'Penerima' },
+  {
+    key: 'totalAmount', header: 'Total', type: 'money',
+    render: (r) => financeMoney(r.totalAmount, r.currency), exportValue: (r) => r.totalAmount,
+  },
+  {
+    key: 'status', header: 'Status', nowrap: true,
+    render: (r) => <StatusBadge status={r.status} />, exportValue: (r) => statusLabel(r.status),
+  },
+  { key: 'requesterName', header: 'Pengaju' },
+  { key: 'departmentName', header: 'Divisi', translate: true },
+  {
+    key: 'requestDate', header: 'Tanggal', nowrap: true,
+    render: (r) => formatDate(r.requestDate), sortValue: (r) => r.requestDate || '', exportValue: (r) => r.requestDate || '',
+  },
+];
+
+// Pengajuan pembayaran & reimbursement (list template, docs/ui-guideline.md
+// §3.1): one grid with search, status chips and a type filter; a row opens the
+// request. Everyone sees their own requests; a division Head sees the
+// division's and Finance sees all (the server decides).
 export default function PaymentRequests() {
-  const [rows, setRows] = useState([]);
-  const [meta, setMeta] = useState({ page: 1, total: 0 });
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ workflowType: '', status: '', q: '' });
-  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const canRequest = (user?.permissions || []).includes('finance.request');
+  const [params, setParams] = useSearchParams();
+  const status = REQUEST_STATUSES.includes(params.get('status')) ? params.get('status') : '';
+  const type = WORKFLOW_TYPES.some((w) => w.value === params.get('type')) ? params.get('type') : '';
+  const q = params.get('q') || '';
+  const creating = canRequest && params.get('baru') === '1';
+  const [page, setPage] = useState(1);
+  const [state, setState] = useState({ loading: true, error: '', rows: [], meta: { page: 1, limit: LIMIT, total: 0 } });
+  const request = useRef(0);
+  const leaving = useRef(false); // a saved draft opens its page; closing the form must not navigate back
 
-  const load = async (page = 1) => {
-    setLoading(true);
-    try {
-      const params = { page, limit: 20 };
-      Object.entries(filters).forEach(([k, v]) => {
-        if (v) params[k] = v;
-      });
-      const r = await api.get('/finance/payment-requests', { params });
-      setRows(r.data.data);
-      setMeta(r.data.meta || { page, total: r.data.data.length });
-    } finally {
-      setLoading(false);
-    }
+  // New filters start from the first page.
+  const setParam = (changes) => {
+    setPage(1);
+    setParams((current) => {
+      const next = new URLSearchParams(current);
+      for (const [key, value] of Object.entries(changes)) { if (value) next.set(key, value); else next.delete(key); }
+      return next;
+    }, { replace: true });
   };
-  useEffect(() => { load(1); /* eslint-disable-next-line */ }, [filters.workflowType, filters.status]);
 
-  const create = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
+  const load = useCallback(async () => {
+    const id = ++request.current;
+    setState((s) => ({ ...s, loading: true, error: '' }));
     try {
-      const r = await api.post('/finance/payment-requests', {
-        entityId: Number(fd.get('entityId')),
-        workflowType: fd.get('workflowType'),
-        title: fd.get('title'),
-        description: fd.get('description') || null,
-        category: fd.get('category') || null,
-        payeeName: fd.get('payeeName') || null,
-        payeeBank: fd.get('payeeBank') || null,
-        payeeAccountNumber: fd.get('payeeAccountNumber') || null,
-        payeeAccountName: fd.get('payeeAccountName') || null,
-        amount: Number(fd.get('amount')),
-        taxAmount: Number(fd.get('taxAmount') || 0),
-        totalAmount: Number(fd.get('totalAmount')),
-        requestDate: fd.get('requestDate'),
-        dueDate: fd.get('dueDate') || null,
-      });
-      toast(`Draft dibuat: ${r.data.data.requestNumber}`, 'success');
-      setOpen(false);
-      load(1);
+      const query = { page, limit: LIMIT };
+      if (type) query.workflowType = type;
+      if (status) query.status = status;
+      if (q) query.q = q;
+      const r = await api.get('/finance/payment-requests', { params: query });
+      if (id !== request.current) return;
+      const rows = r.data.data || [];
+      setState({ loading: false, error: '', rows, meta: { page, limit: LIMIT, total: rows.length, ...(r.data.meta || {}) } });
     } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
+      if (id !== request.current) return;
+      setState((s) => ({ ...s, loading: false, error: apiMessage(err) }));
     }
-  };
+  }, [type, status, q, page]);
+  useEffect(() => { load(); }, [load]);
 
+  const filtered = Boolean(q || type || status);
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h2>Payment Requests</h2>
-        <Button onClick={() => setOpen(true)}>+ Payment / Reimbursement</Button>
-      </div>
-
-      <FilterBar
-        filters={[
-          {
-            name: 'workflowType',
-            label: 'Tipe',
-            type: 'select',
-            options: [
-              { value: 'payment_request', label: 'Payment Request' },
-              { value: 'reimbursement', label: 'Reimbursement' },
-            ],
-          },
-          {
-            name: 'status',
-            label: 'Status',
-            type: 'select',
-            options: [
-              'draft',
-              'pending_approval',
-              'approved',
-              'rejected',
-              'revision_requested',
-              'processing',
-              'paid',
-              'cancelled',
-            ].map((s) => ({ value: s, label: s })),
-          },
-          { name: 'q', label: 'Cari', type: 'text', placeholder: 'nomor / judul / penerima' },
-        ]}
-        values={filters}
-        onChange={setFilters}
-        onReset={() => setFilters({ workflowType: '', status: '', q: '' })}
-      >
-        <Button variant="secondary" onClick={() => load(1)}>
-          Terapkan
-        </Button>
-      </FilterBar>
-
-      <DataTable
-        loading={loading}
-        rows={rows}
-        meta={meta}
-        onPageChange={load}
-        empty="Belum ada pengajuan"
-        columns={[
-          {
-            key: 'requestNumber',
-            title: 'Nomor',
-            render: (r) => <Link to={`/finance/payment-requests/${r.id}`}>{r.requestNumber}</Link>,
-          },
-          {
-            key: 'workflowType',
-            title: 'Tipe',
-            render: (r) => (
-              <Badge tone={r.workflowType === 'reimbursement' ? 'info' : 'default'}>
-                {r.workflowType}
-              </Badge>
-            ),
-          },
-          { key: 'title', title: 'Judul' },
-          { key: 'payeeName', title: 'Penerima' },
-          {
-            key: 'totalAmount',
-            title: 'Total',
-            render: (r) => `${r.currency || 'IDR'} ${Number(r.totalAmount).toLocaleString('id-ID')}`,
-          },
-          { key: 'status', title: 'Status', render: (r) => <Badge tone={statusTone(r.status)}>{r.status}</Badge> },
-          {
-            key: 'documentCheckStatus',
-            title: 'Doc Check',
-            render: (r) => (
-              <Badge
-                tone={
-                  r.documentCheckStatus === 'passed'
-                    ? 'success'
-                    : r.documentCheckStatus === 'warning'
-                    ? 'warning'
-                    : r.documentCheckStatus === 'failed'
-                    ? 'error'
-                    : 'default'
-                }
-              >
-                {r.documentCheckStatus}
-              </Badge>
-            ),
-          },
-          { key: 'requesterName', title: 'Requester' },
-        ]}
+    <Page
+      title="Pengajuan pembayaran"
+      description="Pengajuan pembayaran ke pemasok dan reimbursement karyawan: disetujui atasan, lalu dibayar Finance."
+      actions={canRequest ? <Button icon="add" onClick={() => setParam({ baru: '1' })}>Buat pengajuan</Button> : null}
+    >
+      <DataGrid
+        title={state.loading ? 'Pengajuan' : `Pengajuan (${formatNumber(state.meta.total)})`}
+        columns={COLUMNS}
+        rows={state.rows}
+        loading={state.loading}
+        error={state.error}
+        onRetry={load}
+        meta={state.meta}
+        onPageChange={setPage}
+        search={q}
+        onSearchChange={(value) => setParam({ q: value })}
+        searchPlaceholder="Cari nomor, judul, penerima, atau kategori"
+        filters={(
+          <>
+            <Chip selected={!status} onClick={() => setParam({ status: '' })}>Semua</Chip>
+            {REQUEST_STATUSES.map((s) => (
+              <Chip key={s} selected={status === s} onClick={() => setParam({ status: status === s ? '' : s })}>{statusLabel(s)}</Chip>
+            ))}
+            <FilterMenuChip label="Jenis" icon="category" value={type} options={TYPE_OPTIONS} onChange={(value) => setParam({ type: value })} />
+          </>
+        )}
+        onRowClick={(r) => navigate(`/finance/payment-requests/${r.id}`)}
+        exportName="pengajuan-pembayaran"
+        empty={filtered ? 'Tidak ada pengajuan yang cocok dengan filter ini' : 'Belum ada pengajuan. Pilih Buat pengajuan untuk pembayaran atau reimbursement.'}
       />
-
-      <Modal open={open} onClose={() => setOpen(false)} title="Buat Pengajuan Finance">
-        <form onSubmit={create}>
-          <Input label="Entity ID" name="entityId" type="number" required />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-            <label style={{ fontSize: 13 }}>Tipe</label>
-            <select name="workflowType" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
-              <option value="payment_request">Payment Request</option>
-              <option value="reimbursement">Reimbursement</option>
-            </select>
-          </div>
-          <Input label="Judul" name="title" required />
-          <Input label="Deskripsi" name="description" />
-          <Input label="Kategori" name="category" placeholder="operational/vendor/travel/medical" />
-          <Input label="Nama Penerima" name="payeeName" />
-          <Input label="Bank" name="payeeBank" />
-          <Input label="No. Rekening" name="payeeAccountNumber" />
-          <Input label="Atas Nama" name="payeeAccountName" />
-          <Input label="Subtotal" name="amount" type="number" required />
-          <Input label="Pajak" name="taxAmount" type="number" defaultValue={0} />
-          <Input label="Total" name="totalAmount" type="number" required />
-          <Input
-            label="Tanggal Pengajuan"
-            name="requestDate"
-            type="date"
-            required
-            defaultValue={new Date().toISOString().slice(0, 10)}
-          />
-          <Input label="Jatuh Tempo" name="dueDate" type="date" />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button variant="secondary" type="button" onClick={() => setOpen(false)}>
-              Batal
-            </Button>
-            <Button type="submit">Simpan Draft</Button>
-          </div>
-        </form>
-      </Modal>
-    </div>
+      <PaymentRequestForm
+        open={creating}
+        onClose={() => { if (!leaving.current) setParam({ baru: '' }); }}
+        onSaved={(created) => {
+          if (!created?.id) return;
+          leaving.current = true;
+          navigate(`/finance/payment-requests/${created.id}`);
+        }}
+      />
+    </Page>
   );
 }

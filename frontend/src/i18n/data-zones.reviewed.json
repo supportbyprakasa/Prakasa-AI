@@ -1,0 +1,374 @@
+[
+ {
+  "file": "frontend/src/components/ai/AIDocumentWorkspace.jsx",
+  "kind": "key-value",
+  "name": "'Relasi'",
+  "reason": "Raw relation code stored on the context record (fallback 'reference' is the same code), not a label."
+ },
+ {
+  "file": "frontend/src/pages/admin/AIProviderSettings.jsx",
+  "kind": "grid-column",
+  "name": "'Model'",
+  "reason": "Model id and gateway URL are record data; the only label (' · riset web aktif') is wrapped in <Translate>. Still flagged because of the 'gateway' code comparison."
+ },
+ {
+  "file": "frontend/src/pages/admin/AIUsage.jsx",
+  "kind": "grid-column",
+  "name": "'Durasi'",
+  "reason": "A number with the unit literal 'ms' only."
+ },
+ {
+  "file": "frontend/src/pages/admin/AIUsage.jsx",
+  "kind": "key-value",
+  "name": "'Durasi'",
+  "reason": "A number with the unit literal 'ms' only."
+ },
+ {
+  "file": "frontend/src/pages/admin/IntegrationLogs.jsx",
+  "kind": "key-value",
+  "name": "'Durasi'",
+  "reason": "A number with the unit literal 'ms' only."
+ },
+ {
+  "file": "frontend/src/pages/admin/IntegrationLogs.jsx",
+  "kind": "key-value",
+  "name": "'Subjek'",
+  "reason": "Subject type code and id from the log record; literals are only separators."
+ },
+ {
+  "file": "frontend/src/pages/admin/SignaturePrecheckLogs.jsx",
+  "kind": "grid-column",
+  "name": "'Durasi'",
+  "reason": "A number with the unit literal 'ms' only."
+ },
+ {
+  "file": "frontend/src/pages/admin/SignaturePrecheckLogs.jsx",
+  "kind": "grid-column",
+  "name": "'Penyedia / model'",
+  "reason": "Mixed cell: the provider label is wrapped in <Translate>, the model id stays data (the remaining literal is the ' · ' separator)."
+ },
+ {
+  "file": "frontend/src/pages/admin/SignatureRules.jsx",
+  "kind": "grid-column",
+  "name": "'Checksum'",
+  "reason": "Algorithm code shown in <code> (never translated); 'sha256' is the default code."
+ },
+ {
+  "file": "frontend/src/pages/admin/SignatureRules.jsx",
+  "kind": "grid-column",
+  "name": "'Penanda tangan'",
+  "reason": "Mixed cell: a person's name stays data; the role name / 'Pengguna #id' / 'Peran #id' fallback is returned inside <Translate>."
+ },
+ {
+  "file": "frontend/src/pages/advanced/Escalations.jsx",
+  "kind": "grid-column",
+  "name": "'Judul'",
+  "reason": "Record title, reference and context from the source module; literals are only separators."
+ },
+ {
+  "file": "frontend/src/pages/advanced/Escalations.jsx",
+  "kind": "key-value",
+  "name": "'Judul'",
+  "reason": "Record title, reference and context from the source module; literals are only separators."
+ },
+ {
+  "file": "frontend/src/pages/advanced/flow/FlowSales.jsx",
+  "kind": "grid-column",
+  "name": "'Terkirim'",
+  "reason": "A number with a '%' sign only."
+ },
+ {
+  "file": "frontend/src/pages/advanced/flow/SlowMovers.jsx",
+  "kind": "grid-column",
+  "name": "'Barang'",
+  "reason": "Item name and item number from Accurate (both already data-no-translate); no label in the cell."
+ },
+ {
+  "file": "frontend/src/pages/ga/GaOperations.jsx",
+  "kind": "grid-column",
+  "name": "'Pemakaian'",
+  "reason": "Usage number plus the unit typed on the bill (record data); no interface label in the cell."
+ },
+ {
+  "file": "frontend/src/pages/ga/gaOpsModel.js",
+  "kind": "key-value",
+  "name": "'Masa kontrak'",
+  "reason": "Two dates written by the frontend (they already follow the language); the literal is only the dash."
+ },
+ {
+  "file": "frontend/src/pages/ga/gaOpsModel.js",
+  "kind": "key-value",
+  "name": "'Pemakaian'",
+  "reason": "A usage number plus the unit typed on the bill."
+ },
+ {
+  "file": "frontend/src/pages/ga/GaRequestDetail.jsx",
+  "kind": "key-value",
+  "name": "'Penanggung jawab'",
+  "reason": "Assignee name (record data); the 'Belum ditugaskan' fallback is wrapped in <Translate>. Still flagged only because of the status codes in the condition."
+ },
+ {
+  "file": "frontend/src/pages/google/Groups.jsx",
+  "kind": "grid-column",
+  "name": "'Nama grup'",
+  "reason": "Google group name and email (record data), already marked data-no-translate."
+ },
+ {
+  "file": "frontend/src/pages/google/Groups.jsx",
+  "kind": "grid-column",
+  "name": "'Nama'",
+  "reason": "Google group member name / email (record data); flagged only because of the avatar kind props."
+ },
+ {
+  "file": "frontend/src/pages/it/infraModel.js",
+  "kind": "key-value",
+  "name": "'Bandwidth'",
+  "reason": "A number with the unit Mbps only."
+ },
+ {
+  "file": "frontend/src/pages/it/infraModel.js",
+  "kind": "key-value",
+  "name": "'Pemegang'",
+  "reason": "A person's name (record data); the \" (sudah resign)\" suffix is in the same string built in a .js model, so it stays Indonesian."
+ },
+ {
+  "file": "frontend/src/pages/it/Infrastructure.jsx",
+  "kind": "grid-column",
+  "name": "'Nomor'",
+  "reason": "A phone number and extension (render given by reference: phoneText)."
+ },
+ {
+  "file": "frontend/src/pages/it/ReportImportDialog.jsx",
+  "kind": "grid-column",
+  "name": "'Pemakai'",
+  "reason": "Holder name from the imported file, with a kind label joined in the model (importHolderText); kept as data because of the name."
+ },
+ {
+  "file": "frontend/src/pages/procurement/ProcurementOrders.jsx",
+  "kind": "grid-column",
+  "name": "'Diterima'",
+  "reason": "A percentage number (receivedText)."
+ },
+ {
+  "file": "frontend/src/pages/procurement/ProcurementOrders.jsx",
+  "kind": "key-value",
+  "name": "'Pemasok'",
+  "reason": "Supplier name and supplier number from Accurate; the literals are only a dash and brackets."
+ },
+ {
+  "file": "frontend/src/pages/procurement/ProcurementOrders.jsx",
+  "kind": "key-value",
+  "name": "'Status'",
+  "reason": "StatusBadge translates itself; the meta line is Accurate's own status text verbatim behind the product name 'Accurate:'."
+ },
+ {
+  "file": "frontend/src/pages/procurement/ProcurementPrices.jsx",
+  "kind": "grid-column",
+  "name": "'Diskon'",
+  "reason": "A discount number from Accurate with a % sign."
+ },
+ {
+  "file": "frontend/src/pages/procurement/ProcurementToday.jsx",
+  "kind": "grid-column",
+  "name": "'Diterima'",
+  "reason": "A percentage number (receivedText)."
+ },
+ {
+  "file": "frontend/src/pages/procurement/ProcurementVendors.jsx",
+  "kind": "grid-column",
+  "name": "'Diterima'",
+  "reason": "A percentage number (receivedText)."
+ },
+ {
+  "file": "frontend/src/pages/projects/Projects.jsx",
+  "kind": "grid-column",
+  "name": "'Belum selesai'",
+  "reason": "A count (number); the quoted text is a code key, not a label."
+ },
+ {
+  "file": "frontend/src/pages/projects/Projects.jsx",
+  "kind": "grid-column",
+  "name": "'Dikerjakan'",
+  "reason": "A count (number); the quoted text is a code key, not a label."
+ },
+ {
+  "file": "frontend/src/pages/projects/Projects.jsx",
+  "kind": "grid-column",
+  "name": "'Project'",
+  "reason": "Project name (user-typed) and project key; 'Space Chat' is a product term identical in English."
+ },
+ {
+  "file": "frontend/src/pages/projects/Projects.jsx",
+  "kind": "grid-column",
+  "name": "'Selesai'",
+  "reason": "A count (number); the quoted text is a code key, not a label."
+ },
+ {
+  "file": "frontend/src/pages/projects/Projects.jsx",
+  "kind": "grid-column",
+  "name": "'Sprint aktif'",
+  "reason": "Mixed: the sprint name (user-typed) and a percentage stay data; the label 'Tidak ada sprint aktif' is wrapped in <Translate>."
+ },
+ {
+  "file": "frontend/src/pages/projects/Projects.jsx",
+  "kind": "grid-column",
+  "name": "'Terlambat'",
+  "reason": "A count (number); the quoted text is a code key, not a label."
+ },
+ {
+  "file": "frontend/src/pages/projects/TrackerPortfolio.jsx",
+  "kind": "grid-column",
+  "name": "'Sprint aktif'",
+  "reason": "Mixed: the sprint name (user-typed) stays data; the 's.d. <date>' label is wrapped in <Translate>."
+ },
+ {
+  "file": "frontend/src/pages/sales/SalesAccurateBatch.jsx",
+  "kind": "key-value",
+  "name": "'Diputuskan oleh'",
+  "reason": "A person's name and a date-time."
+ },
+ {
+  "file": "frontend/src/pages/sales/SalesExchanges.jsx",
+  "kind": "grid-column",
+  "name": "'Pelanggan'",
+  "reason": "Customer name, salesperson name and channel from Accurate; 'Sales:' is identical in English."
+ },
+ {
+  "file": "frontend/src/pages/sales/SalesOrderDetail.jsx",
+  "kind": "key-value",
+  "name": "'Invoice'",
+  "reason": "Invoice numbers and a date."
+ },
+ {
+  "file": "frontend/src/pages/sales/SalesOrderDetail.jsx",
+  "kind": "key-value",
+  "name": "'Surat jalan'",
+  "reason": "Delivery note numbers and a date."
+ },
+ {
+  "file": "frontend/src/pages/sales/SalesPipeline.jsx",
+  "kind": "grid-column",
+  "name": "'Produk'",
+  "reason": "Item name and item code from Accurate (flagged only because of the data-no-translate attributes)."
+ },
+ {
+  "file": "frontend/src/pages/signatures/SignatureDetail.jsx",
+  "kind": "key-value",
+  "name": "'Permintaan approval'",
+  "reason": "Approval request number (#id): a record number, the literal is only the # prefix."
+ },
+ {
+  "file": "frontend/src/pages/signatures/SignatureInbox.jsx",
+  "kind": "grid-column",
+  "name": "'Ditandatangani oleh'",
+  "reason": "Mixed: a person's name stays data; the \"Pengguna #n\" fallback is rendered inside <Translate>."
+ },
+ {
+  "file": "frontend/src/pages/signatures/SignatureInbox.jsx",
+  "kind": "grid-column",
+  "name": "'Penanda tangan ditunjuk'",
+  "reason": "Mixed: a person's name stays data; a role name or the \"Pengguna #n\" / \"Peran #n\" fallback is rendered inside <Translate>."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseAccurateDocs.jsx",
+  "kind": "grid-column",
+  "name": "'Jumlah'",
+  "reason": "A quantity and the unit from Accurate (lineQtyText)."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseAccurateDocs.jsx",
+  "kind": "grid-column",
+  "name": "'No. SO'",
+  "reason": "SO / PO numbers from Accurate (referenceText)."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseAccurateDocs.jsx",
+  "kind": "grid-column",
+  "name": "'PO'",
+  "reason": "SO / PO numbers from Accurate (referenceText)."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseAccurateDocs.jsx",
+  "kind": "key-value",
+  "name": "'Status'",
+  "reason": "StatusBadge translates itself; otherwise the document status verbatim from Accurate."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseDashboard.jsx",
+  "kind": "grid-column",
+  "name": "'Nomor'",
+  "reason": "A record number (#id)."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseMovementDetail.jsx",
+  "kind": "key-value",
+  "name": "'Diajukan oleh'",
+  "reason": "A person's name and a date-time."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseMovementDetail.jsx",
+  "kind": "grid-column",
+  "name": "'Jumlah'",
+  "reason": "A quantity and the unit typed by the user."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseMovements.jsx",
+  "kind": "grid-column",
+  "name": "'Referensi'",
+  "reason": "A reference number typed by the user, or the record number (#id)."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseRecon.jsx",
+  "kind": "grid-column",
+  "name": "'Cara cocok'",
+  "reason": "Mixed: the match-kind label is wrapped in <Translate>; the meta line is a person's name, a date-time and the reason typed by the user."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseRecon.jsx",
+  "kind": "grid-column",
+  "name": "'Jumlah'",
+  "reason": "A quantity and a unit from Accurate or typed by the user."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseRecon.jsx",
+  "kind": "grid-column",
+  "name": "'Selisih'",
+  "reason": "A signed quantity and the base unit from Accurate (itemDiffText)."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseShipping.jsx",
+  "kind": "grid-column",
+  "name": "'Dipesan'",
+  "reason": "A quantity and the unit from Accurate (lineQtyText)."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseShipping.jsx",
+  "kind": "key-value",
+  "name": "'Pelanggan'",
+  "reason": "Customer name and channel from Accurate."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseStock.jsx",
+  "kind": "grid-column",
+  "name": "'Jumlah'",
+  "reason": "A quantity and the unit from Accurate (lineQtyText)."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseToday.jsx",
+  "kind": "grid-column",
+  "name": "'Diterima'",
+  "reason": "A percentage number."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseToday.jsx",
+  "kind": "grid-column",
+  "name": "'No. SO'",
+  "reason": "SO / PO numbers from Accurate (referenceText)."
+ },
+ {
+  "file": "frontend/src/pages/warehouse/WarehouseToday.jsx",
+  "kind": "grid-column",
+  "name": "'PO'",
+  "reason": "SO / PO numbers from Accurate (referenceText)."
+ }
+]

@@ -13,11 +13,8 @@ const {
   sanitizeFileName,
 } = require('./aiDocumentArtifact.service');
 const claudeTeam = require('./ai/claudeTeamPersonal');
-const {
-  getClaudeTeamSettings,
-  isClaudeTeamAllowed,
-  loadUserIdentity,
-} = require('./ai/providerSettings');
+const { loadUserIdentity, resolveEngineForUser } = require('./ai/aiRouting.service');
+const { getAccount: getClaudeTeamAccount } = require('./ai/claudeTeamAccounts.service');
 
 // A PDF whose text layer is shorter than this is treated as a scan.
 const MIN_PDF_TEXT_CHARS = 50;
@@ -75,18 +72,20 @@ function needsVisualRead(mimeType, extraction) {
 // Images and scanned PDFs are transcribed once with Claude vision so every later message
 // (and every provider) can use the text. Failure never blocks the upload itself.
 async function readVisually({ user, buffer, mimeType }) {
-  if (process.env.CLAUDE_TEAM_GATEWAY_URL) {
-    return { text: null, reason: 'Pembacaan visual belum tersedia lewat gateway' };
-  }
-  const [settings, identity] = await Promise.all([
-    getClaudeTeamSettings(),
-    loadUserIdentity(user.sub),
-  ]);
-  if (!isClaudeTeamAllowed(settings, identity)) {
+  const identity = await loadUserIdentity(user.sub);
+  const resolved = await resolveEngineForUser(identity);
+  if (resolved.provider !== 'claude_team' || !resolved.claudeTeamAccountId) {
     return { text: null, reason: 'Pembacaan gambar/scan membutuhkan akses Claude Team' };
   }
+  const account = await getClaudeTeamAccount(resolved.claudeTeamAccountId);
+  if (!account?.enabled) {
+    return { text: null, reason: 'Pembacaan gambar/scan membutuhkan akses Claude Team' };
+  }
+  if (account.mode === 'gateway') {
+    return { text: null, reason: 'Pembacaan visual belum tersedia lewat gateway' };
+  }
   try {
-    const result = await claudeTeam.transcribeVisual({ buffer, mimeType, model: settings.model });
+    const result = await claudeTeam.transcribeVisual({ buffer, mimeType, model: account.model });
     const text = String(result.content || '').trim();
     if (!text) return { text: null, reason: 'Pembacaan visual tidak menghasilkan teks' };
     return {

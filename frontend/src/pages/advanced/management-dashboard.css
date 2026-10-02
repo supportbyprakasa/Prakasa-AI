@@ -1,0 +1,30 @@
+/* Management Dashboard — only the page's own layout. The modules and their KPIs
+   come from the API, so nothing here assumes how many there are. */
+
+/* Dashboard cards sit 24px apart (docs/ui-guideline.md §3.4). The figures
+   come in any unit ("Rp 184,5 jt", "6,4 hari"), so a tile never gets narrower
+   than a 32px figure needs: four across on a wide desktop, fewer as the
+   content narrows (1024 with the side menu: two), one on a phone. */
+.pw-cols-4.mgmt-kpis { grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 24px; }
+
+/* Eskalasi teratas: open count + "Lihat semua" in the card header, then one
+   full-width row per item (the row reaches the card edges so its hover veil
+   does too), each opening Pusat Eskalasi on the item's kind. */
+.mgmt-esc__count { color: var(--pw-text-muted); font-size: var(--pw-font-body); line-height: 20px; white-space: nowrap; }
+.mgmt-esc__count.is-alert { color: var(--pw-error); }
+.mgmt-esc { display: flex; flex-direction: column; margin: 0 -24px -8px; padding: 0; list-style: none; }
+.mgmt-esc > li + li { box-shadow: inset 0 1px 0 0 var(--pw-divider); }
+.mgmt-esc__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 56px;
+  padding: 8px 24px;
+  color: var(--pw-text);
+  text-decoration: none;
+}
+.mgmt-esc__ref { color: var(--pw-text-meta); }
+.mgmt-esc__late { flex: none; font-size: var(--pw-font-sm); line-height: 20px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mgmt-esc__late.is-error { color: var(--pw-error); }
+.mgmt-esc__late.is-warning { color: var(--pw-warning); }

@@ -5,8 +5,8 @@ function providerError(message, code, status) {
   return error;
 }
 
-async function generate({ system, prompt, model, params }) {
-  const key = process.env.GEMINI_API_KEY;
+async function generate({ system, prompt, model, params, config }) {
+  const key = config?.apiKey || process.env.GEMINI_API_KEY;
   if (!key) {
     throw providerError(
       'Gemini belum dikonfigurasi oleh administrator',

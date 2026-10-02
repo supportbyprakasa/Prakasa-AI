@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import api from '../api/client';
 import Button from './Button';
+import Card from './Card';
+import EmptyState from './EmptyState';
+import Select from './Select';
+import './ai/ai-components.css';
 
 export default function AiAssistantPanel({ documentId }) {
   const [action, setAction] = useState('summarize');
@@ -19,24 +23,34 @@ export default function AiAssistantPanel({ documentId }) {
   };
 
   return (
-    <div style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)', borderRadius: 12, padding: 16 }}>
-      <h4 style={{ marginTop: 0 }}>Tanya AI</h4>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        <select value={action} onChange={(e) => setAction(e.target.value)}
-          style={{ padding: '6px 10px', borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
-          <option value="summarize">Ringkas</option>
-          <option value="check_completeness">Cek kelengkapan</option>
-          <option value="check_consistency">Cek konsistensi angka</option>
-        </select>
-        <Button onClick={run} disabled={loading}>{loading ? 'Memproses…' : 'Jalankan'}</Button>
+    <Card title="Tanya AI">
+      <div className="pw-stack">
+        <div className="pw-row ai-doc-assistant__controls">
+          <Select
+            label="Aksi"
+            value={action}
+            onChange={(e) => setAction(e.target.value)}
+            fieldClassName="pw-grow"
+            options={[
+              { value: 'summarize', label: 'Ringkas' },
+              { value: 'check_completeness', label: 'Cek kelengkapan' },
+              { value: 'check_consistency', label: 'Cek konsistensi angka' },
+            ]}
+          />
+          <Button onClick={run} loading={loading}>Jalankan analisis</Button>
+        </div>
+        {error && (
+          <EmptyState
+            compact
+            tone="error"
+            description={error}
+            action={<Button variant="secondary" onClick={run}>Coba lagi</Button>}
+          />
+        )}
+        {result && (
+          <pre className="ai-doc-assistant__result">{result}</pre>
+        )}
       </div>
-      {error && <div style={{ color: 'var(--color-error)', fontSize: 13, marginBottom: 8 }}>{error}</div>}
-      {result && (
-        <pre style={{
-          whiteSpace: 'pre-wrap', fontSize: 13, background: '#f8fafc',
-          padding: 12, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)', margin: 0,
-        }}>{result}</pre>
-      )}
-    </div>
+    </Card>
   );
 }

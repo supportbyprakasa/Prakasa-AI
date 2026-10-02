@@ -1,0 +1,22 @@
+/* Alur & Margin (program 3.3) — only the page's own layout. */
+
+/* Period chips, resolved dates and (margin) division chips on one wrapping row. */
+.mflow-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; min-width: 0; }
+
+/* Dashboard cards sit 24px apart (docs/ui-guideline.md §3.4). A step card
+   carries a 32px figure ("Rp 1,27 M") and a few lines of notes, so it never
+   gets narrower than 240px: one row on a wide desktop, two by two at 1024
+   with the side menu, one column on a phone. */
+.pw-cols-4.mflow-kpis,
+.pw-cols-3.mflow-kpis { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 24px; }
+
+/* A flow step's note (StepCard): its share, what it counts, and — under a
+   divider — how long the step before it took. */
+.mflow-note { display: flex; flex-direction: column; gap: 4px; }
+.mflow-gap { margin-top: 4px; padding-top: 8px; box-shadow: inset 0 1px 0 0 var(--pw-divider); }
+.mflow-gap__label { color: var(--pw-text); font-weight: 500; }
+
+/* PO status counts: coloured status text, spaced wider than chips. */
+.pw-row.mflow-states { gap: 8px 24px; }
+
+.mflow-note-text { margin: 0; }

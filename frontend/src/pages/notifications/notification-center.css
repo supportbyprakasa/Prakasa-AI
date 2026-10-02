@@ -1,0 +1,33 @@
+/* Notifikasi page: one white panel (like a DataGrid, docs/ui-guideline.md
+   §4.9) holding the filters, the rows (components/notifications) and the
+   shared Pager. */
+.nc-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--pw-outline-panel);
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface);
+}
+
+/* Filter area: the status chips (the 56px filter bar), then the pickers. */
+.nc-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 24px 0;
+  box-shadow: inset 0 -1px 0 0 var(--pw-divider);
+}
+.nc-filters > .pw-row { min-height: var(--pw-control-height); }
+.nc-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 24px; }
+
+.pw-notification-list.is-loading { opacity: .6; transition: opacity var(--pw-dur-sm) var(--pw-ease-standard); }
+
+@media (max-width: 1023px) {
+  .nc-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .nc-filters { padding: 12px 16px 0; }
+  .nc-fields { gap: 0 16px; }
+}

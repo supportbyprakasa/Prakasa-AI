@@ -1,0 +1,96 @@
+/* Menu / ActionMenu (docs/ui-guideline.md §4.14): white, radius 4,
+   --pw-elev-menu, padding 8px 0, 48px items with padding 0 16px, Roboto 14/20,
+   4% hover, 112–280px wide, above dialogs (--pw-z-menu). Opens with scale .8
+   and a fade in --pw-dur-menu (120ms), closes with a 75ms fade. */
+.pw-menu[role="menu"] {
+  position: fixed;
+  top: 0;
+  right: auto;
+  left: 0;
+  z-index: var(--pw-z-menu);
+  min-width: 112px;
+  max-width: 280px;
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+  padding: 8px 0;
+  border-radius: var(--pw-radius-md);
+  background: var(--pw-surface);
+  box-shadow: var(--pw-elev-menu);
+  color: var(--pw-text);
+  transform-origin: top right;
+  animation: pw-scale-in var(--pw-dur-menu) var(--pw-ease-decelerate);
+}
+.pw-menu[role="menu"]:focus { outline: none; }
+.pw-menu[role="menu"][data-positioned="false"] { visibility: hidden; }
+.pw-menu[role="menu"][data-placement="bottom-start"] { transform-origin: top left; }
+.pw-menu[role="menu"][data-placement="top-end"] { transform-origin: bottom right; }
+.pw-menu[role="menu"][data-placement="top-start"] { transform-origin: bottom left; }
+.pw-menu[role="menu"][data-state="closing"] {
+  pointer-events: none;
+  animation: pw-fade-out var(--pw-dur-state) linear forwards;
+}
+
+.pw-menu[role="menu"] .pw-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  height: 48px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--pw-text);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+  font-weight: 400;
+  line-height: 20px;
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.pw-menu[role="menu"] .pw-menu__item:focus-visible { outline: 2px solid var(--pw-primary); outline-offset: -2px; }
+.pw-menu[role="menu"] .pw-menu__icon { flex: 0 0 auto; color: var(--pw-text-muted); }
+.pw-menu[role="menu"] .pw-menu__label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.pw-menu[role="menu"] .pw-menu__item.is-danger,
+.pw-menu[role="menu"] .pw-menu__item.is-danger .pw-menu__icon { color: var(--pw-error); }
+.pw-menu[role="menu"] .pw-menu__item:disabled,
+.pw-menu[role="menu"] .pw-menu__item:disabled .pw-menu__icon {
+  color: var(--pw-disabled-text);
+  cursor: not-allowed;
+  opacity: 1;
+}
+.pw-menu[role="menu"] .pw-menu__divider {
+  height: 1px;
+  margin: 8px 0;
+  background: var(--pw-divider);
+}
+
+/* Item with a description: label over a Roboto 12/16 muted line; the item
+   grows past 48px when the description wraps. */
+.pw-menu[role="menu"] .pw-menu__item.has-description { height: auto; padding-top: 6px; padding-bottom: 6px; }
+.pw-menu[role="menu"] .pw-menu__text { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; }
+.pw-menu[role="menu"] .pw-menu__description {
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-xs);
+  line-height: 16px;
+  white-space: normal;
+}
+.pw-menu[role="menu"] .pw-menu__item:disabled .pw-menu__description { color: inherit; }
+/* Single choice (menuitemradio): the chosen item carries a check after its label. */
+.pw-menu[role="menu"] .pw-menu__check { flex: 0 0 auto; color: var(--pw-accent); }
+
+/* Header slot (e.g. the signed-in account): above the items, not focusable. */
+.pw-menu[role="menu"] .pw-menu__header {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-bottom: 8px;
+  padding: 8px 16px 12px;
+  border-bottom: 1px solid var(--pw-divider);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+  line-height: 20px;
+}

@@ -1,39 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Clock, ChevronDown } from 'lucide-react';
 import api from '../../api/client';
 import Card from '../Card';
 import Button from '../Button';
+import Icon from '../Icon';
+import EmptyState, { LoadingState } from '../EmptyState';
+import { formatDateTime } from '../format';
 import { toast } from '../Toast';
+import { activityLabel, activityParts } from './taskModel';
+import { Mixed, data } from '../../i18n/NoTranslate';
+import './tasks.css';
 
-const EVENT_LABEL = {
-  'task.created': 'Task dibuat',
-  'task.updated': 'Task diperbarui',
-  'task.moved': 'Task dipindahkan',
-  'task.assigned': 'Assignee ditambahkan',
-  'task.reassigned': 'Assignee diganti',
-  'task.unassigned': 'Assignee dilepas',
-  'task.status_changed': 'Status berubah',
-  'task.completed': 'Task selesai',
-  'task.reopened': 'Task dibuka kembali',
-  'task.comment_added': 'Komentar ditambahkan',
-  'task.checklist_added': 'Checklist ditambahkan',
-  'task.checklist_completed': 'Checklist selesai',
-  'task.checklist_reopened': 'Checklist dibuka kembali',
-  'task.checklist_deleted': 'Checklist dihapus',
-  'task.watcher_added': 'Watcher ditambahkan',
-  'task.watcher_removed': 'Watcher dihapus',
-  'task.dependency_added': 'Dependency ditambahkan',
-  'task.dependency_removed': 'Dependency dihapus',
-};
-
-function labelFor(event) {
-  return EVENT_LABEL[event] || event;
-}
-
+// Everything that happened to a task, newest first, 50 at a time.
 export default function TaskActivityTimeline({ taskId, refreshKey }) {
   const [rows, setRows] = useState([]);
   const [meta, setMeta] = useState({ page: 1, limit: 50, total: 0 });
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [loadingMore, setLoadingMore] = useState(false);
 
   const load = async (page = 1, append = false) => {
@@ -46,8 +28,11 @@ export default function TaskActivityTimeline({ taskId, refreshKey }) {
       const nextRows = r.data.data || [];
       setRows((prev) => (append ? [...prev, ...nextRows] : nextRows));
       setMeta(r.data.meta || { page, limit: 50, total: nextRows.length });
+      setLoadError('');
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal memuat aktivitas', 'error');
+      const message = e.response?.data?.error?.message || 'Aktivitas gagal dimuat.';
+      if (append) toast(message, 'error');
+      else setLoadError(message);
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -60,56 +45,52 @@ export default function TaskActivityTimeline({ taskId, refreshKey }) {
 
   return (
     <Card title={`Aktivitas (${meta.total || rows.length})`}>
-      {loading && <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Memuat…</div>}
+      <div className="pw-stack pw-stack--sm">
+        {loading && !rows.length ? <LoadingState compact label="Memuat aktivitas…" /> : null}
 
-      {!loading && !rows.length && (
-        <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-          Belum ada aktivitas.
-        </div>
-      )}
+        {!loading && loadError ? (
+          <EmptyState compact tone="error" title="Aktivitas gagal dimuat" description={loadError} action={<Button variant="secondary" onClick={() => load(1, false)}>Coba lagi</Button>} />
+        ) : null}
 
-      {rows.map((a) => (
-        <div key={a.id} style={{
-          display: 'flex', gap: 8, padding: '8px 0',
-          boxShadow: 'inset 0 -1px 0 0 var(--color-border)', fontSize: 13,
-        }}>
-          <Clock size={13} style={{ marginTop: 3, color: 'var(--color-text-muted)', flexShrink: 0 }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 500 }}>{labelFor(a.event)}</div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-              {a.actorName || 'Sistem'} · {new Date(a.createdAt).toLocaleString('id-ID')}
-            </div>
-            <MetadataPreview metadata={a.metadata} />
+        {!loading && !loadError && !rows.length ? <EmptyState compact icon="history" description="Belum ada aktivitas." /> : null}
+
+        {rows.length > 0 ? (
+          <ol className="task-activity">
+            {rows.map((a) => {
+              // A title someone typed stays as typed; the labels around it translate.
+              const details = activityParts(a.metadata);
+              return (
+                <li key={a.id} className="task-activity__row">
+                  <Icon name="schedule" size="sm" className="task-activity__icon" />
+                  <span className="pw-cell">
+                    <span className="pw-cell__title pw-strong">{activityLabel(a.event)}</span>
+                    <span className="pw-cell__meta"><span data-no-translate={a.actorName ? '' : undefined}>{a.actorName || 'Sistem'}</span>{' · '}{formatDateTime(a.createdAt)}</span>
+                    {details.length ? (
+                      <span className="pw-cell__meta">
+                        {details.map((part, index) => (
+                          // eslint-disable-next-line react/no-array-index-key
+                          <span key={index}>
+                            {index > 0 ? ' · ' : null}
+                            {typeof part === 'string' ? part : <Mixed separator=" " parts={[part.label, data(part.value)]} />}
+                          </span>
+                        ))}
+                      </span>
+                    ) : null}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        ) : null}
+
+        {hasMore ? (
+          <div className="task-activity__more">
+            <Button variant="text" icon="expand_more" onClick={() => load((meta.page || 1) + 1, true)} loading={loadingMore}>
+              Muat lebih banyak
+            </Button>
           </div>
-        </div>
-      ))}
-
-      {hasMore && (
-        <div style={{ textAlign: 'center', marginTop: 10 }}>
-          <Button variant="secondary" onClick={() => load((meta.page || 1) + 1, true)}
-            disabled={loadingMore}>
-            <ChevronDown size={14} /> {loadingMore ? 'Memuat…' : 'Muat lebih banyak'}
-          </Button>
-        </div>
-      )}
+        ) : null}
+      </div>
     </Card>
-  );
-}
-
-function MetadataPreview({ metadata }) {
-  if (!metadata || typeof metadata !== 'object') return null;
-  const entries = Object.entries(metadata)
-    .filter(([, v]) => v !== null && v !== undefined && v !== '')
-    .slice(0, 4);
-  if (!entries.length) return null;
-
-  return (
-    <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
-      {entries.map(([k, v]) => (
-        <span key={k} style={{ marginRight: 8 }}>
-          {k}: <b>{typeof v === 'object' ? JSON.stringify(v) : String(v).slice(0, 40)}</b>
-        </span>
-      ))}
-    </div>
   );
 }

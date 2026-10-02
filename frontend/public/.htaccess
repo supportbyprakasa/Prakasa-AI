@@ -1,0 +1,76 @@
+# Prakasa Workspace — static frontend on cPanel (Apache 2.4, public_html).
+# Vite copies this file into dist/ on every build; upload it with dist/*.
+#
+# BEFORE UPLOAD: replace every `<domain>` below with the live domain
+# (docs/deployment.md §4 Frontend), e.g.
+#   sed -i 's/<domain>/contoh.co.id/g' public_html/.htaccess
+# A left-over placeholder makes the browser drop that CSP source, so every API
+# call fails — the smoke test catches it on the first login.
+
+Options -Indexes
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. HTTPS only. AutoSSL's domain checks under /.well-known stay on HTTP.
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{REQUEST_URI} !^/\.well-known/
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+  # 2. SPA fallback: any path that is not a real file or folder is a React
+  # route (/sales/orders, /verify/<kode>, …) and gets index.html. A missing
+  # file under /assets/ stays a real 404: after a redeploy an old tab asks for
+  # old chunk names, and the app reloads itself on that error (lazyPage.js).
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_URI} !^/assets/
+  RewriteCond %{REQUEST_URI} !^/\.well-known/
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+</IfModule>
+
+<IfModule mod_headers.c>
+  # ---- Caching
+  # (FilesMatch only, no <If>/expr=: works on Apache and on LiteSpeed hosts.)
+  # index.html — also when it answers a deep link, since the SPA rewrite and
+  # DirectoryIndex are internal redirects to it — and the manifest: always
+  # revalidate, so a new deploy is picked up on the next load.
+  <FilesMatch "^(index\.html|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  # Vite's hashed bundles in /assets (name-<8 char hash>.ext): the name changes
+  # with the content, so cache them for a year.
+  <FilesMatch "-[A-Za-z0-9_-]{8}\.(js|css|woff2?|png|svg|jpe?g|gif|webp)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # ---- Security headers (also on redirects and errors)
+  # HSTS without includeSubDomains/preload: other subdomains of <domain> may
+  # not be on HTTPS. (Browsers ignore it on the plain-HTTP redirect.)
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+
+  # Content-Security-Policy (decisions in docs/deployment.md §12.3):
+  # - script-src: the Vite bundles + Google Identity Services (Google login).
+  #   No 'unsafe-inline' / 'unsafe-eval': the build emits no inline script.
+  # - style-src 'unsafe-inline': the Gmail reader renders mail in a srcdoc
+  #   iframe, which inherits this policy and needs its own <style> and the
+  #   mail's style="" attributes; Google Identity Services also injects styles.
+  # - connect-src: the API origin (XHR, SSE stream, AI stream, /verify) and GIS.
+  # - frame-src: Docs/Sheets/Slides editors and Drive previews, GIS button.
+  # - img-src https:: Google avatars, Drive thumbnails, remote mail images.
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.<domain> https://accounts.google.com/gsi/; frame-src https://docs.google.com https://drive.google.com https://accounts.google.com/gsi/; media-src 'self' blob: data:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
+</IfModule>
+
+# Plain-text compression for the bundles (if the host has mod_deflate).
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript text/javascript application/json application/manifest+json image/svg+xml
+</IfModule>

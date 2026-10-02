@@ -1,5 +1,9 @@
 const pool = require('../db/pool');
 const intLog = require('./integrationLog.service');
+const { ownScope } = require('./salesOwners.service');
+const { documentVisibilitySql, signatureVisibilitySql } = require('./divisionAccess');
+const { taskDivisionSql } = require('./taskAccess.service');
+const { approvalVisibilitySql } = require('./approvalEngine.service');
 
 /* ============================================================
    Constants
@@ -12,14 +16,11 @@ const SUPPORTED_TYPES = [
   'document',
   'task',
   'customer',
-  'sales_pipeline',
-  'meeting',
+  'sales_order',
   'device',
   'subscription',
   'finance_workflow',
   'hrga_workflow',
-  'kb_document',
-  'decision_log',
   'approval_request',
   'signature_request',
 ];
@@ -32,14 +33,11 @@ const TYPE_PERMISSION = {
   document: 'document.view',
   task: 'task.view',
   customer: 'sales.customer.view',
-  sales_pipeline: 'sales.pipeline.view',
-  meeting: 'meeting.view',
+  sales_order: 'sales.order.view',
   device: 'device.view',
   subscription: 'subscription.view',
   finance_workflow: 'finance.view',
   hrga_workflow: 'hrga.view',
-  kb_document: 'kb.view',
-  decision_log: 'decision_log.view',
   approval_request: 'approval.view',
   signature_request: 'signature.view',
 };
@@ -51,14 +49,11 @@ const ACTION_URL_BUILDERS = {
   document: (r) => `/documents?highlight=${r.id}`,
   task: (r) => `/tasks/${r.id}`,
   customer: (r) => `/sales/customers/${r.id}`,
-  sales_pipeline: () => `/sales/pipeline`,
-  meeting: (r) => `/meetings/${r.id}`,
+  sales_order: (r) => `/sales/orders/${r.id}`,
   device: (r) => `/it/devices/${r.id}`,
   subscription: (r) => `/it/subscriptions/${r.id}`,
   finance_workflow: (r) => `/finance/payment-requests/${r.id}`,
   hrga_workflow: (r) => `/hrga/workflows/${r.id}`,
-  kb_document: () => `/kb`,
-  decision_log: () => `/decision-log`,
   approval_request: () => `/approvals`,
   signature_request: (r) => `/signatures/${r.id}`,
 };
@@ -166,16 +161,17 @@ function getAllowedSearchTypes(user) {
    Each provider returns normalized safe rows.
    ============================================================ */
 
-async function searchDocuments({ entityId, q, cap }) {
+async function searchDocuments({ entityId, q, cap, user }) {
   const like = `%${escapeLike(q)}%`;
+  const visible = documentVisibilitySql(user, 'd');
   const [rows] = await pool.query(
-    `SELECT id, entity_id, department_id, title, document_type, status, created_at
-       FROM documents
-      WHERE entity_id = ? AND deleted_at IS NULL
-        AND (title LIKE ? OR document_type LIKE ?)
-      ORDER BY id DESC
+    `SELECT d.id, d.entity_id, d.department_id, d.title, d.document_type, d.status, d.created_at
+       FROM documents d
+      WHERE d.entity_id = ? AND d.deleted_at IS NULL AND ${visible.sql}
+        AND (d.title LIKE ? OR d.document_type LIKE ?)
+      ORDER BY d.id DESC
       LIMIT ?`,
-    [entityId, like, like, cap]
+    [entityId, ...visible.args, like, like, cap]
   );
   return rows.map((r) =>
     normalize({
@@ -194,16 +190,17 @@ async function searchDocuments({ entityId, q, cap }) {
   );
 }
 
-async function searchTasks({ entityId, q, cap }) {
+async function searchTasks({ entityId, q, cap, user }) {
   const like = `%${escapeLike(q)}%`;
+  const visible = taskDivisionSql(user, 't');
   const [rows] = await pool.query(
-    `SELECT id, entity_id, department_id, title, description, status, priority, due_date, created_at
-       FROM tasks
-      WHERE entity_id = ? AND deleted_at IS NULL
-        AND (title LIKE ? OR description LIKE ?)
-      ORDER BY id DESC
+    `SELECT t.id, t.entity_id, t.department_id, t.title, t.description, t.status, t.priority, t.due_date, t.created_at
+       FROM tasks t
+      WHERE t.entity_id = ? AND t.deleted_at IS NULL AND ${visible.sql}
+        AND (t.title LIKE ? OR t.description LIKE ?)
+      ORDER BY t.id DESC
       LIMIT ?`,
-    [entityId, like, like, cap]
+    [entityId, ...visible.args, like, like, cap]
   );
   return rows.map((r) =>
     normalize({
@@ -219,23 +216,25 @@ async function searchTasks({ entityId, q, cap }) {
   );
 }
 
-async function searchCustomers({ entityId, q, cap }) {
+// Sales members only find the customers and orders they own (sales.data.view_all sees all).
+async function searchCustomers({ entityId, q, cap, user }) {
   const like = `%${escapeLike(q)}%`;
+  const cs = ownScope(user, 'customer', 'c.id');
   const [rows] = await pool.query(
-    `SELECT id, entity_id, department_id, name, contact_person, phone, city, created_at
-       FROM sales_customers
-      WHERE entity_id = ? AND deleted_at IS NULL
-        AND (name LIKE ? OR contact_person LIKE ? OR phone LIKE ? OR city LIKE ?)
-      ORDER BY id DESC
+    `SELECT c.id, c.entity_id, c.department_id, c.name, c.contact_person, c.phone, c.city, c.customer_code, c.created_at
+       FROM sales_customers c
+      WHERE c.entity_id = ?${cs.sql} AND c.deleted_at IS NULL
+        AND (c.name LIKE ? OR c.contact_person LIKE ? OR c.phone LIKE ? OR c.city LIKE ? OR c.customer_code LIKE ?)
+      ORDER BY c.id DESC
       LIMIT ?`,
-    [entityId, like, like, like, like, cap]
+    [entityId, ...cs.args, like, like, like, like, like, cap]
   );
   return rows.map((r) =>
     normalize({
       type: 'customer',
       row: r,
       title: r.name,
-      subtitle: r.city || r.contact_person || null,
+      subtitle: r.customer_code || r.city || r.contact_person || null,
       createdAt: r.created_at,
       score: Math.max(
         scoreMatch(r.name, q),
@@ -248,52 +247,34 @@ async function searchCustomers({ entityId, q, cap }) {
   );
 }
 
-async function searchPipeline({ entityId, q, cap }) {
+// Sales orders by SO, surat jalan (DO) or invoice number, or customer name.
+async function searchSalesOrders({ entityId, q, cap, user }) {
   const like = `%${escapeLike(q)}%`;
+  const os = ownScope(user, 'order', 'o.id');
   const [rows] = await pool.query(
-    `SELECT p.id, p.entity_id, p.department_id, p.deal_title AS dealTitle,
-            p.stage, p.created_at
-       FROM sales_pipeline p
-      WHERE p.entity_id = ? AND p.deleted_at IS NULL
-        AND p.deal_title LIKE ?
-      ORDER BY p.id DESC
+    `SELECT o.id, o.entity_id, o.department_id, o.order_number AS orderNumber, o.customer_name AS customerName,
+            o.do_numbers AS doNumbers, o.invoice_numbers AS invoiceNumbers, o.transaction_date, o.created_at
+       FROM sales_orders o
+      WHERE o.entity_id = ?${os.sql} AND o.deleted_at IS NULL
+        AND (o.order_number LIKE ? OR o.do_numbers LIKE ? OR o.invoice_numbers LIKE ? OR o.customer_name LIKE ?)
+      ORDER BY o.transaction_date DESC, o.id DESC
       LIMIT ?`,
-    [entityId, like, cap]
+    [entityId, ...os.args, like, like, like, like, cap]
   );
   return rows.map((r) =>
     normalize({
-      type: 'sales_pipeline',
+      type: 'sales_order',
       row: r,
-      title: r.dealTitle,
-      subtitle: r.stage,
-      status: r.stage,
-      createdAt: r.created_at,
-      score: scoreMatch(r.dealTitle, q),
-      meta: { stage: r.stage },
-    })
-  );
-}
-
-async function searchMeetings({ entityId, q, cap }) {
-  const like = `%${escapeLike(q)}%`;
-  const [rows] = await pool.query(
-    `SELECT id, entity_id, department_id, title, status, start_time, created_at
-       FROM meetings
-      WHERE entity_id = ? AND deleted_at IS NULL
-        AND title LIKE ?
-      ORDER BY start_time DESC, id DESC
-      LIMIT ?`,
-    [entityId, like, cap]
-  );
-  return rows.map((r) =>
-    normalize({
-      type: 'meeting',
-      row: r,
-      title: r.title,
-      subtitle: r.start_time ? new Date(r.start_time).toISOString().slice(0, 16) : null,
-      status: r.status,
-      createdAt: r.created_at,
-      score: scoreMatch(r.title, q),
+      title: r.orderNumber,
+      subtitle: [r.customerName, r.doNumbers, r.invoiceNumbers].filter(Boolean).join(' · ') || null,
+      createdAt: r.transaction_date || r.created_at,
+      score: Math.max(
+        scoreMatch(r.orderNumber, q),
+        scoreSecondary(r.doNumbers, q),
+        scoreSecondary(r.invoiceNumbers, q),
+        scoreSecondary(r.customerName, q)
+      ),
+      meta: {},
     })
   );
 }
@@ -358,17 +339,19 @@ async function searchSubscriptions({ entityId, q, cap }) {
   );
 }
 
-async function searchFinance({ entityId, q, cap }) {
+async function searchFinance({ entityId, q, cap, user }) {
   const like = `%${escapeLike(q)}%`;
+  // Same read rule as the Finance module's own list.
+  const scope = require('./financeRequests.service').readScope(user);
   const [rows] = await pool.query(
-    `SELECT id, entity_id, department_id, request_number, title, status,
-            total_amount, currency, created_at
-       FROM finance_workflows
-      WHERE entity_id = ? AND deleted_at IS NULL
-        AND (title LIKE ? OR request_number LIKE ?)
-      ORDER BY id DESC
+    `SELECT f.id, f.entity_id, f.department_id, f.request_number, f.title, f.status,
+            f.total_amount, f.currency, f.created_at
+       FROM finance_workflows f
+      WHERE f.entity_id = ? AND f.deleted_at IS NULL${scope.sql}
+        AND (f.title LIKE ? OR f.request_number LIKE ?)
+      ORDER BY f.id DESC
       LIMIT ?`,
-    [entityId, like, like, cap]
+    [entityId, ...scope.args, like, like, cap]
   );
   return rows.map((r) =>
     normalize({
@@ -417,42 +400,18 @@ async function searchHrga({ entityId, q, cap }) {
   );
 }
 
-async function searchDecisionLogs({ entityId, q, cap }) {
+async function searchApprovals({ entityId, q, cap, user }) {
   const like = `%${escapeLike(q)}%`;
+  const visible = approvalVisibilitySql(user, 'a');
   const [rows] = await pool.query(
-    `SELECT id, entity_id, department_id, title, category, status, created_at
-       FROM decision_logs
-      WHERE entity_id = ? AND deleted_at IS NULL
-        AND title LIKE ?
-      ORDER BY id DESC
+    `SELECT a.id, a.entity_id, a.department_id, a.title, a.status, a.subject_type,
+            a.current_level, a.created_at
+       FROM approval_requests a
+      WHERE a.entity_id = ? AND ${visible.sql}
+        AND a.title LIKE ?
+      ORDER BY a.id DESC
       LIMIT ?`,
-    [entityId, like, cap]
-  );
-  return rows.map((r) =>
-    normalize({
-      type: 'decision_log',
-      row: r,
-      title: r.title,
-      subtitle: r.category,
-      status: r.status,
-      createdAt: r.created_at,
-      score: scoreMatch(r.title, q),
-      meta: { category: r.category },
-    })
-  );
-}
-
-async function searchApprovals({ entityId, q, cap }) {
-  const like = `%${escapeLike(q)}%`;
-  const [rows] = await pool.query(
-    `SELECT id, entity_id, department_id, title, status, subject_type,
-            current_level, created_at
-       FROM approval_requests
-      WHERE entity_id = ?
-        AND title LIKE ?
-      ORDER BY id DESC
-      LIMIT ?`,
-    [entityId, like, cap]
+    [entityId, ...visible.args, like, cap]
   );
   return rows.map((r) =>
     normalize({
@@ -467,19 +426,20 @@ async function searchApprovals({ entityId, q, cap }) {
   );
 }
 
-async function searchSignatures({ entityId, q, cap }) {
+async function searchSignatures({ entityId, q, cap, user }) {
   const like = `%${escapeLike(q)}%`;
+  const visible = signatureVisibilitySql(user, 's');
   const [rows] = await pool.query(
     `SELECT s.id, s.entity_id, s.department_id, s.status, s.created_at,
             d.title AS docTitle
        FROM signature_requests s
        JOIN documents d ON d.id = s.document_id
-      WHERE s.entity_id = ?
+      WHERE s.entity_id = ? AND ${visible.sql}
         AND d.deleted_at IS NULL
         AND d.title LIKE ?
       ORDER BY s.id DESC
       LIMIT ?`,
-    [entityId, like, cap]
+    [entityId, ...visible.args, like, cap]
   );
   return rows.map((r) =>
     normalize({
@@ -494,77 +454,6 @@ async function searchSignatures({ entityId, q, cap }) {
   );
 }
 
-/**
- * KB provider with strict visibility enforcement.
- * Cross-entity + private / role visibility returns nothing if it cannot be
- * safely satisfied — never weaken privacy to make results appear.
- */
-async function searchKnowledgeBase({ entityId, q, cap, user }) {
-  const like = `%${escapeLike(q)}%`;
-
-  // Load user's role IDs once.
-  const [roleRows] = await pool.query(
-    `SELECT role_id AS roleId FROM user_roles WHERE user_id = ?`,
-    [user.sub]
-  );
-  const userRoleIds = new Set(roleRows.map((r) => Number(r.roleId)));
-  const userDeptId = user.departmentId || null;
-  const sameEntity = Number(entityId) === Number(user.entityId);
-
-  const [rows] = await pool.query(
-    `SELECT id, entity_id, department_id, title, category, visibility,
-            allowed_role_ids, uploaded_by, created_at
-       FROM kb_documents
-      WHERE entity_id = ? AND deleted_at IS NULL AND is_active = 1
-        AND title LIKE ?
-      ORDER BY id DESC
-      LIMIT ?`,
-    [entityId, like, cap]
-  );
-
-  const visible = rows.filter((r) => {
-    const vis = r.visibility;
-    if (vis === 'entity') return true;
-    if (!sameEntity) {
-      // Cross-entity KB is only allowed for 'entity' visibility.
-      return false;
-    }
-    if (vis === 'department') {
-      return userDeptId != null &&
-        Number(r.department_id) === Number(userDeptId);
-    }
-    if (vis === 'role') {
-      const allowed = r.allowed_role_ids
-        ? (typeof r.allowed_role_ids === 'string'
-            ? safeParseJson(r.allowed_role_ids, [])
-            : r.allowed_role_ids)
-        : [];
-      if (!Array.isArray(allowed) || !allowed.length) return false;
-      return allowed.some((rid) => userRoleIds.has(Number(rid)));
-    }
-    if (vis === 'private') {
-      return Number(r.uploaded_by) === Number(user.sub);
-    }
-    return false;
-  });
-
-  return visible.map((r) =>
-    normalize({
-      type: 'kb_document',
-      row: r,
-      title: r.title,
-      subtitle: r.category,
-      createdAt: r.created_at,
-      score: scoreMatch(r.title, q),
-      meta: { category: r.category, visibility: r.visibility },
-    })
-  );
-}
-
-function safeParseJson(v, fallback) {
-  try { return JSON.parse(v); } catch { return fallback; }
-}
-
 /* ============================================================
    PROVIDER REGISTRY
    ============================================================ */
@@ -573,14 +462,11 @@ const PROVIDERS = {
   document: searchDocuments,
   task: searchTasks,
   customer: searchCustomers,
-  sales_pipeline: searchPipeline,
-  meeting: searchMeetings,
+  sales_order: searchSalesOrders,
   device: searchDevices,
   subscription: searchSubscriptions,
   finance_workflow: searchFinance,
   hrga_workflow: searchHrga,
-  kb_document: searchKnowledgeBase,
-  decision_log: searchDecisionLogs,
   approval_request: searchApprovals,
   signature_request: searchSignatures,
 };
@@ -640,10 +526,7 @@ async function search({ user, q, entityId, types, page = 1, limit = 20 }) {
     const fn = PROVIDERS[type];
     if (!fn) return [];
     try {
-      const args = type === 'kb_document'
-        ? { entityId: resolvedEntityId, q: query, cap: fetchCap, user }
-        : { entityId: resolvedEntityId, q: query, cap: fetchCap };
-      const rows = await fn(args);
+      const rows = await fn({ entityId: resolvedEntityId, q: query, cap: fetchCap, user });
       return rows;
     } catch (e) {
       // Keep public metadata sanitized; raw error stays internal only.

@@ -1,0 +1,27 @@
+/* Material Symbols Outlined through <Icon> only (docs/ui-guideline.md §1.11). */
+.pw-icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+  font-family: "Material Symbols Outlined";
+  font-size: var(--pw-icon-lg);
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "liga";
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+.pw-icon--sm { font-size: var(--pw-icon-sm); font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20; }
+.pw-icon--md { font-size: var(--pw-icon-md); font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20; }
+.pw-icon--xl { font-size: var(--pw-icon-xl); }
+.pw-icon--filled { font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24; }
+.pw-icon--spin { animation: pw-spin var(--pw-dur-loop) linear infinite; }

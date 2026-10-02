@@ -2,16 +2,18 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const mysql = require('mysql2/promise');
-const { buildDbConnectionConfig } = require('./connectionConfig');
+const { buildDbConnectionConfig, SESSION_TIME_ZONE_SQL } = require('./connectionConfig');
 
 const MIGRATIONS_DIR = path.join(__dirname, '..', '..', 'migrations');
 const LEDGER_TABLE = 'schema_migrations';
 
-function createMigrationConnection() {
-  return mysql.createConnection({
+async function createMigrationConnection() {
+  const connection = await mysql.createConnection({
     ...buildDbConnectionConfig(),
     multipleStatements: true,
   });
+  await connection.query(SESSION_TIME_ZONE_SQL);
+  return connection;
 }
 
 async function ensureLedger(db) {

@@ -1,29 +1,29 @@
-import { Lock, Users, Building2 } from 'lucide-react';
-import Badge from '../Badge';
+import Icon from '../Icon';
+import StatusBadge from '../StatusBadge';
+import './ai-components.css';
 
 /**
  * Display session visibility with clear helper text.
  * Frontend presentation only — backend enforces actual access.
+ * The tone comes from statusTone.js (visibility is a category, so neutral);
+ * only the label, icon and helper text live here.
  */
 
 const VIS_META = {
   private: {
-    label: 'Private',
-    tone: 'default',
-    icon: Lock,
+    label: 'Pribadi',
+    icon: 'lock',
     helper: 'Hanya Anda yang dapat membaca isi percakapan.'
   },
   department: {
-    label: 'Department',
-    tone: 'info',
-    icon: Users,
-    helper: 'Dibagikan sesuai akses department.',
+    label: 'Divisi',
+    icon: 'group',
+    helper: 'Dibagikan sesuai akses divisi.',
   },
   entity: {
-    label: 'Entity',
-    tone: 'warning',
-    icon: Building2,
-    helper: 'Dibagikan sesuai akses entity.',
+    label: 'Lintas divisi',
+    icon: 'domain',
+    helper: 'Dibagikan sesuai akses entitas.',
   },
 };
 
@@ -35,18 +35,23 @@ export function visibilityHelper(v) {
   return (VIS_META[v] || VIS_META.private).helper;
 }
 
+// "Pribadi — Hanya Anda yang …" options for the visibility Select.
+export function visibilityOptions() {
+  return Object.keys(VIS_META).map((value) => ({ value, label: `${VIS_META[value].label} — ${VIS_META[value].helper}` }));
+}
+
 export default function AIVisibilityBadge({ visibility, showIcon = true }) {
-  const meta = VIS_META[visibility] || VIS_META.private;
-  const Icon = meta.icon;
+  const key = VIS_META[visibility] ? visibility : 'private';
+  const meta = VIS_META[key];
   return (
-    <Badge tone={meta.tone}>
-      {showIcon && (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <Icon size={11} />
+    <StatusBadge
+      status={key}
+      label={showIcon ? (
+        <span className="ai-visibility-label">
+          <Icon name={meta.icon} size="sm" />
           {meta.label}
         </span>
-      )}
-      {!showIcon && meta.label}
-    </Badge>
+      ) : meta.label}
+    />
   );
 }

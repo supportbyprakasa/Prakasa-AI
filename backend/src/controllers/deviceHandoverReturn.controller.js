@@ -3,6 +3,8 @@ const { ok, fail } = require('../utils/response');
 const { log } = require('../services/activityLog.service');
 const drive = require('../services/googleDrive.service');
 
+const sharedDriveId = () => String(process.env.GOOGLE_SHARED_DRIVE_ID || '').trim() || null;
+
 /**
  * Upload dokumen handover (serah terima). Boleh link ke document Fase 2 atau file baru.
  */
@@ -12,17 +14,21 @@ async function uploadHandover(req, res, next) {
     const { documentId } = req.body;
 
     const [aRows] = await pool.query(
-      `SELECT * FROM device_assignments WHERE id=?`, [id]
+      `SELECT * FROM device_assignments WHERE id=? AND entity_id=?`, [id, req.user.entityId]
     );
     if (!aRows[0]) return fail(res, 'NOT_FOUND', 'Assignment tidak ditemukan', 404);
 
     let fileId = null;
     let webViewLink = null;
     if (req.file) {
+      // Company files live in the Shared Drive only, never in the service account's own Drive.
+      const parentId = sharedDriveId();
+      if (!parentId) return fail(res, 'GOOGLE_DRIVE_NOT_CONFIGURED', 'Google Shared Drive belum dikonfigurasi. Isi GOOGLE_SHARED_DRIVE_ID.', 503);
       const up = await drive.uploadFile({
         name: req.file.originalname,
         mimeType: req.file.mimetype,
         buffer: req.file.buffer,
+        parentId,
       });
       fileId = up.id; webViewLink = up.webViewLink;
     }
@@ -53,17 +59,21 @@ async function uploadReturn(req, res, next) {
     const { documentId, conditionOnReturn, accessoriesReturned } = req.body;
 
     const [aRows] = await pool.query(
-      `SELECT * FROM device_assignments WHERE id=?`, [id]
+      `SELECT * FROM device_assignments WHERE id=? AND entity_id=?`, [id, req.user.entityId]
     );
     if (!aRows[0]) return fail(res, 'NOT_FOUND', 'Assignment tidak ditemukan', 404);
 
     let fileId = null;
     let webViewLink = null;
     if (req.file) {
+      // Company files live in the Shared Drive only, never in the service account's own Drive.
+      const parentId = sharedDriveId();
+      if (!parentId) return fail(res, 'GOOGLE_DRIVE_NOT_CONFIGURED', 'Google Shared Drive belum dikonfigurasi. Isi GOOGLE_SHARED_DRIVE_ID.', 503);
       const up = await drive.uploadFile({
         name: req.file.originalname,
         mimeType: req.file.mimetype,
         buffer: req.file.buffer,
+        parentId,
       });
       fileId = up.id; webViewLink = up.webViewLink;
     }

@@ -1,136 +1,51 @@
-import { useNavigate } from 'react-router-dom';
-import {
-  FileText, CheckSquare, Users, TrendingUp, CalendarDays,
-  MonitorSmartphone, AppWindow, Wallet, UserRound, BookOpen,
-  ScrollText, CheckCircle, PenTool, Circle,
-} from 'lucide-react';
-import Card from '../Card';
+import { Link } from 'react-router-dom';
 import Badge from '../Badge';
+import Icon from '../Icon';
+import StatusBadge from '../StatusBadge';
+import { formatDate } from '../format';
+import { safeInternalPath } from '../notifications/notificationModel';
+import { resultEntity, resultMetaItems, resultSubtitle, searchTypeIcon, searchTypeLabel } from './searchResultModel';
+import './search-result.css';
 
-const TYPE_META = {
-  document: { label: 'Dokumen', icon: FileText, tone: 'default' },
-  task: { label: 'Task', icon: CheckSquare, tone: 'info' },
-  customer: { label: 'Customer', icon: Users, tone: 'default' },
-  sales_pipeline: { label: 'Pipeline', icon: TrendingUp, tone: 'info' },
-  meeting: { label: 'Meeting', icon: CalendarDays, tone: 'default' },
-  device: { label: 'Device', icon: MonitorSmartphone, tone: 'default' },
-  subscription: { label: 'Subscription', icon: AppWindow, tone: 'default' },
-  finance_workflow: { label: 'Finance', icon: Wallet, tone: 'success' },
-  hrga_workflow: { label: 'HRGA', icon: UserRound, tone: 'info' },
-  kb_document: { label: 'Knowledge Base', icon: BookOpen, tone: 'default' },
-  decision_log: { label: 'Decision', icon: ScrollText, tone: 'default' },
-  approval_request: { label: 'Approval', icon: CheckCircle, tone: 'warning' },
-  signature_request: { label: 'Signature', icon: PenTool, tone: 'warning' },
-};
-
-/**
- * Safe internal path check — trust backend, but re-verify defensively.
- */
-function safeInternalPath(url) {
-  if (typeof url !== 'string') return null;
-  const s = url.trim();
-  if (!s.startsWith('/')) return null;
-  if (s.startsWith('//')) return null;
-  if (s.includes('://')) return null;
-  return s;
-}
-
-/**
- * Render meta safely — only whitelisted keys.
- */
-function renderMeta(meta) {
-  if (!meta || typeof meta !== 'object') return null;
-  const safe = [];
-  if (meta.priority) safe.push(['priority', meta.priority]);
-  if (meta.dueDate) safe.push(['due', meta.dueDate]);
-  if (meta.city) safe.push(['kota', meta.city]);
-  if (meta.stage) safe.push(['stage', meta.stage]);
-  if (meta.deviceType) safe.push(['tipe', meta.deviceType]);
-  if (meta.renewalDate) safe.push(['renewal', meta.renewalDate]);
-  if (meta.currency) safe.push(['mata uang', meta.currency]);
-  if (meta.workflowType) safe.push(['workflow', meta.workflowType]);
-  if (meta.category) safe.push(['kategori', meta.category]);
-  if (meta.visibility) safe.push(['visibilitas', meta.visibility]);
-
-  if (!safe.length) return null;
-  return (
-    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
-      {safe.map(([k, v]) => (
-        <span key={k} style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-          {k}: <b>{String(v)}</b>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-export default function SearchResultCard({ result }) {
-  const nav = useNavigate();
-  const meta = TYPE_META[result.type] || { label: result.type, icon: Circle, tone: 'default' };
-  const Icon = meta.icon;
-
+// One global-search result as a list row (docs/ui-guideline.md §4.9): the
+// whole row is a real link to the record (keyboard and middle-click work), the
+// record type is a neutral label, the status comes from StatusBadge, and meta
+// values are read through the shared label maps and format.js. A result
+// without an in-app path is shown as plain text.
+export default function SearchResultCard({ result, currentEntityId }) {
   const target = safeInternalPath(result.actionUrl);
-  const clickable = !!target;
+  const subtitle = resultSubtitle(result);
+  const meta = resultMetaItems(result.meta);
+  const entity = resultEntity(result.entityId, currentEntityId);
 
-  const onClick = () => {
-    if (!clickable) return;
-    nav(target);
-  };
+  const content = (
+    <>
+      <span className="pw-search-result__icon"><Icon name={searchTypeIcon(result.type)} /></span>
+      <span className="pw-search-result__body">
+        {/* A record's own title and second line are never translated; a second
+            line the model turned into a label (a subject type, a kind) is. */}
+        <span className="pw-search-result__title" data-no-translate={result.title ? '' : undefined}>{result.title || '(Tanpa judul)'}</span>
+        {subtitle ? <span className="pw-search-result__subtitle" data-no-translate={subtitle === result.subtitle ? '' : undefined}>{subtitle}</span> : null}
+        <span className="pw-search-result__meta">
+          <Badge>{searchTypeLabel(result.type)}</Badge>
+          {result.status ? <StatusBadge status={result.status} /> : null}
+          {meta.map((item) => (
+            <span key={item.key} className="pw-search-result__pair">{item.label}: <span data-no-translate={item.data ? '' : undefined}>{item.value}</span></span>
+          ))}
+          {result.createdAt ? <span className="pw-search-result__pair">Dibuat {formatDate(result.createdAt)}</span> : null}
+          {entity ? <span className="pw-search-result__pair">{entity}</span> : null}
+        </span>
+      </span>
+    </>
+  );
 
   return (
-    <div
-      onClick={onClick}
-      style={{
-        cursor: clickable ? 'pointer' : 'default',
-        opacity: clickable ? 1 : 0.85,
-      }}
-    >
-      <Card>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-            background: '#f1f5f9',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            color: 'var(--color-text-muted)',
-          }}>
-            <Icon size={18} />
-          </div>
-
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
-              <div style={{
-                fontSize: 14, fontWeight: 600,
-                overflow: 'hidden', textOverflow: 'ellipsis',
-                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-              }}>
-                {result.title}
-              </div>
-              <Badge tone={meta.tone}>{meta.label}</Badge>
-            </div>
-
-            {result.subtitle && (
-              <div style={{
-                fontSize: 12, color: 'var(--color-text-muted)',
-                marginTop: 2,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {result.subtitle}
-              </div>
-            )}
-
-            {renderMeta(result.meta)}
-
-            <div style={{
-              display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap',
-              fontSize: 11, color: 'var(--color-text-muted)',
-            }}>
-              {result.status && <span>Status: <b>{result.status}</b></span>}
-              {result.createdAt && <span>{new Date(result.createdAt).toLocaleDateString('id-ID')}</span>}
-              {result.entityId != null && <span>Entity #{result.entityId}</span>}
-            </div>
-          </div>
-        </div>
-      </Card>
-    </div>
+    <li className="pw-search-result">
+      {target ? (
+        <Link to={target} className="pw-search-result__row pw-state-layer">{content}</Link>
+      ) : (
+        <div className="pw-search-result__row is-static">{content}</div>
+      )}
+    </li>
   );
 }

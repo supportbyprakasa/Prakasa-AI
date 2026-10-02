@@ -1,0 +1,72 @@
+/* Onboarding & offboarding (People & Culture) — layout only; cards, progress
+   bar, badges, dialogs and buttons are shared. */
+
+/* List: progress bar + "5/9" in one cell; late count in error colour. */
+.hrga-progress-cell { display: flex; align-items: center; gap: 8px; min-width: 112px; }
+.hrga-progress-cell .pw-progress { flex: 1 1 64px; }
+.hrga-progress-cell__text { flex: 0 0 auto; }
+.hrga-late { color: var(--pw-error); }
+.hrga-error-text { color: var(--pw-error); font-size: var(--pw-font-xs); line-height: 16px; }
+
+/* Detail: checklist progress above the groups. */
+.hrga-progress { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.hrga-progress__label { margin: 0; color: var(--pw-text-secondary); font-size: var(--pw-font-body); line-height: 20px; }
+
+/* Checklist groups: IT / GA / Atasan / People & Culture. */
+.hrga-group { display: flex; flex-direction: column; gap: 4px; }
+.hrga-group + .hrga-group { margin-top: 16px; }
+.hrga-group__title { margin: 0; }
+
+/* Task, approval step, holding and attachment lines: title + meta left,
+   status and at most one action + ⋮ right; wraps under on narrow cards. */
+.hrga-lines { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.hrga-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 56px;
+  padding: 8px 0;
+  font-size: var(--pw-font-body);
+  box-shadow: inset 0 -1px 0 0 var(--pw-divider);
+}
+.hrga-line:last-child { box-shadow: none; }
+.hrga-line__main { display: flex; flex: 1 1 220px; flex-direction: column; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+.hrga-line__title { color: var(--pw-text); line-height: 20px; }
+.hrga-line__meta { color: var(--pw-text-meta); font-size: var(--pw-font-xs); line-height: 18px; }
+.hrga-line__side { display: inline-flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 8px; min-width: 0; }
+
+/* Form: needs switches in a row, licences as a checkbox list. */
+.hrga-needs { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-bottom: 16px; }
+.hrga-licenses { display: flex; flex-direction: column; gap: 4px; min-width: 0; margin: 16px 0 0; padding: 0; border: 0; }
+.hrga-licenses > legend { margin-bottom: 4px; padding: 0; }
+.hrga-form-note, .hrga-dialog-intro { margin: 0; color: var(--pw-text-secondary); font-size: var(--pw-font-body); line-height: 20px; overflow-wrap: anywhere; }
+.hrga-form-note { margin-top: 8px; }
+
+/* Template editor: one row per item, fields side by side, stacked on phones. */
+.hrga-items { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.hrga-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 2fr) minmax(0, .7fr) minmax(0, 1fr) auto;
+  gap: 0 12px;
+  align-items: start;
+  padding-bottom: 8px;
+  box-shadow: inset 0 -1px 0 0 var(--pw-divider);
+}
+.hrga-item--off { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 2fr) minmax(0, .7fr) auto; }
+.hrga-item__actions { display: inline-flex; align-items: center; padding-top: 8px; }
+.hrga-items-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+/* Penanggung jawab card: two pickers and the save button. */
+.hrga-pic { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0 24px; }
+.hrga-pic__field { flex: 1 1 240px; min-width: 0; }
+.hrga-pic__save { display: flex; align-items: center; min-height: 62px; }
+
+@media (max-width: 1023px) {
+  .hrga-item, .hrga-item--off { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .hrga-item__actions { grid-column: 1 / -1; justify-content: flex-end; padding-top: 0; }
+}
+@media (max-width: 600px) {
+  .hrga-item, .hrga-item--off { grid-template-columns: minmax(0, 1fr); }
+  .hrga-line__side { justify-content: flex-start; }
+}

@@ -1,27 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { GitCompareArrows, RotateCcw, Search, ShieldCheck } from 'lucide-react';
 import api from '../../api/client';
 import Button from '../../components/Button';
+import Card from '../../components/Card';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import DataTable from '../../components/DataTable';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { apiErrorMessage } from '../../components/datagrid/gridModel';
+import EmptyState from '../../components/EmptyState';
+import IconButton from '../../components/IconButton';
+import Page from '../../components/Page';
+import PageHeader from '../../components/PageHeader';
+import StatCard from '../../components/StatCard';
+import { toast } from '../../components/Toast';
+import FilterChips from './FilterChips';
 import RoleEditorPanel from './RoleEditorPanel';
-import { roleHierarchyRows } from './roleAdminModel';
+import { ROLE_LEVEL_LABELS, roleHierarchyRows, roleLevelLabel } from './roleAdminModel';
+import { Mixed } from '../../i18n/NoTranslate';
+import './admin-editors.css';
 
-const LEVEL_LABELS = {
-  member: 'Member',
-  supervisor: 'Supervisor',
-  head: 'Head',
-  admin: 'Admin',
-  custom: 'Custom',
-};
-
-function RoleLevelChip({ level }) {
-  return (
-    <span className={`role-level-chip role-level-chip--${level}`}>
-      {LEVEL_LABELS[level] || level || 'Custom'}
-    </span>
-  );
-}
+const LEVEL_OPTIONS = Object.entries(ROLE_LEVEL_LABELS).map(([value, label]) => ({ value, label }));
+const TYPE_OPTIONS = [
+  { value: 'standard', label: 'Standar' },
+  { value: 'custom', label: 'Custom' },
+];
+const NO_FILTERS = { departmentId: '', roleLevel: '', standard: '' };
 
 export default function Roles() {
   const [rows, setRows] = useState([]);
@@ -29,13 +30,12 @@ export default function Roles() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
-  const [departmentId, setDepartmentId] = useState('');
-  const [roleLevel, setRoleLevel] = useState('');
-  const [standard, setStandard] = useState('');
+  const [filters, setFilters] = useState(NO_FILTERS);
   const [compareMode, setCompareMode] = useState(false);
   const [editorRole, setEditorRole] = useState(null);
   const [resetRole, setResetRole] = useState(null);
   const [resetting, setResetting] = useState(false);
+  const { departmentId, roleLevel, standard } = filters;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -48,7 +48,7 @@ export default function Roles() {
       setRows(rolesResponse.data.data || []);
       setDepartments(departmentsResponse.data.data || []);
     } catch (requestError) {
-      setError(requestError.response?.data?.error?.message || 'Daftar role tidak dapat dimuat.');
+      setError(apiErrorMessage(requestError, 'Daftar peran tidak dapat dimuat.'));
     } finally {
       setLoading(false);
     }
@@ -57,7 +57,7 @@ export default function Roles() {
   useEffect(() => { load(); }, [load]);
 
   const filteredRows = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase('id-ID');
+    const normalizedQuery = query.trim().toLowerCase();
     return rows.filter((role) => {
       if (departmentId && Number(role.departmentId) !== Number(departmentId)) return false;
       if (roleLevel && role.roleLevel !== roleLevel) return false;
@@ -65,7 +65,7 @@ export default function Roles() {
       if (standard === 'custom' && role.isSystemTemplate) return false;
       if (!normalizedQuery) return true;
       return [role.name, role.roleKey, role.departmentName]
-        .some((value) => String(value || '').toLocaleLowerCase('id-ID').includes(normalizedQuery));
+        .some((value) => String(value || '').toLowerCase().includes(normalizedQuery));
     });
   }, [departmentId, query, roleLevel, rows, standard]);
 
@@ -76,154 +76,113 @@ export default function Roles() {
     () => roleHierarchyRows(rows, comparisonDepartmentId),
     [comparisonDepartmentId, rows],
   );
+  const comparisonName = departments.find((item) => Number(item.id) === Number(comparisonDepartmentId))?.name;
 
   const resetDefault = async () => {
     if (!resetRole) return;
     setResetting(true);
-    setError('');
     try {
       await api.post(`/roles/${resetRole.id}/reset-standard`);
       setResetRole(null);
       await load();
     } catch (requestError) {
-      setError(requestError.response?.data?.error?.message || 'Default role gagal dipulihkan.');
+      toast(apiErrorMessage(requestError, 'Standar peran gagal dipulihkan.'), 'error');
       setResetRole(null);
     } finally {
       setResetting(false);
     }
   };
 
+  const columns = [
+    {
+      key: 'name',
+      header: 'Peran',
+      translate: true,
+      render: (role) => (
+        <span className="pw-cell">
+          <span className="pw-cell__title">{role.name}</span>
+          <code data-no-translate="" className="pw-cell__meta admin-code">{role.roleKey || 'custom'}</code>
+        </span>
+      ),
+    },
+    { key: 'departmentName', header: 'Divisi', translate: true, render: (role) => role.departmentName || 'Global' },
+    { key: 'roleLevel', header: 'Level', translate: true, render: (role) => roleLevelLabel(role.roleLevel) },
+    { key: 'permissionCount', header: 'Permission', type: 'number' },
+    { key: 'userCount', header: 'Pengguna', type: 'number' },
+    { key: 'updatedAt', header: 'Diperbarui', type: 'date' },
+  ];
+
   return (
-    <div className="role-admin-page">
-      <header className="role-admin-header">
-        <div>
-          <span className="role-admin-eyebrow"><ShieldCheck size={16} /> Kontrol akses</span>
-          <h1>Role & permission</h1>
-          <p>Atur akses Member, Supervisor, dan Head untuk setiap divisi.</p>
-        </div>
-        <Button
-          variant={compareMode ? 'primary' : 'secondary'}
-          type="button"
-          onClick={() => setCompareMode((current) => !current)}
-        >
-          <GitCompareArrows size={18} />
-          {compareMode ? 'Tutup perbandingan' : 'Bandingkan role'}
-        </Button>
-      </header>
-
-      <section className="role-admin-filters" aria-label="Filter role">
-        <label className="role-admin-search">
-          <span className="sr-only">Cari role</span>
-          <Search size={18} aria-hidden="true" />
-          <input
-            type="search"
-            value={query}
-            placeholder="Cari nama atau key role"
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </label>
-        <label>
-          <span>Divisi</span>
-          <select value={departmentId} onChange={(event) => setDepartmentId(event.target.value)}>
-            <option value="">Semua divisi</option>
-            {departments.map((department) => (
-              <option key={department.id} value={department.id}>{department.name}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>Level</span>
-          <select value={roleLevel} onChange={(event) => setRoleLevel(event.target.value)}>
-            <option value="">Semua level</option>
-            {Object.entries(LEVEL_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>Tipe</span>
-          <select value={standard} onChange={(event) => setStandard(event.target.value)}>
-            <option value="">Semua tipe</option>
-            <option value="standard">Standar</option>
-            <option value="custom">Custom</option>
-          </select>
-        </label>
-      </section>
-
-      {error ? <div className="role-admin-alert" role="alert">{error}</div> : null}
+    <Page>
+      <PageHeader
+        title="Peran"
+        description="Atur akses Member, Supervisor, dan Head untuk setiap divisi."
+        actions={(
+          <Button
+            variant={compareMode ? 'tonal' : 'secondary'}
+            icon="compare_arrows"
+            type="button"
+            aria-pressed={compareMode}
+            onClick={() => setCompareMode((current) => !current)}
+          >
+            {compareMode ? 'Tutup perbandingan' : 'Bandingkan peran'}
+          </Button>
+        )}
+      />
 
       {compareMode ? (
-        <section className="role-comparison" aria-label="Perbandingan role divisi">
-          <div className="role-comparison__heading">
-            <div>
-              <span>Perbandingan akses</span>
-              <h2>{departments.find((item) => Number(item.id) === Number(comparisonDepartmentId))?.name || 'Pilih divisi'}</h2>
+        <Card
+          variant="panel"
+          size="sm"
+          title={<Mixed parts={['Perbandingan akses', comparisonName || 'pilih divisi']} />}
+          subtitle={departmentId ? undefined : 'Tambahkan filter divisi untuk mengganti divisi yang dibandingkan.'}
+        >
+          {comparisonRows.length ? (
+            <div className="pw-cols-3 admin-compare">
+              {comparisonRows.map((role) => (
+                <StatCard
+                  key={role.id}
+                  label={role.name}
+                  value={role.permissionCount}
+                  note={`permission aktif · ${role.userCount} pengguna`}
+                  action={<Button variant="text" icon="edit" type="button" onClick={() => setEditorRole(role)}>Ubah akses</Button>}
+                />
+              ))}
             </div>
-            {!departmentId ? <small>Pilih divisi pada filter untuk mengganti perbandingan.</small> : null}
-          </div>
-          <div className="role-comparison__grid">
-            {comparisonRows.map((role) => (
-              <article key={role.id} className={`role-comparison-card role-comparison-card--${role.roleLevel}`}>
-                <RoleLevelChip level={role.roleLevel} />
-                <h3>{role.name}</h3>
-                <strong>{role.permissionCount}</strong>
-                <span>permission aktif</span>
-                <small>{role.userCount} pengguna</small>
-                <Button variant="secondary" type="button" onClick={() => setEditorRole(role)}>
-                  Edit akses
-                </Button>
-              </article>
-            ))}
-          </div>
-        </section>
+          ) : (
+            <EmptyState compact icon="compare_arrows" title="Belum ada peran standar untuk divisi ini." />
+          )}
+        </Card>
       ) : null}
 
-      <DataTable
-        loading={loading}
+      <DataGrid
+        title="Semua peran"
+        exportName="peran"
+        columns={columns}
         rows={filteredRows}
-        empty="Tidak ada role yang cocok dengan filter."
-        columns={[
-          {
-            key: 'name',
-            title: 'Role',
-            render: (role) => (
-              <div className="role-name-cell">
-                <strong>{role.name}</strong>
-                <code>{role.roleKey || 'custom'}</code>
-              </div>
-            ),
-          },
-          { key: 'departmentName', title: 'Divisi', render: (role) => role.departmentName || 'Global' },
-          { key: 'roleLevel', title: 'Level', render: (role) => <RoleLevelChip level={role.roleLevel} /> },
-          { key: 'permissionCount', title: 'Permission' },
-          { key: 'userCount', title: 'Pengguna' },
-          {
-            key: 'updatedAt',
-            title: 'Diperbarui',
-            render: (role) => role.updatedAt ? new Date(role.updatedAt).toLocaleDateString('id-ID') : '—',
-          },
-          {
-            key: 'actions',
-            title: 'Tindakan',
-            render: (role) => (
-              <div className="role-row-actions">
-                <Button variant="secondary" type="button" onClick={() => setEditorRole(role)}>
-                  Edit
-                </Button>
-                {role.isSystemTemplate && role.departmentId ? (
-                  <button
-                    type="button"
-                    className="role-reset-button"
-                    onClick={() => setResetRole(role)}
-                    aria-label={`Reset ${role.name} ke default`}
-                  >
-                    <RotateCcw size={17} />
-                  </button>
-                ) : null}
-              </div>
-            ),
-          },
-        ]}
+        loading={loading}
+        error={error}
+        onRetry={load}
+        search={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Cari peran, kode, atau divisi"
+        filters={(
+          <FilterChips
+            label="Filter peran"
+            values={filters}
+            onChange={setFilters}
+            fields={[
+              { key: 'departmentId', label: 'Divisi', type: 'select', options: departments.map((department) => ({ value: department.id, label: department.name })) },
+              { key: 'roleLevel', label: 'Level', type: 'select', options: LEVEL_OPTIONS },
+              { key: 'standard', label: 'Tipe', type: 'select', options: TYPE_OPTIONS },
+            ]}
+          />
+        )}
+        empty="Tidak ada peran yang cocok dengan filter."
+        onRowClick={(role) => setEditorRole(role)}
+        rowActions={(role) => (role.isSystemTemplate && role.departmentId ? (
+          <IconButton size="sm" icon="replay" label={`Kembalikan ${role.name} ke default`} onClick={() => setResetRole(role)} />
+        ) : null)}
       />
 
       <RoleEditorPanel
@@ -236,13 +195,13 @@ export default function Roles() {
       <ConfirmDialog
         open={Boolean(resetRole)}
         title="Kembalikan permission default?"
-        message={`Semua penyesuaian pada ${resetRole?.name || 'role ini'} akan diganti dengan standar Prakasa Workspace.`}
-        confirmLabel="Reset ke default"
+        message={`Semua penyesuaian pada ${resetRole?.name || 'peran ini'} akan diganti dengan standar Prakasa Workspace.`}
+        confirmLabel="Kembalikan ke default"
         tone="warning"
         loading={resetting}
         onClose={() => setResetRole(null)}
         onConfirm={resetDefault}
       />
-    </div>
+    </Page>
   );
 }

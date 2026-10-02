@@ -92,11 +92,12 @@ test('firstNameOf prefers the first name, then the email local part', () => {
 });
 
 test('resolveResponsiveMode maps viewport breakpoints', () => {
-  assert.equal(resolveResponsiveMode(480), 'mobile');
-  assert.equal(resolveResponsiveMode(699), 'mobile');
-  assert.equal(resolveResponsiveMode(700), 'tablet');
-  assert.equal(resolveResponsiveMode(1179), 'tablet');
-  assert.equal(resolveResponsiveMode(1180), 'desktop');
+  // docs/ui-guideline.md §1.9: phone <=600, compact 601-1023, desktop >=1024.
+  assert.equal(resolveResponsiveMode(390), 'mobile');
+  assert.equal(resolveResponsiveMode(600), 'mobile');
+  assert.equal(resolveResponsiveMode(601), 'tablet');
+  assert.equal(resolveResponsiveMode(1023), 'tablet');
+  assert.equal(resolveResponsiveMode(1024), 'desktop');
   assert.equal(resolveResponsiveMode(1440), 'desktop');
 });
 

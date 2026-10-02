@@ -5,8 +5,8 @@ function providerError(message, code, status) {
   return error;
 }
 
-async function generate({ system, prompt, model, params }) {
-  const key = process.env.ANTHROPIC_API_KEY;
+async function generate({ system, prompt, model, params, config }) {
+  const key = config?.apiKey || process.env.ANTHROPIC_API_KEY;
   if (!key) {
     throw providerError(
       'Claude API belum dikonfigurasi oleh administrator',

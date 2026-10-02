@@ -1,20 +1,16 @@
+import { noTranslate } from '../../i18n/NoTranslate';
 import { useEffect, useRef, useState } from 'react';
-import {
-  Building2,
-  FileText,
-  Lock,
-  Paperclip,
-  SlidersHorizontal,
-  Sparkles,
-  Upload,
-  Users,
-  X,
-} from 'lucide-react';
 import api from '../../api/client';
+import Banner from '../Banner';
+import Button from '../Button';
+import Chip from '../Chip';
+import Icon from '../Icon';
+import IconButton from '../IconButton';
 import { toast } from '../Toast';
 import { useAuth } from '../../context/AuthContext';
 import BrandDoodles from '../BrandDoodles';
 import AIComposer from './AIComposer';
+import { AIAttachmentErrors } from './AIAttachmentChips';
 import AIDropdown from './AIDropdown';
 import AIWebToggle from './AIWebToggle';
 import useFileDrop from './useFileDrop';
@@ -27,9 +23,12 @@ import {
 } from './aiEngineOptions';
 import {
   AI_FILE_ACCEPT,
+  AI_MAX_MESSAGE_ATTACHMENTS,
   AI_MAX_PENDING_FILES,
   AI_MAX_UPLOAD_BYTES,
+  addAttachments,
   formatBytes,
+  markUploaded,
 } from './aiFiles';
 import {
   firstNameOf,
@@ -43,9 +42,14 @@ const SUGGESTIONS = [
   'Periksa selisih data penjualan',
 ];
 
-const VISIBILITY_ICONS = { private: Lock, department: Users, entity: Building2 };
+const VISIBILITY_ICONS = { private: 'lock', department: 'group', entity: 'domain' };
 
-export default function AINewChat({ providers, providersLoading, onSessionCreated, initialVisibility = 'private' }) {
+// `surface`: 'panel' in the side panel on a page. There the files belong to the
+// first message (at most three, private conversation only — §9.15) and the
+// message names them; in the Command Center they are conversation documents.
+export default function AINewChat({ providers, providersLoading, onSessionCreated, initialVisibility = 'private', surface = 'full' }) {
+  const panel = surface === 'panel';
+  const maxFiles = panel ? AI_MAX_MESSAGE_ATTACHMENTS : AI_MAX_PENDING_FILES;
   const { user } = useAuth();
   const permissions = user?.permissions || [];
   const canCreate = permissions.includes('ai_command.use');
@@ -66,6 +70,11 @@ export default function AINewChat({ providers, providersLoading, onSessionCreate
   const [creating, setCreating] = useState(false);
   const [progress, setProgress] = useState('');
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  // Why the message cannot be sent yet, shown in the form (not a snackbar).
+  const [formError, setFormError] = useState('');
+  // Side panel: why a file was not attached (type, size, more than three).
+  const [attachErrors, setAttachErrors] = useState([]);
+  useEffect(() => { setFormError(''); }, [visibility, departmentId, provider, providers]);
   const fileInputRef = useRef(null);
 
   // Divisions are loaded only when a shared division chat is chosen.
@@ -90,6 +99,12 @@ export default function AINewChat({ providers, providersLoading, onSessionCreate
   const webCapable = Boolean(available.find((item) => item.id === selectedProvider)?.webResearch);
 
   const addFiles = (fileList) => {
+    if (panel) {
+      const { next, errors } = addAttachments(attachments, fileList);
+      setAttachments(next);
+      setAttachErrors(errors);
+      return;
+    }
     const picked = Array.from(fileList || []);
     const tooBig = picked.filter((file) => file.size > AI_MAX_UPLOAD_BYTES);
     if (tooBig.length) toast(`Ukuran file maksimum ${formatBytes(AI_MAX_UPLOAD_BYTES)}: ${tooBig.map((f) => f.name).join(', ')}`, 'error');
@@ -108,13 +123,18 @@ export default function AINewChat({ providers, providersLoading, onSessionCreate
     const text = input.trim();
     if (!text || creating) return;
     if (!selectedProvider) {
-      toast('Belum ada engine AI yang tersedia untuk akun Anda', 'error');
+      setFormError('Belum ada engine AI yang tersedia untuk akun Anda.');
       return;
     }
     if (visibility === 'department' && !departmentId) {
-      toast('Pilih divisi untuk percakapan bersama ini', 'error');
+      setFormError('Pilih divisi untuk percakapan bersama ini.');
       return;
     }
+    if (panel && attachments.length && (visibility !== 'private' || (webCapable && webResearch))) {
+      setFormError('Lampiran hanya bisa dipakai di percakapan pribadi tanpa riset web. Pilih "Pribadi" dan matikan riset web, atau hapus lampirannya.');
+      return;
+    }
+    setFormError('');
 
     setCreating(true);
     setProgress('Membuat percakapan…');
@@ -137,13 +157,15 @@ export default function AINewChat({ providers, providersLoading, onSessionCreate
 
     // Files are attached before the first message so the AI can read them in its answer.
     const failed = [];
+    let uploaded = [];
     for (let index = 0; index < attachments.length; index += 1) {
       const { file } = attachments[index];
       setProgress(`Mengunggah file ${index + 1} dari ${attachments.length}…`);
       const form = new FormData();
       form.append('file', file);
       try {
-        await api.post(`/ai-command/sessions/${sessionId}/files`, form);
+        const response = await api.post(`/ai-command/sessions/${sessionId}/files`, form);
+        if (panel) uploaded = [...uploaded, ...markUploaded([attachments[index]], attachments[index].key, response.data.data)];
       } catch (error) {
         failed.push({ name: file.name, message: error.response?.data?.error?.message });
       }
@@ -154,29 +176,30 @@ export default function AINewChat({ providers, providersLoading, onSessionCreate
         `Gagal mengunggah ${failed.map((item) => item.name).join(', ')}${failed[0].message ? ` (${failed[0].message})` : ''}. Pesan belum dikirim — lampirkan ulang lalu kirim.`,
         'error',
       );
-      onSessionCreated(sessionId, text, { autoSend: false, showDocuments: attachments.length > failed.length });
+      onSessionCreated(sessionId, text, { autoSend: false, showDocuments: attachments.length > failed.length, attachments: uploaded });
       return;
     }
 
-    onSessionCreated(sessionId, text, { showDocuments: attachments.length > 0 });
+    onSessionCreated(sessionId, text, { showDocuments: attachments.length > 0, attachments: uploaded });
   };
 
   const attachmentChips = attachments.length > 0 && (
     <div className="ai-attachments" aria-label="File terlampir">
       {attachments.map(({ key, file }) => (
         <span key={key} className="ai-attachment-chip">
-          <FileText size={16} aria-hidden="true" />
-          <span className="ai-attachment-name" title={file.name}>{file.name}</span>
-          <small>{formatBytes(file.size)}</small>
-          <button
-            type="button"
-            className="ai-icon-button is-tiny ai-ripple"
+          <Icon name="description" size="sm" />
+          <span className="pw-tooltip-anchor ai-attachment-name" data-pw-tooltip={file.name}>
+            <span data-no-translate="" className="ai-attachment-text">{file.name}</span>
+          </span>
+          <span className="ai-attachment-size">{formatBytes(file.size)}</span>
+          <IconButton
+            size="sm"
+            label="Hapus lampiran"
+            icon="close"
             onClick={() => setAttachments((current) => current.filter((item) => item.key !== key))}
             disabled={creating}
             aria-label={`Hapus lampiran ${file.name}`}
-          >
-            <X size={14} />
-          </button>
+          />
         </span>
       ))}
     </div>
@@ -187,14 +210,14 @@ export default function AINewChat({ providers, providersLoading, onSessionCreate
       <BrandDoodles />
       {dragging && (
         <div className="ai-drop-overlay" aria-hidden="true">
-          <Upload size={28} />
+          <Icon name="upload" size="xl" />
           <span>Lepaskan file untuk dilampirkan</span>
         </div>
       )}
       <div className="ai-new-chat-inner">
         <h1 className="ai-greeting">
-          <span className="ai-greeting-mark" aria-hidden="true"><Sparkles size={24} /></span>
-          <span>{greeting}{name ? `, ${name}` : ''}</span>
+          <span className="ai-greeting-mark" aria-hidden="true"><Icon name="auto_awesome" /></span>
+          <span>{greeting}{name ? <>, <span {...noTranslate}>{name}</span></> : null}</span>
         </h1>
 
         {!canCreate ? (
@@ -225,23 +248,22 @@ export default function AINewChat({ providers, providersLoading, onSessionCreate
                         ref={fileInputRef}
                         type="file"
                         multiple
-                        className="ai-visually-hidden"
+                        className="pw-visually-hidden"
+                        tabIndex={-1}
+                        aria-label="Lampirkan file ke percakapan"
                         accept={AI_FILE_ACCEPT}
                         onChange={(event) => {
                           addFiles(event.target.files);
                           event.target.value = '';
                         }}
                       />
-                      <button
-                        type="button"
-                        className="ai-icon-button ai-ripple"
+                      <IconButton
+                        label="Lampirkan file"
+                        icon="attach_file"
                         onClick={() => fileInputRef.current?.click()}
-                        disabled={creating || attachments.length >= AI_MAX_PENDING_FILES}
-                        aria-label="Lampirkan file"
-                        title={`Lampirkan file (maks. ${AI_MAX_PENDING_FILES} file, ${formatBytes(AI_MAX_UPLOAD_BYTES)} per file)`}
-                      >
-                        <Paperclip size={19} />
-                      </button>
+                        disabled={creating || attachments.length >= maxFiles}
+                        aria-label={`Lampirkan file (maks. ${maxFiles} file, ${formatBytes(AI_MAX_UPLOAD_BYTES)} per file)`}
+                      />
                     </>
                   )}
                   {webCapable && (
@@ -263,7 +285,7 @@ export default function AINewChat({ providers, providersLoading, onSessionCreate
                   />
                   {visibility === 'department' && (divisions || []).length > 1 && (
                     <AIDropdown
-                      icon={Users}
+                      icon="group"
                       label={selectedDivision?.name || 'Pilih divisi'}
                       ariaLabel="Divisi untuk percakapan bersama"
                       items={divisions.map((item) => ({ value: item.id, label: item.name }))}
@@ -278,8 +300,9 @@ export default function AINewChat({ providers, providersLoading, onSessionCreate
               trailing={(
                 <AIDropdown
                   label={providersLoading
-                    ? 'Memuat engine…'
+                    ? 'Engine AI'
                     : selectedProvider ? engineChipLabel(providers, selectedProvider) : 'Tidak ada engine'}
+                  dataLabel={!providersLoading && Boolean(selectedProvider)}
                   ariaLabel="Pilih engine AI"
                   items={engineMenuItems(providers)}
                   value={selectedProvider}
@@ -290,6 +313,8 @@ export default function AINewChat({ providers, providersLoading, onSessionCreate
                 />
               )}
             />
+            <AIAttachmentErrors errors={attachErrors} onClose={() => setAttachErrors([])} />
+            {formError ? <Banner tone="error">{formError}</Banner> : null}
             {progress && <p className="ai-progress-note" role="status">{progress}</p>}
             {!progress && visibility === 'department' && (
               <p className="ai-progress-note">
@@ -301,34 +326,25 @@ export default function AINewChat({ providers, providersLoading, onSessionCreate
               </p>
             )}
 
-            <div className="ai-suggestions">
+            <div className="ai-suggestions" aria-label="Saran permintaan">
               {SUGGESTIONS.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  className="ai-suggestion-chip ai-ripple"
-                  onClick={() => setInput(suggestion)}
-                  disabled={creating}
-                >
+                <Chip key={suggestion} onClick={() => setInput(suggestion)} disabled={creating}>
                   {suggestion}
-                </button>
+                </Chip>
               ))}
             </div>
 
-            <button
-              type="button"
-              className="ai-text-button ai-ripple ai-advanced-link"
-              onClick={() => setAdvancedOpen(true)}
-              disabled={creating}
-            >
-              <SlidersHorizontal size={15} /> Opsi lanjutan
-            </button>
+            <div className="ai-advanced-link">
+              <Button variant="text" icon="tune" onClick={() => setAdvancedOpen(true)} disabled={creating}>
+                Buka opsi lanjutan
+              </Button>
+            </div>
           </>
         )}
       </div>
 
       <p className="ai-disclaimer">
-        Prakasa AI dapat membuat kesalahan. Periksa kembali informasi penting. · Powered by Prakasa
+        Prakasa AI dapat membuat kesalahan. Periksa kembali informasi penting. · Didukung Prakasa
       </p>
 
       <CreateSessionModal

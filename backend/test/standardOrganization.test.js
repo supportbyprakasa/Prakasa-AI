@@ -8,10 +8,13 @@ const {
   permissionsForStandardRole,
 } = require('../src/config/standardOrganization');
 
-test('catalog contains nine divisions and three roles per division', () => {
-  assert.equal(DIVISIONS.length, 9);
-  assert.equal(STANDARD_ROLES.length, 27);
-  assert.equal(new Set(STANDARD_ROLES.map((role) => role.key)).size, 27);
+// Eight divisions: Operations is not one (owner, 1 Oct 2026) — GA runs office
+// operations inside People & Culture.
+test('catalog contains eight divisions and three roles per division', () => {
+  assert.equal(DIVISIONS.length, 8);
+  assert.equal(DIVISIONS.some((division) => division.code === 'operations'), false);
+  assert.equal(STANDARD_ROLES.length, 24);
+  assert.equal(new Set(STANDARD_ROLES.map((role) => role.key)).size, 24);
 
   for (const division of DIVISIONS) {
     assert.deepEqual(
@@ -34,20 +37,26 @@ test('supervisor and head defaults are permission supersets', () => {
   }
 });
 
-test('migration 032 seeds every catalog role and permission', () => {
-  const migration = fs.readFileSync(
-    path.join(__dirname, '../migrations/032_prakasa_workspace_organization.sql'),
-    'utf8',
-  );
+test('migration history seeds every catalog role and permission', () => {
+  // Migration 032 seeded the original catalog; later migrations (e.g. 037) can
+  // legitimately introduce new permission codes as divisions evolve, so a
+  // permission only needs to appear SOMEWHERE in migration history, not in 032
+  // specifically. Role keys and division codes were fixed at 032, though.
+  const migrationsDir = path.join(__dirname, '../migrations');
+  const migration032 = fs.readFileSync(path.join(migrationsDir, '032_prakasa_workspace_organization.sql'), 'utf8');
+  const allMigrations = fs.readdirSync(migrationsDir)
+    .filter((file) => file.endsWith('.sql'))
+    .map((file) => fs.readFileSync(path.join(migrationsDir, file), 'utf8'))
+    .join('\n');
 
   for (const division of DIVISIONS) {
-    assert.equal(migration.includes(`'${division.code}'`), true, division.code);
+    assert.equal(migration032.includes(`'${division.code}'`), true, division.code);
   }
 
   for (const role of STANDARD_ROLES) {
-    assert.equal(migration.includes(`'${role.key}'`), true, role.key);
+    assert.equal(migration032.includes(`'${role.key}'`), true, role.key);
     for (const permission of role.permissions) {
-      assert.equal(migration.includes(`'${permission}'`), true, permission);
+      assert.equal(allMigrations.includes(`'${permission}'`), true, permission);
     }
   }
 
@@ -60,7 +69,7 @@ test('migration 032 seeds every catalog role and permission', () => {
     'warehouse.movement.cancel',
     'warehouse.movement.audit.view',
   ]) {
-    assert.equal(migration.includes(`'${permission}'`), true, permission);
+    assert.equal(migration032.includes(`'${permission}'`), true, permission);
   }
 });
 
@@ -73,8 +82,8 @@ test('organization checker reports incomplete seeded structures', () => {
     evaluateWorkspaceOrganization({
       departmentColumns: 1,
       roleColumns: 4,
-      divisions: 9,
-      standardRoles: 27,
+      divisions: 8,
+      standardRoles: 24,
       movementPermissions: 7,
       invalidStandardRoles: 0,
     }),
@@ -84,15 +93,15 @@ test('organization checker reports incomplete seeded structures', () => {
   const incomplete = evaluateWorkspaceOrganization({
     departmentColumns: 1,
     roleColumns: 4,
-    divisions: 8,
-    standardRoles: 26,
+    divisions: 7,
+    standardRoles: 23,
     movementPermissions: 6,
     invalidStandardRoles: 1,
   });
   assert.equal(incomplete.ready, false);
   assert.deepEqual(incomplete.failures, [
-    'standard divisions: 8/9',
-    'standard roles: 26/27',
+    'standard divisions: 7/8',
+    'standard roles: 23/24',
     'Warehouse movement permissions: 6/7',
     'invalid standard role links: 1',
   ]);

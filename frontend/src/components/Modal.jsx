@@ -1,56 +1,84 @@
-import { useEffect, useId, useRef } from 'react';
-import { X } from 'lucide-react';
+import { dataZone } from '../i18n/zones.js';
+import { useId, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import FormActions from './FormActions';
+import FullScreenDialog from './FullScreenDialog';
+import Icon from './Icon';
+import IconButton from './IconButton';
+import { useLatestWhileOpen, useOverlay, usePresence, useScrimDismiss } from './useOverlay';
+import './dialog.css';
 
-export default function Modal({ open, onClose, title, children, footer, maxWidth = 640, minWidth = 0 }) {
+// Dialog (docs/ui-guideline.md §3.3, §4.14).
+//   size="sm"  480px — confirmation, form of up to 5 fields
+//   size="md"  640px — standard short form (default)
+//   size="lg"  full-screen dialog like the admin console's "Add new user"
+// Full screen on phones. `maxWidth` / `minWidth` are no longer supported
+// (§5.5): they are accepted and ignored so old callers keep working.
+export default function Modal({ size = 'md', maxWidth, minWidth, ...props }) { // eslint-disable-line no-unused-vars
+  if (size === 'lg' || size === 'full') return <FullScreenDialog {...props} />;
+  return <DialogBase size={size === 'sm' ? 'sm' : 'md'} {...props} />;
+}
+
+// The base shared by Modal and ConfirmDialog: portal, scrim, motion, focus
+// trap, Escape for the top-most dialog, focus back to the trigger.
+export function DialogBase({
+  open,
+  onClose,
+  onEscape,
+  title,
+  // The title is a record's own name (an event, a file): never translated.
+  dataTitle = false,
+  children,
+  footer,
+  size = 'md',
+  closeButton = true,
+  className = '',
+  describedBy,
+  initialFocus,
+  dismissible = true,
+  bodyClassName = '',
+}) {
+  const { present, closing, onAnimationEnd } = usePresence(Boolean(open));
   const dialogRef = useRef(null);
-  const closeRef = useRef(onClose);
   const titleId = useId();
-  closeRef.current = onClose;
+  useOverlay({ open: Boolean(open), containerRef: dialogRef, onEscape: onEscape ?? onClose, initialFocus });
+  const view = useLatestWhileOpen(Boolean(open), { title, children, footer });
+  const scrim = useScrimDismiss(dismissible ? onClose : undefined);
 
-  useEffect(() => {
-    if (!open) return undefined;
-    const previousFocus = document.activeElement;
-    const frame = window.requestAnimationFrame(() => {
-      if (!dialogRef.current?.contains(document.activeElement)) dialogRef.current?.focus();
-    });
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        // Only the top-most modal dialog reacts, so a stacked confirmation closes first.
-        const dialogs = document.querySelectorAll('[role="dialog"][aria-modal="true"]');
-        if (dialogs[dialogs.length - 1] !== dialogRef.current) return;
-        closeRef.current?.();
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      document.removeEventListener('keydown', onKeyDown);
-      if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
-    };
-  }, [open]);
-
-  if (!open) return null;
-  return (
-    <div className="pw-scrim" onClick={onClose} role="presentation">
+  if (!present || typeof document === 'undefined') return null;
+  return createPortal(
+    <div
+      className="pw-scrim"
+      data-state={closing ? 'closing' : 'open'}
+      role="presentation"
+      onAnimationEnd={onAnimationEnd}
+      {...scrim}
+    >
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        aria-describedby={describedBy}
         tabIndex={-1}
-        className="pw-dialog"
-        onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth, minWidth: `min(${minWidth}px, calc(100vw - 32px))` }}
+        className={['pw-dialog', `pw-dialog--${size}`, className].filter(Boolean).join(' ')}
       >
         <div className="pw-dialog__header">
-          <h3 id={titleId} className="pw-dialog__title">{title}</h3>
-          <button type="button" className="pw-icon-button pw-state-layer pw-ripple" aria-label="Tutup" onClick={onClose}>
-            <X size={20} aria-hidden="true" />
-          </button>
+          <h2 id={titleId} className="pw-dialog__title" {...dataZone(dataTitle)}>{view.title}</h2>
+          {closeButton ? (
+            <IconButton size="sm" label="Tutup" onClick={onClose} disabled={!onClose || closing} className="pw-dialog__close">
+              <Icon name="close" />
+            </IconButton>
+          ) : null}
         </div>
-        {children}
-        {footer && <div className="pw-dialog__footer">{footer}</div>}
+        <div className={['pw-dialog__body', bodyClassName].filter(Boolean).join(' ')}>{view.children}</div>
+        {view.footer ? (
+          <div className="pw-dialog__footer">
+            <FormActions>{view.footer}</FormActions>
+          </div>
+        ) : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

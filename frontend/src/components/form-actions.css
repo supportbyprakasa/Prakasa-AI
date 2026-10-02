@@ -1,0 +1,31 @@
+/* FormActions (docs/ui-guideline.md §3.3): Batal then the primary action,
+   bottom-right, 8px apart; 16px apart under a full-screen dialog card
+   (referensi §10). Buttons keep their own width on phones, like the admin
+   console, and wrap when they do not fit. The 8px top margin keeps old forms
+   that are not a pw-stack apart from their last field; inside a dialog the
+   dialog's own gap does that job instead. */
+.pw-form-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+}
+.pw-form-actions > * { width: auto; }
+.pw-form-actions--end { justify-content: flex-end; }
+.pw-form-actions--start { justify-content: flex-start; }
+.pw-form-actions--between { justify-content: space-between; }
+
+.pw-form-actions--sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--pw-z-sticky);
+  padding: 12px 0;
+  background: var(--pw-surface);
+  box-shadow: inset 0 1px 0 var(--pw-divider);
+}
+
+@media (max-width: 600px) {
+  .pw-form-actions--sticky { position: static; padding: 0; box-shadow: none; }
+}

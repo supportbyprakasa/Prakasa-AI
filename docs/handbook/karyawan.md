@@ -692,7 +692,7 @@ Asisten AI di dalam aplikasi: bertanya, meringkas, membaca file, dan menyiapkan 
 2. Klik "Percakapan baru".
 3. Ketik permintaan di "Tanyakan atau minta apa saja ke Prakasa AI…", atau pilih saran seperti "Bantu susun draft dokumen".
 4. Tekan Enter untuk mengirim (Shift+Enter untuk baris baru). Klik "Hentikan jawaban" bila ingin berhenti.
-5. Klik "Salin jawaban", atau jadikan PDF / DOCX / XLSX; file tersimpan di Shared Drive dan terunduh.
+5. Klik "Salin jawaban", atau jadikan PDF / DOCX / XLSX / PPTX (file tersimpan di Shared Drive dan terunduh), atau pilih "Google" untuk Google Doc, Sheet, atau Slides yang langsung bisa diedit di Google Workspace.
 
 > **Tips**
 >
@@ -712,6 +712,20 @@ Asisten AI di dalam aplikasi: bertanya, meringkas, membaca file, dan menyiapkan 
 - Gambar atau hasil scan dibaca dengan AI vision.
 
 > **Perhatian:** Jangan melampirkan data pribadi karyawan (KTP, slip gaji, rekening) atau kata sandi.
+
+<a id="prakasa-ai-konversi-dokumen"></a>
+
+### Mengonversi dan membaca dokumen
+
+Setiap file di panel dokumen percakapan (lampiran, hasil jawaban, atau hasil konversi) bisa diubah ke format lain. Hasilnya menjadi dokumen baru di Shared Drive yang sama; file aslinya tidak berubah.
+
+1. Buka panel "Dokumen, konteks & aksi" di kanan atas percakapan, lalu pilih dokumennya.
+2. Klik "Konversi ke…" dan pilih formatnya. Pilihan mengikuti jenis file: Word, Excel, PowerPoint, dan CSV bisa menjadi Google Doc/Sheet/Slides atau PDF; Google Doc/Sheet/Slides bisa menjadi PDF atau file Office; file yang teksnya sudah terbaca bisa menjadi TXT atau Markdown.
+3. File terunduh otomatis; hasil Google Doc/Sheet/Slides dibuka lewat "Buka di Google Workspace".
+
+Prakasa AI juga bisa membaca isi dokumen yang boleh Anda buka di halaman Dokumen atau Penyimpanan divisi, misalnya "Ringkas dokumen SOP gudang" atau "Apa isi kontrak itu tentang garansi?". Dokumen panjang dibaca per bagian; AI menyebut nomor bagian saat mengutip. Dokumen divisi lain tidak bisa dibaca, dan hasil scan atau gambar belum bisa (belum ada OCR).
+
+> **Catatan:** Konversi memakai Google Drive perusahaan. Membaca isi file yang hanya tertaut dari Drive dilakukan sekali, lalu teksnya disimpan di aplikasi untuk pertanyaan berikutnya.
 
 <a id="prakasa-ai-visibilitas"></a>
 
@@ -750,7 +764,7 @@ Prakasa AI bisa membaca data di modul yang boleh Anda buka, lalu menjawab dengan
 | --- | --- |
 | Beranda dan pekerjaan harian | "Apa yang perlu saya kerjakan hari ini?" · "Tugas saya mana yang terlambat?" · "Pengajuan saya sudah sampai mana?" |
 | Persetujuan dan tanda tangan | "Pengajuan apa saja yang menunggu keputusan saya?" · "Dokumen apa yang menunggu tanda tangan saya?" |
-| Dokumen dan template | "Carikan dokumen kontrak divisi saya" · "Apa saja yang perlu saya isi untuk membuat BAST dari template?" |
+| Dokumen dan template | "Carikan dokumen kontrak divisi saya" · "Ringkas isi dokumen SOP gudang" · "Apa saja yang perlu saya isi untuk membuat BAST dari template?" |
 | Sales | "Customer dormant mana yang perlu saya hubungi minggu ini?" · "Order mana yang belum terkirim penuh?" · "Omzet bulan ini (sebelum PPN) dibanding target dan bulan lalu" |
 | Retail Commerce dan Marketing | "Pesanan marketplace mana yang belum terkirim atau terlambat?" · "Kampanye apa yang sedang berjalan?" |
 | Finance | "Pengajuan pembayaran saya sudah sampai mana?" · "Ringkas posisi piutang dan perkiraan DSO" |

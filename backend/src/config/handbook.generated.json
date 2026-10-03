@@ -1,6 +1,6 @@
 {
  "note": "Dibuat oleh frontend/scripts/build-handbook-json.mjs dari frontend/src/pages/handbook/handbookContent.js. Jangan diubah dengan tangan.",
- "sourceHash": "451929ebce69019d468302aec26bc196148b8ed1e9c40f3c1acb050123f64393",
+ "sourceHash": "ea93f6d6c60951d98a4b42a479e02d0a4aca7e0883bdc744fb5c0529b85f9272",
  "routeAccess": {
   "/": {
    "open": true
@@ -2007,7 +2007,7 @@
         "Klik \"Percakapan baru\".",
         "Ketik permintaan di \"Tanyakan atau minta apa saja ke Prakasa AI…\", atau pilih saran seperti \"Bantu susun draft dokumen\".",
         "Tekan Enter untuk mengirim (Shift+Enter untuk baris baru). Klik \"Hentikan jawaban\" bila ingin berhenti.",
-        "Klik \"Salin jawaban\", atau jadikan PDF / DOCX / XLSX; file tersimpan di Shared Drive dan terunduh."
+        "Klik \"Salin jawaban\", atau jadikan PDF / DOCX / XLSX / PPTX (file tersimpan di Shared Drive dan terunduh), atau pilih \"Google\" untuk Google Doc, Sheet, atau Slides yang langsung bisa diedit di Google Workspace."
        ]
       },
       {
@@ -2044,6 +2044,34 @@
       {
        "type": "warning",
        "text": "Jangan melampirkan data pribadi karyawan (KTP, slip gaji, rekening) atau kata sandi."
+      }
+     ]
+    },
+    {
+     "id": "konversi-dokumen",
+     "title": "Mengonversi dan membaca dokumen",
+     "audience": null,
+     "route": null,
+     "body": [
+      {
+       "type": "p",
+       "text": "Setiap file di panel dokumen percakapan (lampiran, hasil jawaban, atau hasil konversi) bisa diubah ke format lain. Hasilnya menjadi dokumen baru di Shared Drive yang sama; file aslinya tidak berubah."
+      },
+      {
+       "type": "steps",
+       "items": [
+        "Buka panel \"Dokumen, konteks & aksi\" di kanan atas percakapan, lalu pilih dokumennya.",
+        "Klik \"Konversi ke…\" dan pilih formatnya. Pilihan mengikuti jenis file: Word, Excel, PowerPoint, dan CSV bisa menjadi Google Doc/Sheet/Slides atau PDF; Google Doc/Sheet/Slides bisa menjadi PDF atau file Office; file yang teksnya sudah terbaca bisa menjadi TXT atau Markdown.",
+        "File terunduh otomatis; hasil Google Doc/Sheet/Slides dibuka lewat \"Buka di Google Workspace\"."
+       ]
+      },
+      {
+       "type": "p",
+       "text": "Prakasa AI juga bisa membaca isi dokumen yang boleh Anda buka di halaman Dokumen atau Penyimpanan divisi, misalnya \"Ringkas dokumen SOP gudang\" atau \"Apa isi kontrak itu tentang garansi?\". Dokumen panjang dibaca per bagian; AI menyebut nomor bagian saat mengutip. Dokumen divisi lain tidak bisa dibaca, dan hasil scan atau gambar belum bisa (belum ada OCR)."
+      },
+      {
+       "type": "note",
+       "text": "Konversi memakai Google Drive perusahaan. Membaca isi file yang hanya tertaut dari Drive dilakukan sekali, lalu teksnya disimpan di aplikasi untuk pertanyaan berikutnya."
       }
      ]
     },
@@ -2134,7 +2162,7 @@
         ],
         [
          "Dokumen dan template",
-         "\"Carikan dokumen kontrak divisi saya\" · \"Apa saja yang perlu saya isi untuk membuat BAST dari template?\""
+         "\"Carikan dokumen kontrak divisi saya\" · \"Ringkas isi dokumen SOP gudang\" · \"Apa saja yang perlu saya isi untuk membuat BAST dari template?\""
         ],
         [
          "Sales",

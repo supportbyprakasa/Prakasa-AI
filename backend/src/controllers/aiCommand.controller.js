@@ -423,6 +423,23 @@ async function downloadArtifact(req, res, next) {
   }
 }
 
+async function convertArtifact(req, res, next) {
+  try {
+    const session = await aiCommand.getSessionById(req.params.id);
+    if (!session) return fail(res, 'NOT_FOUND', 'Session tidak ditemukan', 404);
+    aiAccess.assertSessionAccess({ user: req.user, session, action: 'send_message' });
+    const result = await aiDocumentStorage.convertSessionDocument({
+      session,
+      user: req.user,
+      documentId: Number(req.params.documentId),
+      format: req.body.format,
+    });
+    return ok(res, result, undefined, 201);
+  } catch (error) {
+    return handleServiceError(error, res, next);
+  }
+}
+
 async function getArtifact(req, res, next) {
   try {
     const session = await aiCommand.getSessionById(req.params.id);
@@ -758,6 +775,7 @@ module.exports = {
   inbox,
   uploadSessionFile,
   generateArtifact,
+  convertArtifact,
   getArtifact,
   downloadArtifact,
   listContexts,

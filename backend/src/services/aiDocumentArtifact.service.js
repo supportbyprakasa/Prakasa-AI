@@ -4,6 +4,7 @@ const { promisify } = require('util');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { Document, HeadingLevel, Packer, Paragraph, TextRun } = require('docx');
 const JSZip = require('jszip');
+const PptxGenJS = require('pptxgenjs');
 // The library entry, not the package index: pdf-parse's index.js runs a debug
 // self-test (reads a sample PDF from disk) when it thinks it is the main module.
 const pdfParse = require('pdf-parse/lib/pdf-parse.js');
@@ -234,6 +235,50 @@ async function extractZippedXml(buffer, { mimeType, extension }) {
   return parts.join('\n');
 }
 
+// Native Google files (owner, 3 Oct 2026): the answer is built as an Office
+// file, then imported through Google's own converter, so Docs, Sheets and
+// Slides exist in the Shared Drive like any file a person made there.
+const NATIVE_FORMATS = Object.freeze({
+  gdoc: { office: 'docx', mimeType: 'application/vnd.google-apps.document', label: 'Google Doc' },
+  gsheet: { office: 'xlsx', mimeType: 'application/vnd.google-apps.spreadsheet', label: 'Google Sheet' },
+  gslides: { office: 'pptx', mimeType: 'application/vnd.google-apps.presentation', label: 'Google Slides' },
+});
+const OFFICE_FORMATS = Object.freeze(['pdf', 'docx', 'xlsx', 'pptx']);
+const TEXT_FORMATS = Object.freeze(['txt', 'md', 'csv']);
+const ARTIFACT_FORMATS = Object.freeze([...OFFICE_FORMATS, ...TEXT_FORMATS, ...Object.keys(NATIVE_FORMATS)]);
+const FORMAT_MIME = Object.freeze({ pdf: MIME.pdf, docx: MIME.docx, xlsx: MIME.xlsx, pptx: MIME.pptx, txt: 'text/plain', md: 'text/markdown', csv: 'text/csv' });
+
+// Which family a stored file belongs to, from its mime type: what it can be
+// converted to follows from that. 'native' = a Google Doc/Sheet/Slides.
+const GOOGLE_NATIVE = /^application\/vnd\.google-apps\.(document|spreadsheet|presentation)$/;
+function fileFamily(mimeType) {
+  const mime = String(mimeType || '').split(';')[0].trim().toLowerCase();
+  if (GOOGLE_NATIVE.test(mime)) return { family: 'native', kind: mime.endsWith('document') ? 'doc' : mime.endsWith('spreadsheet') ? 'sheet' : 'slides' };
+  if (mime === MIME.docx || mime === MIME.odt || mime === 'application/rtf' || mime === 'text/html') return { family: 'office', kind: 'doc' };
+  if (mime === MIME.xlsx || mime === MIME.ods || mime === 'text/csv' || mime === 'application/csv') return { family: 'office', kind: 'sheet' };
+  if (mime === MIME.pptx || mime === MIME.odp) return { family: 'office', kind: 'slides' };
+  if (mime === MIME.pdf) return { family: 'pdf', kind: 'doc' };
+  if (mime.startsWith('image/')) return { family: 'image', kind: null };
+  if (TEXT_MIMES.has(mime) || mime === 'text/plain') return { family: 'text', kind: 'doc' };
+  return { family: 'other', kind: null };
+}
+
+// The conversions Google's converter can do for a file of this kind: an
+// Office/text file becomes its native Google twin, a PDF, or the Office format
+// of the same kind; a native file becomes PDF or its Office format; a PDF or
+// an image only becomes text (what was read from it). Pure, so the UI and the
+// server agree.
+const KIND_OFFICE = Object.freeze({ doc: 'docx', sheet: 'xlsx', slides: 'pptx' });
+const KIND_NATIVE = Object.freeze({ doc: 'gdoc', sheet: 'gsheet', slides: 'gslides' });
+function conversionTargets(mimeType, { extracted = false } = {}) {
+  const { family, kind } = fileFamily(mimeType);
+  const textTargets = extracted ? ['txt', 'md'] : [];
+  if (family === 'native') return [...new Set(['pdf', KIND_OFFICE[kind], ...textTargets])];
+  if (family === 'office' || family === 'text') return [...new Set([KIND_NATIVE[kind], 'pdf', KIND_OFFICE[kind], ...textTargets])];
+  if (family === 'pdf' || family === 'image') return textTargets;
+  return [];
+}
+
 async function generateArtifact({ format, title, content }) {
   const normalizedFormat = String(format || '').toLowerCase();
   const safeContent = String(content || '').slice(0, 200000);
@@ -243,6 +288,13 @@ async function generateArtifact({ format, title, content }) {
   if (normalizedFormat === 'pdf') return generatePdf(artifactTitle, safeContent);
   if (normalizedFormat === 'docx') return generateDocx(artifactTitle, safeContent);
   if (normalizedFormat === 'xlsx') return generateXlsx(artifactTitle, safeContent);
+  if (normalizedFormat === 'pptx') return generatePptx(artifactTitle, safeContent);
+  if (NATIVE_FORMATS[normalizedFormat]) {
+    // The Office twin, marked for import; the storage layer does the import.
+    const native = NATIVE_FORMATS[normalizedFormat];
+    const office = await generateArtifact({ format: native.office, title, content });
+    return { ...office, format: normalizedFormat, nativeMime: native.mimeType, nativeLabel: native.label };
+  }
   if (['txt', 'md', 'csv'].includes(normalizedFormat)) {
     const mimeType = normalizedFormat === 'csv' ? 'text/csv' : normalizedFormat === 'md' ? 'text/markdown' : 'text/plain';
     return {
@@ -387,6 +439,62 @@ async function generateXlsx(title, content) {
   };
 }
 
+// Slides from the answer: a title slide, then one slide per heading ("#",
+// "##", "###") with its paragraphs and bullets; a markdown table becomes a
+// table slide; long sections continue on a next slide. Plain 16:9 slides the
+// user restyles in Slides or PowerPoint.
+const PPTX_LINES_PER_SLIDE = 9;
+function slidesFromMarkdown(title, content) {
+  const slides = [];
+  let current = null;
+  const open = (heading) => { current = { title: heading, lines: [], table: null }; slides.push(current); };
+  const lines = content.split(/\r?\n/);
+  for (let i = 0; i < lines.length; i += 1) {
+    const raw = lines[i].trim();
+    if (!raw) continue;
+    const heading = raw.match(/^#{1,3}\s+(.*)$/);
+    if (heading) { open(heading[1].trim()); continue; }
+    if (!current) open(title);
+    if (/^\|.*\|$/.test(raw)) {
+      const block = [];
+      while (i < lines.length && /^\|.*\|$/.test(lines[i].trim())) { block.push(lines[i].trim()); i += 1; }
+      i -= 1;
+      const table = parseMarkdownTable(block.join('\n'));
+      if (table.length) { if (current.lines.length || current.table) open(current.title); current.table = table; }
+      continue;
+    }
+    if (current.lines.length >= PPTX_LINES_PER_SLIDE) open(current.title);
+    current.lines.push(raw.replace(/^[-*]\s+/, '• ').replace(/^\d+\.\s+/, (m) => m));
+  }
+  return slides;
+}
+
+async function generatePptx(title, content) {
+  const pptx = new PptxGenJS();
+  pptx.layout = 'LAYOUT_16x9';
+  pptx.title = title;
+  const cover = pptx.addSlide();
+  cover.addText(title, { x: 0.6, y: 1.6, w: 8.8, h: 1.6, fontSize: 32, bold: true, color: '1F1F1F', fontFace: 'Arial' });
+  cover.addText('Disusun dengan Prakasa AI', { x: 0.6, y: 3.3, w: 8.8, h: 0.5, fontSize: 14, color: '5F6368', fontFace: 'Arial' });
+  for (const slide of slidesFromMarkdown(title, content)) {
+    const page = pptx.addSlide();
+    page.addText(slide.title.slice(0, 120), { x: 0.5, y: 0.35, w: 9, h: 0.8, fontSize: 24, bold: true, color: '1F1F1F', fontFace: 'Arial' });
+    if (slide.table) {
+      const rows = slide.table.slice(0, 20).map((cells) => cells.slice(0, 8).map((cell) => ({ text: String(cell).slice(0, 200), options: { fontSize: 11, fontFace: 'Arial' } })));
+      page.addTable(rows, { x: 0.5, y: 1.3, w: 9, colW: Array(rows[0].length).fill(9 / rows[0].length), border: { type: 'solid', color: 'DADCE0', pt: 0.5 }, autoPage: false });
+    } else {
+      const text = slide.lines.map((line) => line.slice(0, 300)).join('\n');
+      page.addText(text, { x: 0.5, y: 1.3, w: 9, h: 3.9, fontSize: 16, color: '3C4043', fontFace: 'Arial', valign: 'top', paraSpaceAfter: 6 });
+    }
+  }
+  return {
+    buffer: Buffer.from(await pptx.write({ outputType: 'nodebuffer' })),
+    mimeType: MIME.pptx,
+    fileName: `${sanitizeFileName(title)}.pptx`,
+    format: 'pptx',
+  };
+}
+
 function parseMarkdownTable(content) {
   const lines = String(content || '').split(/\r?\n/).map((line) => line.trim());
   for (let index = 0; index < lines.length - 2; index += 1) {
@@ -520,6 +628,12 @@ function validationError(message) {
 module.exports = {
   MAX_EXTRACTED_CHARS,
   MIME,
+  ARTIFACT_FORMATS,
+  NATIVE_FORMATS,
+  FORMAT_MIME,
+  fileFamily,
+  conversionTargets,
+  slidesFromMarkdown,
   extractReadableText,
   generateArtifact,
   parseMarkdownTable,

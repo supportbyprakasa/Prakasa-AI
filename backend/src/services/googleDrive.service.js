@@ -370,6 +370,67 @@ async function importDocx({ name, buffer, parentId: requestedParent }, ctx = {})
   });
 }
 
+// Google's own conversion engine, for "Pengajuan dokumen" and Prakasa AI
+// (owner, 3 Oct 2026: create native Google files and convert between formats
+// without LibreOffice): an Office/ODF buffer imported as a native Google file,
+// and a native file exported as PDF or Office.
+const NATIVE_OF = Object.freeze({
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': GOOGLE_DOC_MIME,
+  'application/vnd.oasis.opendocument.text': GOOGLE_DOC_MIME,
+  'application/rtf': GOOGLE_DOC_MIME,
+  'text/plain': GOOGLE_DOC_MIME,
+  'text/html': GOOGLE_DOC_MIME,
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'application/vnd.google-apps.spreadsheet',
+  'application/vnd.oasis.opendocument.spreadsheet': 'application/vnd.google-apps.spreadsheet',
+  'text/csv': 'application/vnd.google-apps.spreadsheet',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'application/vnd.google-apps.presentation',
+  'application/vnd.oasis.opendocument.presentation': 'application/vnd.google-apps.presentation',
+});
+const nativeMimeFor = (sourceMime) => NATIVE_OF[String(sourceMime || '').split(';')[0].trim()] || null;
+
+/** A buffer imported as a native Google file (Doc, Sheet or Slides) in a Shared Drive folder. */
+async function importAsNative({ name, buffer, sourceMime, targetMime, parentId: requestedParent }, ctx = {}) {
+  const target = targetMime || nativeMimeFor(sourceMime);
+  if (!target) throw Object.assign(new Error(`Format ${sourceMime} tidak bisa diubah menjadi file Google`), { status: 400, code: 'VALIDATION_ERROR' });
+  const parentId = sharedDriveTarget(requestedParent);
+  return integrationLog.wrap({
+    entityId: ctx.entityId || null,
+    userId: ctx.userId || null,
+    provider: 'google_drive',
+    operation: 'importAsNative',
+    subjectType: ctx.subjectType || null,
+    subjectId: ctx.subjectId || null,
+    requestMeta: { name, parentId, sourceMime, targetMime: target, size: buffer?.length || 0 },
+    responseMeta: (result) => ({ id: result?.id, name: result?.name, mimeType: result?.mimeType }),
+  }, async () => {
+    const { Readable } = require('stream');
+    const created = await driveClient().files.create({
+      requestBody: { name, mimeType: target, parents: [parentId] },
+      media: { mimeType: sourceMime, body: Readable.from(buffer) },
+      fields: 'id,name,mimeType,size,webViewLink,owners(emailAddress)',
+      supportsAllDrives: true,
+    });
+    return created.data;
+  });
+}
+
+/** A native Google file exported in the given format (PDF, DOCX, XLSX, PPTX, text…). */
+async function exportFile(fileId, mimeType, ctx = {}) {
+  return integrationLog.wrap({
+    entityId: ctx.entityId || null,
+    userId: ctx.userId || null,
+    provider: 'google_drive',
+    operation: 'exportFile',
+    subjectType: ctx.subjectType || null,
+    subjectId: ctx.subjectId || null,
+    requestMeta: { fileId, mimeType },
+    responseMeta: (result) => ({ size: result?.length || 0 }),
+  }, async () => {
+    const response = await driveClient().files.export({ fileId, mimeType }, { responseType: 'arraybuffer' });
+    return Buffer.from(response.data);
+  });
+}
+
 /** Replaces the content of an existing Google Doc with a .docx (same file, same link). */
 async function replaceDocContent({ fileId, buffer }, ctx = {}) {
   return integrationLog.wrap({
@@ -394,6 +455,10 @@ async function replaceDocContent({ fileId, buffer }, ctx = {}) {
 }
 
 module.exports = {
+  NATIVE_OF,
+  nativeMimeFor,
+  importAsNative,
+  exportFile,
   ensureFolder,
   uploadFile,
   copyFile,

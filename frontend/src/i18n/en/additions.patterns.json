@@ -145,5 +145,13 @@
  "Semua PO dengan status penerimaan barangnya. $1": "Every PO with its receiving status. $1",
  "Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari. $1": "Vendor performance: open POs, late ones, 90-day fill rate and on-time rate. $1",
  "Barang yang perlu dipesan: stok ditambah PO berjalan tidak cukup sampai barang baru datang. $1": "Items to reorder: stock plus open POs will not last until new goods arrive. $1",
- "Anda belum memiliki akses ke $1.": "You do not have access to $1 yet."
+ "Anda belum memiliki akses ke $1.": "You do not have access to $1 yet.",
+ "Salinan $1 dibuat di Shared Drive; buka lewat \"Buka di Google Workspace\".": "A $1 copy was made in the Shared Drive; open it through \"Open in Google Workspace\".",
+ "$1 dibuat di Shared Drive; buka lewat panel dokumen atau \"Buka di Google Workspace\".": "$1 made in the Shared Drive; open it through the document panel or \"Open in Google Workspace\".",
+ "$1 $2 dibuat, disimpan di Shared Drive, dan diunduh": "$1 $2 made, saved to the Shared Drive and downloaded",
+ "Isi dokumen ini tidak bisa dibaca sebagai teks$1. Pengguna bisa membukanya lewat tautan.": "This document's content cannot be read as text$1. The user can open it through the link.",
+ "Dokumen $1 bagian; ini bagian $2. Baca bagian berikutnya bila jawaban butuh seluruh isi, atau pakai \"cari\" untuk satu topik.": "Document of $1 parts; this is part $2. Read the next part when the answer needs the whole content, or use \"cari\" for one topic.",
+ "Dokumen ini tidak bisa diubah menjadi $1. Pilihan: $2.": "This document cannot be turned into $1. Options: $2.",
+ "File tidak dapat dibaca dari Google Drive: $1": "The file could not be read from Google Drive: $1",
+ "Format $1 tidak bisa diubah menjadi file Google": "Format $1 cannot be turned into a Google file"
 }

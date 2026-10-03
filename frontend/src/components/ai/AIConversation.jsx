@@ -25,6 +25,7 @@ import AISteps from './AISteps';
 import { runningStep, stepText, upsertStep } from './aiStepsModel';
 import useFileDrop from './useFileDrop';
 import { engineChipLabel, engineMenuItems } from './aiEngineOptions';
+import { EXPORT_FILE_FORMATS, FORMAT_LABELS, artifactMessage, googleExportItems, isNativeFormat } from './aiConversionModel';
 import AIAttachmentChips, { AIAttachmentErrors } from './AIAttachmentChips';
 import {
   AI_FILE_ACCEPT, AI_MAX_MESSAGE_ATTACHMENTS, AI_MAX_PENDING_FILES, AI_MAX_UPLOAD_BYTES,
@@ -497,13 +498,17 @@ export default function AIConversation({
         title: session.title || `Dokumen AI ${message.id}`,
       });
       const artifact = response.data.data;
-      const download = await api.get(artifact.downloadUrl, { responseType: 'blob' });
-      downloadBlob(download.data, artifact.originalName || `dokumen-ai.${format}`);
-      toast(`${format.toUpperCase()} dibuat, disimpan di Shared Drive, dan diunduh`, 'success');
+      // A Google Doc/Sheet/Slides lives in Drive and opens in its editor; a
+      // file is downloaded as well.
+      if (!isNativeFormat(format) || !artifact.native) {
+        const download = await api.get(artifact.downloadUrl, { responseType: 'blob' });
+        downloadBlob(download.data, artifact.originalName || `dokumen-ai.${format}`);
+      }
+      toast(artifactMessage(artifact.native ? format : (isNativeFormat(format) ? 'docx' : format)), 'success');
       onSessionUpdated?.();
       onOpenWorkspace?.('documents');
     } catch (error) {
-      toast(error.response?.data?.error?.message || `Gagal membuat ${format.toUpperCase()}`, 'error');
+      toast(error.response?.data?.error?.message || `Gagal membuat ${FORMAT_LABELS[format] || format.toUpperCase()}`, 'error');
     } finally {
       setExportingKey('');
     }
@@ -913,22 +918,32 @@ function MessageItem({ message, canExport, exportingKey, onExport, showAuthor = 
       <div className="ai-msg-actions">
         <IconButton size="sm" label={copied ? 'Tersalin' : 'Salin jawaban'} icon={copied ? 'check' : 'content_copy'} onClick={copy} />
         {exportable && (
-          <div className="ai-export-group" role="group" aria-label="Unduh jawaban sebagai dokumen">
+          <div className="ai-export-group" role="group" aria-label="Jadikan jawaban sebuah dokumen">
             <Icon name="download" />
-            {['pdf', 'docx', 'xlsx'].map((format) => {
+            {EXPORT_FILE_FORMATS.map((format) => {
               const active = exportingKey === `${message.id}:${format}`;
               return (
                 <Chip
                   key={format}
                   icon={active ? <Spinner label={null} /> : undefined}
-                  tooltip={exportingKey ? undefined : `Jadikan ${format.toUpperCase()}`}
+                  tooltip={exportingKey ? undefined : `Jadikan ${FORMAT_LABELS[format]}`}
                   disabled={Boolean(exportingKey)}
                   onClick={() => onExport(message, format)}
                 >
-                  {format.toUpperCase()}
+                  {FORMAT_LABELS[format]}
                 </Chip>
               );
             })}
+            <AIDropdown
+              icon={exportingKey.startsWith(`${message.id}:g`) ? <Spinner label={null} /> : undefined}
+              label="Google"
+              ariaLabel="Jadikan Google Doc, Sheet, atau Slides"
+              items={googleExportItems()}
+              value={null}
+              onSelect={(format) => onExport(message, format)}
+              disabled={Boolean(exportingKey)}
+              placement="bottom"
+            />
           </div>
         )}
         <span className="ai-msg-meta">

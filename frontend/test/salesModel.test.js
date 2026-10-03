@@ -142,3 +142,15 @@ test('F01: an order is Lunas only when invoiced and paid; the export says the sa
   assert.equal(m.orderBillingStatus({ invoiceNumbers: 'INV-1', outstandingAmount: 0 }), 'paid');
   assert.equal(m.orderBillingStatus({ invoiceNumbers: 'INV-1', outstandingAmount: 5 }), 'unpaid');
 });
+
+test('F10: the scope line follows the response — a member never reads "seluruh perusahaan"', async () => {
+  const m = await import('../src/pages/sales/salesModel.js');
+  assert.match(m.salesScopeText({ viewAll: true, names: [] }), /seluruh perusahaan/);
+  const own = m.salesScopeText({ viewAll: false, names: ['BUDI'] });
+  assert.doesNotMatch(own, /seluruh perusahaan/);
+  assert.match(own, /data Anda saja.*BUDI/);
+  const unmapped = m.salesScopeText({ viewAll: false, names: [] });
+  assert.match(unmapped, /belum dipetakan/);
+  assert.match(unmapped, /Bukan omzet perusahaan/);
+  assert.match(m.salesScopeText(null), /dimuat/);
+});

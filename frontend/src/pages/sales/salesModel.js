@@ -286,3 +286,13 @@ export const PRINT_DOCUMENTS = {
   invoice: 'Invoice',
   receipt: 'Kwitansi',
 };
+
+// Whose numbers the Sales figures hold, from the response's own scope
+// (revision F10): never "seluruh perusahaan" for someone who sees only theirs.
+export function salesScopeText(scope) {
+  if (!scope) return 'Cakupan data sedang dimuat.';
+  if (scope.viewAll) return 'Cakupan: seluruh perusahaan (entitas Anda), termasuk marketplace (Retail Commerce).';
+  const names = Array.isArray(scope.names) ? scope.names.filter(Boolean) : [];
+  if (names.length) return `Cakupan: data Anda saja — faktur dengan nama sales ${names.join(', ')} dan pelanggan milik Anda. Bukan omzet perusahaan.`;
+  return 'Cakupan: data Anda saja — pelanggan milik Anda. Nama sales Accurate Anda belum dipetakan, jadi faktur atas nama Anda belum terhitung. Bukan omzet perusahaan.';
+}

@@ -62,9 +62,11 @@ const PRODUCT_COLUMNS = [
   },
   { key: 'platformText', header: 'Platform', render: (r) => (r.platformParts.length ? <Mixed parts={r.platformParts} separator=", " /> : r.platformText), sortValue: (r) => r.platformText, exportValue: (r) => r.platformText },
   { key: 'qty', header: 'Jumlah', translateContext: 'quantity', nowrap: true },
-  { key: 'revenue', header: 'Nilai', type: 'money' },
-  { key: 'share', header: 'Porsi', type: 'number', render: (r) => pct(r.share), sortValue: (r) => r.share ?? -1 },
-  { key: 'prevRevenue', header: 'Bulan sebelumnya', type: 'money' },
+  // Product value is the invoice-line DPP before returns (revision F11): it is
+  // not a slice of the net revenue on the cards above, and says so.
+  { key: 'revenue', header: 'Nilai penjualan produk (DPP sebelum retur)', type: 'money' },
+  { key: 'share', header: 'Porsi dari total baris faktur', type: 'number', render: (r) => pct(r.share), sortValue: (r) => r.share ?? -1 },
+  { key: 'prevRevenue', header: 'Bulan sebelumnya (DPP sebelum retur)', type: 'money' },
   {
     key: 'changePct', header: 'Perubahan', type: 'number', translate: true,
     render: (r) => {
@@ -267,8 +269,8 @@ export default function RetailCommerce() {
       <Card
         title={products?.month ? `Produk terlaris ${products.month.label}` : 'Produk terlaris'}
         subtitle={products?.month
-          ? `${formatNumber(products.products)} produk terjual senilai ${formatMetric(products.monthRevenue, 'rupiah', { compact: true })}, dibanding ${products.prevMonth.label}.${products.fallback ? ' Bulan ini belum ada faktur, jadi yang tampil bulan terakhir yang sudah ditagih.' : ''}`
-          : 'Nilai per baris faktur Accurate, dibanding bulan sebelumnya.'}
+          ? `${formatNumber(products.products)} produk terjual, total baris faktur ${formatMetric(products.monthRevenue, 'rupiah', { compact: true })} (DPP sebelum retur), dibanding ${products.prevMonth.label}. Angka ini sebelum retur, jadi bisa lebih besar dari omzet bersih retur di atas; retur tidak dialokasikan ke produk.${products.fallback ? ' Bulan ini belum ada faktur, jadi yang tampil bulan terakhir yang sudah ditagih.' : ''}`
+          : 'Nilai per baris faktur Accurate (DPP sebelum retur), dibanding bulan sebelumnya.'}
         actions={overview.months.length ? (
           <Select
             label="Bulan"

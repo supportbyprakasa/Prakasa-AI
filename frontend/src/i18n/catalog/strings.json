@@ -278,7 +278,7 @@
    "frontend/src/pages/it/itTicketModel.js:17",
    "frontend/src/pages/it/ReportImportDialog.jsx:336",
    "frontend/src/pages/marketing/marketingModel.js:25",
-   "frontend/src/pages/marketing/marketingModel.js:232",
+   "frontend/src/pages/marketing/marketingModel.js:245",
    "frontend/src/pages/projects/IssueDrawer.jsx:363",
    "frontend/src/pages/projects/PortfolioCharts.jsx:102",
    "frontend/src/pages/projects/PortfolioCharts.jsx:190",
@@ -564,7 +564,7 @@
    "frontend/src/pages/it/Infrastructure.jsx:94",
    "frontend/src/pages/Login.jsx:144",
    "frontend/src/pages/sales/accurateBatchModel.js:48",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:278",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:279",
    "frontend/src/pages/sales/SalesForms.jsx:63",
    "frontend/src/pages/sales/SalesForms.jsx:200",
    "frontend/src/pages/sales/SalesOrders.jsx:202",
@@ -832,10 +832,10 @@
    "frontend/src/components/navigation.js:197",
    "frontend/src/components/navigation.js:331",
    "frontend/src/pages/advanced/managementFlowModel.js:31",
-   "frontend/src/pages/retail/RetailCommerce.jsx:160",
-   "frontend/src/pages/retail/RetailCommerce.jsx:163",
-   "frontend/src/pages/retail/RetailCommerce.jsx:171",
-   "frontend/src/pages/retail/RetailCommerce.jsx:189",
+   "frontend/src/pages/retail/RetailCommerce.jsx:162",
+   "frontend/src/pages/retail/RetailCommerce.jsx:165",
+   "frontend/src/pages/retail/RetailCommerce.jsx:173",
+   "frontend/src/pages/retail/RetailCommerce.jsx:191",
    "backend/migrations/032_prakasa_workspace_organization.sql:135",
    "backend/src/config/standardOrganization.js:1"
   ],
@@ -975,7 +975,7 @@
    "frontend/src/pages/hrga/hrgaModel.js:92",
    "frontend/src/pages/hrga/hrgaModel.js:109",
    "frontend/src/pages/marketing/marketingModel.js:25",
-   "frontend/src/pages/marketing/marketingModel.js:231"
+   "frontend/src/pages/marketing/marketingModel.js:244"
   ],
   "chunk": "shell-1"
  },
@@ -1418,8 +1418,8 @@
    "frontend/src/components/notifications/notificationModel.js:116",
    "frontend/src/pages/handbook/aiForms.generated.js:44",
    "frontend/src/pages/sales/accurateBatchModel.js:9",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:209",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:248",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:210",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:249",
    "frontend/src/pages/sales/salesModel.js:93",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:284",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:330",
@@ -1524,7 +1524,7 @@
    "frontend/src/pages/hrga/HrgaWorkflowDetail.jsx:315",
    "frontend/src/pages/it/itTicketModel.js:19",
    "frontend/src/pages/marketing/marketingModel.js:25",
-   "frontend/src/pages/marketing/marketingModel.js:233",
+   "frontend/src/pages/marketing/marketingModel.js:246",
    "frontend/src/pages/warehouse/warehouseMovementModel.js:13"
   ],
   "chunk": "shell-1"
@@ -2040,7 +2040,7 @@
    "frontend/src/pages/handbook/handbookContent.js:1094",
    "frontend/src/pages/sales/accurateBatchModel.js:9",
    "frontend/src/pages/sales/accurateBatchModel.js:34",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:181",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:182",
    "frontend/src/pages/sales/SalesCustomers.jsx:27",
    "frontend/src/pages/sales/SalesCustomers.jsx:72",
    "frontend/src/pages/sales/SalesCustomers.jsx:84",
@@ -2257,8 +2257,8 @@
    "frontend/src/pages/finance/FinanceReceivables.jsx:164",
    "frontend/src/pages/handbook/handbookContent.js:1449",
    "frontend/src/pages/sales/accurateBatchModel.js:52",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:211",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:221",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:212",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:222",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:43",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:371",
    "frontend/src/pages/sales/SalesOrders.jsx:60",
@@ -2742,7 +2742,7 @@
    "frontend/src/pages/hrga/hrgaModel.js:96",
    "frontend/src/pages/hrga/hrgaModel.js:112",
    "frontend/src/pages/marketing/marketingModel.js:25",
-   "frontend/src/pages/marketing/marketingModel.js:230"
+   "frontend/src/pages/marketing/marketingModel.js:243"
   ],
   "chunk": "shell-1"
  },
@@ -3140,10 +3140,10 @@
    "frontend/src/pages/projects/TrackerPortfolio.jsx:112",
    "frontend/src/pages/projects/TrackerReports.jsx:170",
    "frontend/src/pages/public/VerifyDocument.jsx:78",
-   "frontend/src/pages/retail/RetailCommerce.jsx:164",
+   "frontend/src/pages/retail/RetailCommerce.jsx:166",
    "frontend/src/pages/sales/SalesAccurateBatch.jsx:248",
    "frontend/src/pages/sales/SalesAging.jsx:30",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:160",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:161",
    "frontend/src/pages/sales/SalesLeads.jsx:415",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:262",
    "frontend/src/pages/sales/SalesOrderForm.jsx:309",
@@ -3515,7 +3515,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/components/appLauncherModel.js:20",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:275",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:276",
    "frontend/src/pages/sales/SalesForms.jsx:60",
    "frontend/src/pages/sales/SalesForms.jsx:197"
   ],
@@ -3613,7 +3613,7 @@
    "frontend/src/pages/marketing/MarketingInsights.jsx:97",
    "frontend/src/pages/people/Directory.jsx:95",
    "frontend/src/pages/people/OrgChart.jsx:49",
-   "frontend/src/pages/retail/RetailCommerce.jsx:137"
+   "frontend/src/pages/retail/RetailCommerce.jsx:139"
   ],
   "chunk": "shell-1"
  },
@@ -4304,7 +4304,7 @@
    "frontend/src/pages/management/DivisionDashboard.jsx:96",
    "frontend/src/pages/marketing/MarketingInsights.jsx:166",
    "frontend/src/pages/notifications/NotificationCenter.jsx:178",
-   "frontend/src/pages/retail/RetailCommerce.jsx:158",
+   "frontend/src/pages/retail/RetailCommerce.jsx:160",
    "frontend/src/pages/sales/SalesPipeline.jsx:155",
    "frontend/src/pages/tasks/TaskBoard.jsx:134",
    "frontend/src/pages/tasks/TaskBoard.jsx:545"
@@ -5198,7 +5198,7 @@
    "frontend/src/pages/it/ItTicketDetail.jsx:262",
    "frontend/src/pages/it/SubscriptionDetail.jsx:384",
    "frontend/src/pages/sales/SalesAccurateBatch.jsx:288",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:267",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:268",
    "frontend/src/pages/sales/SalesLeads.jsx:477",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:340",
    "frontend/src/pages/signatures/SignatureDetail.jsx:162",
@@ -5977,7 +5977,7 @@
   "sources": [
    "frontend/src/components/search/searchResultModel.js:41",
    "frontend/src/pages/sales/accurateBatchModel.js:48",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:280",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:281",
    "frontend/src/pages/sales/SalesForms.jsx:65",
    "frontend/src/pages/sales/SalesForms.jsx:202"
   ],
@@ -6260,7 +6260,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/components/statusTone.js:36",
-   "frontend/src/pages/marketing/marketingModel.js:229",
+   "frontend/src/pages/marketing/marketingModel.js:242",
    "frontend/src/pages/sales/SalesLeads.jsx:80",
    "frontend/src/pages/sales/SalesLeads.jsx:99"
   ],
@@ -6384,7 +6384,7 @@
    "frontend/src/components/statusTone.js:300",
    "frontend/src/pages/advanced/flow/FlowSales.jsx:41",
    "frontend/src/pages/google/mailModel.js:13",
-   "frontend/src/pages/retail/RetailCommerce.jsx:85",
+   "frontend/src/pages/retail/RetailCommerce.jsx:87",
    "frontend/src/pages/warehouse/WarehouseShipping.jsx:61"
   ],
   "chunk": "shell-2"
@@ -6591,8 +6591,8 @@
   "sources": [
    "frontend/src/components/statusTone.js:88",
    "frontend/src/pages/handbook/handbookContent.js:1367",
-   "frontend/src/pages/marketing/MarketingInsights.jsx:228",
-   "frontend/src/pages/marketing/MarketingInsights.jsx:252",
+   "frontend/src/pages/marketing/MarketingInsights.jsx:230",
+   "frontend/src/pages/marketing/MarketingInsights.jsx:254",
    "frontend/src/pages/warehouse/WarehouseRecon.jsx:268",
    "frontend/src/pages/warehouse/warehouseReconModel.js:15"
   ],
@@ -6968,7 +6968,7 @@
    "frontend/src/pages/finance/financeReportsModel.js:118",
    "frontend/src/pages/ga/gaOpsModel.js:76",
    "frontend/src/pages/projects/TrackerPortfolio.jsx:96",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:222",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:223",
    "frontend/src/pages/sales/salesModel.js:60"
   ],
   "chunk": "shell-2"
@@ -11432,7 +11432,7 @@
    "frontend/src/pages/procurement/ProcurementReorder.jsx:91",
    "frontend/src/pages/sales/accurateBatchModel.js:99",
    "frontend/src/pages/sales/salesAgingModel.js:4",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:228",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:229",
    "frontend/src/pages/sales/SalesExchanges.jsx:172",
    "frontend/src/pages/warehouse/warehouseReconModel.js:103"
   ],
@@ -11474,7 +11474,7 @@
    "frontend/src/components/charts/MotionChart.jsx:19",
    "frontend/src/pages/handbook/handbookContent.js:1829",
    "frontend/src/pages/management/DivisionDashboard.jsx:118",
-   "frontend/src/pages/retail/RetailCommerce.jsx:238"
+   "frontend/src/pages/retail/RetailCommerce.jsx:240"
   ],
   "chunk": "components-work"
  },
@@ -11576,7 +11576,7 @@
    "frontend/src/pages/advanced/targetsModel.js:40",
    "frontend/src/pages/calendar/calendarModel.js:19",
    "frontend/src/pages/marketing/MarketingInsights.jsx:160",
-   "frontend/src/pages/retail/RetailCommerce.jsx:274",
+   "frontend/src/pages/retail/RetailCommerce.jsx:276",
    "frontend/src/pages/sales/SalesTargets.jsx:175"
   ],
   "chunk": "components-work"
@@ -11587,7 +11587,6 @@
   "sources": [
    "frontend/src/components/charts/TrendChart.jsx:136",
    "frontend/src/pages/accurate/AccurateQuality.jsx:18",
-   "frontend/src/pages/retail/RetailCommerce.jsx:65",
    "frontend/src/pages/sales/SalesAccurateBatch.jsx:192",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:362",
    "frontend/src/pages/sales/SalesTodo.jsx:50"
@@ -12670,7 +12669,7 @@
    "frontend/src/pages/projects/IssueDrawer.jsx:346",
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:36",
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:72",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:261"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:262"
   ],
   "chunk": "components-work"
  },
@@ -13077,8 +13076,8 @@
    "frontend/src/pages/projects/IssueDrawer.jsx:215",
    "frontend/src/pages/projects/TrackerIssueList.jsx:20",
    "frontend/src/pages/public/VerifyDocument.jsx:105",
-   "frontend/src/pages/retail/RetailCommerce.jsx:88",
-   "frontend/src/pages/retail/RetailCommerce.jsx:103",
+   "frontend/src/pages/retail/RetailCommerce.jsx:90",
+   "frontend/src/pages/retail/RetailCommerce.jsx:105",
    "frontend/src/pages/sales/accurateBatchModel.js:34",
    "frontend/src/pages/sales/SalesAccurateBatch.jsx:119",
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:47",
@@ -13118,7 +13117,7 @@
    "backend/src/controllers/approvals.controller.js:475",
    "backend/src/services/ai/agent/tools/accurateReview.js:14",
    "backend/src/services/ai/agent/tools/approvals.js:24",
-   "backend/src/services/ai/agent/tools/sales.js:727",
+   "backend/src/services/ai/agent/tools/sales.js:733",
    "frontend/src/pages/ActivityLogs.jsx:211"
   ],
   "chunk": "pages-home"
@@ -13287,7 +13286,7 @@
    "backend/src/routes/marketing.routes.js:50",
    "backend/src/services/marketingCampaigns.service.js:116",
    "frontend/src/pages/calendar/calendarModel.js:324",
-   "frontend/src/pages/marketing/marketingModel.js:372"
+   "frontend/src/pages/marketing/marketingModel.js:388"
   ],
   "chunk": "pages-home"
  },
@@ -13368,7 +13367,7 @@
   "sources": [
    "backend/src/services/ai/agent/tools/accurateReview.js:14",
    "backend/src/services/ai/agent/tools/approvals.js:24",
-   "backend/src/services/ai/agent/tools/sales.js:727",
+   "backend/src/services/ai/agent/tools/sales.js:733",
    "frontend/src/pages/ActivityLogs.jsx:145",
    "frontend/src/pages/finance/financeReportsModel.js:157"
   ],
@@ -14900,7 +14899,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/ActivityLogs.jsx:331",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:261"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:262"
   ],
   "chunk": "pages-home"
  },
@@ -23747,7 +23746,7 @@
    "frontend/src/pages/procurement/ProcurementOrders.jsx:73",
    "frontend/src/pages/procurement/ProcurementReorder.jsx:70",
    "frontend/src/pages/procurement/ProcurementVendors.jsx:58",
-   "frontend/src/pages/retail/RetailCommerce.jsx:98",
+   "frontend/src/pages/retail/RetailCommerce.jsx:100",
    "frontend/src/pages/sales/accurateBatchModel.js:34",
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:41",
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:54",
@@ -23796,7 +23795,7 @@
   "sources": [
    "backend/src/config/docTemplates.js:20",
    "frontend/src/pages/documents/DocTemplates.jsx:176",
-   "frontend/src/pages/marketing/marketingModel.js:278",
+   "frontend/src/pages/marketing/marketingModel.js:291",
    "frontend/src/pages/sales/SalesPrint.jsx:252",
    "frontend/src/pages/warehouse/WarehouseMovementDetail.jsx:277",
    "frontend/src/pages/warehouse/WarehouseMovements.jsx:104",
@@ -23937,7 +23936,7 @@
    "frontend/src/pages/people/PersonFormDialog.jsx:205",
    "frontend/src/pages/people/PersonSheet.jsx:88",
    "frontend/src/pages/sales/accurateBatchModel.js:54",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:281",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:282",
    "frontend/src/pages/sales/SalesExchanges.jsx:41",
    "frontend/src/pages/sales/SalesExchanges.jsx:102",
    "frontend/src/pages/sales/SalesForms.jsx:66",
@@ -24011,7 +24010,7 @@
   "sources": [
    "backend/src/controllers/salesData.controller.js:167",
    "frontend/src/pages/handbook/handbookContent.js:1082",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:273"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:274"
   ],
   "chunk": "pages-sales-1"
  },
@@ -24254,7 +24253,7 @@
    "frontend/src/pages/projects/CreateIssueModal.jsx:147",
    "frontend/src/pages/projects/IssueDrawer.jsx:254",
    "frontend/src/pages/projects/TrackerIssueList.jsx:30",
-   "frontend/src/pages/retail/RetailCommerce.jsx:99",
+   "frontend/src/pages/retail/RetailCommerce.jsx:101",
    "frontend/src/pages/sales/accurateBatchModel.js:52",
    "frontend/src/pages/sales/SalesExchanges.jsx:171",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:69",
@@ -24401,7 +24400,7 @@
   "sources": [
    "backend/src/services/ai/agent/forms/sales.js:51",
    "frontend/src/pages/handbook/aiForms.generated.js:43",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:192",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:193",
    "frontend/src/pages/sales/SalesForms.jsx:75",
    "frontend/src/pages/sales/SalesForms.jsx:157"
   ],
@@ -24506,7 +24505,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/ai/agent/tools/sales.js:128",
-   "backend/src/services/ai/agent/tools/sales.js:476",
+   "backend/src/services/ai/agent/tools/sales.js:482",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:271"
   ],
   "chunk": "pages-sales-2"
@@ -24518,6 +24517,7 @@
    "backend/src/services/ai/agent/tools/sales.js:321",
    "backend/src/services/salesFacts.js:75",
    "backend/src/services/salesFacts.js:88",
+   "backend/src/services/salesTargets.service.js:107",
    "frontend/src/pages/sales/SalesOrderForm.jsx:303",
    "frontend/src/pages/sales/SalesPipeline.jsx:180"
   ],
@@ -24681,7 +24681,7 @@
   "sources": [
    "frontend/src/pages/advanced/flow/FlowSales.jsx:161",
    "frontend/src/pages/finance/FinanceReceivables.jsx:174",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:242",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:243",
    "frontend/src/pages/sales/SalesOrders.jsx:103"
   ],
   "chunk": "pages-sales-1"
@@ -24703,7 +24703,6 @@
   "sources": [
    "frontend/src/pages/advanced/flow/MarginEstimate.jsx:29",
    "frontend/src/pages/advanced/flow/MarginEstimate.jsx:46",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:88",
    "frontend/src/pages/sales/SalesOrders.jsx:135",
    "frontend/src/pages/sales/SalesPipeline.jsx:60"
   ],
@@ -24720,7 +24719,7 @@
    "frontend/src/pages/ga/gaOpsModel.js:136",
    "frontend/src/pages/ga/gaOpsModel.js:228",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:81",
-   "frontend/src/pages/marketing/marketingModel.js:273",
+   "frontend/src/pages/marketing/marketingModel.js:286",
    "frontend/src/pages/sales/SalesOrders.jsx:502"
   ],
   "chunk": "pages-sales-1"
@@ -24833,7 +24832,7 @@
    "frontend/src/pages/ga/gaModel.js:318",
    "frontend/src/pages/marketing/MarketingInsights.jsx:64",
    "frontend/src/pages/procurement/ProcurementPrices.jsx:35",
-   "frontend/src/pages/retail/RetailCommerce.jsx:69",
+   "frontend/src/pages/retail/RetailCommerce.jsx:71",
    "frontend/src/pages/sales/SalesAccurateBatch.jsx:178"
   ],
   "chunk": "pages-sales-1"
@@ -24851,10 +24850,10 @@
    "frontend/src/pages/marketing/MarketingInsights.jsx:27",
    "frontend/src/pages/marketing/MarketingInsights.jsx:42",
    "frontend/src/pages/marketing/MarketingInsights.jsx:66",
-   "frontend/src/pages/marketing/marketingModel.js:274",
+   "frontend/src/pages/marketing/marketingModel.js:287",
    "frontend/src/pages/sales/accurateBatchModel.js:49",
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:42",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:270",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:271",
    "frontend/src/pages/sales/SalesCustomers.jsx:29",
    "frontend/src/pages/sales/SalesCustomers.jsx:101",
    "frontend/src/pages/sales/SalesForms.jsx:177",
@@ -24929,7 +24928,7 @@
    "frontend/src/pages/ga/gaOpsModel.js:227",
    "frontend/src/pages/sales/accurateBatchModel.js:34",
    "frontend/src/pages/sales/accurateBatchModel.js:49",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:269",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:270",
    "frontend/src/pages/sales/SalesCustomers.jsx:28",
    "frontend/src/pages/sales/SalesForms.jsx:58",
    "frontend/src/pages/sales/SalesForms.jsx:189",
@@ -25218,7 +25217,7 @@
   "text": "No. SO",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:80",
+   "frontend/src/pages/retail/RetailCommerce.jsx:82",
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:40",
    "frontend/src/pages/sales/SalesOrderForm.jsx:51",
    "frontend/src/pages/sales/SalesOrderForm.jsx:51",
@@ -25238,7 +25237,7 @@
   "text": "Nilai (sebelum PPN)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:86",
+   "frontend/src/pages/retail/RetailCommerce.jsx:88",
    "frontend/src/pages/sales/SalesOrders.jsx:144"
   ],
   "chunk": "pages-sales-1"
@@ -25247,7 +25246,7 @@
   "text": "No. faktur",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:96",
+   "frontend/src/pages/retail/RetailCommerce.jsx:98",
    "frontend/src/pages/sales/SalesExchanges.jsx:157",
    "frontend/src/pages/sales/SalesOrders.jsx:115"
   ],
@@ -25474,7 +25473,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/sales/accurateBatchModel.js:48",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:279",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:280",
    "frontend/src/pages/sales/SalesLeads.jsx:142",
    "frontend/src/pages/sales/SalesLeads.jsx:207",
    "frontend/src/pages/sales/SalesLeads.jsx:481",
@@ -25910,7 +25909,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/sales/SalesAccurateBatch.jsx:143",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:254",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:255",
    "frontend/src/pages/sales/SalesCustomers.jsx:113",
    "frontend/src/pages/sales/SalesLeads.jsx:582",
    "frontend/src/pages/sales/SalesOrders.jsx:543",
@@ -26335,9 +26334,9 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:35",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:212",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:230",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:258",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:213",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:231",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:259",
    "frontend/src/pages/sales/SalesLeads.jsx:57"
   ],
   "chunk": "pages-sales-1"
@@ -26437,10 +26436,18 @@
   "chunk": "pages-sales-1"
  },
  {
+  "text": "Nilai penjualan (DPP sebelum retur)",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:89"
+  ],
+  "chunk": "additions"
+ },
+ {
   "text": "Rp 0",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:91"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:92"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26448,7 +26455,7 @@
   "text": "Pelanggan tidak ditemukan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:138"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:139"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26456,7 +26463,7 @@
   "text": "Pelanggan dihapus",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:148"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:149"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26464,7 +26471,7 @@
   "text": "Pelanggan gagal dihapus",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:151"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:152"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26472,7 +26479,7 @@
   "text": "Memuat pelanggan…",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:156"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:157"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26480,7 +26487,7 @@
   "text": "Pelanggan belum bisa dimuat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:160"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:161"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26488,8 +26495,8 @@
   "text": "Hapus pelanggan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:172",
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:293"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:173",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:294"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26502,7 +26509,7 @@
    "daysAgoText(customer.daysSinceOrder).toLowerCase()"
   ],
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:175"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:176"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26510,7 +26517,7 @@
   "text": "Belum pernah order",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:176"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:177"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26518,7 +26525,7 @@
   "text": "Order lagi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:194",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:195",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:276",
    "frontend/src/pages/sales/SalesOrderForm.jsx:303"
   ],
@@ -26528,7 +26535,7 @@
   "text": "Buat sales order",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:196",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:197",
    "frontend/src/pages/sales/SalesOrderForm.jsx:303",
    "frontend/src/pages/sales/SalesOrders.jsx:559"
   ],
@@ -26538,7 +26545,7 @@
   "text": "Bagian pelanggan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:205"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:206"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26546,7 +26553,7 @@
   "text": "Total order",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:210"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:211"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26554,7 +26561,7 @@
   "text": "Omzet 12 bulan (bersih retur)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:219"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:220"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26562,7 +26569,7 @@
   "text": "Faktur 12 bulan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:220"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:221"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26570,7 +26577,7 @@
   "text": "Perlu ditagih",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:222"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:223"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26578,7 +26585,7 @@
   "text": "Pembelian dan pembayaran",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:224"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:225"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26586,7 +26593,7 @@
   "text": "Faktur terakhir",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:226"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:227"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26594,7 +26601,7 @@
   "text": "Pembayaran terakhir",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:227"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:228"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26602,7 +26609,7 @@
   "text": "Syarat bayar rata-rata",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:228"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:229"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26610,7 +26617,7 @@
   "text": "Tunai",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:228"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:229"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26618,7 +26625,7 @@
   "text": "Retur 12 bulan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:229"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:230"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26626,7 +26633,7 @@
   "text": "Produk teratas (12 bulan)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:235"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:236"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26634,7 +26641,7 @@
   "text": "Belum ada pembelian 12 bulan terakhir",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:240"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:241"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26642,7 +26649,7 @@
   "text": "Belum ada sales order",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:253"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:254"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26650,7 +26657,7 @@
   "text": "Belum ada kunjungan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:258",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:259",
    "frontend/src/pages/sales/SalesLeads.jsx:459"
   ],
   "chunk": "pages-sales-1"
@@ -26659,7 +26666,7 @@
   "text": "Bentuk usaha",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:271",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:272",
    "frontend/src/pages/sales/SalesForms.jsx:55",
    "frontend/src/pages/sales/SalesForms.jsx:178"
   ],
@@ -26669,7 +26676,7 @@
   "text": "PIC sales",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:272",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:273",
    "frontend/src/pages/sales/SalesForms.jsx:59",
    "frontend/src/pages/sales/SalesForms.jsx:191",
    "frontend/src/pages/sales/SalesLeads.jsx:143",
@@ -26683,7 +26690,7 @@
   "text": "Order terakhir",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:274",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:275",
    "frontend/src/pages/sales/SalesCustomers.jsx:31",
    "frontend/src/pages/sales/SalesPipeline.jsx:101",
    "frontend/src/pages/sales/SalesTodo.jsx:51"
@@ -26694,7 +26701,7 @@
   "text": "Handphone",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:276",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:277",
    "frontend/src/pages/sales/SalesForms.jsx:61",
    "frontend/src/pages/sales/SalesForms.jsx:198"
   ],
@@ -26704,7 +26711,7 @@
   "text": "Telp. bisnis",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:277",
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:278",
    "frontend/src/pages/sales/SalesForms.jsx:62",
    "frontend/src/pages/sales/SalesForms.jsx:199"
   ],
@@ -26714,7 +26721,7 @@
   "text": "Hapus pelanggan?",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:291"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:292"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26726,7 +26733,7 @@
    "customer.name"
   ],
   "sources": [
-   "frontend/src/pages/sales/SalesCustomerDetail.jsx:292"
+   "frontend/src/pages/sales/SalesCustomerDetail.jsx:293"
   ],
   "chunk": "pages-sales-1"
  },
@@ -27807,6 +27814,42 @@
    "frontend/src/pages/sales/salesModel.js:287"
   ],
   "chunk": "pages-sales-2"
+ },
+ {
+  "text": "Cakupan data sedang dimuat.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/sales/salesModel.js:293"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Cakupan: seluruh perusahaan (entitas Anda), termasuk marketplace (Retail Commerce).",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/sales/salesModel.js:294"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Cakupan: data Anda saja — faktur dengan nama sales $1 dan pelanggan milik Anda. Bukan omzet perusahaan.",
+  "kind": "pattern",
+  "regex": "^Cakupan: data Anda saja — faktur dengan nama sales ([\\s\\S]*?) dan pelanggan milik Anda\\. Bukan omzet perusahaan\\.$",
+  "vars": [
+   "names.join(', ')"
+  ],
+  "sources": [
+   "frontend/src/pages/sales/salesModel.js:296"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Cakupan: data Anda saja — pelanggan milik Anda. Nama sales Accurate Anda belum dipetakan, jadi faktur atas nama Anda belum terhitung. Bukan omzet perusahaan.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/sales/salesModel.js:297"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Qty",
@@ -28907,12 +28950,12 @@
   "chunk": "pages-sales-2"
  },
  {
-  "text": "Omzet per produk = bagian tiap baris faktur Accurate dari DPP fakturnya (sebelum PPN; diskon dan biaya di faktur dibagi rata ke produk), tanpa faktur uang muka.",
+  "text": "Nilai per produk = bagian tiap baris faktur Accurate dari DPP fakturnya (sebelum PPN; diskon dan biaya di faktur dialokasikan proporsional terhadap nilai baris), sebelum retur, tanpa faktur uang muka.",
   "kind": "exact",
   "sources": [
    "frontend/src/pages/sales/SalesOrders.jsx:489"
   ],
-  "chunk": "pages-sales-2"
+  "chunk": "additions"
  },
  {
   "text": "Master produk mengikuti Accurate.",
@@ -29238,12 +29281,16 @@
   "chunk": "pages-sales-2"
  },
  {
-  "text": "Otomatis dari kunjungan dan sales order; tidak ada kartu yang perlu digeser manual. Angka omzet mencakup seluruh perusahaan, termasuk marketplace (Retail Commerce).",
-  "kind": "exact",
+  "text": "Otomatis dari kunjungan dan sales order; tidak ada kartu yang perlu digeser manual. $1",
+  "kind": "pattern",
+  "regex": "^Otomatis dari kunjungan dan sales order; tidak ada kartu yang perlu digeser manual\\. ([\\s\\S]*?)$",
+  "vars": [
+   "salesScopeText(ov?.scope)"
+  ],
   "sources": [
    "frontend/src/pages/sales/SalesPipeline.jsx:154"
   ],
-  "chunk": "pages-sales-2"
+  "chunk": "additions"
  },
  {
   "text": "Ringkasan pipeline belum bisa dimuat",
@@ -29396,12 +29443,16 @@
   "chunk": "pages-sales-2"
  },
  {
-  "text": "Dari faktur Accurate yang sudah disetujui, menurut tanggal faktur, seluruh perusahaan termasuk marketplace (Retail Commerce; ditagih bulanan, satu faktur rekap per akhir bulan). Saldo awal Accurate (faktur 31 Des 2025 tanpa baris barang) bukan penjualan: tetap di piutang, tidak dihitung sebagai omzet maupun NOO. NOO = pelanggan Accurate (per nomor pelanggan) yang pertama kali difakturkan di bulan itu.",
-  "kind": "exact",
+  "text": "Dari faktur Accurate yang sudah disetujui, menurut tanggal faktur. $1 Marketplace (Retail Commerce) ditagih bulanan, satu faktur rekap per akhir bulan. Saldo awal Accurate (faktur 31 Des 2025 tanpa baris barang) bukan penjualan: tetap di piutang, tidak dihitung sebagai omzet maupun NOO. NOO = pelanggan Accurate (per nomor pelanggan) yang pertama kali difakturkan di bulan itu.",
+  "kind": "pattern",
+  "regex": "^Dari faktur Accurate yang sudah disetujui, menurut tanggal faktur\\. ([\\s\\S]*?) Marketplace \\(Retail Commerce\\) ditagih bulanan, satu faktur rekap per akhir bulan\\. Saldo awal Accurate \\(faktur 31 Des 2025 tanpa baris barang\\) bukan penjualan: tetap di piutang, tidak dihitung sebagai omzet maupun NOO\\. NOO = pelanggan Accurate \\(per nomor pelanggan\\) yang pertama kali difakturkan di bulan itu\\.$",
+  "vars": [
+   "salesScopeText(ov?.scope)"
+  ],
   "sources": [
    "frontend/src/pages/sales/SalesPipeline.jsx:252"
   ],
-  "chunk": "pages-sales-2"
+  "chunk": "additions"
  },
  {
   "text": "Tanggal transaksi mengikuti tanggal kirim (ETD), atau tanggal order bila belum ada. NOO = pelanggan yang order pertama kali di bulan itu.",
@@ -29870,16 +29921,12 @@
   "chunk": "pages-sales-2"
  },
  {
-  "text": "$1 sales order",
-  "kind": "pattern",
-  "regex": "^([\\s\\S]*?) sales order$",
-  "vars": [
-   "formatCount(r.orders)"
-  ],
+  "text": "transaksi",
+  "kind": "exact",
   "sources": [
    "frontend/src/pages/sales/SalesTargets.jsx:153"
   ],
-  "chunk": "pages-sales-2"
+  "chunk": "additions"
  },
  {
   "text": "Pencapaian belum bisa dihitung: akun ini belum dihubungkan ke nama sales Accurate atau pelanggan.",
@@ -30039,8 +30086,9 @@
    "frontend/src/pages/advanced/targetsModel.js:34",
    "frontend/src/pages/advanced/targetsModel.js:35",
    "frontend/src/pages/marketing/marketingModel.js:98",
-   "frontend/src/pages/marketing/marketingModel.js:309",
-   "frontend/src/pages/marketing/marketingModel.js:310",
+   "frontend/src/pages/marketing/marketingModel.js:323",
+   "frontend/src/pages/marketing/marketingModel.js:325",
+   "frontend/src/pages/marketing/marketingModel.js:326",
    "frontend/src/pages/retail/retailModel.js:78",
    "frontend/src/pages/retail/retailModel.js:99",
    "frontend/src/pages/retail/retailModel.js:159",
@@ -30211,7 +30259,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/advanced/flow/FlowSales.jsx:31",
-   "frontend/src/pages/retail/RetailCommerce.jsx:83",
+   "frontend/src/pages/retail/RetailCommerce.jsx:85",
    "frontend/src/pages/warehouse/WarehouseShipping.jsx:33",
    "frontend/src/pages/warehouse/WarehouseShipping.jsx:75"
   ],
@@ -30327,7 +30375,7 @@
    "frontend/src/pages/ga/GaBookingDetail.jsx:117",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:79",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:289",
-   "frontend/src/pages/marketing/marketingModel.js:272",
+   "frontend/src/pages/marketing/marketingModel.js:285",
    "frontend/src/pages/warehouse/WarehouseAccurateDocs.jsx:100",
    "frontend/src/pages/warehouse/warehouseMovementModel.js:19"
   ],
@@ -31789,7 +31837,7 @@
   "text": "Tanggal SO",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:82",
+   "frontend/src/pages/retail/RetailCommerce.jsx:84",
    "frontend/src/pages/warehouse/WarehouseShipping.jsx:78"
   ],
   "chunk": "pages-warehouse"
@@ -33093,6 +33141,19 @@
   "chunk": "pages-warehouse"
  },
  {
+  "text": "$1 baris · $2 SKU",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?) baris · ([\\s\\S]*?) SKU$",
+  "vars": [
+   "rows.length",
+   "skus.size"
+  ],
+  "sources": [
+   "frontend/src/pages/warehouse/warehouseMovementModel.js:221"
+  ],
+  "chunk": "additions"
+ },
+ {
   "text": "Belum ada transaksi barang masuk.",
   "kind": "exact",
   "sources": [
@@ -33129,19 +33190,6 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/warehouse/WarehouseMovements.jsx:29"
-  ],
-  "chunk": "pages-warehouse"
- },
- {
-  "text": "$1 baris · $2 total",
-  "kind": "pattern",
-  "regex": "^([\\s\\S]*?) baris · ([\\s\\S]*?) total$",
-  "vars": [
-   "row.items.length",
-   "formatQuantity(totalQuantity(row.items))"
-  ],
-  "sources": [
-   "frontend/src/pages/warehouse/WarehouseMovements.jsx:36"
   ],
   "chunk": "pages-warehouse"
  },
@@ -34694,7 +34742,7 @@
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:115",
    "frontend/src/pages/marketing/MarketingInsights.jsx:203",
    "frontend/src/pages/marketing/marketingModel.js:128",
-   "frontend/src/pages/marketing/marketingModel.js:307",
+   "frontend/src/pages/marketing/marketingModel.js:320",
    "frontend/src/pages/retail/retailModel.js:69",
    "frontend/src/pages/retail/retailModel.js:74",
    "frontend/src/pages/retail/retailModel.js:83",
@@ -34847,7 +34895,7 @@
   "sources": [
    "backend/src/routes/marketing.routes.js:29",
    "backend/src/services/marketingCampaigns.service.js:112",
-   "frontend/src/pages/marketing/marketingModel.js:368"
+   "frontend/src/pages/marketing/marketingModel.js:384"
   ],
   "chunk": "pages-finance"
  },
@@ -34860,7 +34908,7 @@
   ],
   "sources": [
    "backend/src/routes/marketing.routes.js:37",
-   "frontend/src/pages/marketing/marketingModel.js:378"
+   "frontend/src/pages/marketing/marketingModel.js:394"
   ],
   "chunk": "pages-finance"
  },
@@ -34929,7 +34977,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/ai/agent/tools/marketing.js:25",
-   "frontend/src/pages/marketing/marketingModel.js:286"
+   "frontend/src/pages/marketing/marketingModel.js:299"
   ],
   "chunk": "pages-finance"
  },
@@ -34991,8 +35039,8 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/marketingCampaigns.service.js:87",
-   "backend/src/services/marketingCampaigns.service.js:438",
-   "frontend/src/pages/marketing/marketingModel.js:373"
+   "backend/src/services/marketingCampaigns.service.js:467",
+   "frontend/src/pages/marketing/marketingModel.js:389"
   ],
   "chunk": "pages-finance"
  },
@@ -35003,7 +35051,7 @@
    "backend/src/services/marketingCampaigns.service.js:104",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:58",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:299",
-   "frontend/src/pages/marketing/marketingModel.js:259"
+   "frontend/src/pages/marketing/marketingModel.js:272"
   ],
   "chunk": "pages-finance"
  },
@@ -35012,7 +35060,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/marketingCampaigns.service.js:113",
-   "frontend/src/pages/marketing/marketingModel.js:369"
+   "frontend/src/pages/marketing/marketingModel.js:385"
   ],
   "chunk": "pages-finance"
  },
@@ -35066,7 +35114,7 @@
   "text": "Tanpa area",
   "kind": "exact",
   "sources": [
-   "backend/src/services/marketingInsights.service.js:237",
+   "backend/src/services/marketingInsights.service.js:254",
    "frontend/src/pages/marketing/marketingModel.js:19"
   ],
   "chunk": "backend-services-3"
@@ -35104,7 +35152,8 @@
   "sources": [
    "frontend/src/pages/advanced/flow/MarginEstimate.jsx:47",
    "frontend/src/pages/marketing/MarketingInsights.jsx:55",
-   "frontend/src/pages/marketing/marketingModel.js:309"
+   "frontend/src/pages/marketing/marketingModel.js:323",
+   "frontend/src/pages/marketing/marketingModel.js:325"
   ],
   "chunk": "pages-finance"
  },
@@ -35284,7 +35333,7 @@
   "sources": [
    "frontend/src/pages/finance/FinancePayables.jsx:34",
    "frontend/src/pages/finance/FinanceReceivables.jsx:152",
-   "frontend/src/pages/retail/RetailCommerce.jsx:100"
+   "frontend/src/pages/retail/RetailCommerce.jsx:102"
   ],
   "chunk": "pages-finance"
  },
@@ -36679,7 +36728,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:1221",
-   "frontend/src/pages/retail/RetailCommerce.jsx:193"
+   "frontend/src/pages/retail/RetailCommerce.jsx:195"
   ],
   "chunk": "pages-finance"
  },
@@ -36688,8 +36737,8 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:1221",
-   "frontend/src/pages/retail/RetailCommerce.jsx:216",
-   "frontend/src/pages/retail/RetailCommerce.jsx:217"
+   "frontend/src/pages/retail/RetailCommerce.jsx:218",
+   "frontend/src/pages/retail/RetailCommerce.jsx:219"
   ],
   "chunk": "pages-finance"
  },
@@ -36698,7 +36747,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:1221",
-   "frontend/src/pages/retail/RetailCommerce.jsx:225"
+   "frontend/src/pages/retail/RetailCommerce.jsx:227"
   ],
   "chunk": "pages-finance"
  },
@@ -36707,8 +36756,8 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:1221",
-   "frontend/src/pages/retail/RetailCommerce.jsx:268",
-   "frontend/src/pages/retail/RetailCommerce.jsx:284"
+   "frontend/src/pages/retail/RetailCommerce.jsx:270",
+   "frontend/src/pages/retail/RetailCommerce.jsx:286"
   ],
   "chunk": "pages-finance"
  },
@@ -36740,7 +36789,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/management/DivisionDashboard.jsx:125",
-   "frontend/src/pages/retail/RetailCommerce.jsx:242"
+   "frontend/src/pages/retail/RetailCommerce.jsx:244"
   ],
   "chunk": "pages-finance"
  },
@@ -36750,8 +36799,8 @@
   "sources": [
    "frontend/src/pages/management/DivisionDashboard.jsx:132",
    "frontend/src/pages/management/DivisionDashboard.jsx:133",
-   "frontend/src/pages/retail/RetailCommerce.jsx:247",
-   "frontend/src/pages/retail/RetailCommerce.jsx:248"
+   "frontend/src/pages/retail/RetailCommerce.jsx:249",
+   "frontend/src/pages/retail/RetailCommerce.jsx:250"
   ],
   "chunk": "pages-finance"
  },
@@ -36799,7 +36848,7 @@
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:60",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:170",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:309",
-   "frontend/src/pages/marketing/marketingModel.js:275"
+   "frontend/src/pages/marketing/marketingModel.js:288"
   ],
   "chunk": "pages-finance"
  },
@@ -36816,7 +36865,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:83",
-   "frontend/src/pages/marketing/marketingModel.js:276"
+   "frontend/src/pages/marketing/marketingModel.js:289"
   ],
   "chunk": "pages-finance"
  },
@@ -36845,7 +36894,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:115",
-   "frontend/src/pages/marketing/marketingModel.js:307"
+   "frontend/src/pages/marketing/marketingModel.js:320"
   ],
   "chunk": "pages-finance"
  },
@@ -36906,7 +36955,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:168",
-   "frontend/src/pages/marketing/marketingModel.js:275"
+   "frontend/src/pages/marketing/marketingModel.js:288"
   ],
   "chunk": "pages-finance"
  },
@@ -37420,18 +37469,26 @@
   "chunk": "pages-finance"
  },
  {
-  "text": "Jumlah terjual dijumlahkan apa adanya dari satuan faktur (PCS, Box, Pack …) karena rasio satuan Accurate belum tersedia.",
+  "text": "Jumlah terjual ditulis per satuan; satuan berbeda tidak dijumlahkan. Sebagian baris memakai satuan faktur karena rasio satuan Accurate belum tersedia.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:225"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:226"
   ],
-  "chunk": "pages-finance"
+  "chunk": "additions"
+ },
+ {
+  "text": "Jumlah terjual ditulis per satuan dasar Accurate; satuan berbeda tidak dijumlahkan.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/marketing/MarketingInsights.jsx:227"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Omzet per channel muncul setelah batch Accurate pertama disetujui divisi Sales.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:228"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:230"
   ],
   "chunk": "pages-finance"
  },
@@ -37443,7 +37500,7 @@
    "data.monthLabel"
   ],
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:235"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:237"
   ],
   "chunk": "pages-finance"
  },
@@ -37451,7 +37508,7 @@
   "text": "Cari produk atau kode",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:238"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:240"
   ],
   "chunk": "pages-finance"
  },
@@ -37459,7 +37516,7 @@
   "text": "Belum ada produk terjual bulan ini",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:240"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:242"
   ],
   "chunk": "pages-finance"
  },
@@ -37467,7 +37524,7 @@
   "text": "Naik paling tinggi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:243"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:245"
   ],
   "chunk": "pages-finance"
  },
@@ -37479,7 +37536,7 @@
    "data.prevMonthLabel"
   ],
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:243"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:245"
   ],
   "chunk": "pages-finance"
  },
@@ -37487,7 +37544,7 @@
   "text": "Produk dengan kenaikan omzet terbesar",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:244"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:246"
   ],
   "chunk": "pages-finance"
  },
@@ -37495,7 +37552,7 @@
   "text": "Tidak ada produk yang naik",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:244"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:246"
   ],
   "chunk": "pages-finance"
  },
@@ -37503,7 +37560,7 @@
   "text": "Turun paling dalam",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:246"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:248"
   ],
   "chunk": "pages-finance"
  },
@@ -37515,7 +37572,7 @@
    "data.prevMonthLabel"
   ],
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:246"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:248"
   ],
   "chunk": "pages-finance"
  },
@@ -37523,7 +37580,7 @@
   "text": "Produk dengan penurunan omzet terbesar",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:247"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:249"
   ],
   "chunk": "pages-finance"
  },
@@ -37531,23 +37588,23 @@
   "text": "Tidak ada produk yang turun",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:247"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:249"
   ],
   "chunk": "pages-finance"
  },
  {
-  "text": "Omzet produk = porsi DPP tiap baris faktur (voucher dan diskon faktur dibagi rata), sebelum retur.",
+  "text": "Omzet produk = porsi DPP tiap baris faktur: voucher dan diskon faktur dialokasikan proporsional terhadap nilai baris, sebelum retur.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:250"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:252"
   ],
-  "chunk": "pages-finance"
+  "chunk": "additions"
  },
  {
   "text": "Produk terlaris muncul setelah batch Accurate pertama disetujui divisi Sales.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:252"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:254"
   ],
   "chunk": "pages-finance"
  },
@@ -37555,7 +37612,7 @@
   "text": "Pelanggan baru (NOO) per channel",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:259"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:261"
   ],
   "chunk": "pages-finance"
  },
@@ -37563,7 +37620,7 @@
   "text": "Belum ada pelanggan baru dalam 12 bulan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:264"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:266"
   ],
   "chunk": "pages-finance"
  },
@@ -37571,7 +37628,7 @@
   "text": "Leads per area",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:268"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:270"
   ],
   "chunk": "pages-finance"
  },
@@ -37579,7 +37636,7 @@
   "text": "Cari area",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:271"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:273"
   ],
   "chunk": "pages-finance"
  },
@@ -37587,7 +37644,7 @@
   "text": "Belum ada leads",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:273"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:275"
   ],
   "chunk": "pages-finance"
  },
@@ -37600,7 +37657,7 @@
    "formatNumber(data.leads.newThisMonth)"
   ],
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:276"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:278"
   ],
   "chunk": "pages-finance"
  },
@@ -37690,6 +37747,19 @@
   "chunk": "pages-finance"
  },
  {
+  "text": "$1 (tanpa satuan)",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?) \\(tanpa satuan\\)$",
+  "vars": [
+   "formatQty(u.qty)"
+  ],
+  "sources": [
+   "frontend/src/pages/marketing/marketingModel.js:152",
+   "frontend/src/pages/marketing/marketingModel.js:325"
+  ],
+  "chunk": "additions"
+ },
+ {
   "text": "$1 dari bulan lalu",
   "kind": "pattern",
   "regex": "^([\\s\\S]*?) dari bulan lalu$",
@@ -37697,7 +37767,7 @@
    "pctText(p.changePct)"
   ],
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:206"
+   "frontend/src/pages/marketing/marketingModel.js:219"
   ],
   "chunk": "pages-finance"
  },
@@ -37705,7 +37775,7 @@
   "text": "Baru terjual bulan ini",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:206"
+   "frontend/src/pages/marketing/marketingModel.js:219"
   ],
   "chunk": "pages-finance"
  },
@@ -37713,7 +37783,7 @@
   "text": "Lewat tanggal selesai",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:228"
+   "frontend/src/pages/marketing/marketingModel.js:241"
   ],
   "chunk": "pages-finance"
  },
@@ -37725,7 +37795,7 @@
    "formatNumber(n)"
   ],
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:266"
+   "frontend/src/pages/marketing/marketingModel.js:279"
   ],
   "chunk": "pages-finance"
  },
@@ -37738,7 +37808,7 @@
    "formatNumber(row.days)"
   ],
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:273"
+   "frontend/src/pages/marketing/marketingModel.js:286"
   ],
   "chunk": "pages-finance"
  },
@@ -37746,7 +37816,7 @@
   "text": "Catatan / hasil",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:277"
+   "frontend/src/pages/marketing/marketingModel.js:290"
   ],
   "chunk": "pages-finance"
  },
@@ -37754,7 +37824,7 @@
   "text": "Kinerja dihitung setelah kampanye berjalan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:284"
+   "frontend/src/pages/marketing/marketingModel.js:297"
   ],
   "chunk": "pages-finance"
  },
@@ -37762,7 +37832,7 @@
   "text": "Kampanye dibatalkan, kinerjanya tidak dihitung.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:285"
+   "frontend/src/pages/marketing/marketingModel.js:298"
   ],
   "chunk": "pages-finance"
  },
@@ -37770,7 +37840,7 @@
   "text": "Angka penjualan menunggu batch Accurate pertama yang disetujui divisi Sales.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:287"
+   "frontend/src/pages/marketing/marketingModel.js:300"
   ],
   "chunk": "pages-finance"
  },
@@ -37782,7 +37852,7 @@
    "formatDate(perf.dataThrough)"
   ],
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:296"
+   "frontend/src/pages/marketing/marketingModel.js:309"
   ],
   "chunk": "pages-finance"
  },
@@ -37790,7 +37860,7 @@
   "text": "Belum ada data Accurate untuk periode kampanye.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:297"
+   "frontend/src/pages/marketing/marketingModel.js:310"
   ],
   "chunk": "pages-finance"
  },
@@ -37798,7 +37868,7 @@
   "text": "Kinerja belum bisa dihitung.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:299"
+   "frontend/src/pages/marketing/marketingModel.js:312"
   ],
   "chunk": "pages-finance"
  },
@@ -37810,7 +37880,7 @@
    "formatNumber(perf.window.days)"
   ],
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:305"
+   "frontend/src/pages/marketing/marketingModel.js:318"
   ],
   "chunk": "pages-finance"
  },
@@ -37818,7 +37888,7 @@
   "text": "Kenaikan omzet",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:308"
+   "frontend/src/pages/marketing/marketingModel.js:321"
   ],
   "chunk": "pages-finance"
  },
@@ -37826,7 +37896,7 @@
   "text": "Tidak ada omzet di periode pembanding",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:308"
+   "frontend/src/pages/marketing/marketingModel.js:321"
   ],
   "chunk": "pages-finance"
  },
@@ -37834,42 +37904,36 @@
   "text": "Dibanding periode yang sama panjang sebelumnya",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:308"
+   "frontend/src/pages/marketing/marketingModel.js:321"
   ],
   "chunk": "pages-finance"
+ },
+ {
+  "text": "Jumlah terjual ($1)",
+  "kind": "pattern",
+  "regex": "^Jumlah terjual \\(([\\s\\S]*?)\\)$",
+  "vars": [
+   "perf.qtyUnit"
+  ],
+  "sources": [
+   "frontend/src/pages/marketing/marketingModel.js:323"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Jumlah gabungan tidak dapat dihitung (satuan berbeda): $1",
+  "kind": "pattern",
+  "regex": "^Jumlah gabungan tidak dapat dihitung \\(satuan berbeda\\): ([\\s\\S]*?)$",
+  "vars": [
+   "perf.qtyByUnit.map((u) => (u.unit ? formatQty(u.qty, u.unit) : `${formatQty(u.qt"
+  ],
+  "sources": [
+   "frontend/src/pages/marketing/marketingModel.js:325"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Pelanggan baru di channel ini",
-  "kind": "exact",
-  "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:310"
-  ],
-  "chunk": "pages-finance"
- },
- {
-  "text": "Diukur $1$2, dibanding $3. Omzet = porsi DPP faktur, sebelum retur.",
-  "kind": "pattern",
-  "regex": "^Diukur ([\\s\\S]*?)([\\s\\S]*?), dibanding ([\\s\\S]*?)\\. Omzet = porsi DPP faktur, sebelum retur\\.$",
-  "vars": [
-   "span",
-   "perf.window.partial ? ' (sejauh ini)' : ''",
-   "base"
-  ],
-  "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:319"
-  ],
-  "chunk": "pages-finance"
- },
- {
-  "text": "(sejauh ini)",
-  "kind": "exact",
-  "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:319"
-  ],
-  "chunk": "pages-finance"
- },
- {
-  "text": "(sebelum)",
   "kind": "exact",
   "sources": [
    "frontend/src/pages/marketing/marketingModel.js:326"
@@ -37877,10 +37941,53 @@
   "chunk": "pages-finance"
  },
  {
+  "text": "$1: $2 · belum tentu membeli produk target",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?): ([\\s\\S]*?) · belum tentu membeli produk target$",
+  "vars": [
+   "before",
+   "formatNumber(perf.baselineNoo)"
+  ],
+  "sources": [
+   "frontend/src/pages/marketing/marketingModel.js:326"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Diukur $1$2, dibanding $3. Omzet = porsi DPP faktur, sebelum retur. Ini perbandingan periode, bukan efek kausal atau ROI.",
+  "kind": "pattern",
+  "regex": "^Diukur ([\\s\\S]*?)([\\s\\S]*?), dibanding ([\\s\\S]*?)\\. Omzet = porsi DPP faktur, sebelum retur\\. Ini perbandingan periode, bukan efek kausal atau ROI\\.$",
+  "vars": [
+   "span",
+   "perf.window.partial ? ' (sejauh ini)' : ''",
+   "base"
+  ],
+  "sources": [
+   "frontend/src/pages/marketing/marketingModel.js:335"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "(sejauh ini)",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/marketing/marketingModel.js:335"
+  ],
+  "chunk": "pages-finance"
+ },
+ {
+  "text": "(sebelum)",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/marketing/marketingModel.js:342"
+  ],
+  "chunk": "pages-finance"
+ },
+ {
   "text": "per minggu",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:328"
+   "frontend/src/pages/marketing/marketingModel.js:344"
   ],
   "chunk": "pages-finance"
  },
@@ -37888,7 +37995,7 @@
   "text": "per hari",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:328"
+   "frontend/src/pages/marketing/marketingModel.js:344"
   ],
   "chunk": "pages-finance"
  },
@@ -37896,7 +38003,7 @@
   "text": "Isi tanggal mulai",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:370"
+   "frontend/src/pages/marketing/marketingModel.js:386"
   ],
   "chunk": "pages-finance"
  },
@@ -37904,7 +38011,7 @@
   "text": "Isi tanggal selesai",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:371"
+   "frontend/src/pages/marketing/marketingModel.js:387"
   ],
   "chunk": "pages-finance"
  },
@@ -37912,7 +38019,7 @@
   "text": "Anggaran berupa angka 0 atau lebih",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:376"
+   "frontend/src/pages/marketing/marketingModel.js:392"
   ],
   "chunk": "pages-finance"
  },
@@ -37920,7 +38027,7 @@
   "text": "Catatan paling panjang 1.000 karakter",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/marketingModel.js:380"
+   "frontend/src/pages/marketing/marketingModel.js:396"
   ],
   "chunk": "pages-finance"
  },
@@ -37946,8 +38053,7 @@
   "text": "Porsi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:42",
-   "frontend/src/pages/retail/RetailCommerce.jsx:66"
+   "frontend/src/pages/retail/RetailCommerce.jsx:42"
   ],
   "chunk": "pages-finance"
  },
@@ -37986,18 +38092,34 @@
   "chunk": "pages-finance"
  },
  {
-  "text": "Bulan sebelumnya",
+  "text": "Nilai penjualan produk (DPP sebelum retur)",
   "kind": "exact",
   "sources": [
    "frontend/src/pages/retail/RetailCommerce.jsx:67"
   ],
-  "chunk": "pages-finance"
+  "chunk": "additions"
+ },
+ {
+  "text": "Porsi dari total baris faktur",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:68"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Bulan sebelumnya (DPP sebelum retur)",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:69"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Umur (hari)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:84"
+   "frontend/src/pages/retail/RetailCommerce.jsx:86"
   ],
   "chunk": "pages-finance"
  },
@@ -38005,7 +38127,7 @@
   "text": "Belum cair",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:101"
+   "frontend/src/pages/retail/RetailCommerce.jsx:103"
   ],
   "chunk": "pages-finance"
  },
@@ -38013,7 +38135,7 @@
   "text": "Produk terlaris belum bisa dimuat.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:150"
+   "frontend/src/pages/retail/RetailCommerce.jsx:152"
   ],
   "chunk": "pages-finance"
  },
@@ -38021,7 +38143,7 @@
   "text": "Kinerja penjualan marketplace dari data Accurate yang sudah disetujui. Omzet dihitung sebelum PPN dan bersih retur.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:157"
+   "frontend/src/pages/retail/RetailCommerce.jsx:159"
   ],
   "chunk": "pages-finance"
  },
@@ -38029,7 +38151,7 @@
   "text": "Menyiapkan kinerja marketplace",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:160"
+   "frontend/src/pages/retail/RetailCommerce.jsx:162"
   ],
   "chunk": "pages-finance"
  },
@@ -38037,7 +38159,7 @@
   "text": "Data marketplace belum bisa dimuat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:164"
+   "frontend/src/pages/retail/RetailCommerce.jsx:166"
   ],
   "chunk": "pages-finance"
  },
@@ -38050,7 +38172,7 @@
    "formatDateTime(overview.generatedAt)"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:190"
+   "frontend/src/pages/retail/RetailCommerce.jsx:192"
   ],
   "chunk": "pages-finance"
  },
@@ -38062,7 +38184,7 @@
    "overview.latestMonth.label"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:208"
+   "frontend/src/pages/retail/RetailCommerce.jsx:210"
   ],
   "chunk": "pages-finance"
  },
@@ -38075,7 +38197,7 @@
    "compactMoney(overview.windowRevenue)"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:216"
+   "frontend/src/pages/retail/RetailCommerce.jsx:218"
   ],
   "chunk": "pages-finance"
  },
@@ -38083,7 +38205,7 @@
   "text": "Belum ada omzet di periode ini",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:217"
+   "frontend/src/pages/retail/RetailCommerce.jsx:219"
   ],
   "chunk": "pages-finance"
  },
@@ -38091,7 +38213,7 @@
   "text": "Piutang marketplace",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:219"
+   "frontend/src/pages/retail/RetailCommerce.jsx:221"
   ],
   "chunk": "pages-finance"
  },
@@ -38103,7 +38225,7 @@
    "compactMoney(overview.kpis.receivable.amount)"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:219"
+   "frontend/src/pages/retail/RetailCommerce.jsx:221"
   ],
   "chunk": "pages-finance"
  },
@@ -38111,7 +38233,7 @@
   "text": "Tidak ada faktur yang belum cair",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:219"
+   "frontend/src/pages/retail/RetailCommerce.jsx:221"
   ],
   "chunk": "pages-finance"
  },
@@ -38119,7 +38241,7 @@
   "text": "Piutang marketplace per platform",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:220"
+   "frontend/src/pages/retail/RetailCommerce.jsx:222"
   ],
   "chunk": "pages-finance"
  },
@@ -38127,7 +38249,7 @@
   "text": "Semua sudah cair",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:220"
+   "frontend/src/pages/retail/RetailCommerce.jsx:222"
   ],
   "chunk": "pages-finance"
  },
@@ -38135,7 +38257,7 @@
   "text": "Belum ada data platform",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:231"
+   "frontend/src/pages/retail/RetailCommerce.jsx:233"
   ],
   "chunk": "pages-finance"
  },
@@ -38143,7 +38265,7 @@
   "text": "Belum ada penjualan marketplace",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:235"
+   "frontend/src/pages/retail/RetailCommerce.jsx:237"
   ],
   "chunk": "pages-finance"
  },
@@ -38155,7 +38277,7 @@
    "range"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:235"
+   "frontend/src/pages/retail/RetailCommerce.jsx:237"
   ],
   "chunk": "pages-finance"
  },
@@ -38167,7 +38289,7 @@
    "range"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:238"
+   "frontend/src/pages/retail/RetailCommerce.jsx:240"
   ],
   "chunk": "pages-finance"
  },
@@ -38175,7 +38297,7 @@
   "text": "Grafik capaian bulanan Retail Commerce",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:240"
+   "frontend/src/pages/retail/RetailCommerce.jsx:242"
   ],
   "chunk": "pages-finance"
  },
@@ -38183,7 +38305,7 @@
   "text": "Grafik bergerak ini berjalan setelah minimal dua platform atau ukuran punya angka.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:242"
+   "frontend/src/pages/retail/RetailCommerce.jsx:244"
   ],
   "chunk": "pages-finance"
  },
@@ -38195,14 +38317,14 @@
    "products.month.label"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:268"
+   "frontend/src/pages/retail/RetailCommerce.jsx:270"
   ],
   "chunk": "pages-finance"
  },
  {
-  "text": "$1 produk terjual senilai $2, dibanding $3.$4",
+  "text": "$1 produk terjual, total baris faktur $2 (DPP sebelum retur), dibanding $3. Angka ini sebelum retur, jadi bisa lebih besar dari omzet bersih retur di atas; retur tidak dialokasikan ke produk.$4",
   "kind": "pattern",
-  "regex": "^([\\s\\S]*?) produk terjual senilai ([\\s\\S]*?), dibanding ([\\s\\S]*?)\\.([\\s\\S]*?)$",
+  "regex": "^([\\s\\S]*?) produk terjual, total baris faktur ([\\s\\S]*?) \\(DPP sebelum retur\\), dibanding ([\\s\\S]*?)\\. Angka ini sebelum retur, jadi bisa lebih besar dari omzet bersih retur di atas; retur tidak dialokasikan ke produk\\.([\\s\\S]*?)$",
   "vars": [
    "formatNumber(products.products)",
    "formatMetric(products.monthRevenue, 'rupiah', { compact: true })",
@@ -38210,31 +38332,31 @@
    "products.fallback ? ' Bulan ini belum ada faktur, jadi yang tampil bulan terakhi"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:270"
+   "frontend/src/pages/retail/RetailCommerce.jsx:272"
   ],
-  "chunk": "pages-finance"
+  "chunk": "additions"
  },
  {
   "text": "Bulan ini belum ada faktur, jadi yang tampil bulan terakhir yang sudah ditagih.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:270"
+   "frontend/src/pages/retail/RetailCommerce.jsx:272"
   ],
   "chunk": "pages-finance"
  },
  {
-  "text": "Nilai per baris faktur Accurate, dibanding bulan sebelumnya.",
+  "text": "Nilai per baris faktur Accurate (DPP sebelum retur), dibanding bulan sebelumnya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:271"
+   "frontend/src/pages/retail/RetailCommerce.jsx:273"
   ],
-  "chunk": "pages-finance"
+  "chunk": "additions"
  },
  {
   "text": "Belum ada produk terjual di bulan ini",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:296"
+   "frontend/src/pages/retail/RetailCommerce.jsx:298"
   ],
   "chunk": "pages-finance"
  },
@@ -38246,7 +38368,7 @@
    "shipments?.total ? ` (${formatNumber(shipments.total)})` : ''"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:301"
+   "frontend/src/pages/retail/RetailCommerce.jsx:303"
   ],
   "chunk": "pages-finance"
  },
@@ -38254,7 +38376,7 @@
   "text": "Cari nomor SO",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:305"
+   "frontend/src/pages/retail/RetailCommerce.jsx:307"
   ],
   "chunk": "pages-finance"
  },
@@ -38262,7 +38384,7 @@
   "text": "Semua SO marketplace sudah terkirim",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:307"
+   "frontend/src/pages/retail/RetailCommerce.jsx:309"
   ],
   "chunk": "pages-finance"
  },
@@ -38275,7 +38397,7 @@
    "formatNumber(shipments.total)"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:310"
+   "frontend/src/pages/retail/RetailCommerce.jsx:312"
   ],
   "chunk": "pages-finance"
  },
@@ -38283,7 +38405,7 @@
   "text": "Faktur marketplace belum cair",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:314"
+   "frontend/src/pages/retail/RetailCommerce.jsx:316"
   ],
   "chunk": "pages-finance"
  },
@@ -38291,7 +38413,7 @@
   "text": "Cari nomor faktur",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:318"
+   "frontend/src/pages/retail/RetailCommerce.jsx:320"
   ],
   "chunk": "pages-finance"
  },
@@ -38299,7 +38421,7 @@
   "text": "Tidak ada faktur marketplace yang belum cair",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:320"
+   "frontend/src/pages/retail/RetailCommerce.jsx:322"
   ],
   "chunk": "pages-finance"
  },
@@ -38312,7 +38434,7 @@
    "formatNumber(receivables.total)"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:323"
+   "frontend/src/pages/retail/RetailCommerce.jsx:325"
   ],
   "chunk": "pages-finance"
  },
@@ -52411,12 +52533,12 @@
   "chunk": "pages-management-1"
  },
  {
-  "text": "Perkiraan margin (harga PO). Omzet = baris faktur disesuaikan ke DPP faktur (diskon dan biaya di kepala faktur dibagi rata ke barang), tanpa faktur uang muka. Perkiraan HPP = jumlah dalam satuan dasar × harga beli per satuan dasar dari PO terakhir sebelum tanggal jual (sebelum PPN, setelah diskon PO, dari semua pemasok); bila belum ada PO sebelumnya, harga PO sesudahnya (ditandai). Margin % hanya dari omzet yang punya harga beli dan satuan yang diketahui; kode barang lama dan baru tidak dicocokkan.",
+  "text": "Perkiraan margin (harga PO). Omzet = baris faktur disesuaikan ke DPP faktur (diskon dan biaya di kepala faktur dialokasikan proporsional terhadap nilai baris), sebelum retur, tanpa faktur uang muka. Perkiraan HPP = jumlah dalam satuan dasar × harga beli per satuan dasar dari PO terakhir sebelum tanggal jual (sebelum PPN, setelah diskon PO, dari semua pemasok); bila belum ada PO sebelumnya, harga PO sesudahnya (ditandai). Margin % hanya dari omzet yang punya harga beli dan satuan yang diketahui; kode barang lama dan baru tidak dicocokkan.",
   "kind": "exact",
   "sources": [
    "frontend/src/pages/advanced/flow/MarginEstimate.jsx:124"
   ],
-  "chunk": "pages-management-1"
+  "chunk": "additions"
  },
  {
   "text": "Terakhir terjual",
@@ -76461,9 +76583,9 @@
   "kind": "exact",
   "sources": [
    "backend/src/routes/sales.routes.js:56",
-   "backend/src/services/ai/agent/tools/sales.js:535",
+   "backend/src/services/ai/agent/tools/sales.js:541",
    "backend/src/services/salesTargets.service.js:29",
-   "backend/src/services/salesTargets.service.js:111"
+   "backend/src/services/salesTargets.service.js:113"
   ],
   "chunk": "backend-services-1"
  },
@@ -78056,10 +78178,27 @@
   "chunk": "additions"
  },
  {
+  "text": "tanpa satuan",
+  "kind": "exact",
+  "sources": [
+   "backend/src/services/ai/agent/tools/marketing.js:95",
+   "backend/src/services/ai/agent/tools/marketing.js:250"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Sebagian barang belum punya rasio satuan di Accurate, jadi jumlahnya memakai satuan faktur.",
+  "kind": "exact",
+  "sources": [
+   "backend/src/services/ai/agent/tools/marketing.js:102"
+  ],
+  "chunk": "additions"
+ },
+ {
   "text": "Membaca lead dan customer baru",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/marketing.js:108"
+   "backend/src/services/ai/agent/tools/marketing.js:111"
   ],
   "chunk": "additions"
  },
@@ -78067,7 +78206,7 @@
   "text": "Membaca daftar kampanye",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/marketing.js:171"
+   "backend/src/services/ai/agent/tools/marketing.js:174"
   ],
   "chunk": "additions"
  },
@@ -78075,7 +78214,7 @@
   "text": "Membaca hasil kampanye",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/marketing.js:205"
+   "backend/src/services/ai/agent/tools/marketing.js:208"
   ],
   "chunk": "additions"
  },
@@ -78168,6 +78307,18 @@
   "chunk": "additions"
  },
  {
+  "text": "$1 Nilai produk = DPP baris faktur sebelum retur (porsi dari total baris faktur), jadi bisa lebih besar dari omzet bersih retur; retur tidak dialokasikan ke produk.",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?) Nilai produk = DPP baris faktur sebelum retur \\(porsi dari total baris faktur\\), jadi bisa lebih besar dari omzet bersih retur; retur tidak dialokasikan ke produk\\.$",
+  "vars": [
+   "out.fallback ? `Bulan berjalan belum punya faktur (marketplace ditagih per bulan"
+  ],
+  "sources": [
+   "backend/src/services/ai/agent/tools/retailCommerce.js:140"
+  ],
+  "chunk": "additions"
+ },
+ {
   "text": "Membaca pengiriman marketplace yang tertunda",
   "kind": "exact",
   "sources": [
@@ -78208,10 +78359,30 @@
   "chunk": "additions"
  },
  {
+  "text": "data pembayaran belum tersedia",
+  "kind": "exact",
+  "sources": [
+   "backend/src/services/ai/agent/tools/sales.js:431"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "faktur lunas, SO baru ditagih sebagian$1",
+  "kind": "pattern",
+  "regex": "^faktur lunas, SO baru ditagih sebagian([\\s\\S]*?)$",
+  "vars": [
+   "r.invoiceCoverage != null ? ` (${Number(r.invoiceCoverage)}%)` : ''"
+  ],
+  "sources": [
+   "backend/src/services/ai/agent/tools/sales.js:432"
+  ],
+  "chunk": "additions"
+ },
+ {
   "text": "Membaca status sales order",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/sales.js:434"
+   "backend/src/services/ai/agent/tools/sales.js:440"
   ],
   "chunk": "additions"
  },
@@ -78219,7 +78390,7 @@
   "text": "Membaca omzet dan target Sales",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/sales.js:515"
+   "backend/src/services/ai/agent/tools/sales.js:521"
   ],
   "chunk": "additions"
  },
@@ -78227,7 +78398,7 @@
   "text": "Membaca piutang dan tagihan terlambat",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/sales.js:613"
+   "backend/src/services/ai/agent/tools/sales.js:619"
   ],
   "chunk": "additions"
  },
@@ -78235,7 +78406,7 @@
   "text": "bacaan Accurate tidak lengkap (tidak ada yang dinolkan)",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/sales.js:732",
+   "backend/src/services/ai/agent/tools/sales.js:738",
    "backend/src/services/salesAccurateBatches.service.js:286"
   ],
   "chunk": "backend-services-3"
@@ -78248,7 +78419,7 @@
    "checks.stock_sum.mismatched"
   ],
   "sources": [
-   "backend/src/services/ai/agent/tools/sales.js:733",
+   "backend/src/services/ai/agent/tools/sales.js:739",
    "backend/src/services/salesAccurateBatches.service.js:285"
   ],
   "chunk": "backend-services-3"
@@ -78261,7 +78432,7 @@
    "unread"
   ],
   "sources": [
-   "backend/src/services/ai/agent/tools/sales.js:735",
+   "backend/src/services/ai/agent/tools/sales.js:741",
    "backend/src/services/salesAccurateBatches.service.js:288"
   ],
   "chunk": "backend-services-3"
@@ -78270,7 +78441,7 @@
   "text": "Membaca batch Data Accurate",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/sales.js:750"
+   "backend/src/services/ai/agent/tools/sales.js:756"
   ],
   "chunk": "additions"
  },
@@ -83851,7 +84022,7 @@
   "sources": [
    "backend/src/services/gaOps.service.js:225",
    "backend/src/services/itRegisters.service.js:320",
-   "backend/src/services/marketingCampaigns.service.js:406"
+   "backend/src/services/marketingCampaigns.service.js:435"
   ],
   "chunk": "backend-services-2"
  },
@@ -87117,7 +87288,7 @@
   "text": "Divisi Marketing perusahaan ini belum ada",
   "kind": "exact",
   "sources": [
-   "backend/src/services/marketingCampaigns.service.js:370"
+   "backend/src/services/marketingCampaigns.service.js:399"
   ],
   "chunk": "backend-services-3"
  },
@@ -87129,7 +87300,7 @@
    "MAX_ITEMS"
   ],
   "sources": [
-   "backend/src/services/marketingCampaigns.service.js:377"
+   "backend/src/services/marketingCampaigns.service.js:406"
   ],
   "chunk": "backend-services-3"
  },
@@ -87141,7 +87312,7 @@
    "missing.join(', ')"
   ],
   "sources": [
-   "backend/src/services/marketingCampaigns.service.js:386"
+   "backend/src/services/marketingCampaigns.service.js:415"
   ],
   "chunk": "backend-services-3"
  },
@@ -87149,7 +87320,7 @@
   "text": "Isian kampanye tidak memenuhi aturan",
   "kind": "exact",
   "sources": [
-   "backend/src/services/marketingCampaigns.service.js:404"
+   "backend/src/services/marketingCampaigns.service.js:433"
   ],
   "chunk": "backend-services-3"
  },
@@ -87161,7 +87332,7 @@
    "STATUS_LABELS[current.status].toLowerCase()"
   ],
   "sources": [
-   "backend/src/services/marketingCampaigns.service.js:490"
+   "backend/src/services/marketingCampaigns.service.js:519"
   ],
   "chunk": "backend-services-3"
  },
@@ -88930,7 +89101,7 @@
   "text": "Target hanya untuk akun divisi Sales atau Retail Commerce.",
   "kind": "exact",
   "sources": [
-   "backend/src/services/salesTargets.service.js:121"
+   "backend/src/services/salesTargets.service.js:123"
   ],
   "chunk": "backend-services-3"
  },

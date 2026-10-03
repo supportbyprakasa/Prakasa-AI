@@ -91,13 +91,16 @@ const channelProduct = {
         revenue_dpp_bulan_lalu: at(c.revenue, cur - 1),
         revenue_dpp_12_bulan: c.totalRevenue,
         jumlah_terjual_bulan: at(c.qty, cur),
+        jumlah_terjual_bulan_per_satuan: (c.qtyByUnit || [])
+          .map((u) => ({ satuan: u.unit || 'tanpa satuan', jumlah: at(u.values, cur) }))
+          .filter((u) => u.jumlah !== null && u.jumlah !== undefined && Number(u.jumlah) !== 0),
       })),
       produk_terlaris: data.topProducts.slice(0, limit).map(product),
       produk_paling_naik: data.movers.rising.map(product),
       produk_paling_turun: data.movers.falling.map(product),
       catatan: `Revenue = DPP (sebelum PPN). Angka channel sudah dikurangi retur; angka produk adalah bagian DPP tiap baris faktur, sebelum retur. Faktur uang muka tidak dihitung.${
-        data.qtyMixedUnits ? ' Jumlah terjual per channel mencampur satuan (ada barang tanpa rasio satuan di Accurate).' : ''
-      } Channel marketplace ditagih satu faktur rekap per bulan, jadi bulan berjalan bisa masih 0.`,
+        data.qtyMixedUnits ? ' Sebagian barang belum punya rasio satuan di Accurate, jadi jumlahnya memakai satuan faktur.' : ''
+      } Jumlah terjual tidak dijumlahkan lintas satuan: jumlah_terjual_bulan kosong bila channel menjual dalam lebih dari satu satuan, lihat jumlah_terjual_bulan_per_satuan. Diskon faktur dialokasikan proporsional terhadap nilai baris. Channel marketplace ditagih satu faktur rekap per bulan, jadi bulan berjalan bisa masih 0.`,
     };
   },
 };
@@ -240,12 +243,15 @@ const campaignResult = {
           revenue_dpp: p.revenue,
           revenue_dpp_pembanding: p.baselineRevenue,
           kenaikan_revenue_persen: p.upliftPct,
+          // Quantities per unit; one total only when every line is in the same unit.
           jumlah_terjual: p.qty,
           jumlah_terjual_pembanding: p.baselineQty,
+          satuan_jumlah: p.qtyUnit || null,
+          jumlah_terjual_per_satuan: (p.qtyByUnit || []).map((u) => ({ satuan: u.unit || 'tanpa satuan', jumlah: u.qty, pembanding: u.baselineQty, kenaikan_persen: u.upliftPct })),
           kenaikan_jumlah_persen: p.qtyUpliftPct,
           customer_baru: p.noo,
           customer_baru_pembanding: p.baselineNoo,
-          catatan: 'Pembanding = jumlah hari yang sama tepat sebelum kampanye. Kenaikan kosong bila pembandingnya nol. Revenue = bagian DPP tiap baris faktur, sebelum PPN, tanpa faktur uang muka.',
+          catatan: 'Pembanding = jumlah hari yang sama tepat sebelum kampanye; ini perbandingan periode, bukan efek kausal, ROI, atau ROAS. Kenaikan kosong bila pembandingnya nol. Revenue = bagian DPP tiap baris faktur (diskon faktur dialokasikan proporsional terhadap nilai baris), sebelum PPN dan sebelum retur, tanpa faktur uang muka. Jumlah terjual tidak dijumlahkan lintas satuan: jumlah_terjual kosong bila satuannya berbeda, lihat jumlah_terjual_per_satuan. Pelanggan baru di channel belum tentu membeli produk target.',
         }
         : { terukur: false, catatan: PERFORMANCE_STATE[p.state] || 'Hasil belum bisa diukur.' },
     };

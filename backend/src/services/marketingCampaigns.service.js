@@ -166,12 +166,34 @@ const upliftPct = (current, baseline) => changePct(current, baseline);
  * never straddle the campaign's start.
  */
 function summarizeDays(rows, win) {
-  const byDay = new Map(rows.map((r) => [isoDate(r.d), { revenue: num(r.revenue), qty: num(r.qty) }]));
-  const totals = { revenue: 0, qty: 0, baselineRevenue: 0, baselineQty: 0 };
-  for (const [day, v] of byDay) {
-    if (day >= win.start && day <= win.end) { totals.revenue += v.revenue; totals.qty += v.qty; }
-    if (day >= win.baselineStart && day <= win.baselineEnd) { totals.baselineRevenue += v.revenue; totals.baselineQty += v.qty; }
+  // Rows come per day and unit: revenue adds up across units, quantities only
+  // within one unit (revision F08 — 1 Box + 5 PCS is never "6").
+  const byDay = new Map();
+  const units = new Map();
+  for (const r of rows) {
+    const day = isoDate(r.d);
+    const entry = byDay.get(day) || { revenue: 0 };
+    entry.revenue += num(r.revenue);
+    byDay.set(day, entry);
+    const name = String(r.unit || '').trim() || null;
+    const key = name ? name.toLowerCase() : '';
+    const u = units.get(key) || { unit: name, qty: 0, baselineQty: 0 };
+    if (day >= win.start && day <= win.end) u.qty += num(r.qty);
+    if (day >= win.baselineStart && day <= win.baselineEnd) u.baselineQty += num(r.qty);
+    units.set(key, u);
   }
+  const totals = { revenue: 0, baselineRevenue: 0 };
+  for (const [day, v] of byDay) {
+    if (day >= win.start && day <= win.end) totals.revenue += v.revenue;
+    if (day >= win.baselineStart && day <= win.baselineEnd) totals.baselineRevenue += v.revenue;
+  }
+  const qtyByUnit = [...units.values()]
+    .filter((u) => u.qty || u.baselineQty)
+    .map((u) => ({ unit: u.unit, qty: round2(u.qty), baselineQty: round2(u.baselineQty), upliftPct: upliftPct(u.qty, u.baselineQty) }));
+  // One total and one uplift only when every line, now and before, is in the
+  // same known unit; otherwise null with the reason.
+  const single = qtyByUnit.length === 1 && qtyByUnit[0].unit ? qtyByUnit[0] : null;
+  const qtyNote = single || !qtyByUnit.length ? null : qtyByUnit.some((u) => !u.unit) ? 'unit_unknown' : 'mixed_units';
   const step = win.days * 2 > DAILY_MAX_DAYS ? 7 : 1;
   const series = [];
   const blocks = (from, to, phase) => {
@@ -188,8 +210,11 @@ function summarizeDays(rows, win) {
   return {
     revenue: round2(totals.revenue),
     baselineRevenue: round2(totals.baselineRevenue),
-    qty: round2(totals.qty),
-    baselineQty: round2(totals.baselineQty),
+    qty: single ? single.qty : (qtyByUnit.length ? null : 0),
+    baselineQty: single ? single.baselineQty : (qtyByUnit.length ? null : 0),
+    qtyUnit: single ? single.unit : null,
+    qtyByUnit,
+    qtyNote,
     series,
     seriesStep: step === 7 ? 'week' : 'day',
   };
@@ -199,10 +224,10 @@ function summarizeDays(rows, win) {
 const PERFORMANCE_SQL = Object.freeze({
   dataThrough: `SELECT MAX(a.trans_date) AS d FROM accurate_records a
                  WHERE a.entity_id = ? AND a.record_type = 'sales_invoice' AND a.missing = 0`,
-  days: (channelSql, itemSql) => `SELECT l.trans_date AS d, SUM(l.revenue) AS revenue, SUM(l.qty) AS qty
+  days: (channelSql, itemSql) => `SELECT l.trans_date AS d, l.unit, SUM(l.revenue) AS revenue, SUM(l.qty) AS qty
                                      FROM mg_invoice_lines_accurate l
                                     WHERE l.entity_id = ? AND NOT l.is_dp AND l.trans_date BETWEEN ? AND ?${channelSql}${itemSql}
-                                    GROUP BY l.trans_date`,
+                                    GROUP BY l.trans_date, l.unit`,
   noo: (channelSql) => `SELECT SUM(c.noo_date >= ?) AS noo, SUM(c.noo_date < ?) AS baseline_noo
                           FROM sales_customers_accurate c
                          WHERE c.entity_id = ? AND c.deleted_at IS NULL AND c.noo_date BETWEEN ? AND ?${channelSql}`,
@@ -250,7 +275,11 @@ async function performance(db, entityId, campaign, { today = wibToday(), dataThr
     upliftPct: upliftPct(sum.revenue, sum.baselineRevenue),
     qty: sum.qty,
     baselineQty: sum.baselineQty,
-    qtyUpliftPct: upliftPct(sum.qty, sum.baselineQty),
+    qtyUnit: sum.qtyUnit,
+    qtyByUnit: sum.qtyByUnit,
+    qtyNote: sum.qtyNote,
+    // An uplift of quantities only on one comparable unit; never across units.
+    qtyUpliftPct: sum.qtyUnit ? upliftPct(sum.qty, sum.baselineQty) : null,
     noo,
     baselineNoo,
     series: sum.series,

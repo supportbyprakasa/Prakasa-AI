@@ -1,0 +1,19 @@
+{
+ "Nilai penjualan (DPP sebelum retur)": "",
+ "Cakupan data sedang dimuat.": "",
+ "Cakupan: seluruh perusahaan (entitas Anda), termasuk marketplace (Retail Commerce).": "",
+ "Cakupan: data Anda saja — pelanggan milik Anda. Nama sales Accurate Anda belum dipetakan, jadi faktur atas nama Anda belum terhitung. Bukan omzet perusahaan.": "",
+ "Nilai per produk = bagian tiap baris faktur Accurate dari DPP fakturnya (sebelum PPN; diskon dan biaya di faktur dialokasikan proporsional terhadap nilai baris), sebelum retur, tanpa faktur uang muka.": "",
+ "transaksi": "",
+ "Jumlah terjual ditulis per satuan; satuan berbeda tidak dijumlahkan. Sebagian baris memakai satuan faktur karena rasio satuan Accurate belum tersedia.": "",
+ "Jumlah terjual ditulis per satuan dasar Accurate; satuan berbeda tidak dijumlahkan.": "",
+ "Omzet produk = porsi DPP tiap baris faktur: voucher dan diskon faktur dialokasikan proporsional terhadap nilai baris, sebelum retur.": "",
+ "Nilai penjualan produk (DPP sebelum retur)": "",
+ "Porsi dari total baris faktur": "",
+ "Bulan sebelumnya (DPP sebelum retur)": "",
+ "Nilai per baris faktur Accurate (DPP sebelum retur), dibanding bulan sebelumnya.": "",
+ "Perkiraan margin (harga PO). Omzet = baris faktur disesuaikan ke DPP faktur (diskon dan biaya di kepala faktur dialokasikan proporsional terhadap nilai baris), sebelum retur, tanpa faktur uang muka. Perkiraan HPP = jumlah dalam satuan dasar × harga beli per satuan dasar dari PO terakhir sebelum tanggal jual (sebelum PPN, setelah diskon PO, dari semua pemasok); bila belum ada PO sebelumnya, harga PO sesudahnya (ditandai). Margin % hanya dari omzet yang punya harga beli dan satuan yang diketahui; kode barang lama dan baru tidak dicocokkan.": "",
+ "tanpa satuan": "",
+ "Sebagian barang belum punya rasio satuan di Accurate, jadi jumlahnya memakai satuan faktur.": "",
+ "data pembayaran belum tersedia": ""
+}

@@ -12,7 +12,7 @@ import StatCard from '../../components/StatCard';
 import DataGrid from '../../components/datagrid/DataGrid';
 import { useAuth } from '../../context/AuthContext';
 import {
-  apiError, daysAgoText, formatCount, formatRupiahShort, monthBars, soldQty, todayIso,
+  apiError, daysAgoText, formatCount, formatRupiahShort, monthBars, salesScopeText, soldQty, todayIso,
 } from './salesModel';
 import SalesScopeBanner, { AccurateHoldBanner, useTransactionsReliable } from './SalesScopeBanner';
 import SalesTodo from './SalesTodo';
@@ -151,7 +151,7 @@ export default function SalesPipeline() {
     <Page>
       <PageHeader
         title="Pipeline sales"
-        description="Otomatis dari kunjungan dan sales order; tidak ada kartu yang perlu digeser manual. Angka omzet mencakup seluruh perusahaan, termasuk marketplace (Retail Commerce)."
+        description={`Otomatis dari kunjungan dan sales order; tidak ada kartu yang perlu digeser manual. ${salesScopeText(ov?.scope)}`}
         actions={<Button variant="secondary" icon="refresh" onClick={() => { loadOverview(); loadStage(); }} disabled={state.loading}>Muat ulang</Button>}
       />
 
@@ -249,7 +249,7 @@ export default function SalesPipeline() {
               Omzet dihitung dari DPP (sebelum PPN), sama seperti laporan Penjualan per Pelanggan di Accurate; ongkir tidak termasuk.
               {' '}
               {ov.sales.unit === 'faktur'
-                ? 'Dari faktur Accurate yang sudah disetujui, menurut tanggal faktur, seluruh perusahaan termasuk marketplace (Retail Commerce; ditagih bulanan, satu faktur rekap per akhir bulan). Saldo awal Accurate (faktur 31 Des 2025 tanpa baris barang) bukan penjualan: tetap di piutang, tidak dihitung sebagai omzet maupun NOO. NOO = pelanggan Accurate (per nomor pelanggan) yang pertama kali difakturkan di bulan itu.'
+                ? `Dari faktur Accurate yang sudah disetujui, menurut tanggal faktur. ${salesScopeText(ov?.scope)} Marketplace (Retail Commerce) ditagih bulanan, satu faktur rekap per akhir bulan. Saldo awal Accurate (faktur 31 Des 2025 tanpa baris barang) bukan penjualan: tetap di piutang, tidak dihitung sebagai omzet maupun NOO. NOO = pelanggan Accurate (per nomor pelanggan) yang pertama kali difakturkan di bulan itu.`
                 : 'Tanggal transaksi mengikuti tanggal kirim (ETD), atau tanggal order bila belum ada. NOO = pelanggan yang order pertama kali di bulan itu.'}
             </p>
           </div>

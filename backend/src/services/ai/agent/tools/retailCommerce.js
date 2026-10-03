@@ -137,9 +137,9 @@ const produk = {
         terjual: (p.qtyByUnit || []).map((q) => `${q.qty} ${q.unit || ''}`.trim()),
         marketplace: p.platforms.map((x) => x.label),
       })),
-      catatan: out.fallback
+      catatan: `${out.fallback
         ? `Bulan berjalan belum punya faktur (marketplace ditagih per bulan), jadi yang ditampilkan bulan ${out.month.key}.`
-        : BILLED_MONTHLY,
+        : BILLED_MONTHLY} Nilai produk = DPP baris faktur sebelum retur (porsi dari total baris faktur), jadi bisa lebih besar dari omzet bersih retur; retur tidak dialokasikan ke produk.`,
     };
   },
 };

@@ -114,7 +114,7 @@ export default function SalesTargets() {
     setState((s) => ({ ...s, loading: true, error: '' }));
     try {
       const r = await api.get('/sales/targets', { params: { month } });
-      setState({ loading: false, error: '', rows: r.data.data?.rows || [] });
+      setState({ loading: false, error: '', rows: r.data.data?.rows || [], orderUnit: r.data.data?.orderUnit || null });
     } catch (err) {
       setState({ loading: false, error: apiError(err), rows: [] });
     }
@@ -150,7 +150,7 @@ export default function SalesTargets() {
             <div key={r.userId} className="sales-targets__row">
               <div className="pw-cell">
                 <span data-no-translate="" className="pw-cell__title">{r.name}</span>
-                <span className="pw-cell__meta">{r.linked === false ? 'Belum terhubung ke nama sales Accurate' : `${formatCount(r.orders)} sales order`}</span>
+                <span className="pw-cell__meta">{r.linked === false ? 'Belum terhubung ke nama sales Accurate' : `${formatCount(r.orders)} ${state.orderUnit || 'transaksi'}`}</span>
               </div>
               {r.linked === false ? (
                 <p className="pw-text-helper">Pencapaian belum bisa dihitung: akun ini belum dihubungkan ke nama sales Accurate atau pelanggan.</p>

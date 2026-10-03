@@ -91,5 +91,17 @@
  "Mata uang pembayaran ($1) berbeda dengan invoice ($2). Tidak ada konversi otomatis.": "The payment currency ($1) differs from the invoice ($2). There is no automatic conversion.",
  "Jumlah melebihi sisa tagihan invoice ($1 $2). Catat kelebihannya sebagai pembayaran tanpa invoice bila memang terjadi.": "The amount is more than the invoice's outstanding balance ($1 $2). Record the excess as a payment without an invoice if it really happened.",
  "Invoice berstatus $1 tidak dapat diverifikasi.": "An invoice with status $1 cannot be verified.",
- "Faktur lunas · SO ditagih $1%": "Invoices paid · order $1% billed"
+ "Faktur lunas · SO ditagih $1%": "Invoices paid · order $1% billed",
+ "Cakupan: data Anda saja — faktur dengan nama sales $1 dan pelanggan milik Anda. Bukan omzet perusahaan.": "Scope: your data only — invoices with salesperson name $1 and your own customers. Not company revenue.",
+ "Otomatis dari kunjungan dan sales order; tidak ada kartu yang perlu digeser manual. $1": "Built from visits and sales orders; no card needs to be moved by hand. $1",
+ "Dari faktur Accurate yang sudah disetujui, menurut tanggal faktur. $1 Marketplace (Retail Commerce) ditagih bulanan, satu faktur rekap per akhir bulan. Saldo awal Accurate (faktur 31 Des 2025 tanpa baris barang) bukan penjualan: tetap di piutang, tidak dihitung sebagai omzet maupun NOO. NOO = pelanggan Accurate (per nomor pelanggan) yang pertama kali difakturkan di bulan itu.": "From approved Accurate invoices, by invoice date. $1 Marketplace (Retail Commerce) is billed monthly, one summary invoice at month end. The Accurate opening balance (invoices of 31 Dec 2025 without item lines) is not a sale: it stays in receivables and counts as neither revenue nor NOO. NOO = Accurate customers (by customer number) first invoiced in that month.",
+ "$1 baris · $2 SKU": "$1 lines · $2 SKUs",
+ "$1 (tanpa satuan)": "$1 (no unit)",
+ "Jumlah terjual ($1)": "Quantity sold ($1)",
+ "Jumlah gabungan tidak dapat dihitung (satuan berbeda): $1": "No combined quantity (different units): $1",
+ "$1: $2 · belum tentu membeli produk target": "$1: $2 · not necessarily buying the target products",
+ "Diukur $1$2, dibanding $3. Omzet = porsi DPP faktur, sebelum retur. Ini perbandingan periode, bukan efek kausal atau ROI.": "Measured $1$2, against $3. Revenue = share of the invoice DPP, before returns. This compares periods; it is not a causal effect or ROI.",
+ "$1 produk terjual, total baris faktur $2 (DPP sebelum retur), dibanding $3. Angka ini sebelum retur, jadi bisa lebih besar dari omzet bersih retur di atas; retur tidak dialokasikan ke produk.$4": "$1 products sold, invoice lines totalling $2 (DPP before returns), against $3. This is before returns, so it can be higher than the net revenue above; returns are not allocated to products.$4",
+ "$1 Nilai produk = DPP baris faktur sebelum retur (porsi dari total baris faktur), jadi bisa lebih besar dari omzet bersih retur; retur tidak dialokasikan ke produk.": "$1 Product value = invoice-line DPP before returns (share of all invoice lines), so it can be higher than the net revenue; returns are not allocated to products.",
+ "faktur lunas, SO baru ditagih sebagian$1": "invoices paid, order only partly billed$1"
 }

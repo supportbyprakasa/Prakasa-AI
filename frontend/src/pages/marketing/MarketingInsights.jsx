@@ -14,7 +14,7 @@ import MotionChart from '../../components/charts/MotionChart';
 import BarList from '../../components/charts/BarList';
 import TrendChart from '../../components/charts/TrendChart';
 import DataGrid from '../../components/datagrid/DataGrid';
-import { formatDate, formatNumber, formatQty } from '../../components/format';
+import { formatDate, formatNumber } from '../../components/format';
 import { Mixed, Translate } from '../../i18n/NoTranslate';
 import {
   NO_AREA_LABEL, NO_CHANNEL, channelRows, channelShareItems, formatMonth, kpiCards, leadRows, monthOptions, motionSeries, moverItems, nooTable,
@@ -52,7 +52,7 @@ const CHANNEL_COLUMNS = [
   channelColumn,
   { key: 'revenue', header: 'Omzet (DPP)', type: 'money' },
   pctColumn('changePct', 'vs bulan lalu'),
-  { key: 'qty', header: 'Jumlah terjual', type: 'number', render: (r) => (r.qty === null ? '' : formatQty(r.qty)) },
+  { key: 'qtyText', header: 'Jumlah terjual', translateContext: 'quantity', nowrap: true },
   { key: 'noo', header: 'Pelanggan baru', type: 'number' },
   { key: 'revenue12', header: 'Omzet 12 bulan', type: 'money' },
 ];
@@ -221,9 +221,11 @@ export default function MarketingInsights() {
                 exportName={`marketing-channel-${data.month}`}
                 empty="Belum ada penjualan per channel"
               />
-              {data.qtyMixedUnits ? (
-                <p className="pw-text-helper">Jumlah terjual dijumlahkan apa adanya dari satuan faktur (PCS, Box, Pack …) karena rasio satuan Accurate belum tersedia.</p>
-              ) : null}
+              <p className="pw-text-helper">
+                {data.qtyMixedUnits
+                  ? 'Jumlah terjual ditulis per satuan; satuan berbeda tidak dijumlahkan. Sebagian baris memakai satuan faktur karena rasio satuan Accurate belum tersedia.'
+                  : 'Jumlah terjual ditulis per satuan dasar Accurate; satuan berbeda tidak dijumlahkan.'}
+              </p>
             </>
           ) : <EmptyState icon="storefront" title="Menunggu data Accurate" description="Omzet per channel muncul setelah batch Accurate pertama disetujui divisi Sales." />
         ) : null}
@@ -247,7 +249,7 @@ export default function MarketingInsights() {
                   {falling.length ? <BarList dataLabels items={falling} label="Produk dengan penurunan omzet terbesar" /> : <EmptyState compact icon="trending_down" title="Tidak ada produk yang turun" />}
                 </Card>
               </div>
-              <p className="pw-text-helper">Omzet produk = porsi DPP tiap baris faktur (voucher dan diskon faktur dibagi rata), sebelum retur.</p>
+              <p className="pw-text-helper">Omzet produk = porsi DPP tiap baris faktur: voucher dan diskon faktur dialokasikan proporsional terhadap nilai baris, sebelum retur.</p>
             </>
           ) : <EmptyState icon="inventory_2" title="Menunggu data Accurate" description="Produk terlaris muncul setelah batch Accurate pertama disetujui divisi Sales." />
         ) : null}

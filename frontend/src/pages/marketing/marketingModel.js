@@ -144,6 +144,17 @@ export function channelShareItems(channels = [], index) {
   }));
 }
 
+// "12 PCS + 3 Box" for the month at `index`; empty when nothing sold or unknown.
+export function channelQtyText(channel, index) {
+  const parts = (channel?.qtyByUnit || [])
+    .map((u) => ({ unit: u.unit, qty: u.values?.[index] }))
+    .filter((u) => u.qty !== null && u.qty !== undefined && Number(u.qty) !== 0)
+    .map((u) => (u.unit ? formatQty(u.qty, u.unit) : `${formatQty(u.qty)} (tanpa satuan)`));
+  if (parts.length) return parts.join(' + ');
+  const single = channel?.qty?.[index];
+  return single === null || single === undefined ? '' : formatQty(single);
+}
+
 /** Rows of the channel table for the month at `index`. */
 export function channelRows(channels = [], index) {
   return channels
@@ -157,6 +168,8 @@ export function channelRows(channels = [], index) {
         revenue,
         changePct: changePct(revenue, prev),
         qty: c.qty?.[index] ?? null,
+        // Per unit, never one sum across units (revision F08).
+        qtyText: channelQtyText(c, index),
         noo: c.noo?.[index] ?? null,
         revenue12: c.totalRevenue,
       };
@@ -306,8 +319,11 @@ export function perfFigures(perf) {
   return [
     { key: 'revenue', label: 'Omzet produk target', unit: 'rupiah', value: perf.revenue, note: `${before}: ${compactMoney(perf.baselineRevenue)}` },
     { key: 'uplift', label: 'Kenaikan omzet', unit: '%', value: perf.upliftPct, note: perf.upliftPct === null ? 'Tidak ada omzet di periode pembanding' : 'Dibanding periode yang sama panjang sebelumnya' },
-    { key: 'qty', label: 'Jumlah terjual', unit: 'item', value: perf.qty, note: `${before}: ${formatQty(perf.baselineQty)}${perf.qtyUpliftPct !== null ? ` (${pctText(perf.qtyUpliftPct)})` : ''}` },
-    { key: 'noo', label: 'Pelanggan baru di channel ini', unit: 'item', value: perf.noo, note: `${before}: ${formatNumber(perf.baselineNoo)}` },
+    perf.qtyUnit || !(perf.qtyByUnit || []).length
+      ? { key: 'qty', label: perf.qtyUnit ? `Jumlah terjual (${perf.qtyUnit})` : 'Jumlah terjual', unit: 'item', value: perf.qty, note: `${before}: ${formatQty(perf.baselineQty)}${perf.qtyUpliftPct !== null ? ` (${pctText(perf.qtyUpliftPct)})` : ''}` }
+      // Several units: no single number and no uplift — the quantity per unit instead.
+      : { key: 'qty', label: 'Jumlah terjual', unit: 'item', value: null, note: `Jumlah gabungan tidak dapat dihitung (satuan berbeda): ${perf.qtyByUnit.map((u) => (u.unit ? formatQty(u.qty, u.unit) : `${formatQty(u.qty)} (tanpa satuan)`)).join(' + ')}` },
+    { key: 'noo', label: 'Pelanggan baru di channel ini', unit: 'item', value: perf.noo, note: `${before}: ${formatNumber(perf.baselineNoo)} · belum tentu membeli produk target` },
   ];
 }
 
@@ -316,7 +332,7 @@ export function perfWindowText(perf) {
   if (!perf || perf.state !== 'ok') return '';
   const span = `${formatDate(perf.window.start)} – ${formatDate(perf.window.end)}`;
   const base = `${formatDate(perf.baseline.start)} – ${formatDate(perf.baseline.end)}`;
-  return `Diukur ${span}${perf.window.partial ? ' (sejauh ini)' : ''}, dibanding ${base}. Omzet = porsi DPP faktur, sebelum retur.`;
+  return `Diukur ${span}${perf.window.partial ? ' (sejauh ini)' : ''}, dibanding ${base}. Omzet = porsi DPP faktur, sebelum retur. Ini perbandingan periode, bukan efek kausal atau ROI.`;
 }
 
 /** TrendChart input for the performance series (per day or per week). */

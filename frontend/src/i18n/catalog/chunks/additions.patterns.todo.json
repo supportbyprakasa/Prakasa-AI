@@ -1,0 +1,142 @@
+[
+ {
+  "id": "Cakupan: data Anda saja — faktur dengan nama sales $1 dan pelanggan milik Anda. Bukan omzet perusahaan.",
+  "regex": "^Cakupan: data Anda saja — faktur dengan nama sales ([\\s\\S]*?) dan pelanggan milik Anda\\. Bukan omzet perusahaan\\.$",
+  "vars": [
+   "names.join(', ')"
+  ],
+  "sources": [
+   "frontend/src/pages/sales/salesModel.js:296"
+  ],
+  "en": ""
+ },
+ {
+  "id": "Otomatis dari kunjungan dan sales order; tidak ada kartu yang perlu digeser manual. $1",
+  "regex": "^Otomatis dari kunjungan dan sales order; tidak ada kartu yang perlu digeser manual\\. ([\\s\\S]*?)$",
+  "vars": [
+   "salesScopeText(ov?.scope)"
+  ],
+  "sources": [
+   "frontend/src/pages/sales/SalesPipeline.jsx:154"
+  ],
+  "en": ""
+ },
+ {
+  "id": "Dari faktur Accurate yang sudah disetujui, menurut tanggal faktur. $1 Marketplace (Retail Commerce) ditagih bulanan, satu faktur rekap per akhir bulan. Saldo awal Accurate (faktur 31 Des 2025 tanpa baris barang) bukan penjualan: tetap di piutang, tidak dihitung sebagai omzet maupun NOO. NOO = pelanggan Accurate (per nomor pelanggan) yang pertama kali difakturkan di bulan itu.",
+  "regex": "^Dari faktur Accurate yang sudah disetujui, menurut tanggal faktur\\. ([\\s\\S]*?) Marketplace \\(Retail Commerce\\) ditagih bulanan, satu faktur rekap per akhir bulan\\. Saldo awal Accurate \\(faktur 31 Des 2025 tanpa baris barang\\) bukan penjualan: tetap di piutang, tidak dihitung sebagai omzet maupun NOO\\. NOO = pelanggan Accurate \\(per nomor pelanggan\\) yang pertama kali difakturkan di bulan itu\\.$",
+  "vars": [
+   "salesScopeText(ov?.scope)"
+  ],
+  "sources": [
+   "frontend/src/pages/sales/SalesPipeline.jsx:252"
+  ],
+  "en": ""
+ },
+ {
+  "id": "$1 baris · $2 SKU",
+  "regex": "^([\\s\\S]*?) baris · ([\\s\\S]*?) SKU$",
+  "vars": [
+   "rows.length",
+   "skus.size"
+  ],
+  "sources": [
+   "frontend/src/pages/warehouse/warehouseMovementModel.js:221"
+  ],
+  "en": ""
+ },
+ {
+  "id": "$1 (tanpa satuan)",
+  "regex": "^([\\s\\S]*?) \\(tanpa satuan\\)$",
+  "vars": [
+   "formatQty(u.qty)"
+  ],
+  "sources": [
+   "frontend/src/pages/marketing/marketingModel.js:152",
+   "frontend/src/pages/marketing/marketingModel.js:325"
+  ],
+  "en": ""
+ },
+ {
+  "id": "Jumlah terjual ($1)",
+  "regex": "^Jumlah terjual \\(([\\s\\S]*?)\\)$",
+  "vars": [
+   "perf.qtyUnit"
+  ],
+  "sources": [
+   "frontend/src/pages/marketing/marketingModel.js:323"
+  ],
+  "en": ""
+ },
+ {
+  "id": "Jumlah gabungan tidak dapat dihitung (satuan berbeda): $1",
+  "regex": "^Jumlah gabungan tidak dapat dihitung \\(satuan berbeda\\): ([\\s\\S]*?)$",
+  "vars": [
+   "perf.qtyByUnit.map((u) => (u.unit ? formatQty(u.qty, u.unit) : `${formatQty(u.qt"
+  ],
+  "sources": [
+   "frontend/src/pages/marketing/marketingModel.js:325"
+  ],
+  "en": ""
+ },
+ {
+  "id": "$1: $2 · belum tentu membeli produk target",
+  "regex": "^([\\s\\S]*?): ([\\s\\S]*?) · belum tentu membeli produk target$",
+  "vars": [
+   "before",
+   "formatNumber(perf.baselineNoo)"
+  ],
+  "sources": [
+   "frontend/src/pages/marketing/marketingModel.js:326"
+  ],
+  "en": ""
+ },
+ {
+  "id": "Diukur $1$2, dibanding $3. Omzet = porsi DPP faktur, sebelum retur. Ini perbandingan periode, bukan efek kausal atau ROI.",
+  "regex": "^Diukur ([\\s\\S]*?)([\\s\\S]*?), dibanding ([\\s\\S]*?)\\. Omzet = porsi DPP faktur, sebelum retur\\. Ini perbandingan periode, bukan efek kausal atau ROI\\.$",
+  "vars": [
+   "span",
+   "perf.window.partial ? ' (sejauh ini)' : ''",
+   "base"
+  ],
+  "sources": [
+   "frontend/src/pages/marketing/marketingModel.js:335"
+  ],
+  "en": ""
+ },
+ {
+  "id": "$1 produk terjual, total baris faktur $2 (DPP sebelum retur), dibanding $3. Angka ini sebelum retur, jadi bisa lebih besar dari omzet bersih retur di atas; retur tidak dialokasikan ke produk.$4",
+  "regex": "^([\\s\\S]*?) produk terjual, total baris faktur ([\\s\\S]*?) \\(DPP sebelum retur\\), dibanding ([\\s\\S]*?)\\. Angka ini sebelum retur, jadi bisa lebih besar dari omzet bersih retur di atas; retur tidak dialokasikan ke produk\\.([\\s\\S]*?)$",
+  "vars": [
+   "formatNumber(products.products)",
+   "formatMetric(products.monthRevenue, 'rupiah', { compact: true })",
+   "products.prevMonth.label",
+   "products.fallback ? ' Bulan ini belum ada faktur, jadi yang tampil bulan terakhi"
+  ],
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:272"
+  ],
+  "en": ""
+ },
+ {
+  "id": "$1 Nilai produk = DPP baris faktur sebelum retur (porsi dari total baris faktur), jadi bisa lebih besar dari omzet bersih retur; retur tidak dialokasikan ke produk.",
+  "regex": "^([\\s\\S]*?) Nilai produk = DPP baris faktur sebelum retur \\(porsi dari total baris faktur\\), jadi bisa lebih besar dari omzet bersih retur; retur tidak dialokasikan ke produk\\.$",
+  "vars": [
+   "out.fallback ? `Bulan berjalan belum punya faktur (marketplace ditagih per bulan"
+  ],
+  "sources": [
+   "backend/src/services/ai/agent/tools/retailCommerce.js:140"
+  ],
+  "en": ""
+ },
+ {
+  "id": "faktur lunas, SO baru ditagih sebagian$1",
+  "regex": "^faktur lunas, SO baru ditagih sebagian([\\s\\S]*?)$",
+  "vars": [
+   "r.invoiceCoverage != null ? ` (${Number(r.invoiceCoverage)}%)` : ''"
+  ],
+  "sources": [
+   "backend/src/services/ai/agent/tools/sales.js:432"
+  ],
+  "en": ""
+ }
+]

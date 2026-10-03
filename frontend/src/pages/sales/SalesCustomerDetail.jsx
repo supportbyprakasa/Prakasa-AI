@@ -85,7 +85,8 @@ const TOP_PRODUCT_COLUMNS = [
     render: (p) => { const q = soldQty(p); return q.detail ? <span className="pw-cell"><span className="pw-cell__title">{q.main}</span><span className="pw-cell__meta">{q.detail}</span></span> : q.main; },
     exportValue: (p) => soldQty(p).main,
   },
-  { key: 'revenue', header: 'Omzet', align: 'end', translate: true, render: (p) => formatRupiahShort(p.revenue), exportValue: (p) => p.revenue },
+  // Invoice-line DPP before returns (revision F11), not the net revenue above.
+  { key: 'revenue', header: 'Nilai penjualan (DPP sebelum retur)', align: 'end', translate: true, render: (p) => formatRupiahShort(p.revenue), exportValue: (p) => p.revenue },
 ];
 
 const rupiahShort = (value) => formatRupiahShort(value) || 'Rp 0';

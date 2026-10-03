@@ -486,7 +486,7 @@ export default function SalesOrders() {
       : `Nilai faktur ${formatRupiahShort(list.meta.revenue || 0)} (sebelum PPN) · piutang ${formatRupiahShort(list.meta.outstanding || 0)}`)
     : (list.meta.sum ? `Total ${formatRupiahShort(list.meta.sum)}` : '');
   const productNote = accurate && tab === 'products'
-    ? (fromAccurate ? 'Omzet per produk = bagian tiap baris faktur Accurate dari DPP fakturnya (sebelum PPN; diskon dan biaya di faktur dibagi rata ke produk), tanpa faktur uang muka.' : 'Master produk mengikuti Accurate.')
+    ? (fromAccurate ? 'Nilai per produk = bagian tiap baris faktur Accurate dari DPP fakturnya (sebelum PPN; diskon dan biaya di faktur dialokasikan proporsional terhadap nilai baris), sebelum retur, tanpa faktur uang muka.' : 'Master produk mengikuti Accurate.')
     : '';
   const footnote = list.loading ? '' : [values, productNote].filter(Boolean).join(' · ');
 

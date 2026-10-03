@@ -112,3 +112,14 @@ test('field errors sit on their own field, matching the summary', () => {
   assert.deepEqual(errors.items[1], {});
   assert.match(errors.items[2].sku, /baris 2/);
 });
+
+test('F07: 2 Box and 3 PCS are never "5 total"; the same unit adds up; screen and export share the text', async () => {
+  const m = await import('../src/pages/warehouse/warehouseMovementModel.js');
+  const mixed = [{ sku: 'A', quantity: 2, unit: 'Box' }, { sku: 'B', quantity: 3, unit: 'PCS' }];
+  assert.equal(m.movementItemsText(mixed), '2 baris · 2 SKU · 2 Box + 3 PCS');
+  assert.doesNotMatch(m.movementItemsText(mixed), /5/);
+  const same = [{ sku: 'A', quantity: 2, unit: 'Box' }, { sku: 'A', quantity: 1, unit: 'box' }, { sku: 'C', quantity: 3, unit: 'PCS' }];
+  assert.equal(m.movementItemsText(same), '3 baris · 2 SKU · 3 Box + 3 PCS', 'units compare without case; no Box→PCS conversion without a ratio');
+  assert.equal(m.movementItemsText([{ sku: 'K', quantity: 1.5, unit: 'kg' }, { sku: 'L', quantity: 2, unit: 'liter' }]), '2 baris · 2 SKU · 1.5 kg + 2 liter');
+  assert.equal(m.movementItemsText([]), '0 baris · 0 SKU');
+});

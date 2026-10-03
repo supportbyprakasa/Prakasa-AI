@@ -37,9 +37,9 @@ test('file ids are validated strictly', () => {
 });
 
 test('editorFrameUrl builds the minimal-chrome Google editor URL only for a valid id', () => {
-  assert.equal(editorFrameUrl('document', ID), `https://docs.google.com/document/d/${ID}/edit?rm=minimal`);
-  assert.equal(editorFrameUrl('spreadsheet', ID), `https://docs.google.com/spreadsheets/d/${ID}/edit?rm=minimal`);
-  assert.equal(editorFrameUrl('presentation', ID), `https://docs.google.com/presentation/d/${ID}/edit?rm=minimal`);
+  assert.equal(editorFrameUrl('document', ID), `https://docs.google.com/document/d/${ID}/edit`);
+  assert.equal(editorFrameUrl('spreadsheet', ID), `https://docs.google.com/spreadsheets/d/${ID}/edit`);
+  assert.equal(editorFrameUrl('presentation', ID), `https://docs.google.com/presentation/d/${ID}/edit`);
   assert.equal(editorFrameUrl('document', '../evil'), null);
   assert.equal(editorFrameUrl('folder', ID), null);
 });

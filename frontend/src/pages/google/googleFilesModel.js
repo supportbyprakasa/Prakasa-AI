@@ -63,10 +63,12 @@ export function editorRoute(kind, fileId) {
 }
 
 // URL of Google's editor inside the iframe — built only from a strictly
-// validated id, never from a URL the server or the user supplied.
+// validated id, never from a URL the server or the user supplied. The full
+// editor, with Google's own menus and toolbar (owner, 3 Oct 2026: never the
+// minimal mode that hides them).
 export function editorFrameUrl(kind, fileId) {
   if (!isValidFileId(fileId) || !Object.prototype.hasOwnProperty.call(KINDS, kind)) return null;
-  return `https://docs.google.com/${KINDS[kind].editorPath}/d/${fileId}/edit?rm=minimal`;
+  return `https://docs.google.com/${KINDS[kind].editorPath}/d/${fileId}/edit`;
 }
 
 // "Buka di Google" target: the file's own webViewLink when it is a Google

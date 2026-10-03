@@ -91,12 +91,24 @@ const NAV = [
       { to: '/marketing/campaigns', label: 'Kampanye', symbol: 'campaign', permission: 'marketing.insight.view' },
     ],
   },
+  // One titled group per division, like Sales/Finance/Marketing (owner, 3 Oct 2026),
+  // even when the division has a single page with tabs inside.
   {
-    title: 'Divisi',
+    title: 'Warehouse',
     items: [
       // Movements, or stock from Accurate only (Management Office oversight).
       { to: '/warehouse', label: 'Warehouse', symbol: 'warehouse', permission: ['warehouse.movement.view', 'warehouse.stock.view'] },
+    ],
+  },
+  {
+    title: 'Procurement',
+    items: [
       { to: '/procurement', label: 'Procurement', symbol: 'assignment_turned_in', permission: 'procurement.view' },
+    ],
+  },
+  {
+    title: 'Retail Commerce',
+    items: [
       // Marketplace performance (migration 120).
       { to: '/retail-commerce', label: 'Retail Commerce', symbol: 'storefront', permission: 'retail.insight.view' },
     ],

@@ -27,8 +27,11 @@ test('sections with several modules become groups; single modules stay plain ite
   const byKey = Object.fromEntries(groups.map((entry) => [entry.key, entry]));
   assert.equal(byKey['/'].type, 'item');
   assert.equal(byKey['/ai-command'].type, 'item');
-  assert.equal(byKey.Divisi.type, 'group');
-  assert.deepEqual(byKey.Divisi.items.slice(0, 2).map((item) => item.to), ['/warehouse', '/procurement']);
+  // Single-page divisions are their own entry at division level, not a shared "Divisi" group.
+  assert.equal(byKey.Divisi, undefined);
+  for (const to of ['/warehouse', '/procurement', '/retail-commerce']) assert.equal(byKey[to].type, 'item', to);
+  const order = groups.map((entry) => entry.key);
+  assert.ok(order.indexOf('Marketing') < order.indexOf('/warehouse') && order.indexOf('/retail-commerce') < order.indexOf('People & Culture'));
   assert.equal(byKey.Komunikasi.type, 'group');
   // Work-based groups: Project Tracker is daily work, not "Google"; IT is not People & Culture.
   assert.ok(byKey['Kerja harian'].items.some((item) => item.to === '/projects'));

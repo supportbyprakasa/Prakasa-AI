@@ -13,8 +13,7 @@
    "frontend/src/components/ai/aiEngineOptions.js:34",
    "frontend/src/components/ai/AISessionList.jsx:27",
    "frontend/src/components/ai/AIVisibilityBadge.jsx:19",
-   "frontend/src/components/navigation.js:95",
-   "frontend/src/components/navigation.js:137",
+   "frontend/src/components/navigation.js:149",
    "frontend/src/components/statusTone.js:285",
    "frontend/src/pages/account/Account.jsx:43",
    "frontend/src/pages/ActivityLogs.jsx:36",
@@ -736,8 +735,8 @@
    "backend/src/services/accurate/accurateSync.service.js:50",
    "backend/src/services/notificationPolicy.service.js:14",
    "frontend/src/components/navigation.js:80",
-   "frontend/src/components/navigation.js:197",
-   "frontend/src/components/navigation.js:322",
+   "frontend/src/components/navigation.js:209",
+   "frontend/src/components/navigation.js:334",
    "frontend/src/components/notifications/notificationModel.js:69",
    "frontend/src/components/search/searchResultModel.js:17",
    "frontend/src/pages/ActivityLogs.jsx:49",
@@ -756,9 +755,10 @@
    "backend/src/services/accurate/accurateSync.service.js:44",
    "backend/src/services/aiToolRegistry.service.js:771",
    "backend/src/services/morningBriefing.service.js:313",
-   "frontend/src/components/navigation.js:99",
-   "frontend/src/components/navigation.js:185",
-   "frontend/src/components/navigation.js:326",
+   "frontend/src/components/navigation.js:104",
+   "frontend/src/components/navigation.js:106",
+   "frontend/src/components/navigation.js:197",
+   "frontend/src/components/navigation.js:338",
    "frontend/src/pages/advanced/managementFlowModel.js:31",
    "frontend/src/pages/procurement/ProcurementDashboard.jsx:54",
    "backend/migrations/032_prakasa_workspace_organization.sql:131",
@@ -774,9 +774,9 @@
    "backend/src/services/accurate/accurateSync.service.js:40",
    "backend/src/services/morningBriefing.service.js:311",
    "frontend/src/components/navigation.js:69",
-   "frontend/src/components/navigation.js:183",
-   "frontend/src/components/navigation.js:194",
    "frontend/src/components/navigation.js:195",
+   "frontend/src/components/navigation.js:206",
+   "frontend/src/components/navigation.js:207",
    "frontend/src/components/notifications/notificationModel.js:51",
    "frontend/src/pages/ActivityLogs.jsx:79",
    "frontend/src/pages/advanced/managementFlowModel.js:31",
@@ -806,10 +806,10 @@
    "backend/src/config/standardOrganization.js:5",
    "backend/src/services/ai/agent/tools/peopleCulture.js:39",
    "backend/src/services/hrgaWorkflow.service.js:926",
-   "frontend/src/components/navigation.js:105",
-   "frontend/src/components/navigation.js:187",
-   "frontend/src/components/navigation.js:324",
-   "frontend/src/components/navigation.js:410",
+   "frontend/src/components/navigation.js:117",
+   "frontend/src/components/navigation.js:199",
+   "frontend/src/components/navigation.js:336",
+   "frontend/src/components/navigation.js:422",
    "frontend/src/pages/ActivityLogs.jsx:75",
    "frontend/src/pages/hrga/hrgaModel.js:36",
    "frontend/src/pages/hrga/WorkflowFormDialog.jsx:309",
@@ -825,9 +825,10 @@
    "backend/src/config/standardOrganization.js:7",
    "backend/src/management/providers/retailCommerce.js:52",
    "backend/src/services/aiToolRegistry.service.js:779",
-   "frontend/src/components/navigation.js:101",
-   "frontend/src/components/navigation.js:194",
-   "frontend/src/components/navigation.js:328",
+   "frontend/src/components/navigation.js:110",
+   "frontend/src/components/navigation.js:113",
+   "frontend/src/components/navigation.js:206",
+   "frontend/src/components/navigation.js:340",
    "frontend/src/pages/advanced/managementFlowModel.js:31",
    "frontend/src/pages/retail/RetailCommerce.jsx:167",
    "frontend/src/pages/retail/RetailCommerce.jsx:170",
@@ -847,10 +848,11 @@
    "backend/src/services/accurate/accurateSync.service.js:41",
    "backend/src/services/aiToolRegistry.service.js:717",
    "backend/src/services/morningBriefing.service.js:312",
-   "frontend/src/components/navigation.js:98",
-   "frontend/src/components/navigation.js:184",
-   "frontend/src/components/navigation.js:194",
-   "frontend/src/components/navigation.js:320",
+   "frontend/src/components/navigation.js:97",
+   "frontend/src/components/navigation.js:100",
+   "frontend/src/components/navigation.js:196",
+   "frontend/src/components/navigation.js:206",
+   "frontend/src/components/navigation.js:332",
    "frontend/src/pages/ActivityLogs.jsx:110",
    "frontend/src/pages/advanced/managementFlowModel.js:31",
    "frontend/src/pages/handbook/aiForms.generated.js:71",
@@ -874,8 +876,8 @@
    "backend/src/management/providers/marketing.js:82",
    "backend/src/services/notificationPolicy.service.js:25",
    "frontend/src/components/navigation.js:88",
-   "frontend/src/components/navigation.js:195",
-   "frontend/src/components/navigation.js:330",
+   "frontend/src/components/navigation.js:207",
+   "frontend/src/components/navigation.js:342",
    "backend/migrations/032_prakasa_workspace_organization.sql:137",
    "backend/src/config/standardOrganization.js:1"
   ],
@@ -888,7 +890,7 @@
    "backend/src/controllers/googleAnalytics.controller.js:36",
    "backend/src/controllers/googleAnalytics.controller.js:54",
    "backend/src/services/aiToolRegistry.service.js:681",
-   "frontend/src/components/navigation.js:126",
+   "frontend/src/components/navigation.js:138",
    "frontend/src/pages/admin/IntegrationLogs.jsx:38",
    "frontend/src/pages/google/Analytics.jsx:332",
    "frontend/src/pages/handbook/handbookContent.js:1947"
@@ -945,7 +947,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/controllers/signatures.controller.js:209",
-   "frontend/src/components/navigation.js:411",
+   "frontend/src/components/navigation.js:423",
    "frontend/src/components/notifications/notificationModel.js:96",
    "frontend/src/pages/account/accountModel.js:35",
    "frontend/src/pages/ActivityLogs.jsx:98",
@@ -1051,7 +1053,7 @@
    "backend/src/services/ai/agent/tools/peopleCulture.js:29",
    "backend/src/services/aiToolRegistry.service.js:760",
    "backend/src/services/hrgaWorkflow.service.js:40",
-   "frontend/src/components/navigation.js:108",
+   "frontend/src/components/navigation.js:120",
    "frontend/src/components/statusTone.js:294",
    "frontend/src/pages/handbook/aiForms.generated.js:146",
    "frontend/src/pages/handbook/aiForms.generated.js:146",
@@ -1075,7 +1077,7 @@
    "backend/src/services/ai/agent/tools/peopleCulture.js:29",
    "backend/src/services/aiToolRegistry.service.js:759",
    "backend/src/services/hrgaWorkflow.service.js:40",
-   "frontend/src/components/navigation.js:107",
+   "frontend/src/components/navigation.js:119",
    "frontend/src/components/statusTone.js:293",
    "frontend/src/pages/handbook/aiForms.generated.js:145",
    "frontend/src/pages/handbook/aiForms.generated.js:145",
@@ -1107,7 +1109,7 @@
    "backend/src/services/aiToolRegistry.service.js:713",
    "backend/src/services/morningBriefing.service.js:319",
    "backend/src/services/notificationPolicy.service.js:11",
-   "frontend/src/components/navigation.js:415",
+   "frontend/src/components/navigation.js:427",
    "frontend/src/components/notifications/notificationModel.js:47",
    "frontend/src/pages/accurate/DataAccurate.jsx:26",
    "frontend/src/pages/procurement/ProcurementDashboard.jsx:27",
@@ -1172,7 +1174,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/management/providers/sales.js:93",
-   "frontend/src/components/navigation.js:318"
+   "frontend/src/components/navigation.js:330"
   ],
   "chunk": "shell-1"
  },
@@ -1373,7 +1375,7 @@
   "sources": [
    "backend/src/services/ai/agent/forms/people.js:55",
    "backend/src/services/aiToolRegistry.service.js:762",
-   "frontend/src/components/navigation.js:111",
+   "frontend/src/components/navigation.js:123",
    "frontend/src/pages/ActivityLogs.jsx:59",
    "frontend/src/pages/handbook/aiForms.generated.js:149",
    "frontend/src/pages/handbook/aiForms.generated.js:150",
@@ -1545,7 +1547,7 @@
    "backend/src/services/ai/agent/tools/it.js:76",
    "backend/src/services/gaWorkSummary.service.js:45",
    "backend/src/services/gaWorkSummary.service.js:86",
-   "frontend/src/components/navigation.js:400",
+   "frontend/src/components/navigation.js:412",
    "frontend/src/components/statusTone.js:23",
    "frontend/src/components/statusTone.js:161",
    "frontend/src/components/statusTone.js:226",
@@ -1781,8 +1783,8 @@
    "frontend/src/components/ai/PrakasaAIToolPanel.jsx:324",
    "frontend/src/components/Navbar.jsx:153",
    "frontend/src/components/navigation.js:18",
-   "frontend/src/components/navigation.js:316",
-   "frontend/src/components/navigation.js:428",
+   "frontend/src/components/navigation.js:328",
+   "frontend/src/components/navigation.js:440",
    "frontend/src/components/notifications/notificationModel.js:99",
    "frontend/src/components/notifications/notificationModel.js:130",
    "frontend/src/pages/ai/AICommandCenter.jsx:387",
@@ -1809,7 +1811,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:642",
-   "frontend/src/components/navigation.js:419",
+   "frontend/src/components/navigation.js:431",
    "frontend/src/pages/advanced/GlobalSearch.jsx:181"
   ],
   "chunk": "shell-1"
@@ -1819,7 +1821,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:644",
-   "frontend/src/components/navigation.js:166",
+   "frontend/src/components/navigation.js:178",
    "frontend/src/pages/handbook/Handbook.jsx:271"
   ],
   "chunk": "shell-1"
@@ -1833,7 +1835,7 @@
    "frontend/src/components/Navbar.jsx:286",
    "frontend/src/components/Navbar.jsx:293",
    "frontend/src/components/navigation.js:17",
-   "frontend/src/components/navigation.js:416",
+   "frontend/src/components/navigation.js:428",
    "frontend/src/components/notifications/notificationModel.js:151",
    "frontend/src/pages/admin/NotificationPolicy.jsx:63",
    "frontend/src/pages/admin/NotificationPolicy.jsx:83",
@@ -1850,7 +1852,7 @@
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:655",
    "frontend/src/components/Navbar.jsx:332",
-   "frontend/src/components/navigation.js:418",
+   "frontend/src/components/navigation.js:430",
    "frontend/src/pages/account/Account.jsx:26",
    "frontend/src/pages/MorningBriefing.jsx:163"
   ],
@@ -1890,7 +1892,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:671",
-   "frontend/src/components/navigation.js:159",
+   "frontend/src/components/navigation.js:171",
    "frontend/src/pages/admin/NotificationPolicy.jsx:58",
    "frontend/src/pages/handbook/handbookContent.js:2160"
   ],
@@ -1967,7 +1969,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:693",
-   "frontend/src/components/navigation.js:412",
+   "frontend/src/components/navigation.js:424",
    "frontend/src/pages/account/accountModel.js:36",
    "frontend/src/pages/handbook/handbookContent.js:790",
    "frontend/src/pages/signatures/SignatureAsset.jsx:47"
@@ -1979,7 +1981,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:694",
-   "frontend/src/components/navigation.js:413",
+   "frontend/src/components/navigation.js:425",
    "frontend/src/pages/account/accountModel.js:37",
    "frontend/src/pages/ActivityLogs.jsx:70",
    "frontend/src/pages/signatures/Letterhead.jsx:125"
@@ -2102,7 +2104,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:749",
-   "frontend/src/components/navigation.js:117",
+   "frontend/src/components/navigation.js:129",
    "frontend/src/pages/handbook/handbookContent.js:1633",
    "frontend/src/pages/it/ItDashboard.jsx:231"
   ],
@@ -2113,7 +2115,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:750",
-   "frontend/src/components/navigation.js:118",
+   "frontend/src/components/navigation.js:130",
    "frontend/src/components/notifications/notificationModel.js:120",
    "frontend/src/components/search/searchResultModel.js:15",
    "frontend/src/pages/ActivityLogs.jsx:37",
@@ -2152,7 +2154,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:751",
-   "frontend/src/components/navigation.js:120",
+   "frontend/src/components/navigation.js:132",
    "frontend/src/components/notifications/notificationModel.js:122",
    "frontend/src/pages/ActivityLogs.jsx:100",
    "frontend/src/pages/ActivityLogs.jsx:102",
@@ -2172,7 +2174,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:755",
-   "frontend/src/components/navigation.js:119",
+   "frontend/src/components/navigation.js:131",
    "frontend/src/pages/ActivityLogs.jsx:66",
    "frontend/src/pages/handbook/aiForms.generated.js:123",
    "frontend/src/pages/handbook/aiForms.generated.js:124",
@@ -2215,7 +2217,7 @@
    "backend/src/services/aiToolRegistry.service.js:768",
    "backend/src/services/morningBriefing.service.js:315",
    "backend/src/services/notificationPolicy.service.js:20",
-   "frontend/src/components/navigation.js:110",
+   "frontend/src/components/navigation.js:122",
    "frontend/src/pages/ga/GaOperations.jsx:217",
    "frontend/src/pages/ga/GaOpsDialogs.jsx:64",
    "frontend/src/pages/ga/GaOpsDialogs.jsx:71",
@@ -2345,7 +2347,7 @@
    "backend/src/services/tracker.service.js:1004",
    "backend/src/services/trackerModel.js:209",
    "backend/src/services/trackerModel.js:212",
-   "frontend/src/components/navigation.js:133",
+   "frontend/src/components/navigation.js:145",
    "frontend/src/pages/ActivityLogs.jsx:109",
    "frontend/src/pages/ActivityLogs.jsx:334",
    "frontend/src/pages/admin/AIUsage.jsx:99",
@@ -2368,7 +2370,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:792",
-   "frontend/src/components/navigation.js:134",
+   "frontend/src/components/navigation.js:146",
    "frontend/src/pages/ActivityLogs.jsx:116",
    "frontend/src/pages/admin/WorkspaceSync.jsx:242",
    "frontend/src/pages/handbook/handbookContent.js:2020"
@@ -2380,7 +2382,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:793",
-   "frontend/src/components/navigation.js:138",
+   "frontend/src/components/navigation.js:150",
    "frontend/src/pages/ActivityLogs.jsx:48",
    "frontend/src/pages/admin/AIUsage.jsx:161",
    "frontend/src/pages/admin/Departments.jsx:27",
@@ -2401,7 +2403,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:795",
-   "frontend/src/components/navigation.js:135",
+   "frontend/src/components/navigation.js:147",
    "frontend/src/pages/account/Account.jsx:44",
    "frontend/src/pages/ActivityLogs.jsx:78",
    "frontend/src/pages/admin/roleInfoModel.js:53",
@@ -2420,7 +2422,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:796",
-   "frontend/src/components/navigation.js:136",
+   "frontend/src/components/navigation.js:148",
    "frontend/src/pages/admin/Permissions.jsx:34",
    "frontend/src/pages/handbook/handbookContent.js:2042"
   ],
@@ -2431,7 +2433,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:797",
-   "frontend/src/components/navigation.js:148",
+   "frontend/src/components/navigation.js:160",
    "frontend/src/pages/ActivityLogs.jsx:51",
    "frontend/src/pages/ActivityLogs.jsx:54",
    "frontend/src/pages/admin/FolderMappingRules.jsx:116",
@@ -2444,7 +2446,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:798",
-   "frontend/src/components/navigation.js:147",
+   "frontend/src/components/navigation.js:159",
    "frontend/src/pages/ActivityLogs.jsx:45",
    "frontend/src/pages/admin/DocumentTypes.jsx:131",
    "frontend/src/pages/finance/PaymentRequestDetail.jsx:395",
@@ -2457,7 +2459,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:799",
-   "frontend/src/components/navigation.js:145",
+   "frontend/src/components/navigation.js:157",
    "frontend/src/pages/ActivityLogs.jsx:99",
    "frontend/src/pages/admin/SignatureRules.jsx:117",
    "frontend/src/pages/handbook/handbookContent.js:2086"
@@ -2469,7 +2471,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:800",
-   "frontend/src/components/navigation.js:157",
+   "frontend/src/components/navigation.js:169",
    "frontend/src/pages/admin/IntegrationLogs.jsx:191",
    "frontend/src/pages/admin/IntegrationLogs.jsx:205",
    "frontend/src/pages/handbook/handbookContent.js:2153"
@@ -2481,7 +2483,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:801",
-   "frontend/src/components/navigation.js:144",
+   "frontend/src/components/navigation.js:156",
    "frontend/src/pages/ActivityLogs.jsx:31",
    "frontend/src/pages/admin/ApprovalMatrix.jsx:291",
    "frontend/src/pages/handbook/handbookContent.js:2075"
@@ -2493,7 +2495,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:802",
-   "frontend/src/components/navigation.js:146",
+   "frontend/src/components/navigation.js:158",
    "frontend/src/pages/admin/aiLabels.js:21",
    "frontend/src/pages/admin/SignaturePrecheckLogs.jsx:89",
    "frontend/src/pages/handbook/handbookContent.js:2093"
@@ -2505,7 +2507,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:803",
-   "frontend/src/components/navigation.js:156",
+   "frontend/src/components/navigation.js:168",
    "frontend/src/pages/admin/AIUsage.jsx:114",
    "frontend/src/pages/handbook/handbookContent.js:2146"
   ],
@@ -2516,7 +2518,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:804",
-   "frontend/src/components/navigation.js:155",
+   "frontend/src/components/navigation.js:167",
    "frontend/src/pages/admin/AIProviderSettings.jsx:100",
    "frontend/src/pages/handbook/handbookContent.js:2136"
   ],
@@ -2527,7 +2529,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:805",
-   "frontend/src/components/navigation.js:154",
+   "frontend/src/components/navigation.js:166",
    "frontend/src/pages/admin/AccurateIntegration.jsx:202",
    "frontend/src/pages/handbook/handbookContent.js:2126"
   ],
@@ -2538,7 +2540,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:806",
-   "frontend/src/components/navigation.js:127",
+   "frontend/src/components/navigation.js:139",
    "frontend/src/pages/ActivityLogs.jsx:322",
    "frontend/src/pages/ActivityLogs.jsx:324",
    "frontend/src/pages/handbook/handbookContent.js:1954"
@@ -2551,7 +2553,7 @@
   "sources": [
    "backend/src/services/docxKit.js:119",
    "frontend/src/components/datagrid/Pager.jsx:65",
-   "frontend/src/components/navigation.js:433",
+   "frontend/src/components/navigation.js:445",
    "frontend/src/pages/google/Analytics.jsx:163",
    "frontend/src/pages/handbook/handbookContent.js:1009"
   ],
@@ -3751,7 +3753,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/components/datagrid/DataGrid.jsx:738",
-   "frontend/src/components/navigation.js:401",
+   "frontend/src/components/navigation.js:413",
    "frontend/src/pages/admin/DocumentTypes.jsx:148",
    "frontend/src/pages/admin/SignatureRules.jsx:134",
    "frontend/src/pages/documents/DocTemplates.jsx:272",
@@ -4637,7 +4639,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/components/navigation.js:22",
-   "frontend/src/components/navigation.js:191",
+   "frontend/src/components/navigation.js:203",
    "frontend/src/pages/handbook/handbookContent.js:936"
   ],
   "chunk": "shell-1"
@@ -4664,8 +4666,8 @@
   "text": "Laporan",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:124",
-   "frontend/src/components/navigation.js:192",
+   "frontend/src/components/navigation.js:136",
+   "frontend/src/components/navigation.js:204",
    "frontend/src/pages/handbook/handbookContent.js:372",
    "frontend/src/pages/projects/trackerModel.js:9"
   ],
@@ -4675,8 +4677,8 @@
   "text": "Pengguna & akses",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:131",
-   "frontend/src/components/navigation.js:201",
+   "frontend/src/components/navigation.js:143",
+   "frontend/src/components/navigation.js:213",
    "frontend/src/pages/handbook/handbookContent.js:1969"
   ],
   "chunk": "shell-1"
@@ -4685,8 +4687,8 @@
   "text": "Aturan & dokumen",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:142",
-   "frontend/src/components/navigation.js:202"
+   "frontend/src/components/navigation.js:154",
+   "frontend/src/components/navigation.js:214"
   ],
   "chunk": "shell-1"
  },
@@ -4694,8 +4696,8 @@
   "text": "Sistem & integrasi",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:152",
-   "frontend/src/components/navigation.js:204",
+   "frontend/src/components/navigation.js:164",
+   "frontend/src/components/navigation.js:216",
    "frontend/src/pages/handbook/handbookContent.js:2117"
   ],
   "chunk": "shell-1"
@@ -4704,7 +4706,7 @@
   "text": "Bantuan",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:164"
+   "frontend/src/components/navigation.js:176"
   ],
   "chunk": "shell-1"
  },
@@ -4712,7 +4714,7 @@
   "text": "Tanya, ringkas, dan susun draft bersama Prakasa AI.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:317"
+   "frontend/src/components/navigation.js:329"
   ],
   "chunk": "shell-1"
  },
@@ -4720,7 +4722,7 @@
   "text": "Pipeline, pelanggan dan leads, kunjungan lapangan, dan Data Sales.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:319"
+   "frontend/src/components/navigation.js:331"
   ],
   "chunk": "additions"
  },
@@ -4728,7 +4730,7 @@
   "text": "Barang masuk dan keluar, approval Supervisor, serta operasional gudang.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:321"
+   "frontend/src/components/navigation.js:333"
   ],
   "chunk": "shell-1"
  },
@@ -4736,7 +4738,7 @@
   "text": "Piutang dan utang dari Accurate: umur, jatuh tempo, penagihan, dan pembayaran.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:323"
+   "frontend/src/components/navigation.js:335"
   ],
   "chunk": "shell-1"
  },
@@ -4744,7 +4746,7 @@
   "text": "Onboarding, offboarding, GA (operasional kantor), dan IT perusahaan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:325"
+   "frontend/src/components/navigation.js:337"
   ],
   "chunk": "shell-2"
  },
@@ -4752,7 +4754,7 @@
   "text": "PO, barang datang, dan pemasok dari Accurate.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:327"
+   "frontend/src/components/navigation.js:339"
   ],
   "chunk": "shell-2"
  },
@@ -4760,7 +4762,7 @@
   "text": "Kinerja marketplace: omzet, pesanan, retur, piutang, dan SO belum dikirim.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:329"
+   "frontend/src/components/navigation.js:341"
   ],
   "chunk": "shell-2"
  },
@@ -4768,7 +4770,7 @@
   "text": "Kinerja produk & channel, kampanye dan hasilnya, serta leads per area.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:331"
+   "frontend/src/components/navigation.js:343"
   ],
   "chunk": "shell-2"
  },
@@ -4776,7 +4778,7 @@
   "text": "Google Workspace",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:332",
+   "frontend/src/components/navigation.js:344",
    "frontend/src/pages/it/infraModel.js:57"
   ],
   "chunk": "shell-2"
@@ -4785,7 +4787,7 @@
   "text": "Gmail, Google Chat, Calendar, Docs, Sheets, Slides, dan Groups — langsung di dalam Prakasa Workspace.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:333"
+   "frontend/src/components/navigation.js:345"
   ],
   "chunk": "shell-2"
  },
@@ -4793,7 +4795,7 @@
   "text": "Kerja Harian",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:334"
+   "frontend/src/components/navigation.js:346"
   ],
   "chunk": "shell-2"
  },
@@ -4801,7 +4803,7 @@
   "text": "Penyimpanan divisi, My Drive, dan tiket IT.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:335"
+   "frontend/src/components/navigation.js:347"
   ],
   "chunk": "shell-2"
  },
@@ -4809,7 +4811,7 @@
   "text": "Insight & Manajemen",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:336"
+   "frontend/src/components/navigation.js:348"
   ],
   "chunk": "shell-2"
  },
@@ -4817,7 +4819,7 @@
   "text": "Dashboard eksekutif, Google Analytics, dan jejak audit.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:337"
+   "frontend/src/components/navigation.js:349"
   ],
   "chunk": "shell-2"
  },
@@ -4825,7 +4827,7 @@
   "text": "Administrasi",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:338"
+   "frontend/src/components/navigation.js:350"
   ],
   "chunk": "shell-2"
  },
@@ -4833,7 +4835,7 @@
   "text": "Pengguna, akses, aturan approval, dan konfigurasi sistem.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:339"
+   "frontend/src/components/navigation.js:351"
   ],
   "chunk": "shell-2"
  },
@@ -4841,7 +4843,7 @@
   "text": "Cara memakai Prakasa Workspace, sesuai peran Anda.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:343"
+   "frontend/src/components/navigation.js:355"
   ],
   "chunk": "shell-2"
  },
@@ -4849,7 +4851,7 @@
   "text": "Tahap pelanggan otomatis — prospek, NOO, aktif, dormant, lost.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:344"
+   "frontend/src/components/navigation.js:356"
   ],
   "chunk": "shell-2"
  },
@@ -4857,7 +4859,7 @@
   "text": "Direktori pelanggan, lengkap dengan status Aktif / Dormant / Lost.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:345"
+   "frontend/src/components/navigation.js:357"
   ],
   "chunk": "shell-2"
  },
@@ -4865,7 +4867,7 @@
   "text": "Outlet dari kunjungan SimpliDOTS & lapangan yang belum jadi pelanggan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:346"
+   "frontend/src/components/navigation.js:358"
   ],
   "chunk": "shell-2"
  },
@@ -4873,7 +4875,7 @@
   "text": "Sales order, surat jalan, invoice & pembayaran — dicatat di Accurate, dipantau di sini.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:347"
+   "frontend/src/components/navigation.js:359"
   ],
   "chunk": "shell-2"
  },
@@ -4881,7 +4883,7 @@
   "text": "Barang masuk & keluar dengan approval Supervisor, dicocokkan dengan dokumen Accurate, plus operasional gudang.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:348"
+   "frontend/src/components/navigation.js:360"
   ],
   "chunk": "shell-2"
  },
@@ -4889,7 +4891,7 @@
   "text": "PO, pemasok, dan barang datang dari Accurate, setelah disetujui Head Procurement.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:349",
+   "frontend/src/components/navigation.js:361",
    "frontend/src/pages/procurement/ProcurementDashboard.jsx:57"
   ],
   "chunk": "shell-2"
@@ -4898,7 +4900,7 @@
   "text": "Agenda Google Calendar Anda: lihat, buat event, dan Google Meet.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:350"
+   "frontend/src/components/navigation.js:362"
   ],
   "chunk": "shell-2"
  },
@@ -4906,7 +4908,7 @@
   "text": "Folder Shared Drive divisi Anda — buat dan edit Dokumen, Spreadsheet, Slide langsung dari sini.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:351"
+   "frontend/src/components/navigation.js:363"
   ],
   "chunk": "shell-2"
  },
@@ -4914,7 +4916,7 @@
   "text": "Template Google Docs dengan kop & footer per divisi — BAST, surat, memo — langsung ke Shared Drive divisi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:352"
+   "frontend/src/components/navigation.js:364"
   ],
   "chunk": "shell-2"
  },
@@ -4922,7 +4924,7 @@
   "text": "My Drive pribadi Anda di Google — dan folder Shared Drive divisi Anda, dalam satu tempat.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:353"
+   "frontend/src/components/navigation.js:365"
   ],
   "chunk": "shell-2"
  },
@@ -4930,7 +4932,7 @@
   "text": "Ajukan kebutuhan IT dan pantau statusnya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:354"
+   "frontend/src/components/navigation.js:366"
   ],
   "chunk": "shell-2"
  },
@@ -4938,7 +4940,7 @@
   "text": "ATK, perbaikan fasilitas, dan ruang rapat — operasional kantor yang dikelola GA, bagian People & Culture.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:355"
+   "frontend/src/components/navigation.js:367"
   ],
   "chunk": "shell-2"
  },
@@ -4946,7 +4948,7 @@
   "text": "Kontak kerja, jabatan, atasan, dan struktur organisasi perusahaan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:356"
+   "frontend/src/components/navigation.js:368"
   ],
   "chunk": "shell-2"
  },
@@ -4954,7 +4956,7 @@
   "text": "Kotak masuk Gmail Anda, langsung di Prakasa Workspace.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:357"
+   "frontend/src/components/navigation.js:369"
   ],
   "chunk": "shell-2"
  },
@@ -4962,7 +4964,7 @@
   "text": "Space dan pesan Google Chat Anda — termasuk Space per Task Board.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:358"
+   "frontend/src/components/navigation.js:370"
   ],
   "chunk": "shell-2"
  },
@@ -4970,7 +4972,7 @@
   "text": "Project tracker ala Jira untuk setiap Space Google Chat: board, backlog, sprint, dan laporan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:359"
+   "frontend/src/components/navigation.js:371"
   ],
   "chunk": "shell-2"
  },
@@ -4978,7 +4980,7 @@
   "text": "Google Docs Anda: buat, cari, dan edit dokumen.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:360"
+   "frontend/src/components/navigation.js:372"
   ],
   "chunk": "shell-2"
  },
@@ -4986,7 +4988,7 @@
   "text": "Google Sheets Anda: buat, cari, dan edit spreadsheet.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:361"
+   "frontend/src/components/navigation.js:373"
   ],
   "chunk": "shell-2"
  },
@@ -4994,7 +4996,7 @@
   "text": "Google Slides Anda: buat, cari, dan edit presentasi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:362"
+   "frontend/src/components/navigation.js:374"
   ],
   "chunk": "shell-2"
  },
@@ -5002,7 +5004,7 @@
   "text": "Google Groups perusahaan dan anggotanya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:363"
+   "frontend/src/components/navigation.js:375"
   ],
   "chunk": "shell-2"
  },
@@ -5010,7 +5012,7 @@
   "text": "Laporan Google Analytics: pengunjung, halaman, dan sumber trafik.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:364"
+   "frontend/src/components/navigation.js:376"
   ],
   "chunk": "shell-2"
  },
@@ -5018,7 +5020,7 @@
   "text": "Karyawan baru — approval atasan, lalu checklist IT, GA, atasan, dan People & Culture.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:365"
+   "frontend/src/components/navigation.js:377"
   ],
   "chunk": "shell-2"
  },
@@ -5026,7 +5028,7 @@
   "text": "Karyawan keluar — pengembalian perangkat, lisensi, nomor, dan akses.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:366"
+   "frontend/src/components/navigation.js:378"
   ],
   "chunk": "shell-2"
  },
@@ -5034,7 +5036,7 @@
   "text": "Template checklist onboarding/offboarding.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:367"
+   "frontend/src/components/navigation.js:379"
   ],
   "chunk": "shell-2"
  },
@@ -5042,7 +5044,7 @@
   "text": "Perawatan berkala (AC, APAR, genset), kontrak kebersihan/keamanan/sewa, dan tagihan listrik & air.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:368"
+   "frontend/src/components/navigation.js:380"
   ],
   "chunk": "shell-2"
  },
@@ -5050,7 +5052,7 @@
   "text": "Ringkasan aset, lisensi, tiket.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:369"
+   "frontend/src/components/navigation.js:381"
   ],
   "chunk": "shell-2"
  },
@@ -5058,7 +5060,7 @@
   "text": "Aset perangkat, assignment, kondisi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:370"
+   "frontend/src/components/navigation.js:382"
   ],
   "chunk": "shell-2"
  },
@@ -5066,7 +5068,7 @@
   "text": "Software vendor, lisensi, invoice, pembayaran.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:371"
+   "frontend/src/components/navigation.js:383"
   ],
   "chunk": "shell-2"
  },
@@ -5074,7 +5076,7 @@
   "text": "Jaringan, ISP, CCTV, backup, Google Workspace, dan nomor perusahaan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:372"
+   "frontend/src/components/navigation.js:384"
   ],
   "chunk": "shell-2"
  },
@@ -5082,7 +5084,7 @@
   "text": "Dashboard eksekutif lintas divisi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:373"
+   "frontend/src/components/navigation.js:385"
   ],
   "chunk": "shell-2"
  },
@@ -5090,7 +5092,7 @@
   "text": "Umur piutang, jatuh tempo, pelanggan terlambat, dan penagihan per bulan — dari Accurate.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:374"
+   "frontend/src/components/navigation.js:386"
   ],
   "chunk": "shell-2"
  },
@@ -5098,7 +5100,7 @@
   "text": "Utang ke pemasok dari faktur & pembayaran pembelian Accurate: umur, jatuh tempo, dan pembayaran.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:375"
+   "frontend/src/components/navigation.js:387"
   ],
   "chunk": "shell-2"
  },
@@ -5106,7 +5108,7 @@
   "text": "Pengajuan pembayaran ke vendor dan reimbursement karyawan, dengan approval dan cek dokumen.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:376"
+   "frontend/src/components/navigation.js:388"
   ],
   "chunk": "shell-2"
  },
@@ -5114,7 +5116,7 @@
   "text": "Omzet per channel, produk terlaris dan yang naik/turun, pelanggan baru, dan leads per area.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:377"
+   "frontend/src/components/navigation.js:389"
   ],
   "chunk": "shell-2"
  },
@@ -5122,7 +5124,7 @@
   "text": "Kampanye per channel dan produk, dengan uplift penjualan dibanding periode sebelumnya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:378"
+   "frontend/src/components/navigation.js:390"
   ],
   "chunk": "shell-2"
  },
@@ -5130,7 +5132,7 @@
   "text": "Kinerja marketplace Shopee & Tokopedia: omzet, pesanan, produk terlaris, retur, piutang, dan SO belum dikirim.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:379"
+   "frontend/src/components/navigation.js:391"
   ],
   "chunk": "shell-2"
  },
@@ -5138,7 +5140,7 @@
   "text": "Dashboard tiap divisi: angka utama, grafik capaian 12 bulan, tren dengan target, dan yang lewat tenggat.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:380"
+   "frontend/src/components/navigation.js:392"
   ],
   "chunk": "shell-2"
  },
@@ -5146,7 +5148,7 @@
   "text": "Semua pekerjaan lintas modul yang lewat tenggat, dalam satu antrean tindak lanjut.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:381"
+   "frontend/src/components/navigation.js:393"
   ],
   "chunk": "shell-2"
  },
@@ -5154,7 +5156,7 @@
   "text": "Linimasa project semua divisi dalam satu peta — jadwal, tumpang tindih, dan yang lewat tenggat.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:382"
+   "frontend/src/components/navigation.js:394"
   ],
   "chunk": "shell-2"
  },
@@ -5162,7 +5164,7 @@
   "text": "Target per divisi per periode, berdampingan dengan realisasi nyata dari Project Tracker dan approval.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:383"
+   "frontend/src/components/navigation.js:395"
   ],
   "chunk": "shell-2"
  },
@@ -5170,7 +5172,7 @@
   "text": "Pesanan sampai lunas, PO sampai barang datang, perkiraan margin, dan barang lambat laku — dari data Accurate yang disetujui.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:384"
+   "frontend/src/components/navigation.js:396"
   ],
   "chunk": "shell-2"
  },
@@ -5178,7 +5180,7 @@
   "text": "Jejak audit aktivitas pengguna dan sistem.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:385"
+   "frontend/src/components/navigation.js:397"
   ],
   "chunk": "shell-2"
  },
@@ -5186,7 +5188,7 @@
   "text": "Sambungkan Accurate Online — hanya baca, aplikasi tidak pernah menulis ke Accurate.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:386"
+   "frontend/src/components/navigation.js:398"
   ],
   "chunk": "shell-2"
  },
@@ -5194,7 +5196,7 @@
   "text": "Detail",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:402",
+   "frontend/src/components/navigation.js:414",
    "frontend/src/pages/accurate/AccurateQuality.jsx:17",
    "frontend/src/pages/tasks/TaskDetail.jsx:295"
   ],
@@ -5204,7 +5206,7 @@
   "text": "Alur karyawan",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:410",
+   "frontend/src/components/navigation.js:422",
    "frontend/src/pages/ActivityLogs.jsx:58",
    "frontend/src/pages/ActivityLogs.jsx:60"
   ],
@@ -5214,7 +5216,7 @@
   "text": "Papan tugas",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:414",
+   "frontend/src/components/navigation.js:426",
    "frontend/src/pages/tasks/TaskBoard.jsx:120"
   ],
   "chunk": "shell-2"
@@ -5223,7 +5225,7 @@
   "text": "Galeri komponen",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/navigation.js:420"
+   "frontend/src/components/navigation.js:432"
   ],
   "chunk": "shell-2"
  },

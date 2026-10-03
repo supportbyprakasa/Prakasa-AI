@@ -19,6 +19,7 @@ import { toast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
 import {
   CUSTOMER_STATUS_LABEL, apiError, daysAgoText, formatRupiahShort, soldQty,
+  orderBillingStatus, orderBillingText,
 } from './salesModel';
 import { CustomerFormModal } from './SalesForms';
 import useOpenFromUrl from '../../components/ai/useOpenFromUrl';
@@ -44,8 +45,8 @@ const ORDER_COLUMNS = [
   { key: 'totalAmount', header: 'Total', type: 'money' },
   {
     key: 'outstandingAmount', header: 'Status', nowrap: true,
-    render: (o) => (Number(o.outstandingAmount) > 0 ? <StatusBadge status="unpaid" /> : <StatusBadge status="paid" label="Lunas" />),
-    exportValue: (o) => (Number(o.outstandingAmount) > 0 ? 'Belum lunas' : 'Lunas'),
+    render: (o) => <StatusBadge status={`so_${orderBillingStatus(o)}`} label={orderBillingText(o)} />,
+    exportValue: (o) => orderBillingText(o),
   },
 ];
 

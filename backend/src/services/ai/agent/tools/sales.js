@@ -421,10 +421,16 @@ const customerLead = {
 
 const ORDER_STATUSES = Object.freeze({ belum_terkirim: 'no_do', belum_difaktur: 'no_invoice', belum_lunas: 'unpaid', terlambat_bayar: 'overdue', lunas: 'paid' });
 
-// Billing state in words; the amounts stay with the money tool.
+// Billing state in words, the same as the Data Sales page (revision F01): an
+// order with no invoice is never "lunas", a partly billed one says so, and a
+// missing amount is "belum tersedia". The amounts stay with the money tool.
 function billingState(r) {
-  if (!r.invoiceNumbers) return 'belum difaktur';
-  if (Number(r.outstandingAmount || 0) <= 0) return 'lunas';
+  const status = r.billingStatus
+    || (!r.invoiceNumbers ? 'not_invoiced' : r.outstandingAmount === null || r.outstandingAmount === undefined ? 'unknown' : Number(r.outstandingAmount) > 0 ? 'unpaid' : 'paid');
+  if (status === 'not_invoiced') return 'belum difaktur';
+  if (status === 'unknown') return 'data pembayaran belum tersedia';
+  if (status === 'partly_billed') return `faktur lunas, SO baru ditagih sebagian${r.invoiceCoverage != null ? ` (${Number(r.invoiceCoverage)}%)` : ''}`;
+  if (status === 'paid') return 'lunas';
   return r.daysOverdue ? `belum lunas, terlambat ${Number(r.daysOverdue)} hari` : 'belum lunas';
 }
 
@@ -433,7 +439,7 @@ const statusOrder = {
   module: ['sales-orders'],
   label: 'Membaca status sales order',
   description: 'Status sales order dari SO sampai pengiriman dan faktur: nomor SO, tanggal, customer, channel, pengiriman (persen terkirim dari Accurate atau nomor surat jalan), '
-    + 'nomor faktur, status tagihan (belum difaktur, belum lunas, terlambat, lunas) dan jatuh tempo. Cari dengan nomor SO atau nama customer, atau saring status '
+    + 'nomor faktur, status tagihan (belum difaktur, belum lunas, terlambat, faktur lunas tetapi SO baru ditagih sebagian, lunas, data pembayaran belum tersedia) dan jatuh tempo. Cari dengan nomor SO atau nama customer, atau saring status '
     + '(belum_terkirim, belum_difaktur, belum_lunas, terlambat_bayar, lunas), periode dan channel. Untuk satu SO, surat jalannya ikut ditampilkan. '
     + 'Data transaksi dari Accurate yang sudah disetujui; Sales Member hanya mendapat SO customer miliknya. '
     + 'Tanpa rupiah (pakai piutang_sales atau omzet_sales), tanpa harga barang, tanpa alamat atau kontak customer.',

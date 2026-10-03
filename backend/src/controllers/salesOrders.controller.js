@@ -23,7 +23,8 @@ const ORDER_STATUS = {
   no_invoice: "(o.invoice_numbers IS NULL OR o.invoice_numbers = '')",
   unpaid: 'o.outstanding_amount > 0',
   overdue: 'o.due_date < DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR) AND o.outstanding_amount > 0',
-  paid: 'o.outstanding_amount <= 0',
+  // Lunas needs an invoice: an order with nothing billed is "Belum difakturkan".
+  paid: "o.outstanding_amount <= 0 AND o.invoice_numbers IS NOT NULL AND o.invoice_numbers <> ''",
 };
 
 function handle(fn) {
@@ -64,12 +65,37 @@ function orderFilters(req) {
 const LINKED = (so) => `FROM sales_invoices_accurate li
   WHERE li.entity_id = ${so}.entity_id AND JSON_CONTAINS(li.so_numbers, JSON_QUOTE(${so}.order_number))`;
 
+// The billing state of a sales order, from its invoices (revision F01): a zero
+// or missing outstanding amount is never enough for "Lunas".
+//   not_invoiced  no invoice yet (Belum difakturkan)
+//   unpaid        an invoice still owes (Belum lunas)
+//   partly_billed the invoices are paid, but cover only part of the order
+//   paid          invoiced in full and nothing owed (Lunas)
+//   unknown       the amounts are not available (Data pembayaran belum tersedia)
+function billingStatus({ invoiceCount, outstanding, orderDpp, invoicedDpp }) {
+  if (invoiceCount === null || invoiceCount === undefined) return 'unknown';
+  if (Number(invoiceCount) === 0) return 'not_invoiced';
+  if (outstanding === null || outstanding === undefined) return 'unknown';
+  if (Number(outstanding) > 0) return 'unpaid';
+  if (orderDpp !== null && orderDpp !== undefined && invoicedDpp !== null && invoicedDpp !== undefined
+      && Number(invoicedDpp) + 1 < Number(orderDpp)) return 'partly_billed';
+  return 'paid';
+}
+
+// The share of the order's DPP its invoices cover (0–100), null when unknown.
+function invoiceCoverage(orderDpp, invoicedDpp) {
+  if (!(Number(orderDpp) > 0) || invoicedDpp === null || invoicedDpp === undefined) return null;
+  return Math.min(100, Math.round((Number(invoicedDpp) / Number(orderDpp)) * 100));
+}
+
 const ACCURATE_SO_STATUS = {
   no_do: 's.percent_shipped < 100',
   no_invoice: `NOT EXISTS (SELECT 1 ${LINKED('s')})`,
   unpaid: `EXISTS (SELECT 1 ${LINKED('s')} AND li.outstanding_amount > 0)`,
   overdue: `EXISTS (SELECT 1 ${LINKED('s')} AND li.outstanding_amount > 0 AND li.due_date < DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR))`,
-  paid: `EXISTS (SELECT 1 ${LINKED('s')}) AND NOT EXISTS (SELECT 1 ${LINKED('s')} AND li.outstanding_amount > 0)`,
+  // Lunas: invoiced in full (DPP) and nothing owed; a partly billed order is not Lunas.
+  paid: `EXISTS (SELECT 1 ${LINKED('s')}) AND NOT EXISTS (SELECT 1 ${LINKED('s')} AND li.outstanding_amount > 0)
+    AND (SELECT COALESCE(SUM(li.dpp_amount), 0) ${LINKED('s')} AND ${receivableSql('li')}) + 1 >= s.dpp_amount`,
 };
 
 function periodFilters(req, alias, dateColumn) {
@@ -106,8 +132,10 @@ async function listAccurateOrders(req, res) {
             s.customer_id AS customerId, s.customer_code AS customerCode, s.customer_name AS customerName,
             NULL AS salesPersonName, CONCAT('Terkirim ', FLOOR(COALESCE(s.percent_shipped, 0)), '%') AS doNumbers,
             (SELECT GROUP_CONCAT(li.invoice_number ORDER BY li.trans_date SEPARATOR ', ') ${LINKED('s')}) AS invoiceNumbers,
-            s.total_amount AS totalAmount,
-            (SELECT COALESCE(SUM(li.outstanding_amount), 0) ${LINKED('s')} AND ${receivableSql('li')}) AS outstandingAmount,
+            s.total_amount AS totalAmount, s.dpp_amount AS orderDpp,
+            (SELECT COUNT(*) ${LINKED('s')} AND ${receivableSql('li')}) AS invoiceCount,
+            (SELECT SUM(li.dpp_amount) ${LINKED('s')} AND ${receivableSql('li')}) AS invoicedDpp,
+            (SELECT SUM(li.outstanding_amount) ${LINKED('s')} AND ${receivableSql('li')}) AS outstandingAmount,
             (SELECT MIN(li.due_date) ${LINKED('s')} AND ${receivableSql('li')} AND li.outstanding_amount > 0) AS dueDate,
             s.status, 'accurate' AS source
        FROM sales_so_accurate s
@@ -130,11 +158,16 @@ async function listAccurateOrders(req, res) {
     [req.user.entityId],
   );
   const today = todayWib();
-  return ok(res, rows.map((r) => {
+  return ok(res, rows.map(({ orderDpp, invoicedDpp, invoiceCount, ...r }) => {
     const due = r.dueDate ? new Date(r.dueDate).toISOString().slice(0, 10) : null;
+    const count = int(invoiceCount);
+    const outstanding = count > 0 && r.outstandingAmount !== null ? money(r.outstandingAmount) : (count > 0 ? null : 0);
     return {
-      ...r, totalAmount: money(r.totalAmount), outstandingAmount: money(r.outstandingAmount), settledAmount: null,
-      daysOverdue: due && due < today && money(r.outstandingAmount) > 0 ? Math.round((new Date(today) - new Date(due)) / 86400000) : null,
+      ...r, totalAmount: money(r.totalAmount), outstandingAmount: outstanding, settledAmount: null,
+      invoiceCount: count,
+      invoiceCoverage: invoiceCoverage(orderDpp, invoicedDpp),
+      billingStatus: billingStatus({ invoiceCount: count, outstanding, orderDpp, invoicedDpp }),
+      daysOverdue: due && due < today && Number(outstanding) > 0 ? Math.round((new Date(today) - new Date(due)) / 86400000) : null,
     };
   }), {
     page, limit, total: int(count.n), revenue: money(sum.revenue), outstanding: money(sum.outstanding),
@@ -298,9 +331,16 @@ const listOrders = handle(async (req, res) => {
     'SELECT DISTINCT channel FROM sales_orders WHERE entity_id = ? AND deleted_at IS NULL AND channel IS NOT NULL ORDER BY channel',
     [req.user.entityId],
   );
-  return ok(res, rows.map((r) => ({
-    ...r, totalAmount: money(r.totalAmount), outstandingAmount: money(r.outstandingAmount), settledAmount: money(r.settledAmount),
-  })), {
+  return ok(res, rows.map((r) => {
+    // Recap mode: the invoice numbers typed on the order are its invoices.
+    const invoiceCount = String(r.invoiceNumbers || '').split(',').map((v) => v.trim()).filter(Boolean).length;
+    const outstanding = r.outstandingAmount === null ? null : money(r.outstandingAmount);
+    return {
+      ...r, totalAmount: money(r.totalAmount), outstandingAmount: outstanding, settledAmount: money(r.settledAmount),
+      invoiceCount, invoiceCoverage: null,
+      billingStatus: billingStatus({ invoiceCount, outstanding, orderDpp: null, invoicedDpp: null }),
+    };
+  }), {
     page, limit, total: int(sum.orders), revenue: money(sum.revenue), outstanding: money(sum.outstanding),
     channels: [...new Set([...ORDER_CHANNELS, ...channels.map((c) => c.channel)])],
   });
@@ -543,6 +583,7 @@ const receivablesAging = handle(async (req, res) => {
 });
 
 module.exports = {
+  billingStatus, invoiceCoverage, listAccurateOrders,
   receivablesAging,
   getDocumentSettings, saveDocumentSettings, printData,
   listOrders, orderDetail, listDocuments, nextNumber, createOrder, updateOrder, cancelOrder,

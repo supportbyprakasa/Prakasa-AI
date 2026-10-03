@@ -129,3 +129,16 @@ test('server field errors land on visible fields; the rest become a message', ()
   assert.equal(splitServerErrors(err({}), visible, { fallback: 'Gagal' }).message, 'Input tidak valid');
   assert.equal(splitServerErrors(new Error('network'), visible, { fallback: 'Gagal' }).message, 'Gagal');
 });
+
+test('F01: an order is Lunas only when invoiced and paid; the export says the same words', async () => {
+  const m = await import('../src/pages/sales/salesModel.js');
+  assert.equal(m.orderBillingStatus({ billingStatus: 'not_invoiced', outstandingAmount: 0 }), 'not_invoiced');
+  assert.equal(m.orderBillingText({ billingStatus: 'not_invoiced', outstandingAmount: 0 }), 'Belum difakturkan');
+  assert.equal(m.orderBillingText({ billingStatus: 'partly_billed', invoiceCoverage: 40 }), 'Faktur lunas · SO ditagih 40%');
+  assert.equal(m.orderBillingText({ billingStatus: 'unknown' }), 'Data pembayaran belum tersedia');
+  // An older response without billingStatus never reads zero as Lunas.
+  assert.equal(m.orderBillingStatus({ invoiceNumbers: '', outstandingAmount: 0 }), 'not_invoiced');
+  assert.equal(m.orderBillingStatus({ invoiceNumbers: 'INV-1', outstandingAmount: null }), 'unknown');
+  assert.equal(m.orderBillingStatus({ invoiceNumbers: 'INV-1', outstandingAmount: 0 }), 'paid');
+  assert.equal(m.orderBillingStatus({ invoiceNumbers: 'INV-1', outstandingAmount: 5 }), 'unpaid');
+});

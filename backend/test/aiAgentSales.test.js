@@ -40,6 +40,7 @@ const ROW = {
   durationMinutes: 12, isPlanned: 1, geoMismatch: 0, checkInTime: '09:00',
   // orders, documents, receivables
   orderNumber: 'SO.1', transactionDate: DAY('2026-09-20'), doNumbers: 'Terkirim 40%', invoiceNumbers: 'SI.1', totalAmount: MONEY, outstandingAmount: MONEY,
+  invoiceCount: 1, orderDpp: MONEY, invoicedDpp: MONEY,
   dueDate: DAY('2026-09-25'), number: 'SI.1', date: DAY('2026-09-20'), orderNumbers: 'SO.1', dppAmount: MONEY, revenue: MONEY, outstanding: MONEY, orders: 4,
   term_days: 7, bucket: 'd1_30', invoices: 2, month: '2026-09', units: [{ unit: 'Ctns', qty: 3 }], base_qty: null, base_unit: null,
   net: MONEY, returns: 0, owed: MONEY, overdue: MONEY, last_invoice: DAY('2026-09-20'), last_receipt: DAY('2026-09-10'),

@@ -20,6 +20,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   DOCUMENT_TABS, INVOICE_STATUS_FILTERS, ORDER_STATUS_FILTERS, PERIOD_OPTIONS, apiError, formatRupiahShort,
   periodRange, soldQty, splitServerErrors,
+  orderBillingStatus, orderBillingText,
 } from './salesModel';
 import SalesScopeBanner, { AccurateHoldBanner, useAccurateSource, useNumbersFromAccurate, useSalesScope } from './SalesScopeBanner';
 import { defineAIForm, f } from '../../components/ai/aiFormFields';
@@ -38,8 +39,8 @@ import './sales.css';
 
 const money = (key, header) => ({ key, header, type: 'money' });
 
-const paidBadge = (r) => (Number(r.outstandingAmount) > 0 ? <StatusBadge status="unpaid" /> : <StatusBadge status="paid" label="Lunas" />);
-const paidText = (r) => (Number(r.outstandingAmount) > 0 ? 'Belum lunas' : 'Lunas');
+const paidBadge = (r) => <StatusBadge status={`so_${orderBillingStatus(r)}`} label={orderBillingText(r)} />;
+const paidText = (r) => orderBillingText(r);
 const PAID_COLUMN = { key: 'paid', header: 'Status', render: paidBadge, exportValue: paidText, nowrap: true };
 const activeColumn = {
   key: 'isActive', header: 'Status', nowrap: true,

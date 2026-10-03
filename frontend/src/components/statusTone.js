@@ -120,6 +120,13 @@ const STATUSES = {
   tentative: ['warning', 'Mungkin'],
   declined: ['error', 'Tidak'],
 
+  // Sales order billing (revision F01): pages pass `so_<billingStatus>`.
+  so_not_invoiced: ['default', 'Belum difakturkan'],
+  so_unpaid: ['warning', 'Belum lunas'],
+  so_partly_billed: ['info', 'Faktur lunas · SO baru ditagih sebagian'],
+  so_paid: ['success', 'Lunas'],
+  so_unknown: ['default', 'Data pembayaran belum tersedia'],
+
   // IT assets & subscriptions
   available: ['success', 'Tersedia'],
   returned: ['success', 'Dikembalikan'],

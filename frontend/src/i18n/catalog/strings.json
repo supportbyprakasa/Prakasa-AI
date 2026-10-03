@@ -49,7 +49,7 @@
    "frontend/src/pages/ga/GaBookingDetail.jsx:140",
    "frontend/src/pages/ga/GaRequestDetail.jsx:237",
    "frontend/src/pages/handbook/handbookContent.js:898",
-   "frontend/src/pages/handbook/handbookContent.js:2036",
+   "frontend/src/pages/handbook/handbookContent.js:2049",
    "frontend/src/pages/hrga/ChecklistTemplates.jsx:54",
    "frontend/src/pages/hrga/ChecklistTemplates.jsx:283",
    "frontend/src/pages/hrga/ChecklistTemplates.jsx:418",
@@ -58,7 +58,7 @@
    "frontend/src/pages/hrga/WorkflowList.jsx:88",
    "frontend/src/pages/it/BastDialog.jsx:30",
    "frontend/src/pages/it/BastDialog.jsx:200",
-   "frontend/src/pages/management/DivisionDashboard.jsx:67",
+   "frontend/src/pages/management/DivisionDashboard.jsx:72",
    "frontend/src/pages/people/Directory.jsx:151",
    "frontend/src/pages/people/Directory.jsx:160",
    "frontend/src/pages/people/Directory.jsx:197",
@@ -186,7 +186,7 @@
    "frontend/src/pages/it/infraModel.js:21",
    "frontend/src/pages/it/infraModel.js:23",
    "frontend/src/pages/it/infraModel.js:229",
-   "frontend/src/pages/it/ItDashboard.jsx:124",
+   "frontend/src/pages/it/ItDashboard.jsx:121",
    "frontend/src/pages/it/itModel.js:29",
    "frontend/src/pages/it/LocationsPanel.jsx:47",
    "frontend/src/pages/it/LocationsPanel.jsx:129",
@@ -683,7 +683,7 @@
    "frontend/src/pages/it/infraModel.js:393",
    "frontend/src/pages/it/infraModel.js:636",
    "frontend/src/pages/it/Infrastructure.jsx:43",
-   "frontend/src/pages/it/ItDashboard.jsx:183",
+   "frontend/src/pages/it/ItDashboard.jsx:180",
    "frontend/src/pages/it/ReportImportDialog.jsx:215",
    "frontend/src/pages/projects/CreateIssueModal.jsx:35",
    "frontend/src/pages/projects/CreateIssueModal.jsx:132",
@@ -793,8 +793,8 @@
    "frontend/src/pages/sales/SalesLeads.jsx:480",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:344",
    "frontend/src/pages/sales/SalesOrders.jsx:56",
-   "frontend/src/pages/sales/SalesPipeline.jsx:66",
-   "frontend/src/pages/sales/SalesPipeline.jsx:86",
+   "frontend/src/pages/sales/SalesPipeline.jsx:61",
+   "frontend/src/pages/sales/SalesPipeline.jsx:81",
    "frontend/src/pages/sales/SalesPrint.jsx:223",
    "frontend/src/pages/sales/SalesTodo.jsx:39",
    "backend/migrations/032_prakasa_workspace_organization.sql:132",
@@ -832,10 +832,10 @@
    "frontend/src/components/navigation.js:194",
    "frontend/src/components/navigation.js:328",
    "frontend/src/pages/advanced/managementFlowModel.js:31",
-   "frontend/src/pages/retail/RetailCommerce.jsx:162",
-   "frontend/src/pages/retail/RetailCommerce.jsx:165",
-   "frontend/src/pages/retail/RetailCommerce.jsx:173",
-   "frontend/src/pages/retail/RetailCommerce.jsx:191",
+   "frontend/src/pages/retail/RetailCommerce.jsx:163",
+   "frontend/src/pages/retail/RetailCommerce.jsx:166",
+   "frontend/src/pages/retail/RetailCommerce.jsx:174",
+   "frontend/src/pages/retail/RetailCommerce.jsx:193",
    "backend/migrations/032_prakasa_workspace_organization.sql:135",
    "backend/src/config/standardOrganization.js:1"
   ],
@@ -894,7 +894,7 @@
    "frontend/src/components/navigation.js:126",
    "frontend/src/pages/admin/IntegrationLogs.jsx:38",
    "frontend/src/pages/google/Analytics.jsx:332",
-   "frontend/src/pages/handbook/handbookContent.js:1934"
+   "frontend/src/pages/handbook/handbookContent.js:1947"
   ],
   "chunk": "shell-1"
  },
@@ -939,7 +939,7 @@
    "frontend/src/pages/handbook/handbookContent.js:1087",
    "frontend/src/pages/sales/SalesCustomers.jsx:22",
    "frontend/src/pages/sales/salesModel.js:8",
-   "frontend/src/pages/sales/SalesPipeline.jsx:170"
+   "frontend/src/pages/sales/SalesPipeline.jsx:165"
   ],
   "chunk": "shell-1"
  },
@@ -1132,7 +1132,7 @@
    "frontend/src/pages/approvals/ApprovalInbox.jsx:170",
    "frontend/src/pages/approvals/ApprovalInbox.jsx:174",
    "frontend/src/pages/approvals/ApprovalInbox.jsx:261",
-   "frontend/src/pages/handbook/handbookContent.js:2187"
+   "frontend/src/pages/handbook/handbookContent.js:2200"
   ],
   "chunk": "shell-1"
  },
@@ -1906,7 +1906,7 @@
    "backend/src/services/aiToolRegistry.service.js:671",
    "frontend/src/components/navigation.js:159",
    "frontend/src/pages/admin/NotificationPolicy.jsx:58",
-   "frontend/src/pages/handbook/handbookContent.js:2147"
+   "frontend/src/pages/handbook/handbookContent.js:2160"
   ],
   "chunk": "shell-1"
  },
@@ -1916,8 +1916,8 @@
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:672",
    "frontend/src/components/navigation.js:25",
-   "frontend/src/pages/management/DivisionDashboard.jsx:75",
-   "frontend/src/pages/management/DivisionDashboard.jsx:78"
+   "frontend/src/pages/management/DivisionDashboard.jsx:80",
+   "frontend/src/pages/management/DivisionDashboard.jsx:83"
   ],
   "chunk": "shell-1"
  },
@@ -2023,7 +2023,7 @@
    "backend/src/services/aiToolRegistry.service.js:700",
    "frontend/src/components/navigation.js:71",
    "frontend/src/pages/handbook/handbookContent.js:1074",
-   "frontend/src/pages/sales/SalesPipeline.jsx:153"
+   "frontend/src/pages/sales/SalesPipeline.jsx:148"
   ],
   "chunk": "shell-1"
  },
@@ -2065,8 +2065,8 @@
    "frontend/src/pages/sales/SalesOrders.jsx:126",
    "frontend/src/pages/sales/SalesOrders.jsx:139",
    "frontend/src/pages/sales/SalesOrders.jsx:143",
-   "frontend/src/pages/sales/SalesPipeline.jsx:71",
-   "frontend/src/pages/sales/SalesPipeline.jsx:77",
+   "frontend/src/pages/sales/SalesPipeline.jsx:66",
+   "frontend/src/pages/sales/SalesPipeline.jsx:72",
    "frontend/src/pages/sales/SalesPrint.jsx:252",
    "frontend/src/pages/sales/SalesTodo.jsx:23",
    "frontend/src/pages/warehouse/WarehouseAccurateDocs.jsx:39",
@@ -2122,7 +2122,7 @@
    "backend/src/services/aiToolRegistry.service.js:749",
    "frontend/src/components/navigation.js:117",
    "frontend/src/pages/handbook/handbookContent.js:1633",
-   "frontend/src/pages/it/ItDashboard.jsx:232"
+   "frontend/src/pages/it/ItDashboard.jsx:229"
   ],
   "chunk": "shell-1"
  },
@@ -2178,7 +2178,7 @@
    "frontend/src/pages/handbook/aiForms.generated.js:121",
    "frontend/src/pages/handbook/aiForms.generated.js:122",
    "frontend/src/pages/handbook/handbookContent.js:1662",
-   "frontend/src/pages/it/ItDashboard.jsx:144",
+   "frontend/src/pages/it/ItDashboard.jsx:141",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:179",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:189",
    "frontend/src/pages/it/SubscriptionDetail.jsx:271"
@@ -2303,7 +2303,7 @@
    "frontend/src/components/navigation.js:27",
    "frontend/src/pages/advanced/Escalations.jsx:299",
    "frontend/src/pages/handbook/aiForms.generated.js:82",
-   "frontend/src/pages/handbook/handbookContent.js:1877"
+   "frontend/src/pages/handbook/handbookContent.js:1890"
   ],
   "chunk": "shell-1"
  },
@@ -2314,7 +2314,7 @@
    "backend/src/services/aiToolRegistry.service.js:785",
    "frontend/src/components/navigation.js:29",
    "frontend/src/pages/advanced/Roadmap.jsx:125",
-   "frontend/src/pages/handbook/handbookContent.js:1904"
+   "frontend/src/pages/handbook/handbookContent.js:1917"
   ],
   "chunk": "shell-1"
  },
@@ -2326,7 +2326,7 @@
    "frontend/src/components/navigation.js:28",
    "frontend/src/pages/advanced/Targets.jsx:242",
    "frontend/src/pages/handbook/aiForms.generated.js:83",
-   "frontend/src/pages/handbook/handbookContent.js:1887"
+   "frontend/src/pages/handbook/handbookContent.js:1900"
   ],
   "chunk": "shell-1"
  },
@@ -2337,7 +2337,7 @@
    "backend/src/services/aiToolRegistry.service.js:787",
    "frontend/src/components/navigation.js:26",
    "frontend/src/pages/advanced/ManagementDashboard.jsx:132",
-   "frontend/src/pages/handbook/handbookContent.js:1868"
+   "frontend/src/pages/handbook/handbookContent.js:1881"
   ],
   "chunk": "shell-1"
  },
@@ -2348,7 +2348,7 @@
    "backend/src/services/aiToolRegistry.service.js:790",
    "frontend/src/components/navigation.js:31",
    "frontend/src/pages/advanced/ManagementFlow.jsx:35",
-   "frontend/src/pages/handbook/handbookContent.js:1910"
+   "frontend/src/pages/handbook/handbookContent.js:1923"
   ],
   "chunk": "shell-1"
  },
@@ -2390,7 +2390,7 @@
    "frontend/src/components/navigation.js:134",
    "frontend/src/pages/ActivityLogs.jsx:116",
    "frontend/src/pages/admin/WorkspaceSync.jsx:242",
-   "frontend/src/pages/handbook/handbookContent.js:2007"
+   "frontend/src/pages/handbook/handbookContent.js:2020"
   ],
   "chunk": "shell-1"
  },
@@ -2411,7 +2411,7 @@
    "frontend/src/pages/admin/Users.jsx:250",
    "frontend/src/pages/admin/Users.jsx:358",
    "frontend/src/pages/advanced/GlobalSearch.jsx:213",
-   "frontend/src/pages/handbook/handbookContent.js:2043"
+   "frontend/src/pages/handbook/handbookContent.js:2056"
   ],
   "chunk": "shell-1"
  },
@@ -2429,8 +2429,8 @@
    "frontend/src/pages/admin/Users.jsx:378",
    "frontend/src/pages/admin/WorkspaceSync.jsx:195",
    "frontend/src/pages/google/Groups.jsx:54",
-   "frontend/src/pages/handbook/handbookContent.js:1967",
-   "frontend/src/pages/handbook/handbookContent.js:2018"
+   "frontend/src/pages/handbook/handbookContent.js:1980",
+   "frontend/src/pages/handbook/handbookContent.js:2031"
   ],
   "chunk": "shell-1"
  },
@@ -2441,7 +2441,7 @@
    "backend/src/services/aiToolRegistry.service.js:796",
    "frontend/src/components/navigation.js:136",
    "frontend/src/pages/admin/Permissions.jsx:34",
-   "frontend/src/pages/handbook/handbookContent.js:2029"
+   "frontend/src/pages/handbook/handbookContent.js:2042"
   ],
   "chunk": "shell-1"
  },
@@ -2454,7 +2454,7 @@
    "frontend/src/pages/ActivityLogs.jsx:51",
    "frontend/src/pages/ActivityLogs.jsx:54",
    "frontend/src/pages/admin/FolderMappingRules.jsx:116",
-   "frontend/src/pages/handbook/handbookContent.js:2094"
+   "frontend/src/pages/handbook/handbookContent.js:2107"
   ],
   "chunk": "shell-1"
  },
@@ -2467,7 +2467,7 @@
    "frontend/src/pages/ActivityLogs.jsx:45",
    "frontend/src/pages/admin/DocumentTypes.jsx:131",
    "frontend/src/pages/finance/PaymentRequestDetail.jsx:395",
-   "frontend/src/pages/handbook/handbookContent.js:2087"
+   "frontend/src/pages/handbook/handbookContent.js:2100"
   ],
   "chunk": "shell-1"
  },
@@ -2479,7 +2479,7 @@
    "frontend/src/components/navigation.js:145",
    "frontend/src/pages/ActivityLogs.jsx:99",
    "frontend/src/pages/admin/SignatureRules.jsx:117",
-   "frontend/src/pages/handbook/handbookContent.js:2073"
+   "frontend/src/pages/handbook/handbookContent.js:2086"
   ],
   "chunk": "shell-1"
  },
@@ -2491,7 +2491,7 @@
    "frontend/src/components/navigation.js:157",
    "frontend/src/pages/admin/IntegrationLogs.jsx:191",
    "frontend/src/pages/admin/IntegrationLogs.jsx:205",
-   "frontend/src/pages/handbook/handbookContent.js:2140"
+   "frontend/src/pages/handbook/handbookContent.js:2153"
   ],
   "chunk": "shell-1"
  },
@@ -2503,7 +2503,7 @@
    "frontend/src/components/navigation.js:144",
    "frontend/src/pages/ActivityLogs.jsx:31",
    "frontend/src/pages/admin/ApprovalMatrix.jsx:291",
-   "frontend/src/pages/handbook/handbookContent.js:2062"
+   "frontend/src/pages/handbook/handbookContent.js:2075"
   ],
   "chunk": "shell-1"
  },
@@ -2515,7 +2515,7 @@
    "frontend/src/components/navigation.js:146",
    "frontend/src/pages/admin/aiLabels.js:21",
    "frontend/src/pages/admin/SignaturePrecheckLogs.jsx:89",
-   "frontend/src/pages/handbook/handbookContent.js:2080"
+   "frontend/src/pages/handbook/handbookContent.js:2093"
   ],
   "chunk": "shell-1"
  },
@@ -2526,7 +2526,7 @@
    "backend/src/services/aiToolRegistry.service.js:803",
    "frontend/src/components/navigation.js:156",
    "frontend/src/pages/admin/AIUsage.jsx:114",
-   "frontend/src/pages/handbook/handbookContent.js:2133"
+   "frontend/src/pages/handbook/handbookContent.js:2146"
   ],
   "chunk": "shell-1"
  },
@@ -2537,7 +2537,7 @@
    "backend/src/services/aiToolRegistry.service.js:804",
    "frontend/src/components/navigation.js:155",
    "frontend/src/pages/admin/AIProviderSettings.jsx:100",
-   "frontend/src/pages/handbook/handbookContent.js:2123"
+   "frontend/src/pages/handbook/handbookContent.js:2136"
   ],
   "chunk": "shell-1"
  },
@@ -2548,7 +2548,7 @@
    "backend/src/services/aiToolRegistry.service.js:805",
    "frontend/src/components/navigation.js:154",
    "frontend/src/pages/admin/AccurateIntegration.jsx:202",
-   "frontend/src/pages/handbook/handbookContent.js:2113"
+   "frontend/src/pages/handbook/handbookContent.js:2126"
   ],
   "chunk": "shell-1"
  },
@@ -2560,7 +2560,7 @@
    "frontend/src/components/navigation.js:127",
    "frontend/src/pages/ActivityLogs.jsx:322",
    "frontend/src/pages/ActivityLogs.jsx:324",
-   "frontend/src/pages/handbook/handbookContent.js:1941"
+   "frontend/src/pages/handbook/handbookContent.js:1954"
   ],
   "chunk": "shell-1"
  },
@@ -2719,7 +2719,7 @@
    "frontend/src/pages/calendar/calendarModel.js:229",
    "frontend/src/pages/ga/GaBookingDetail.jsx:118",
    "frontend/src/pages/ga/GaRequestDetail.jsx:188",
-   "frontend/src/pages/handbook/handbookContent.js:1967",
+   "frontend/src/pages/handbook/handbookContent.js:1980",
    "frontend/src/pages/hrga/hrgaModel.js:43",
    "frontend/src/pages/hrga/hrgaModel.js:44",
    "frontend/src/pages/it/infraModel.js:31",
@@ -3122,11 +3122,11 @@
    "frontend/src/pages/it/DeviceDetail.jsx:220",
    "frontend/src/pages/it/InfraImportDialog.jsx:174",
    "frontend/src/pages/it/Infrastructure.jsx:129",
-   "frontend/src/pages/it/ItDashboard.jsx:99",
+   "frontend/src/pages/it/ItDashboard.jsx:96",
    "frontend/src/pages/it/ItTicketDetail.jsx:86",
    "frontend/src/pages/it/ReportImportDialog.jsx:282",
    "frontend/src/pages/it/SubscriptionDetail.jsx:256",
-   "frontend/src/pages/management/DivisionDashboard.jsx:79",
+   "frontend/src/pages/management/DivisionDashboard.jsx:84",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:509",
    "frontend/src/pages/marketing/MarketingInsights.jsx:130",
    "frontend/src/pages/MorningBriefing.jsx:128",
@@ -3144,7 +3144,7 @@
    "frontend/src/pages/projects/TrackerPortfolio.jsx:112",
    "frontend/src/pages/projects/TrackerReports.jsx:170",
    "frontend/src/pages/public/VerifyDocument.jsx:73",
-   "frontend/src/pages/retail/RetailCommerce.jsx:166",
+   "frontend/src/pages/retail/RetailCommerce.jsx:167",
    "frontend/src/pages/sales/SalesAccurateBatch.jsx:248",
    "frontend/src/pages/sales/SalesAging.jsx:30",
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:161",
@@ -3153,7 +3153,7 @@
    "frontend/src/pages/sales/SalesOrderForm.jsx:309",
    "frontend/src/pages/sales/SalesOrders.jsx:348",
    "frontend/src/pages/sales/SalesPeopleDialog.jsx:98",
-   "frontend/src/pages/sales/SalesPipeline.jsx:161",
+   "frontend/src/pages/sales/SalesPipeline.jsx:156",
    "frontend/src/pages/sales/SalesTargets.jsx:127",
    "frontend/src/pages/signatures/Letterhead.jsx:96",
    "frontend/src/pages/signatures/Letterhead.jsx:108",
@@ -3570,7 +3570,7 @@
    "frontend/src/pages/advanced/managementFlowModel.js:66",
    "frontend/src/pages/advanced/targetsModel.js:21",
    "frontend/src/pages/advanced/targetsModel.js:46",
-   "frontend/src/pages/handbook/handbookContent.js:1891",
+   "frontend/src/pages/handbook/handbookContent.js:1904",
    "frontend/src/pages/procurement/ProcurementToday.jsx:86",
    "frontend/src/pages/warehouse/WarehouseToday.jsx:81"
   ],
@@ -3609,15 +3609,15 @@
    "frontend/src/pages/it/Devices.jsx:125",
    "frontend/src/pages/it/Infrastructure.jsx:154",
    "frontend/src/pages/it/Infrastructure.jsx:261",
-   "frontend/src/pages/it/ItDashboard.jsx:66",
+   "frontend/src/pages/it/ItDashboard.jsx:63",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:121",
    "frontend/src/pages/it/SubscriptionDetail.jsx:143",
-   "frontend/src/pages/management/DivisionDashboard.jsx:58",
+   "frontend/src/pages/management/DivisionDashboard.jsx:63",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:399",
    "frontend/src/pages/marketing/MarketingInsights.jsx:97",
    "frontend/src/pages/people/Directory.jsx:95",
    "frontend/src/pages/people/OrgChart.jsx:49",
-   "frontend/src/pages/retail/RetailCommerce.jsx:139"
+   "frontend/src/pages/retail/RetailCommerce.jsx:140"
   ],
   "chunk": "shell-1"
  },
@@ -4374,11 +4374,11 @@
    "frontend/src/pages/google/Mail.jsx:594",
    "frontend/src/pages/hrga/WorkflowFormDialog.jsx:214",
    "frontend/src/pages/it/SubscriptionDetail.jsx:283",
-   "frontend/src/pages/management/DivisionDashboard.jsx:96",
+   "frontend/src/pages/management/DivisionDashboard.jsx:131",
    "frontend/src/pages/marketing/MarketingInsights.jsx:166",
    "frontend/src/pages/notifications/NotificationCenter.jsx:178",
-   "frontend/src/pages/retail/RetailCommerce.jsx:160",
-   "frontend/src/pages/sales/SalesPipeline.jsx:155",
+   "frontend/src/pages/retail/RetailCommerce.jsx:161",
+   "frontend/src/pages/sales/SalesPipeline.jsx:150",
    "frontend/src/pages/tasks/TaskBoard.jsx:134",
    "frontend/src/pages/tasks/TaskBoard.jsx:545"
   ],
@@ -4709,7 +4709,7 @@
   "sources": [
    "frontend/src/components/navigation.js:131",
    "frontend/src/components/navigation.js:201",
-   "frontend/src/pages/handbook/handbookContent.js:1956"
+   "frontend/src/pages/handbook/handbookContent.js:1969"
   ],
   "chunk": "shell-1"
  },
@@ -4728,7 +4728,7 @@
   "sources": [
    "frontend/src/components/navigation.js:152",
    "frontend/src/components/navigation.js:204",
-   "frontend/src/pages/handbook/handbookContent.js:2104"
+   "frontend/src/pages/handbook/handbookContent.js:2117"
   ],
   "chunk": "shell-1"
  },
@@ -6071,7 +6071,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/components/search/searchResultModel.js:44",
-   "frontend/src/pages/it/ItDashboard.jsx:197",
+   "frontend/src/pages/it/ItDashboard.jsx:194",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:211",
    "frontend/src/pages/it/SubscriptionDetail.jsx:391"
   ],
@@ -6285,8 +6285,11 @@
    "frontend/src/components/statusTone.js:15",
    "frontend/src/components/statusTone.js:240",
    "frontend/src/pages/advanced/targetsModel.js:17",
-   "frontend/src/pages/handbook/handbookContent.js:1891",
+   "frontend/src/pages/handbook/handbookContent.js:1832",
+   "frontend/src/pages/handbook/handbookContent.js:1904",
+   "frontend/src/pages/management/DivisionDashboard.jsx:156",
    "frontend/src/pages/procurement/ProcurementToday.jsx:96",
+   "frontend/src/pages/retail/RetailCommerce.jsx:212",
    "frontend/src/pages/warehouse/WarehouseToday.jsx:95"
   ],
   "chunk": "shell-2"
@@ -6466,7 +6469,7 @@
    "frontend/src/components/statusTone.js:301",
    "frontend/src/pages/advanced/flow/FlowSales.jsx:41",
    "frontend/src/pages/google/mailModel.js:13",
-   "frontend/src/pages/retail/RetailCommerce.jsx:87",
+   "frontend/src/pages/retail/RetailCommerce.jsx:88",
    "frontend/src/pages/warehouse/WarehouseShipping.jsx:61"
   ],
   "chunk": "shell-2"
@@ -6567,6 +6570,7 @@
    "frontend/src/pages/advanced/flow/FlowSales.jsx:40",
    "frontend/src/pages/finance/FinancePayables.jsx:43",
    "frontend/src/pages/handbook/handbookContent.js:1412",
+   "frontend/src/pages/management/DivisionDashboard.jsx:118",
    "frontend/src/pages/procurement/procurementModel.js:19",
    "frontend/src/pages/procurement/ProcurementVendors.jsx:32",
    "frontend/src/pages/projects/Projects.jsx:50",
@@ -7146,7 +7150,7 @@
   "sources": [
    "frontend/src/components/statusTone.js:236",
    "frontend/src/pages/advanced/targetsModel.js:20",
-   "frontend/src/pages/handbook/handbookContent.js:1891"
+   "frontend/src/pages/handbook/handbookContent.js:1904"
   ],
   "chunk": "shell-2"
  },
@@ -7166,7 +7170,7 @@
   "sources": [
    "frontend/src/components/statusTone.js:239",
    "frontend/src/pages/advanced/targetsModel.js:16",
-   "frontend/src/pages/handbook/handbookContent.js:1891"
+   "frontend/src/pages/handbook/handbookContent.js:1904"
   ],
   "chunk": "shell-2"
  },
@@ -7176,7 +7180,7 @@
   "sources": [
    "frontend/src/components/statusTone.js:241",
    "frontend/src/pages/advanced/targetsModel.js:18",
-   "frontend/src/pages/handbook/handbookContent.js:1891"
+   "frontend/src/pages/handbook/handbookContent.js:1904"
   ],
   "chunk": "shell-2"
  },
@@ -7186,7 +7190,7 @@
   "sources": [
    "frontend/src/components/statusTone.js:242",
    "frontend/src/pages/advanced/targetsModel.js:19",
-   "frontend/src/pages/handbook/handbookContent.js:1891"
+   "frontend/src/pages/handbook/handbookContent.js:1904"
   ],
   "chunk": "shell-2"
  },
@@ -7214,7 +7218,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/components/statusTone.js:250",
-   "frontend/src/pages/sales/SalesPipeline.jsx:100"
+   "frontend/src/pages/sales/SalesPipeline.jsx:95"
   ],
   "chunk": "shell-2"
  },
@@ -7902,7 +7906,7 @@
   "sources": [
    "backend/src/services/handbookAccess.js:19",
    "frontend/src/components/ai/aiToolModel.js:71",
-   "frontend/src/pages/handbook/handbookContent.js:1967",
+   "frontend/src/pages/handbook/handbookContent.js:1980",
    "frontend/src/pages/handbook/handbookModel.js:26"
   ],
   "chunk": "components-ai"
@@ -9806,7 +9810,8 @@
   "sources": [
    "frontend/src/components/ai/AIInbox.jsx:160",
    "frontend/src/pages/Dashboard.jsx:187",
-   "frontend/src/pages/management/DivisionDashboard.jsx:199"
+   "frontend/src/pages/management/DivisionDashboard.jsx:163",
+   "frontend/src/pages/retail/RetailCommerce.jsx:216"
   ],
   "chunk": "components-ai"
  },
@@ -11506,7 +11511,7 @@
    "frontend/src/pages/finance/financeReportsModel.js:91",
    "frontend/src/pages/ga/gaOpsModel.js:206",
    "frontend/src/pages/ga/GaRequestDetail.jsx:241",
-   "frontend/src/pages/management/DivisionDashboard.jsx:192",
+   "frontend/src/pages/management/DivisionDashboard.jsx:119",
    "frontend/src/pages/procurement/procurementModel.js:56",
    "frontend/src/pages/procurement/ProcurementReorder.jsx:90",
    "frontend/src/pages/procurement/ProcurementReorder.jsx:91",
@@ -11552,9 +11557,10 @@
   "kind": "exact",
   "sources": [
    "frontend/src/components/charts/MotionChart.jsx:19",
-   "frontend/src/pages/handbook/handbookContent.js:1835",
-   "frontend/src/pages/management/DivisionDashboard.jsx:118",
-   "frontend/src/pages/retail/RetailCommerce.jsx:240"
+   "frontend/src/pages/handbook/handbookContent.js:1833",
+   "frontend/src/pages/handbook/handbookContent.js:1843",
+   "frontend/src/pages/management/DivisionDashboard.jsx:167",
+   "frontend/src/pages/retail/RetailCommerce.jsx:220"
   ],
   "chunk": "components-work"
  },
@@ -11591,7 +11597,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/components/charts/MotionChart.jsx:85",
-   "frontend/src/pages/sales/SalesPipeline.jsx:219",
+   "frontend/src/pages/sales/SalesPipeline.jsx:214",
    "frontend/src/pages/warehouse/WarehouseRecon.jsx:411"
   ],
   "chunk": "components-work"
@@ -11656,7 +11662,7 @@
    "frontend/src/pages/advanced/targetsModel.js:40",
    "frontend/src/pages/calendar/calendarModel.js:19",
    "frontend/src/pages/marketing/MarketingInsights.jsx:160",
-   "frontend/src/pages/retail/RetailCommerce.jsx:276",
+   "frontend/src/pages/retail/RetailCommerce.jsx:285",
    "frontend/src/pages/sales/SalesTargets.jsx:175"
   ],
   "chunk": "components-work"
@@ -13108,7 +13114,7 @@
    "frontend/src/pages/handbook/handbookContent.js:1412",
    "frontend/src/pages/handbook/handbookContent.js:1591",
    "frontend/src/pages/handbook/handbookContent.js:1646",
-   "frontend/src/pages/handbook/handbookContent.js:1891",
+   "frontend/src/pages/handbook/handbookContent.js:1904",
    "frontend/src/pages/hrga/ChecklistTemplates.jsx:421",
    "frontend/src/pages/hrga/HrgaWorkflowDetail.jsx:299",
    "frontend/src/pages/hrga/WorkflowList.jsx:91",
@@ -13127,7 +13133,7 @@
    "frontend/src/pages/it/infraModel.js:644",
    "frontend/src/pages/it/infraModel.js:644",
    "frontend/src/pages/it/Infrastructure.jsx:34",
-   "frontend/src/pages/it/ItDashboard.jsx:213",
+   "frontend/src/pages/it/ItDashboard.jsx:210",
    "frontend/src/pages/it/ItTicketDetail.jsx:264",
    "frontend/src/pages/it/ItTickets.jsx:44",
    "frontend/src/pages/it/LocationsPanel.jsx:192",
@@ -13156,8 +13162,8 @@
    "frontend/src/pages/projects/IssueDrawer.jsx:215",
    "frontend/src/pages/projects/TrackerIssueList.jsx:20",
    "frontend/src/pages/public/VerifyDocument.jsx:100",
-   "frontend/src/pages/retail/RetailCommerce.jsx:90",
-   "frontend/src/pages/retail/RetailCommerce.jsx:105",
+   "frontend/src/pages/retail/RetailCommerce.jsx:91",
+   "frontend/src/pages/retail/RetailCommerce.jsx:106",
    "frontend/src/pages/sales/accurateBatchModel.js:34",
    "frontend/src/pages/sales/SalesAccurateBatch.jsx:119",
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:47",
@@ -13451,7 +13457,7 @@
    "frontend/src/pages/ActivityLogs.jsx:84",
    "frontend/src/pages/admin/accurateIntegrationModel.js:51",
    "frontend/src/pages/handbook/aiForms.generated.js:51",
-   "frontend/src/pages/handbook/handbookContent.js:2183",
+   "frontend/src/pages/handbook/handbookContent.js:2196",
    "frontend/src/pages/sales/SalesExchanges.jsx:44",
    "frontend/src/pages/sales/SalesExchanges.jsx:94",
    "frontend/src/pages/sales/SalesExchanges.jsx:181",
@@ -13603,7 +13609,7 @@
    "frontend/src/pages/it/SubscriptionDetail.jsx:468",
    "frontend/src/pages/marketing/MarketingInsights.jsx:65",
    "frontend/src/pages/procurement/ProcurementOrders.jsx:69",
-   "frontend/src/pages/retail/RetailCommerce.jsx:64",
+   "frontend/src/pages/retail/RetailCommerce.jsx:65",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:48",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:201",
    "frontend/src/pages/sales/SalesOrders.jsx:140",
@@ -13623,7 +13629,7 @@
   "sources": [
    "frontend/src/pages/ActivityLogs.jsx:13",
    "frontend/src/pages/admin/IntegrationLogs.jsx:45",
-   "frontend/src/pages/handbook/handbookContent.js:2176",
+   "frontend/src/pages/handbook/handbookContent.js:2189",
    "frontend/src/pages/warehouse/WarehouseRecon.jsx:206"
   ],
   "chunk": "pages-home"
@@ -13988,15 +13994,15 @@
   "sources": [
    "frontend/src/pages/ActivityLogs.jsx:90",
    "frontend/src/pages/handbook/handbookContent.js:1249",
-   "frontend/src/pages/it/ItDashboard.jsx:196",
-   "frontend/src/pages/it/ItDashboard.jsx:210",
+   "frontend/src/pages/it/ItDashboard.jsx:193",
+   "frontend/src/pages/it/ItDashboard.jsx:207",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:37",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:206",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:231",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:82",
    "frontend/src/pages/marketing/MarketingInsights.jsx:28",
    "frontend/src/pages/marketing/MarketingInsights.jsx:61",
-   "frontend/src/pages/retail/RetailCommerce.jsx:54",
+   "frontend/src/pages/retail/RetailCommerce.jsx:55",
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:79",
    "frontend/src/pages/sales/SalesForms.jsx:264",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:37",
@@ -14005,7 +14011,7 @@
    "frontend/src/pages/sales/SalesOrders.jsx:94",
    "frontend/src/pages/sales/SalesOrders.jsx:105",
    "frontend/src/pages/sales/SalesOrders.jsx:147",
-   "frontend/src/pages/sales/SalesPipeline.jsx:51",
+   "frontend/src/pages/sales/SalesPipeline.jsx:46",
    "frontend/src/pages/sales/SalesPrint.jsx:78",
    "frontend/src/pages/warehouse/WarehouseMovementDetail.jsx:222",
    "frontend/src/pages/warehouse/WarehouseMovementForm.jsx:57",
@@ -17472,7 +17478,7 @@
   "sources": [
    "backend/src/services/handbookAccess.js:19",
    "frontend/src/pages/admin/roleAdminModel.js:5",
-   "frontend/src/pages/handbook/handbookContent.js:2023",
+   "frontend/src/pages/handbook/handbookContent.js:2036",
    "frontend/src/pages/handbook/handbookModel.js:22"
   ],
   "chunk": "pages-admin-2"
@@ -17483,7 +17489,7 @@
   "sources": [
    "backend/src/services/handbookAccess.js:19",
    "frontend/src/pages/admin/roleAdminModel.js:6",
-   "frontend/src/pages/handbook/handbookContent.js:2023",
+   "frontend/src/pages/handbook/handbookContent.js:2036",
    "frontend/src/pages/handbook/handbookModel.js:23"
   ],
   "chunk": "pages-admin-2"
@@ -17494,7 +17500,7 @@
   "sources": [
    "backend/src/services/handbookAccess.js:19",
    "frontend/src/pages/admin/roleAdminModel.js:7",
-   "frontend/src/pages/handbook/handbookContent.js:2023",
+   "frontend/src/pages/handbook/handbookContent.js:2036",
    "frontend/src/pages/handbook/handbookModel.js:24"
   ],
   "chunk": "pages-admin-2"
@@ -17659,7 +17665,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/accurate/DataAccurate.jsx:10",
-   "frontend/src/pages/handbook/handbookContent.js:2177",
+   "frontend/src/pages/handbook/handbookContent.js:2190",
    "frontend/src/pages/sales/SalesAccurateBatch.jsx:111",
    "frontend/src/pages/sales/SalesAccurateBatch.jsx:126",
    "frontend/src/pages/warehouse/WarehouseMovementDetail.jsx:224",
@@ -19854,7 +19860,7 @@
    "frontend/src/pages/admin/ApprovalDelegations.jsx:276",
    "frontend/src/pages/ga/GaOperations.jsx:50",
    "frontend/src/pages/ga/gaOpsModel.js:125",
-   "frontend/src/pages/it/ItDashboard.jsx:185"
+   "frontend/src/pages/it/ItDashboard.jsx:182"
   ],
   "chunk": "pages-admin-1"
  },
@@ -20128,7 +20134,8 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/admin/ApprovalMatrix.jsx:68",
-   "frontend/src/pages/admin/approvalMatrixParts.jsx:71"
+   "frontend/src/pages/admin/approvalMatrixParts.jsx:71",
+   "frontend/src/pages/handbook/handbookContent.js:1830"
   ],
   "chunk": "pages-admin-1"
  },
@@ -20140,7 +20147,7 @@
    "frontend/src/pages/admin/approvalMatrixParts.jsx:80",
    "frontend/src/pages/admin/Roles.jsx:109",
    "frontend/src/pages/admin/Roles.jsx:176",
-   "frontend/src/pages/handbook/handbookContent.js:2023",
+   "frontend/src/pages/handbook/handbookContent.js:2036",
    "frontend/src/pages/signatures/SignatureInbox.jsx:69"
   ],
   "chunk": "pages-admin-1"
@@ -22327,7 +22334,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/admin/roleInfoModel.js:29",
-   "frontend/src/pages/handbook/handbookContent.js:2023"
+   "frontend/src/pages/handbook/handbookContent.js:2036"
   ],
   "chunk": "pages-admin-2"
  },
@@ -23873,11 +23880,11 @@
    "frontend/src/pages/it/DeviceDetail.jsx:53",
    "frontend/src/pages/it/DeviceDetail.jsx:435",
    "frontend/src/pages/it/Infrastructure.jsx:194",
-   "frontend/src/pages/it/ItDashboard.jsx:217",
+   "frontend/src/pages/it/ItDashboard.jsx:214",
    "frontend/src/pages/procurement/ProcurementOrders.jsx:73",
    "frontend/src/pages/procurement/ProcurementReorder.jsx:70",
    "frontend/src/pages/procurement/ProcurementVendors.jsx:58",
-   "frontend/src/pages/retail/RetailCommerce.jsx:100",
+   "frontend/src/pages/retail/RetailCommerce.jsx:101",
    "frontend/src/pages/sales/accurateBatchModel.js:34",
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:41",
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:54",
@@ -23953,7 +23960,7 @@
    "frontend/src/pages/it/infraModel.js:221",
    "frontend/src/pages/it/infraModel.js:454",
    "frontend/src/pages/it/Infrastructure.jsx:81",
-   "frontend/src/pages/it/ItDashboard.jsx:209",
+   "frontend/src/pages/it/ItDashboard.jsx:206",
    "frontend/src/pages/procurement/ProcurementOrders.jsx:74",
    "frontend/src/pages/sales/accurateBatchModel.js:34",
    "frontend/src/pages/warehouse/WarehouseAccurateDocs.jsx:33",
@@ -24109,7 +24116,7 @@
    "frontend/src/pages/handbook/handbookContent.js:1088",
    "frontend/src/pages/sales/SalesCustomers.jsx:23",
    "frontend/src/pages/sales/salesModel.js:8",
-   "frontend/src/pages/sales/SalesPipeline.jsx:175"
+   "frontend/src/pages/sales/SalesPipeline.jsx:170"
   ],
   "chunk": "pages-sales-1"
  },
@@ -24131,7 +24138,7 @@
    "backend/src/controllers/salesCustomers.controller.js:158",
    "backend/src/services/salesFacts.js:66",
    "backend/src/services/salesFacts.js:88",
-   "frontend/src/pages/sales/SalesPipeline.jsx:148"
+   "frontend/src/pages/sales/SalesPipeline.jsx:143"
   ],
   "chunk": "pages-sales-1"
  },
@@ -24194,6 +24201,54 @@
   "chunk": "pages-sales-1"
  },
  {
+  "text": "rupiah",
+  "kind": "exact",
+  "sources": [
+   "backend/src/management/contract.js:20",
+   "backend/src/management/providers/finance.js:187",
+   "backend/src/management/providers/financeLedger.js:114",
+   "backend/src/management/providers/financeLedger.js:136",
+   "backend/src/management/providers/financeLedger.js:179",
+   "backend/src/management/providers/financeLedger.js:203",
+   "backend/src/management/providers/procurement.js:233",
+   "backend/src/management/providers/procurement.js:290",
+   "backend/src/management/providers/retailCommerce.js:59",
+   "backend/src/management/providers/retailCommerce.js:169",
+   "backend/src/management/providers/sales.js:277",
+   "backend/src/management/providers/sales.js:354",
+   "backend/src/management/providers/sales.js:402",
+   "backend/src/services/ai/agent/tools/management.js:36",
+   "frontend/src/pages/advanced/targetsModel.js:29",
+   "frontend/src/pages/advanced/targetsModel.js:31",
+   "frontend/src/pages/finance/FinanceReceivables.jsx:60",
+   "frontend/src/pages/finance/FinanceReceivables.jsx:70",
+   "frontend/src/pages/finance/financeReportsModel.js:98",
+   "frontend/src/pages/finance/financeReportsModel.js:99",
+   "frontend/src/pages/finance/financeReportsModel.js:100",
+   "frontend/src/pages/finance/financeReportsModel.js:101",
+   "frontend/src/pages/finance/financeReportsModel.js:102",
+   "frontend/src/pages/finance/financeReportsModel.js:117",
+   "frontend/src/pages/finance/financeReportsModel.js:118",
+   "frontend/src/pages/finance/financeReportsModel.js:119",
+   "frontend/src/pages/finance/financeReportsModel.js:120",
+   "frontend/src/pages/marketing/MarketingCampaigns.jsx:115",
+   "frontend/src/pages/marketing/MarketingInsights.jsx:203",
+   "frontend/src/pages/marketing/marketingModel.js:128",
+   "frontend/src/pages/marketing/marketingModel.js:320",
+   "frontend/src/pages/retail/retailModel.js:69",
+   "frontend/src/pages/retail/retailModel.js:74",
+   "frontend/src/pages/retail/retailModel.js:83",
+   "frontend/src/pages/retail/retailModel.js:87",
+   "frontend/src/pages/retail/retailModel.js:92",
+   "frontend/src/pages/retail/retailModel.js:152",
+   "frontend/src/pages/retail/retailModel.js:177",
+   "frontend/src/pages/retail/retailModel.js:179",
+   "frontend/src/pages/retail/retailModel.js:182",
+   "frontend/src/pages/sales/SalesPipeline.jsx:174"
+  ],
+  "chunk": "pages-finance"
+ },
+ {
   "text": "$1 perubahan",
   "kind": "pattern",
   "regex": "^([\\s\\S]*?) perubahan$",
@@ -24242,7 +24297,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/management/providers/sales.js:332",
-   "frontend/src/pages/sales/SalesPipeline.jsx:168"
+   "frontend/src/pages/sales/SalesPipeline.jsx:163"
   ],
   "chunk": "pages-sales-1"
  },
@@ -24251,8 +24306,8 @@
   "kind": "exact",
   "sources": [
    "backend/src/management/providers/sales.js:353",
-   "frontend/src/pages/sales/SalesPipeline.jsx:68",
-   "frontend/src/pages/sales/SalesPipeline.jsx:178"
+   "frontend/src/pages/sales/SalesPipeline.jsx:63",
+   "frontend/src/pages/sales/SalesPipeline.jsx:173"
   ],
   "chunk": "pages-sales-1"
  },
@@ -24261,7 +24316,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/management/providers/sales.js:432",
-   "frontend/src/pages/sales/SalesPipeline.jsx:183"
+   "frontend/src/pages/sales/SalesPipeline.jsx:178"
   ],
   "chunk": "pages-sales-1"
  },
@@ -24384,7 +24439,7 @@
    "frontend/src/pages/projects/CreateIssueModal.jsx:147",
    "frontend/src/pages/projects/IssueDrawer.jsx:254",
    "frontend/src/pages/projects/TrackerIssueList.jsx:30",
-   "frontend/src/pages/retail/RetailCommerce.jsx:101",
+   "frontend/src/pages/retail/RetailCommerce.jsx:102",
    "frontend/src/pages/sales/accurateBatchModel.js:52",
    "frontend/src/pages/sales/SalesExchanges.jsx:171",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:69",
@@ -24650,7 +24705,7 @@
    "backend/src/services/salesFacts.js:88",
    "backend/src/services/salesTargets.service.js:107",
    "frontend/src/pages/sales/SalesOrderForm.jsx:303",
-   "frontend/src/pages/sales/SalesPipeline.jsx:180"
+   "frontend/src/pages/sales/SalesPipeline.jsx:175"
   ],
   "chunk": "pages-sales-1"
  },
@@ -24675,10 +24730,10 @@
    "backend/src/services/salesAccurateBatches.service.js:53",
    "frontend/src/pages/advanced/flow/FlowSales.jsx:163",
    "frontend/src/pages/finance/FinanceReceivables.jsx:147",
-   "frontend/src/pages/retail/RetailCommerce.jsx:43",
+   "frontend/src/pages/retail/RetailCommerce.jsx:44",
    "frontend/src/pages/sales/accurateBatchModel.js:9",
    "frontend/src/pages/sales/SalesOrders.jsx:100",
-   "frontend/src/pages/sales/SalesPipeline.jsx:227"
+   "frontend/src/pages/sales/SalesPipeline.jsx:222"
   ],
   "chunk": "pages-sales-1"
  },
@@ -24835,7 +24890,7 @@
    "frontend/src/pages/advanced/flow/MarginEstimate.jsx:29",
    "frontend/src/pages/advanced/flow/MarginEstimate.jsx:46",
    "frontend/src/pages/sales/SalesOrders.jsx:135",
-   "frontend/src/pages/sales/SalesPipeline.jsx:60"
+   "frontend/src/pages/sales/SalesPipeline.jsx:55"
   ],
   "chunk": "pages-sales-1"
  },
@@ -24963,7 +25018,7 @@
    "frontend/src/pages/ga/gaModel.js:318",
    "frontend/src/pages/marketing/MarketingInsights.jsx:64",
    "frontend/src/pages/procurement/ProcurementPrices.jsx:35",
-   "frontend/src/pages/retail/RetailCommerce.jsx:71",
+   "frontend/src/pages/retail/RetailCommerce.jsx:72",
    "frontend/src/pages/sales/SalesAccurateBatch.jsx:178"
   ],
   "chunk": "pages-sales-1"
@@ -24994,7 +25049,7 @@
    "frontend/src/pages/sales/SalesOrders.jsx:111",
    "frontend/src/pages/sales/SalesOrders.jsx:144",
    "frontend/src/pages/sales/SalesOrders.jsx:516",
-   "frontend/src/pages/sales/SalesPipeline.jsx:98"
+   "frontend/src/pages/sales/SalesPipeline.jsx:93"
   ],
   "chunk": "pages-sales-1"
  },
@@ -25296,7 +25351,7 @@
    "frontend/src/pages/sales/SalesLeads.jsx:141",
    "frontend/src/pages/sales/SalesLeads.jsx:206",
    "frontend/src/pages/sales/SalesLeads.jsx:482",
-   "frontend/src/pages/sales/SalesPipeline.jsx:90"
+   "frontend/src/pages/sales/SalesPipeline.jsx:85"
   ],
   "chunk": "pages-sales-1"
  },
@@ -25348,7 +25403,7 @@
   "text": "No. SO",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:82",
+   "frontend/src/pages/retail/RetailCommerce.jsx:83",
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:40",
    "frontend/src/pages/sales/SalesOrderForm.jsx:51",
    "frontend/src/pages/sales/SalesOrderForm.jsx:51",
@@ -25368,7 +25423,7 @@
   "text": "Nilai (sebelum PPN)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:88",
+   "frontend/src/pages/retail/RetailCommerce.jsx:89",
    "frontend/src/pages/sales/SalesOrders.jsx:144"
   ],
   "chunk": "pages-sales-1"
@@ -25377,7 +25432,7 @@
   "text": "No. faktur",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:98",
+   "frontend/src/pages/retail/RetailCommerce.jsx:99",
    "frontend/src/pages/sales/SalesExchanges.jsx:157",
    "frontend/src/pages/sales/SalesOrders.jsx:115"
   ],
@@ -26044,7 +26099,7 @@
    "frontend/src/pages/sales/SalesCustomers.jsx:113",
    "frontend/src/pages/sales/SalesLeads.jsx:582",
    "frontend/src/pages/sales/SalesOrders.jsx:543",
-   "frontend/src/pages/sales/SalesPipeline.jsx:213"
+   "frontend/src/pages/sales/SalesPipeline.jsx:208"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26562,7 +26617,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:84",
-   "frontend/src/pages/sales/SalesPipeline.jsx:56"
+   "frontend/src/pages/sales/SalesPipeline.jsx:51"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26823,7 +26878,7 @@
   "sources": [
    "frontend/src/pages/sales/SalesCustomerDetail.jsx:275",
    "frontend/src/pages/sales/SalesCustomers.jsx:31",
-   "frontend/src/pages/sales/SalesPipeline.jsx:101",
+   "frontend/src/pages/sales/SalesPipeline.jsx:96",
    "frontend/src/pages/sales/SalesTodo.jsx:51"
   ],
   "chunk": "pages-sales-1"
@@ -26873,7 +26928,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/sales/SalesCustomers.jsx:34",
-   "frontend/src/pages/sales/SalesPipeline.jsx:102"
+   "frontend/src/pages/sales/SalesPipeline.jsx:97"
   ],
   "chunk": "pages-sales-1"
  },
@@ -26907,7 +26962,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/sales/SalesCustomers.jsx:114",
-   "frontend/src/pages/sales/SalesPipeline.jsx:215"
+   "frontend/src/pages/sales/SalesPipeline.jsx:210"
   ],
   "chunk": "pages-sales-1"
  },
@@ -27390,7 +27445,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/sales/SalesLeads.jsx:51",
-   "frontend/src/pages/sales/SalesPipeline.jsx:77",
+   "frontend/src/pages/sales/SalesPipeline.jsx:72",
    "frontend/src/pages/sales/SalesTodo.jsx:23"
   ],
   "chunk": "pages-sales-1"
@@ -27410,7 +27465,7 @@
   "sources": [
    "frontend/src/pages/sales/SalesLeads.jsx:55",
    "frontend/src/pages/sales/SalesLeads.jsx:484",
-   "frontend/src/pages/sales/SalesPipeline.jsx:92",
+   "frontend/src/pages/sales/SalesPipeline.jsx:87",
    "frontend/src/pages/sales/SalesTodo.jsx:51"
   ],
   "chunk": "pages-sales-1"
@@ -27420,7 +27475,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/sales/SalesLeads.jsx:56",
-   "frontend/src/pages/sales/SalesPipeline.jsx:93"
+   "frontend/src/pages/sales/SalesPipeline.jsx:88"
   ],
   "chunk": "pages-sales-1"
  },
@@ -27429,7 +27484,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/sales/SalesLeads.jsx:56",
-   "frontend/src/pages/sales/SalesPipeline.jsx:93"
+   "frontend/src/pages/sales/SalesPipeline.jsx:88"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29348,15 +29403,21 @@
   "chunk": "pages-sales-2"
  },
  {
-  "text": "Omzet per bulan, sebelum PPN",
-  "kind": "exact",
-  "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:32"
+  "text": "$1 $2 · $3 NOO",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?) ([\\s\\S]*?) · ([\\s\\S]*?) NOO$",
+  "vars": [
+   "formatCount(r.orders)",
+   "unitShort",
+   "formatCount(r.newCustomers)"
   ],
-  "chunk": "pages-sales-2"
+  "sources": [
+   "frontend/src/pages/sales/SalesPipeline.jsx:39"
+  ],
+  "chunk": "additions"
  },
  {
-  "text": "NOO",
+  "text": "Omzet per bulan, sebelum PPN",
   "kind": "exact",
   "sources": [
    "frontend/src/pages/sales/SalesPipeline.jsx:41"
@@ -29367,7 +29428,7 @@
   "text": "Tanpa nama (e-Commerce)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:66"
+   "frontend/src/pages/sales/SalesPipeline.jsx:61"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29375,7 +29436,7 @@
   "text": "Tanpa nama",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:66"
+   "frontend/src/pages/sales/SalesPipeline.jsx:61"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29387,7 +29448,7 @@
    "unitShort"
   ],
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:67"
+   "frontend/src/pages/sales/SalesPipeline.jsx:62"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29399,7 +29460,7 @@
    "unitShort"
   ],
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:69"
+   "frontend/src/pages/sales/SalesPipeline.jsx:64"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29407,7 +29468,7 @@
   "text": "Omzet tahun ini (sebelum PPN)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:70"
+   "frontend/src/pages/sales/SalesPipeline.jsx:65"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29419,7 +29480,7 @@
    "salesScopeText(ov?.scope)"
   ],
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:154"
+   "frontend/src/pages/sales/SalesPipeline.jsx:149"
   ],
   "chunk": "additions"
  },
@@ -29427,7 +29488,7 @@
   "text": "Ringkasan pipeline belum bisa dimuat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:161"
+   "frontend/src/pages/sales/SalesPipeline.jsx:156"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29439,7 +29500,7 @@
    "ov.rules.activeDays"
   ],
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:168"
+   "frontend/src/pages/sales/SalesPipeline.jsx:163"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29451,7 +29512,7 @@
    "ov.rules.lostDays"
   ],
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:172"
+   "frontend/src/pages/sales/SalesPipeline.jsx:167"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29463,7 +29524,7 @@
    "formatCount(ov.customers.neverOrdered)"
   ],
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:175"
+   "frontend/src/pages/sales/SalesPipeline.jsx:170"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29477,7 +29538,7 @@
    "formatCount(thisMonth.newCustomers)"
   ],
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:180"
+   "frontend/src/pages/sales/SalesPipeline.jsx:175"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29485,7 +29546,7 @@
   "text": "Belum ada order bulan ini",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:180"
+   "frontend/src/pages/sales/SalesPipeline.jsx:175"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29497,7 +29558,7 @@
    "formatCount(ov.leads.needsVisit)"
   ],
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:183"
+   "frontend/src/pages/sales/SalesPipeline.jsx:178"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29509,7 +29570,7 @@
    "stage.label"
   ],
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:194"
+   "frontend/src/pages/sales/SalesPipeline.jsx:189"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29517,7 +29578,7 @@
   "text": "Tahap pelanggan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:194"
+   "frontend/src/pages/sales/SalesPipeline.jsx:189"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29525,7 +29586,7 @@
   "text": "Cari nama, kode, atau sales di tahap ini",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:204"
+   "frontend/src/pages/sales/SalesPipeline.jsx:199"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29537,7 +29598,7 @@
    "stage.label"
   ],
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:219"
+   "frontend/src/pages/sales/SalesPipeline.jsx:214"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29545,7 +29606,7 @@
   "text": "Omzet per sales (sebelum PPN)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:226"
+   "frontend/src/pages/sales/SalesPipeline.jsx:221"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29553,7 +29614,7 @@
   "text": "Produk terlaris bulan ini (sebelum PPN)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:236"
+   "frontend/src/pages/sales/SalesPipeline.jsx:231"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29561,7 +29622,7 @@
   "text": "Omzet per bulan (sebelum PPN)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:245"
+   "frontend/src/pages/sales/SalesPipeline.jsx:240"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29569,7 +29630,7 @@
   "text": "Omzet dihitung dari DPP (sebelum PPN), sama seperti laporan Penjualan per Pelanggan di Accurate; ongkir tidak termasuk.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:248"
+   "frontend/src/pages/sales/SalesPipeline.jsx:243"
   ],
   "chunk": "pages-sales-2"
  },
@@ -29581,7 +29642,7 @@
    "salesScopeText(ov?.scope)"
   ],
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:252"
+   "frontend/src/pages/sales/SalesPipeline.jsx:247"
   ],
   "chunk": "additions"
  },
@@ -29589,7 +29650,7 @@
   "text": "Tanggal transaksi mengikuti tanggal kirim (ETD), atau tanggal order bila belum ada. NOO = pelanggan yang order pertama kali di bulan itu.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/sales/SalesPipeline.jsx:253"
+   "frontend/src/pages/sales/SalesPipeline.jsx:248"
   ],
   "chunk": "pages-sales-2"
  },
@@ -30390,7 +30451,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/advanced/flow/FlowSales.jsx:31",
-   "frontend/src/pages/retail/RetailCommerce.jsx:85",
+   "frontend/src/pages/retail/RetailCommerce.jsx:86",
    "frontend/src/pages/warehouse/WarehouseShipping.jsx:33",
    "frontend/src/pages/warehouse/WarehouseShipping.jsx:75"
   ],
@@ -30464,6 +30525,7 @@
   "sources": [
    "frontend/src/pages/documents/DocTemplateDialogs.jsx:38",
    "frontend/src/pages/documents/DocTemplateDialogs.jsx:178",
+   "frontend/src/pages/management/DivisionDashboard.jsx:115",
    "frontend/src/pages/tasks/TaskDetail.jsx:434",
    "frontend/src/pages/warehouse/WarehouseRecon.jsx:231"
   ],
@@ -30559,6 +30621,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:26",
+   "frontend/src/pages/management/DivisionDashboard.jsx:116",
    "frontend/src/pages/warehouse/WarehouseMovementDetail.jsx:252",
    "frontend/src/pages/warehouse/WarehouseMovements.jsx:100",
    "frontend/src/pages/warehouse/WarehouseRecon.jsx:212",
@@ -31968,7 +32031,7 @@
   "text": "Tanggal SO",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:84",
+   "frontend/src/pages/retail/RetailCommerce.jsx:85",
    "frontend/src/pages/warehouse/WarehouseShipping.jsx:78"
   ],
   "chunk": "pages-warehouse"
@@ -34839,53 +34902,6 @@
   "chunk": "pages-sales-1"
  },
  {
-  "text": "rupiah",
-  "kind": "exact",
-  "sources": [
-   "backend/src/management/contract.js:20",
-   "backend/src/management/providers/finance.js:187",
-   "backend/src/management/providers/financeLedger.js:114",
-   "backend/src/management/providers/financeLedger.js:136",
-   "backend/src/management/providers/financeLedger.js:179",
-   "backend/src/management/providers/financeLedger.js:203",
-   "backend/src/management/providers/procurement.js:233",
-   "backend/src/management/providers/procurement.js:290",
-   "backend/src/management/providers/retailCommerce.js:59",
-   "backend/src/management/providers/retailCommerce.js:169",
-   "backend/src/management/providers/sales.js:277",
-   "backend/src/management/providers/sales.js:354",
-   "backend/src/management/providers/sales.js:402",
-   "backend/src/services/ai/agent/tools/management.js:36",
-   "frontend/src/pages/advanced/targetsModel.js:29",
-   "frontend/src/pages/advanced/targetsModel.js:31",
-   "frontend/src/pages/finance/FinanceReceivables.jsx:60",
-   "frontend/src/pages/finance/FinanceReceivables.jsx:70",
-   "frontend/src/pages/finance/financeReportsModel.js:98",
-   "frontend/src/pages/finance/financeReportsModel.js:99",
-   "frontend/src/pages/finance/financeReportsModel.js:100",
-   "frontend/src/pages/finance/financeReportsModel.js:101",
-   "frontend/src/pages/finance/financeReportsModel.js:102",
-   "frontend/src/pages/finance/financeReportsModel.js:117",
-   "frontend/src/pages/finance/financeReportsModel.js:118",
-   "frontend/src/pages/finance/financeReportsModel.js:119",
-   "frontend/src/pages/finance/financeReportsModel.js:120",
-   "frontend/src/pages/marketing/MarketingCampaigns.jsx:115",
-   "frontend/src/pages/marketing/MarketingInsights.jsx:203",
-   "frontend/src/pages/marketing/marketingModel.js:128",
-   "frontend/src/pages/marketing/marketingModel.js:320",
-   "frontend/src/pages/retail/retailModel.js:69",
-   "frontend/src/pages/retail/retailModel.js:74",
-   "frontend/src/pages/retail/retailModel.js:83",
-   "frontend/src/pages/retail/retailModel.js:87",
-   "frontend/src/pages/retail/retailModel.js:92",
-   "frontend/src/pages/retail/retailModel.js:152",
-   "frontend/src/pages/retail/retailModel.js:177",
-   "frontend/src/pages/retail/retailModel.js:179",
-   "frontend/src/pages/retail/retailModel.js:182"
-  ],
-  "chunk": "pages-finance"
- },
- {
   "text": "Dibayar bulan ini",
   "kind": "exact",
   "sources": [
@@ -35463,7 +35479,7 @@
   "sources": [
    "frontend/src/pages/finance/FinancePayables.jsx:34",
    "frontend/src/pages/finance/FinanceReceivables.jsx:152",
-   "frontend/src/pages/retail/RetailCommerce.jsx:102"
+   "frontend/src/pages/retail/RetailCommerce.jsx:103"
   ],
   "chunk": "pages-finance"
  },
@@ -36858,7 +36874,9 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:1224",
-   "frontend/src/pages/retail/RetailCommerce.jsx:195"
+   "frontend/src/pages/handbook/handbookContent.js:1831",
+   "frontend/src/pages/management/DivisionDashboard.jsx:135",
+   "frontend/src/pages/retail/RetailCommerce.jsx:197"
   ],
   "chunk": "pages-finance"
  },
@@ -36867,8 +36885,8 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:1224",
-   "frontend/src/pages/retail/RetailCommerce.jsx:218",
-   "frontend/src/pages/retail/RetailCommerce.jsx:219"
+   "frontend/src/pages/retail/RetailCommerce.jsx:255",
+   "frontend/src/pages/retail/RetailCommerce.jsx:256"
   ],
   "chunk": "pages-finance"
  },
@@ -36877,7 +36895,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:1224",
-   "frontend/src/pages/retail/RetailCommerce.jsx:227"
+   "frontend/src/pages/retail/RetailCommerce.jsx:269"
   ],
   "chunk": "pages-finance"
  },
@@ -36886,8 +36904,8 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:1224",
-   "frontend/src/pages/retail/RetailCommerce.jsx:270",
-   "frontend/src/pages/retail/RetailCommerce.jsx:286"
+   "frontend/src/pages/retail/RetailCommerce.jsx:279",
+   "frontend/src/pages/retail/RetailCommerce.jsx:295"
   ],
   "chunk": "pages-finance"
  },
@@ -36897,6 +36915,16 @@
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:1249",
    "frontend/src/pages/marketing/MarketingInsights.jsx:29"
+  ],
+  "chunk": "pages-finance"
+ },
+ {
+  "text": "Tren 12 bulan",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:1834",
+   "frontend/src/pages/management/DivisionDashboard.jsx:182",
+   "frontend/src/pages/retail/RetailCommerce.jsx:230"
   ],
   "chunk": "pages-finance"
  },
@@ -36918,21 +36946,19 @@
   "text": "Grafik capaian bulanan menunggu data",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:125",
-   "frontend/src/pages/retail/RetailCommerce.jsx:244"
+   "frontend/src/pages/management/DivisionDashboard.jsx:175",
+   "frontend/src/pages/retail/RetailCommerce.jsx:225"
   ],
   "chunk": "pages-finance"
  },
  {
-  "text": "Tren 12 bulan",
+  "text": "Belum ada tren bulanan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:132",
-   "frontend/src/pages/management/DivisionDashboard.jsx:133",
-   "frontend/src/pages/retail/RetailCommerce.jsx:249",
-   "frontend/src/pages/retail/RetailCommerce.jsx:250"
+   "frontend/src/pages/management/DivisionDashboard.jsx:207",
+   "frontend/src/pages/retail/RetailCommerce.jsx:248"
   ],
-  "chunk": "pages-finance"
+  "chunk": "pages-management-1"
  },
  {
   "text": "Kampanye ini sudah diubah orang lain. Tutup, muat ulang, lalu ulangi perubahan Anda.",
@@ -37355,7 +37381,7 @@
   "sources": [
    "frontend/src/pages/marketing/MarketingInsights.jsx:57",
    "frontend/src/pages/marketing/MarketingInsights.jsx:202",
-   "frontend/src/pages/retail/RetailCommerce.jsx:40"
+   "frontend/src/pages/retail/RetailCommerce.jsx:41"
   ],
   "chunk": "pages-finance"
  },
@@ -38173,8 +38199,8 @@
   "text": "Platform",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:30",
-   "frontend/src/pages/retail/RetailCommerce.jsx:63"
+   "frontend/src/pages/retail/RetailCommerce.jsx:31",
+   "frontend/src/pages/retail/RetailCommerce.jsx:64"
   ],
   "chunk": "pages-finance"
  },
@@ -38182,7 +38208,7 @@
   "text": "Omzet bulan ini",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:41",
+   "frontend/src/pages/retail/RetailCommerce.jsx:42",
    "frontend/src/pages/retail/retailModel.js:69"
   ],
   "chunk": "pages-finance"
@@ -38191,7 +38217,7 @@
   "text": "Porsi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:42"
+   "frontend/src/pages/retail/RetailCommerce.jsx:43"
   ],
   "chunk": "pages-finance"
  },
@@ -38199,7 +38225,7 @@
   "text": "Rata-rata per faktur",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:45",
+   "frontend/src/pages/retail/RetailCommerce.jsx:46",
    "frontend/src/pages/retail/retailModel.js:83"
   ],
   "chunk": "pages-finance"
@@ -38208,7 +38234,7 @@
   "text": "Rasio retur",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:46"
+   "frontend/src/pages/retail/RetailCommerce.jsx:47"
   ],
   "chunk": "pages-finance"
  },
@@ -38216,7 +38242,7 @@
   "text": "Piutang belum cair",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:47"
+   "frontend/src/pages/retail/RetailCommerce.jsx:48"
   ],
   "chunk": "pages-finance"
  },
@@ -38224,8 +38250,9 @@
   "text": "SO belum dikirim",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:48",
-   "frontend/src/pages/retail/retailModel.js:99"
+   "frontend/src/pages/retail/RetailCommerce.jsx:49",
+   "frontend/src/pages/retail/retailModel.js:99",
+   "frontend/src/pages/retail/retailModel.js:264"
   ],
   "chunk": "pages-finance"
  },
@@ -38233,7 +38260,7 @@
   "text": "Nilai penjualan produk (DPP sebelum retur)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:67"
+   "frontend/src/pages/retail/RetailCommerce.jsx:68"
   ],
   "chunk": "additions"
  },
@@ -38241,7 +38268,7 @@
   "text": "Porsi dari total baris faktur",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:68"
+   "frontend/src/pages/retail/RetailCommerce.jsx:69"
   ],
   "chunk": "additions"
  },
@@ -38249,7 +38276,7 @@
   "text": "Bulan sebelumnya (DPP sebelum retur)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:69"
+   "frontend/src/pages/retail/RetailCommerce.jsx:70"
   ],
   "chunk": "additions"
  },
@@ -38257,7 +38284,7 @@
   "text": "Umur (hari)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:86"
+   "frontend/src/pages/retail/RetailCommerce.jsx:87"
   ],
   "chunk": "pages-finance"
  },
@@ -38265,7 +38292,7 @@
   "text": "Belum cair",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:103"
+   "frontend/src/pages/retail/RetailCommerce.jsx:104"
   ],
   "chunk": "pages-finance"
  },
@@ -38273,7 +38300,7 @@
   "text": "Produk terlaris belum bisa dimuat.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:152"
+   "frontend/src/pages/retail/RetailCommerce.jsx:153"
   ],
   "chunk": "pages-finance"
  },
@@ -38281,7 +38308,7 @@
   "text": "Kinerja penjualan marketplace dari data Accurate yang sudah disetujui. Omzet dihitung sebelum PPN dan bersih retur.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:159"
+   "frontend/src/pages/retail/RetailCommerce.jsx:160"
   ],
   "chunk": "pages-finance"
  },
@@ -38289,7 +38316,7 @@
   "text": "Menyiapkan kinerja marketplace",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:162"
+   "frontend/src/pages/retail/RetailCommerce.jsx:163"
   ],
   "chunk": "pages-finance"
  },
@@ -38297,7 +38324,7 @@
   "text": "Data marketplace belum bisa dimuat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:166"
+   "frontend/src/pages/retail/RetailCommerce.jsx:167"
   ],
   "chunk": "pages-finance"
  },
@@ -38310,7 +38337,7 @@
    "formatDateTime(overview.generatedAt)"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:192"
+   "frontend/src/pages/retail/RetailCommerce.jsx:194"
   ],
   "chunk": "pages-finance"
  },
@@ -38322,9 +38349,101 @@
    "overview.latestMonth.label"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:210"
+   "frontend/src/pages/retail/RetailCommerce.jsx:197"
   ],
   "chunk": "pages-finance"
+ },
+ {
+  "text": "Dari faktur rekap marketplace yang sudah disetujui",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:197"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Pesanan dan faktur marketplace yang masih menunggu",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:212"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Tidak ada pesanan atau faktur yang menunggu",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:212"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Pesanan dan faktur marketplace yang menunggu",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:215"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Semua SO marketplace terkirim dan semua faktur sudah cair.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:216"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Perjalanan omzet tiap platform dan jumlah pesanan, $1. Panjang batang dibanding bulan terbaik masing-masing.",
+  "kind": "pattern",
+  "regex": "^Perjalanan omzet tiap platform dan jumlah pesanan, ([\\s\\S]*?)\\. Panjang batang dibanding bulan terbaik masing-masing\\.$",
+  "vars": [
+   "range"
+  ],
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:220"
+  ],
+  "chunk": "pages-finance"
+ },
+ {
+  "text": "Grafik capaian bulanan Retail Commerce",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:223"
+  ],
+  "chunk": "pages-finance"
+ },
+ {
+  "text": "Grafik bergerak ini berjalan setelah minimal dua platform atau ukuran punya angka.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:225"
+  ],
+  "chunk": "pages-finance"
+ },
+ {
+  "text": "Satu kartu per ukuran marketplace",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:230"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Tren 12 bulan muncul setelah ada dua bulan faktur marketplace.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:248"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Komposisi per platform",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:252"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "$1 · total $2",
@@ -38335,7 +38454,7 @@
    "compactMoney(overview.windowRevenue)"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:218"
+   "frontend/src/pages/retail/RetailCommerce.jsx:252"
   ],
   "chunk": "pages-finance"
  },
@@ -38343,7 +38462,7 @@
   "text": "Belum ada omzet di periode ini",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:219"
+   "frontend/src/pages/retail/RetailCommerce.jsx:256"
   ],
   "chunk": "pages-finance"
  },
@@ -38351,7 +38470,7 @@
   "text": "Piutang marketplace",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:221"
+   "frontend/src/pages/retail/RetailCommerce.jsx:258"
   ],
   "chunk": "pages-finance"
  },
@@ -38363,7 +38482,7 @@
    "compactMoney(overview.kpis.receivable.amount)"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:221"
+   "frontend/src/pages/retail/RetailCommerce.jsx:258"
   ],
   "chunk": "pages-finance"
  },
@@ -38371,7 +38490,7 @@
   "text": "Tidak ada faktur yang belum cair",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:221"
+   "frontend/src/pages/retail/RetailCommerce.jsx:258"
   ],
   "chunk": "pages-finance"
  },
@@ -38379,7 +38498,7 @@
   "text": "Piutang marketplace per platform",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:222"
+   "frontend/src/pages/retail/RetailCommerce.jsx:259"
   ],
   "chunk": "pages-finance"
  },
@@ -38387,15 +38506,7 @@
   "text": "Semua sudah cair",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:222"
-  ],
-  "chunk": "pages-finance"
- },
- {
-  "text": "Belum ada data platform",
-  "kind": "exact",
-  "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:233"
+   "frontend/src/pages/retail/RetailCommerce.jsx:259"
   ],
   "chunk": "pages-finance"
  },
@@ -38403,7 +38514,7 @@
   "text": "Belum ada penjualan marketplace",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:237"
+   "frontend/src/pages/retail/RetailCommerce.jsx:263"
   ],
   "chunk": "pages-finance"
  },
@@ -38415,35 +38526,31 @@
    "range"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:237"
+   "frontend/src/pages/retail/RetailCommerce.jsx:263"
   ],
   "chunk": "pages-finance"
  },
  {
-  "text": "Perjalanan omzet tiap platform dan jumlah pesanan, $1. Panjang batang dibanding bulan terbaik masing-masing.",
-  "kind": "pattern",
-  "regex": "^Perjalanan omzet tiap platform dan jumlah pesanan, ([\\s\\S]*?)\\. Panjang batang dibanding bulan terbaik masing-masing\\.$",
-  "vars": [
-   "range"
-  ],
-  "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:240"
-  ],
-  "chunk": "pages-finance"
- },
- {
-  "text": "Grafik capaian bulanan Retail Commerce",
+  "text": "Tabel kerja",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:242"
+   "frontend/src/pages/retail/RetailCommerce.jsx:267"
   ],
-  "chunk": "pages-finance"
+  "chunk": "additions"
  },
  {
-  "text": "Grafik bergerak ini berjalan setelah minimal dua platform atau ukuran punya angka.",
+  "text": "Platform, produk terlaris, SO yang belum dikirim, dan faktur yang belum cair",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:244"
+   "frontend/src/pages/retail/RetailCommerce.jsx:267"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Belum ada data platform",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:275"
   ],
   "chunk": "pages-finance"
  },
@@ -38455,7 +38562,7 @@
    "products.month.label"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:270"
+   "frontend/src/pages/retail/RetailCommerce.jsx:279"
   ],
   "chunk": "pages-finance"
  },
@@ -38470,7 +38577,7 @@
    "products.fallback ? ' Bulan ini belum ada faktur, jadi yang tampil bulan terakhi"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:272"
+   "frontend/src/pages/retail/RetailCommerce.jsx:281"
   ],
   "chunk": "additions"
  },
@@ -38478,7 +38585,7 @@
   "text": "Bulan ini belum ada faktur, jadi yang tampil bulan terakhir yang sudah ditagih.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:272"
+   "frontend/src/pages/retail/RetailCommerce.jsx:281"
   ],
   "chunk": "pages-finance"
  },
@@ -38486,7 +38593,7 @@
   "text": "Nilai per baris faktur Accurate (DPP sebelum retur), dibanding bulan sebelumnya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:273"
+   "frontend/src/pages/retail/RetailCommerce.jsx:282"
   ],
   "chunk": "additions"
  },
@@ -38494,7 +38601,7 @@
   "text": "15 produk terlaris",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:297"
+   "frontend/src/pages/retail/RetailCommerce.jsx:306"
   ],
   "chunk": "additions"
  },
@@ -38502,7 +38609,7 @@
   "text": "Belum ada produk terjual di bulan ini",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:299"
+   "frontend/src/pages/retail/RetailCommerce.jsx:308"
   ],
   "chunk": "pages-finance"
  },
@@ -38514,7 +38621,7 @@
    "shipments?.total ? ` (${formatNumber(shipments.total)})` : ''"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:304"
+   "frontend/src/pages/retail/RetailCommerce.jsx:313"
   ],
   "chunk": "pages-finance"
  },
@@ -38522,7 +38629,7 @@
   "text": "Cari nomor SO",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:308"
+   "frontend/src/pages/retail/RetailCommerce.jsx:317"
   ],
   "chunk": "pages-finance"
  },
@@ -38535,7 +38642,7 @@
    "formatNumber(shipments.total)"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:310"
+   "frontend/src/pages/retail/RetailCommerce.jsx:319"
   ],
   "chunk": "additions"
  },
@@ -38543,7 +38650,7 @@
   "text": "Semua SO marketplace sudah terkirim",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:311"
+   "frontend/src/pages/retail/RetailCommerce.jsx:320"
   ],
   "chunk": "pages-finance"
  },
@@ -38556,7 +38663,7 @@
    "formatNumber(shipments.total)"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:314"
+   "frontend/src/pages/retail/RetailCommerce.jsx:323"
   ],
   "chunk": "pages-finance"
  },
@@ -38564,7 +38671,7 @@
   "text": "Faktur marketplace belum cair",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:318"
+   "frontend/src/pages/retail/RetailCommerce.jsx:327"
   ],
   "chunk": "pages-finance"
  },
@@ -38572,7 +38679,7 @@
   "text": "Cari nomor faktur",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:322"
+   "frontend/src/pages/retail/RetailCommerce.jsx:331"
   ],
   "chunk": "pages-finance"
  },
@@ -38585,7 +38692,7 @@
    "formatNumber(receivables.total)"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:324"
+   "frontend/src/pages/retail/RetailCommerce.jsx:333"
   ],
   "chunk": "additions"
  },
@@ -38593,7 +38700,7 @@
   "text": "Tidak ada faktur marketplace yang belum cair",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:325"
+   "frontend/src/pages/retail/RetailCommerce.jsx:334"
   ],
   "chunk": "pages-finance"
  },
@@ -38606,7 +38713,7 @@
    "formatNumber(receivables.total)"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:328"
+   "frontend/src/pages/retail/RetailCommerce.jsx:337"
   ],
   "chunk": "pages-finance"
  },
@@ -38868,6 +38975,38 @@
    "frontend/src/pages/retail/retailModel.js:236"
   ],
   "chunk": "pages-finance"
+ },
+ {
+  "text": "$1 lewat batas kirim",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?) lewat batas kirim$",
+  "vars": [
+   "formatNumber(late)"
+  ],
+  "sources": [
+   "frontend/src/pages/retail/retailModel.js:264"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Faktur belum cair",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/retailModel.js:265"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "$1 lewat jatuh tempo",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?) lewat jatuh tempo$",
+  "vars": [
+   "formatNumber(overdue)"
+  ],
+  "sources": [
+   "frontend/src/pages/retail/retailModel.js:265"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Jabatan",
@@ -39705,9 +39844,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/advanced/flow/FlowSales.jsx:55",
-   "frontend/src/pages/handbook/handbookContent.js:1848",
-   "frontend/src/pages/hrga/WorkflowList.jsx:97",
-   "frontend/src/pages/management/DivisionDashboard.jsx:164"
+   "frontend/src/pages/hrga/WorkflowList.jsx:97"
   ],
   "chunk": "pages-people-1"
  },
@@ -45841,7 +45978,7 @@
   "sources": [
    "backend/src/management/itInfraItems.js:312",
    "frontend/src/pages/it/infraModel.js:627",
-   "frontend/src/pages/it/ItDashboard.jsx:121"
+   "frontend/src/pages/it/ItDashboard.jsx:118"
   ],
   "chunk": "pages-it-1"
  },
@@ -46343,7 +46480,7 @@
    "frontend/src/pages/it/DeviceDialogs.jsx:38",
    "frontend/src/pages/it/DeviceDialogs.jsx:167",
    "frontend/src/pages/it/Devices.jsx:56",
-   "frontend/src/pages/it/ItDashboard.jsx:184",
+   "frontend/src/pages/it/ItDashboard.jsx:181",
    "frontend/src/pages/it/ReportImportDialog.jsx:218"
   ],
   "chunk": "pages-it-1"
@@ -47396,7 +47533,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/it/Devices.jsx:32",
-   "frontend/src/pages/it/ItDashboard.jsx:126"
+   "frontend/src/pages/it/ItDashboard.jsx:123"
   ],
   "chunk": "pages-it-1"
  },
@@ -47405,7 +47542,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/it/Devices.jsx:33",
-   "frontend/src/pages/it/ItDashboard.jsx:134"
+   "frontend/src/pages/it/ItDashboard.jsx:131"
   ],
   "chunk": "pages-it-1"
  },
@@ -47414,7 +47551,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/it/Devices.jsx:34",
-   "frontend/src/pages/it/ItDashboard.jsx:137"
+   "frontend/src/pages/it/ItDashboard.jsx:134"
   ],
   "chunk": "pages-it-1"
  },
@@ -47491,9 +47628,9 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/it/Devices.jsx:240",
-   "frontend/src/pages/it/ItDashboard.jsx:153",
-   "frontend/src/pages/it/ItDashboard.jsx:154",
-   "frontend/src/pages/it/ItDashboard.jsx:155"
+   "frontend/src/pages/it/ItDashboard.jsx:150",
+   "frontend/src/pages/it/ItDashboard.jsx:151",
+   "frontend/src/pages/it/ItDashboard.jsx:152"
   ],
   "chunk": "pages-it-1"
  },
@@ -48944,7 +49081,7 @@
   "text": "Laporan AI gagal dibuat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:79"
+   "frontend/src/pages/it/ItDashboard.jsx:76"
   ],
   "chunk": "pages-it-2"
  },
@@ -48952,7 +49089,7 @@
   "text": "Lihat perangkat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:90"
+   "frontend/src/pages/it/ItDashboard.jsx:87"
   ],
   "chunk": "pages-it-2"
  },
@@ -48960,7 +49097,7 @@
   "text": "Dashboard IT gagal dimuat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:97"
+   "frontend/src/pages/it/ItDashboard.jsx:94"
   ],
   "chunk": "pages-it-2"
  },
@@ -48968,7 +49105,7 @@
   "text": "Memuat dashboard IT",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:103"
+   "frontend/src/pages/it/ItDashboard.jsx:100"
   ],
   "chunk": "pages-it-2"
  },
@@ -48976,7 +49113,7 @@
   "text": "Karyawan (direktori)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:113"
+   "frontend/src/pages/it/ItDashboard.jsx:110"
   ],
   "chunk": "pages-it-2"
  },
@@ -48984,7 +49121,7 @@
   "text": "Semua akun sudah ditinjau People & Culture",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:115"
+   "frontend/src/pages/it/ItDashboard.jsx:112"
   ],
   "chunk": "pages-it-2"
  },
@@ -48992,7 +49129,7 @@
   "text": "Buka direktori",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:116"
+   "frontend/src/pages/it/ItDashboard.jsx:113"
   ],
   "chunk": "pages-it-2"
  },
@@ -49000,7 +49137,7 @@
   "text": "Total perangkat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:119"
+   "frontend/src/pages/it/ItDashboard.jsx:116"
   ],
   "chunk": "pages-it-2"
  },
@@ -49013,7 +49150,7 @@
    "formatNumber(count(byStatus.retired ?? devices.retired))"
   ],
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:128"
+   "frontend/src/pages/it/ItDashboard.jsx:125"
   ],
   "chunk": "pages-it-2"
  },
@@ -49025,7 +49162,7 @@
    "windowDays"
   ],
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:135"
+   "frontend/src/pages/it/ItDashboard.jsx:132"
   ],
   "chunk": "pages-it-2"
  },
@@ -49033,7 +49170,7 @@
   "text": "Kembalikan atau serahkan ke orang lain",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:139"
+   "frontend/src/pages/it/ItDashboard.jsx:136"
   ],
   "chunk": "pages-it-2"
  },
@@ -49045,7 +49182,7 @@
    "formatNumber(expiring)"
   ],
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:146"
+   "frontend/src/pages/it/ItDashboard.jsx:143"
   ],
   "chunk": "pages-it-2"
  },
@@ -49053,7 +49190,7 @@
   "text": "Lihat langganan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:148"
+   "frontend/src/pages/it/ItDashboard.jsx:145"
   ],
   "chunk": "pages-it-2"
  },
@@ -49061,7 +49198,7 @@
   "text": "Perangkat per status",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:153"
+   "frontend/src/pages/it/ItDashboard.jsx:150"
   ],
   "chunk": "pages-it-2"
  },
@@ -49069,7 +49206,7 @@
   "text": "Perangkat per tipe",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:154"
+   "frontend/src/pages/it/ItDashboard.jsx:151"
   ],
   "chunk": "pages-it-2"
  },
@@ -49077,7 +49214,7 @@
   "text": "Perangkat per lokasi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:155"
+   "frontend/src/pages/it/ItDashboard.jsx:152"
   ],
   "chunk": "pages-it-2"
  },
@@ -49085,8 +49222,8 @@
   "text": "Infrastruktur",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:159",
-   "frontend/src/pages/it/ItDashboard.jsx:160"
+   "frontend/src/pages/it/ItDashboard.jsx:156",
+   "frontend/src/pages/it/ItDashboard.jsx:157"
   ],
   "chunk": "pages-it-2"
  },
@@ -49094,7 +49231,7 @@
   "text": "Buka register",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:169"
+   "frontend/src/pages/it/ItDashboard.jsx:166"
   ],
   "chunk": "pages-it-2"
  },
@@ -49106,7 +49243,7 @@
    "windowDays"
   ],
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:177"
+   "frontend/src/pages/it/ItDashboard.jsx:174"
   ],
   "chunk": "pages-it-2"
  },
@@ -49118,7 +49255,7 @@
    "windowDays"
   ],
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:180"
+   "frontend/src/pages/it/ItDashboard.jsx:177"
   ],
   "chunk": "pages-it-2"
  },
@@ -49126,8 +49263,8 @@
   "text": "Sisa hari",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:186",
-   "frontend/src/pages/it/ItDashboard.jsx:198"
+   "frontend/src/pages/it/ItDashboard.jsx:183",
+   "frontend/src/pages/it/ItDashboard.jsx:195"
   ],
   "chunk": "pages-it-2"
  },
@@ -49135,7 +49272,7 @@
   "text": "Perpanjangan langganan dalam 30 hari",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:191"
+   "frontend/src/pages/it/ItDashboard.jsx:188"
   ],
   "chunk": "pages-it-2"
  },
@@ -49143,7 +49280,7 @@
   "text": "Tidak ada langganan yang diperpanjang dalam 30 hari",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:194"
+   "frontend/src/pages/it/ItDashboard.jsx:191"
   ],
   "chunk": "pages-it-2"
  },
@@ -49151,7 +49288,7 @@
   "text": "Seat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:199",
+   "frontend/src/pages/it/ItDashboard.jsx:196",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:208",
    "frontend/src/pages/it/SubscriptionDetail.jsx:387"
   ],
@@ -49161,7 +49298,7 @@
   "text": "Invoice menunggu",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:204"
+   "frontend/src/pages/it/ItDashboard.jsx:201"
   ],
   "chunk": "pages-it-2"
  },
@@ -49169,7 +49306,7 @@
   "text": "Tidak ada invoice yang menunggu",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:207"
+   "frontend/src/pages/it/ItDashboard.jsx:204"
   ],
   "chunk": "pages-it-2"
  },
@@ -49177,7 +49314,7 @@
   "text": "Laporan aset IT dari AI",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:222"
+   "frontend/src/pages/it/ItDashboard.jsx:219"
   ],
   "chunk": "pages-it-2"
  },
@@ -49185,7 +49322,7 @@
   "text": "Ringkasan direktori, perangkat, garansi, dan langganan software — angka yang sama dengan laporan perangkat IT.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:233"
+   "frontend/src/pages/it/ItDashboard.jsx:230"
   ],
   "chunk": "pages-it-2"
  },
@@ -49193,7 +49330,7 @@
   "text": "Buat laporan aset AI",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/ItDashboard.jsx:235"
+   "frontend/src/pages/it/ItDashboard.jsx:232"
   ],
   "chunk": "pages-it-2"
  },
@@ -53165,8 +53302,7 @@
   "text": "Tidak ada yang lewat tenggat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/ManagementDashboard.jsx:81",
-   "frontend/src/pages/management/DivisionDashboard.jsx:164"
+   "frontend/src/pages/advanced/ManagementDashboard.jsx:81"
   ],
   "chunk": "pages-management-1"
  },
@@ -53239,7 +53375,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/advanced/ManagementDashboard.jsx:167",
-   "frontend/src/pages/management/DivisionDashboard.jsx:75"
+   "frontend/src/pages/management/DivisionDashboard.jsx:80"
   ],
   "chunk": "pages-management-1"
  },
@@ -54283,6 +54419,26 @@
   "chunk": "pages-management-1"
  },
  {
+  "text": "Capaian terhadap target",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:1835",
+   "frontend/src/pages/handbook/handbookContent.js:1856",
+   "frontend/src/pages/management/DivisionDashboard.jsx:213"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Pekerjaan lewat tenggat",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:1836",
+   "frontend/src/pages/management/DivisionDashboard.jsx:224",
+   "frontend/src/pages/management/DivisionDashboard.jsx:226"
+  ],
+  "chunk": "additions"
+ },
+ {
   "text": "$1$2 dari $3",
   "kind": "pattern",
   "regex": "^([\\s\\S]*?)([\\s\\S]*?) dari ([\\s\\S]*?)$",
@@ -54292,7 +54448,7 @@
    "head.prevMonth"
   ],
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:32"
+   "frontend/src/pages/management/DivisionDashboard.jsx:35"
   ],
   "chunk": "pages-management-1"
  },
@@ -54300,7 +54456,7 @@
   "text": "Menyiapkan dashboard divisi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:75"
+   "frontend/src/pages/management/DivisionDashboard.jsx:80"
   ],
   "chunk": "pages-management-1"
  },
@@ -54308,9 +54464,17 @@
   "text": "Dashboard belum bisa dimuat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:79"
+   "frontend/src/pages/management/DivisionDashboard.jsx:84"
   ],
   "chunk": "pages-management-1"
+ },
+ {
+  "text": "Pekerjaan",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:102"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Dashboard $1",
@@ -54320,42 +54484,110 @@
    "data.division.name"
   ],
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:91"
+   "frontend/src/pages/management/DivisionDashboard.jsx:126"
   ],
   "chunk": "pages-management-1"
  },
  {
-  "text": "Angka utama, perjalanan 12 bulan, dan pekerjaan yang lewat tenggat. Diperbarui $1.",
+  "text": "Angka utama, pekerjaan yang perlu perhatian, perjalanan 12 bulan, capaian terhadap target, dan daftar kerja. Diperbarui $1.",
   "kind": "pattern",
-  "regex": "^Angka utama, perjalanan 12 bulan, dan pekerjaan yang lewat tenggat\\. Diperbarui ([\\s\\S]*?)\\.$",
+  "regex": "^Angka utama, pekerjaan yang perlu perhatian, perjalanan 12 bulan, capaian terhadap target, dan daftar kerja\\. Diperbarui ([\\s\\S]*?)\\.$",
   "vars": [
    "formatDateTime(data.generatedAt)"
   ],
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:92"
+   "frontend/src/pages/management/DivisionDashboard.jsx:127"
   ],
-  "chunk": "pages-management-1"
+  "chunk": "additions"
+ },
+ {
+  "text": "Posisi hari ini per modul divisi",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:135"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Belum bisa dihitung",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:109"
+   "frontend/src/pages/management/DivisionDashboard.jsx:145"
   ],
   "chunk": "pages-management-1"
  },
  {
-  "text": "Perjalanan capaian $1 – $2",
+  "text": "Belum ada angka utama",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:152"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Modul divisi ini belum melaporkan angka ke dashboard.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:152"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "$1 pekerjaan lewat tenggat, per sumber",
   "kind": "pattern",
-  "regex": "^Perjalanan capaian ([\\s\\S]*?) – ([\\s\\S]*?)$",
+  "regex": "^([\\s\\S]*?) pekerjaan lewat tenggat, per sumber$",
   "vars": [
-   "data.months[0].label",
-   "data.months[data.months.length - 1].label"
+   "formatNumber(esc.total)"
   ],
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:118"
+   "frontend/src/pages/management/DivisionDashboard.jsx:157"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Tidak ada pekerjaan yang lewat tenggat",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:157",
+   "frontend/src/pages/management/DivisionDashboard.jsx:233"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Buka Pusat eskalasi",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:158"
   ],
   "chunk": "pages-management-1"
+ },
+ {
+  "text": "Pekerjaan lewat tenggat per sumber",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:162"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Tidak ada pekerjaan divisi yang lewat tenggat.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:163"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Perjalanan capaian $1",
+  "kind": "pattern",
+  "regex": "^Perjalanan capaian ([\\s\\S]*?)$",
+  "vars": [
+   "range"
+  ],
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:167"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Grafik capaian bulanan $1",
@@ -54365,7 +54597,7 @@
    "data.division.name"
   ],
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:120"
+   "frontend/src/pages/management/DivisionDashboard.jsx:170"
   ],
   "chunk": "pages-management-1"
  },
@@ -54373,15 +54605,23 @@
   "text": "Grafik bergerak ini mulai berjalan setelah modul divisi mencatat pekerjaan minimal 3 bulan, misalnya tiket IT selesai, permintaan GA selesai, atau onboarding selesai.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:126"
+   "frontend/src/pages/management/DivisionDashboard.jsx:176"
   ],
   "chunk": "pages-management-1"
+ },
+ {
+  "text": "Satu kartu per ukuran, dengan garis target bila ada",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:182"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "· rata-rata antar divisi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:138"
+   "frontend/src/pages/management/DivisionDashboard.jsx:190"
   ],
   "chunk": "pages-management-1"
  },
@@ -54389,7 +54629,7 @@
   "text": "· ditagih bulanan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:138"
+   "frontend/src/pages/management/DivisionDashboard.jsx:190"
   ],
   "chunk": "pages-management-1"
  },
@@ -54402,45 +54642,108 @@
    "formatMetric(head.running, m.unit, { compact: true })"
   ],
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:150"
+   "frontend/src/pages/management/DivisionDashboard.jsx:198"
   ],
   "chunk": "additions"
- },
- {
-  "text": "Belum ada tren bulanan",
-  "kind": "exact",
-  "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:161"
-  ],
-  "chunk": "pages-management-1"
  },
  {
   "text": "Tren 12 bulan muncul setelah modul divisi ini mencatat pekerjaan. Ukuran yang selama ini masih nol tidak ditampilkan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:161"
+   "frontend/src/pages/management/DivisionDashboard.jsx:207"
   ],
   "chunk": "pages-management-1"
  },
  {
-  "text": "$1 pekerjaan menunggu tindak lanjut",
+  "text": "Bulan $1, bulan lengkap terakhir",
   "kind": "pattern",
-  "regex": "^([\\s\\S]*?) pekerjaan menunggu tindak lanjut$",
+  "regex": "^Bulan ([\\s\\S]*?), bulan lengkap terakhir$",
   "vars": [
+   "progress.month"
+  ],
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:214"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Belum ada target bulanan untuk divisi ini",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:214"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Buka Target",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:215"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Capaian terhadap target $1",
+  "kind": "pattern",
+  "regex": "^Capaian terhadap target ([\\s\\S]*?)$",
+  "vars": [
+   "progress.month"
+  ],
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:219"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Belum ada target bulanan",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:220"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Setelah target bulanan diisi di menu Target, capaian tiap ukuran tampil di sini sebagai persentase.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/management/DivisionDashboard.jsx:220"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "$1 paling lama dari $2",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?) paling lama dari ([\\s\\S]*?)$",
+  "vars": [
+   "formatNumber(rows.length)",
    "formatNumber(esc.total)"
   ],
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:164"
+   "frontend/src/pages/management/DivisionDashboard.jsx:224",
+   "frontend/src/pages/management/DivisionDashboard.jsx:232"
   ],
-  "chunk": "pages-management-1"
+  "chunk": "additions"
  },
  {
-  "text": "Buka Pusat eskalasi",
+  "text": "Daftar kerja divisi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/management/DivisionDashboard.jsx:197"
+   "frontend/src/pages/management/DivisionDashboard.jsx:224"
   ],
-  "chunk": "pages-management-1"
+  "chunk": "additions"
+ },
+ {
+  "text": "$1 dari target $2",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?) dari target ([\\s\\S]*?)$",
+  "vars": [
+   "formatMetric(a, m.unit, { compact: true })",
+   "formatMetric(t, m.unit, { compact: true })"
+  ],
+  "sources": [
+   "frontend/src/pages/management/divisionDashboardModel.js:76"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Story points",
@@ -57544,7 +57847,7 @@
    "frontend/src/pages/documents/DocTemplates.jsx:156",
    "frontend/src/pages/documents/DocTemplates.jsx:220",
    "frontend/src/pages/handbook/aiForms.generated.js:167",
-   "frontend/src/pages/handbook/handbookContent.js:2185"
+   "frontend/src/pages/handbook/handbookContent.js:2198"
   ],
   "chunk": "pages-ai-docs-1"
  },
@@ -63932,8 +64235,8 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/handbookAccess.js:19",
-   "frontend/src/pages/handbook/handbookContent.js:1967",
-   "frontend/src/pages/handbook/handbookContent.js:2190",
+   "frontend/src/pages/handbook/handbookContent.js:1980",
+   "frontend/src/pages/handbook/handbookContent.js:2203",
    "frontend/src/pages/handbook/handbookModel.js:25",
    "backend/migrations/112_system_admin_role.sql:13"
   ],
@@ -63957,7 +64260,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/morningBriefing.service.js:317",
-   "frontend/src/pages/handbook/handbookContent.js:2188"
+   "frontend/src/pages/handbook/handbookContent.js:2201"
   ],
   "chunk": "handbook-2"
  },
@@ -64736,7 +65039,7 @@
    "frontend/src/pages/handbook/handbookContent.js:1726",
    "frontend/src/pages/handbook/handbookContent.js:1727",
    "frontend/src/pages/handbook/handbookContent.js:1769",
-   "frontend/src/pages/handbook/handbookContent.js:1891"
+   "frontend/src/pages/handbook/handbookContent.js:1904"
   ],
   "chunk": "handbook-1"
  },
@@ -64875,7 +65178,8 @@
    "frontend/src/pages/handbook/handbookContent.js:109",
    "frontend/src/pages/handbook/handbookContent.js:147",
    "frontend/src/pages/handbook/handbookContent.js:168",
-   "frontend/src/pages/handbook/handbookContent.js:1224"
+   "frontend/src/pages/handbook/handbookContent.js:1224",
+   "frontend/src/pages/handbook/handbookContent.js:1830"
   ],
   "chunk": "handbook-1"
  },
@@ -64891,7 +65195,8 @@
    "frontend/src/pages/handbook/handbookContent.js:1300",
    "frontend/src/pages/handbook/handbookContent.js:1411",
    "frontend/src/pages/handbook/handbookContent.js:1591",
-   "frontend/src/pages/handbook/handbookContent.js:2023"
+   "frontend/src/pages/handbook/handbookContent.js:1830",
+   "frontend/src/pages/handbook/handbookContent.js:2036"
   ],
   "chunk": "handbook-1"
  },
@@ -71663,12 +71968,12 @@
   "chunk": "handbook-2"
  },
  {
-  "text": "Angka utama divisi, perjalanan 12 bulan dalam grafik capaian bulanan, tren dengan garis target, dan pekerjaan yang lewat tenggat.",
+  "text": "Satu susunan dashboard yang sama untuk setiap divisi: angka utama, perlu perhatian, grafik capaian bulanan, tren 12 bulan, capaian terhadap target, dan pekerjaan lewat tenggat.",
   "kind": "exact",
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:1823"
   ],
-  "chunk": "handbook-2"
+  "chunk": "additions"
  },
  {
   "text": "Buka \"Dashboard divisi\". Management Office memilih divisi di \"Divisi\".",
@@ -71679,12 +71984,12 @@
   "chunk": "handbook-2"
  },
  {
-  "text": "Lihat angka utama di bagian atas.",
+  "text": "Baca dari atas ke bawah: bagian yang sama selalu ada di urutan yang sama, apa pun divisinya.",
   "kind": "exact",
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:1829"
   ],
-  "chunk": "handbook-2"
+  "chunk": "additions"
  },
  {
   "text": "Klik \"Muat ulang\" untuk data terbaru.",
@@ -71695,18 +72000,66 @@
   "chunk": "handbook-2"
  },
  {
-  "text": "Angka yang berasal dari Accurate hanya mencakup batch yang sudah disetujui.",
+  "text": "Posisi hari ini per modul divisi; angkanya naik saat halaman dibuka.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1830"
+   "frontend/src/pages/handbook/handbookContent.js:1831"
   ],
-  "chunk": "handbook-2"
+  "chunk": "additions"
+ },
+ {
+  "text": "Jumlah pekerjaan lewat tenggat per sumber, dengan tombol ke Pusat eskalasi.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:1832"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Grafik bergerak 12 bulan terakhir.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:1833"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Satu kartu per ukuran, dengan garis target bila ada.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:1834"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Persentase capaian tiap ukuran pada bulan lengkap terakhir.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:1835"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Daftar kerja yang paling lama menunggu.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:1836"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Bagian yang datanya belum ada tetap tampil di tempatnya dengan keterangan \"menunggu data\", supaya dashboard setiap divisi terbaca sama. Angka yang berasal dari Accurate hanya mencakup batch yang sudah disetujui.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:1838"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Grafik capaian bulanan menggambarkan perjalanan capaian divisi bulan demi bulan. Tekan tombol putar atau geser penanda bulan untuk melihat perubahannya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1837"
+   "frontend/src/pages/handbook/handbookContent.js:1845"
   ],
   "chunk": "handbook-2"
  },
@@ -71714,7 +72067,7 @@
   "text": "Bila tertulis \"Grafik capaian bulanan menunggu data\", modul divisi belum mencatat pekerjaan minimal 3 bulan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1838"
+   "frontend/src/pages/handbook/handbookContent.js:1846"
   ],
   "chunk": "handbook-2"
  },
@@ -71722,7 +72075,7 @@
   "text": "Tren 12 bulan dan target",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1843"
+   "frontend/src/pages/handbook/handbookContent.js:1851"
   ],
   "chunk": "handbook-2"
  },
@@ -71730,44 +72083,36 @@
   "text": "Setiap grafik tren menampilkan realisasi per bulan dan garis target bulanan. Target ditetapkan manajemen di \"Target & realisasi\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1844"
+   "frontend/src/pages/handbook/handbookContent.js:1852"
   ],
   "chunk": "handbook-2"
  },
  {
-  "text": "Bagian \"Lewat tenggat\" menghitung pekerjaan divisi yang menunggu tindak lanjut. Klik \"Buka Pusat eskalasi\" untuk menanganinya (Head dan manajemen).",
+  "text": "Untuk setiap ukuran yang punya target bulanan, bagian ini menampilkan capaian bulan lengkap terakhir sebagai persentase: hijau bila target tercapai, oranye bila 80% atau lebih, merah bila di bawahnya. Ukuran \"makin rendah makin baik\" dianggap tercapai bila di bawah target. Tanpa target bulanan, bagian ini meminta target diisi di \"Target\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1849"
+   "frontend/src/pages/handbook/handbookContent.js:1857"
   ],
-  "chunk": "handbook-2"
+  "chunk": "additions"
+ },
+ {
+  "text": "Perlu perhatian dan pekerjaan lewat tenggat",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:1861"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "\"Perlu perhatian\" menghitung pekerjaan divisi yang lewat tenggat per sumber; \"Pekerjaan lewat tenggat\" mendaftar yang paling lama menunggu. Klik \"Buka Pusat eskalasi\" untuk menanganinya (Head dan manajemen).",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:1862"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Manajemen: dashboard, eskalasi, target, peta program",
-  "kind": "exact",
-  "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1858"
-  ],
-  "chunk": "handbook-2"
- },
- {
-  "text": "Management Office untuk seluruh perusahaan; Head divisi untuk divisinya sendiri.",
-  "kind": "exact",
-  "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1863"
-  ],
-  "chunk": "handbook-2"
- },
- {
-  "text": "Alat pemantauan lintas modul. Head divisi melihat divisinya sendiri; Management Office melihat semua divisi.",
-  "kind": "exact",
-  "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1864"
-  ],
-  "chunk": "handbook-2"
- },
- {
-  "text": "Ringkasan KPI dan \"Eskalasi teratas\". Status KPI: \"Perlu ditindaklanjuti\", \"Belum ada data\", atau \"Gagal dimuat\" (coba \"Muat ulang\").",
   "kind": "exact",
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:1871"
@@ -71775,10 +72120,34 @@
   "chunk": "handbook-2"
  },
  {
+  "text": "Management Office untuk seluruh perusahaan; Head divisi untuk divisinya sendiri.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:1876"
+  ],
+  "chunk": "handbook-2"
+ },
+ {
+  "text": "Alat pemantauan lintas modul. Head divisi melihat divisinya sendiri; Management Office melihat semua divisi.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:1877"
+  ],
+  "chunk": "handbook-2"
+ },
+ {
+  "text": "Ringkasan KPI dan \"Eskalasi teratas\". Status KPI: \"Perlu ditindaklanjuti\", \"Belum ada data\", atau \"Gagal dimuat\" (coba \"Muat ulang\").",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:1884"
+  ],
+  "chunk": "handbook-2"
+ },
+ {
   "text": "Bila tertulis \"Akun Anda belum terhubung ke divisi\", minta Administrator Sistem menghubungkan akun Anda.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1872"
+   "frontend/src/pages/handbook/handbookContent.js:1885"
   ],
   "chunk": "handbook-2"
  },
@@ -71786,7 +72155,7 @@
   "text": "Satu antrean untuk semua pekerjaan dari setiap modul yang sudah lewat tenggat. Pilih tampilan \"Antrean\" atau \"Per modul\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1880"
+   "frontend/src/pages/handbook/handbookContent.js:1893"
   ],
   "chunk": "handbook-2"
  },
@@ -71794,7 +72163,7 @@
   "text": "Klik baris eskalasi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1881"
+   "frontend/src/pages/handbook/handbookContent.js:1894"
   ],
   "chunk": "handbook-2"
  },
@@ -71802,7 +72171,7 @@
   "text": "Di \"Tindak lanjut eskalasi\", pilih \"Penanggung jawab tindak lanjut\" (boleh diri sendiri) dan tulis \"Catatan\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1881"
+   "frontend/src/pages/handbook/handbookContent.js:1894"
   ],
   "chunk": "handbook-2"
  },
@@ -71810,7 +72179,7 @@
   "text": "Perbarui statusnya: \"Belum ditangani\", \"Sedang ditangani\", \"Selesai\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1881"
+   "frontend/src/pages/handbook/handbookContent.js:1894"
   ],
   "chunk": "handbook-2"
  },
@@ -71818,7 +72187,7 @@
   "text": "Kolom \"Kondisi sumber\" menunjukkan berapa lama pekerjaan di modul asalnya lewat tenggat; \"Status tindak lanjut\" hanya catatan di sini. Menandai \"Selesai\" tidak membayar, menyetujui, atau menutup pekerjaan di modulnya: selama sumbernya masih lewat tenggat, eskalasi tetap tampil. Antrean kosong pada satu filter tidak berarti semua pekerjaan dalam tenggat.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1882"
+   "frontend/src/pages/handbook/handbookContent.js:1895"
   ],
   "chunk": "additions"
  },
@@ -71826,7 +72195,7 @@
   "text": "Target per divisi dan per metrik untuk satu periode (\"Bulan\" atau \"Kuartal\"), berdampingan dengan realisasinya yang dihitung otomatis.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1890"
+   "frontend/src/pages/handbook/handbookContent.js:1903"
   ],
   "chunk": "handbook-2"
  },
@@ -71834,7 +72203,7 @@
   "text": "Target terpenuhi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1891"
+   "frontend/src/pages/handbook/handbookContent.js:1904"
   ],
   "chunk": "handbook-2"
  },
@@ -71842,7 +72211,7 @@
   "text": "Laju cukup untuk mencapai target.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1891"
+   "frontend/src/pages/handbook/handbookContent.js:1904"
   ],
   "chunk": "handbook-2"
  },
@@ -71850,7 +72219,7 @@
   "text": "Laju agak tertinggal.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1891"
+   "frontend/src/pages/handbook/handbookContent.js:1904"
   ],
   "chunk": "handbook-2"
  },
@@ -71858,7 +72227,7 @@
   "text": "Jauh di bawah laju target.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1891"
+   "frontend/src/pages/handbook/handbookContent.js:1904"
   ],
   "chunk": "handbook-2"
  },
@@ -71866,7 +72235,7 @@
   "text": "Belum bisa dihitung, bukan nol.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1891"
+   "frontend/src/pages/handbook/handbookContent.js:1904"
   ],
   "chunk": "handbook-2"
  },
@@ -71874,7 +72243,7 @@
   "text": "Target belum ditetapkan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1891"
+   "frontend/src/pages/handbook/handbookContent.js:1904"
   ],
   "chunk": "handbook-2"
  },
@@ -71882,7 +72251,7 @@
   "text": "Head divisi bisa melihat target dan realisasinya, tetapi tidak mengubahnya; target ditetapkan manajemen.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1892"
+   "frontend/src/pages/handbook/handbookContent.js:1905"
   ],
   "chunk": "handbook-2"
  },
@@ -71890,7 +72259,7 @@
   "text": "Menetapkan target",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1897"
+   "frontend/src/pages/handbook/handbookContent.js:1910"
   ],
   "chunk": "handbook-2"
  },
@@ -71898,7 +72267,7 @@
   "text": "Buka \"Target & realisasi\", pilih periode.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1900"
+   "frontend/src/pages/handbook/handbookContent.js:1913"
   ],
   "chunk": "handbook-2"
  },
@@ -71906,7 +72275,7 @@
   "text": "Di \"Matriks target\", klik ikon pensil pada sel divisi × metrik.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1900"
+   "frontend/src/pages/handbook/handbookContent.js:1913"
   ],
   "chunk": "handbook-2"
  },
@@ -71914,7 +72283,7 @@
   "text": "Isi target lalu simpan. \"Hapus target\" untuk mengosongkannya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1900"
+   "frontend/src/pages/handbook/handbookContent.js:1913"
   ],
   "chunk": "handbook-2"
  },
@@ -71922,7 +72291,7 @@
   "text": "Semua project Project Tracker dari setiap divisi dalam satu linimasa. Pilih \"Linimasa\" atau \"Daftar\"; klik \"Buka project tracker\" untuk detailnya. Perhatikan jadwal yang tumpang tindih dan yang lewat tenggat.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1906"
+   "frontend/src/pages/handbook/handbookContent.js:1919"
   ],
   "chunk": "handbook-2"
  },
@@ -71930,7 +72299,7 @@
   "text": "Khusus manajemen. Tab \"Alur penjualan\" (pesanan sampai lunas), \"Alur pembelian\" (PO sampai barang datang), \"Perkiraan margin (harga PO)\", dan \"Lambat laku\". Pilih periode: Bulan ini, Bulan lalu, 3 bulan terakhir, Tahun ini.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1914"
+   "frontend/src/pages/handbook/handbookContent.js:1927"
   ],
   "chunk": "handbook-2"
  },
@@ -71938,7 +72307,7 @@
   "text": "Margin adalah perkiraan dari harga PO, bukan laporan laba rugi resmi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1915"
+   "frontend/src/pages/handbook/handbookContent.js:1928"
   ],
   "chunk": "handbook-2"
  },
@@ -71946,7 +72315,7 @@
   "text": "Laporan: Google Analytics dan log aktivitas",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1925"
+   "frontend/src/pages/handbook/handbookContent.js:1938"
   ],
   "chunk": "handbook-2"
  },
@@ -71954,7 +72323,7 @@
   "text": "Management Office dan Marketing (Analytics); Head Management Office dan Super Admin (log aktivitas).",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1929"
+   "frontend/src/pages/handbook/handbookContent.js:1942"
   ],
   "chunk": "handbook-2"
  },
@@ -71962,7 +72331,7 @@
   "text": "Laporan pengunjung situs perusahaan dan jejak audit aktivitas di aplikasi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1930"
+   "frontend/src/pages/handbook/handbookContent.js:1943"
   ],
   "chunk": "handbook-2"
  },
@@ -71970,7 +72339,7 @@
   "text": "Pilih \"Properti\" dan rentang waktu (7 hari, 28 hari, 90 hari, Kustom). Kartu: pengguna aktif & sesi per hari, sumber trafik, perangkat, negara, dan halaman teratas.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1937"
+   "frontend/src/pages/handbook/handbookContent.js:1950"
   ],
   "chunk": "handbook-2"
  },
@@ -71978,7 +72347,7 @@
   "text": "Jejak audit aktivitas pengguna dan sistem (50 kejadian terbaru), termasuk perubahan akses yang dilakukan administrator.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1945"
+   "frontend/src/pages/handbook/handbookContent.js:1958"
   ],
   "chunk": "handbook-2"
  },
@@ -71986,7 +72355,7 @@
   "text": "Log memuat nilai data. Jangan membagikannya ke luar.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1946"
+   "frontend/src/pages/handbook/handbookContent.js:1959"
   ],
   "chunk": "handbook-2"
  },
@@ -71994,9 +72363,9 @@
   "text": "Administrator Sistem dan Super Admin.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1960",
-   "frontend/src/pages/handbook/handbookContent.js:2057",
-   "frontend/src/pages/handbook/handbookContent.js:2108"
+   "frontend/src/pages/handbook/handbookContent.js:1973",
+   "frontend/src/pages/handbook/handbookContent.js:2070",
+   "frontend/src/pages/handbook/handbookContent.js:2121"
   ],
   "chunk": "handbook-2"
  },
@@ -72004,7 +72373,7 @@
   "text": "Membuat akun, menempatkannya di entitas, divisi, dan peran yang tepat, serta mengatur peran dan izin. Administrator Sistem mengatur sistem tanpa bisa melihat data divisi mana pun.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1961"
+   "frontend/src/pages/handbook/handbookContent.js:1974"
   ],
   "chunk": "handbook-2"
  },
@@ -72012,7 +72381,7 @@
   "text": "Batas peran Administrator Sistem",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1965"
+   "frontend/src/pages/handbook/handbookContent.js:1978"
   ],
   "chunk": "handbook-2"
  },
@@ -72020,7 +72389,7 @@
   "text": "Lihat data divisi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1967"
+   "frontend/src/pages/handbook/handbookContent.js:1980"
   ],
   "chunk": "handbook-2"
  },
@@ -72028,7 +72397,7 @@
   "text": "Kelola sistem",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1967"
+   "frontend/src/pages/handbook/handbookContent.js:1980"
   ],
   "chunk": "handbook-2"
  },
@@ -72036,7 +72405,7 @@
   "text": "Ya, semua",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1967"
+   "frontend/src/pages/handbook/handbookContent.js:1980"
   ],
   "chunk": "handbook-2"
  },
@@ -72044,7 +72413,7 @@
   "text": "Ya, termasuk akun Super Admin",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1967"
+   "frontend/src/pages/handbook/handbookContent.js:1980"
   ],
   "chunk": "handbook-2"
  },
@@ -72052,7 +72421,7 @@
   "text": "Ya, kecuali akun dan peran Super Admin",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1967"
+   "frontend/src/pages/handbook/handbookContent.js:1980"
   ],
   "chunk": "handbook-2"
  },
@@ -72060,7 +72429,7 @@
   "text": "Tidak bisa mengubah peran dan divisi akun sendiri.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1968"
+   "frontend/src/pages/handbook/handbookContent.js:1981"
   ],
   "chunk": "handbook-2"
  },
@@ -72068,7 +72437,7 @@
   "text": "Tidak bisa mengubah, mereset, atau menghapus akun Super Admin.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1968"
+   "frontend/src/pages/handbook/handbookContent.js:1981"
   ],
   "chunk": "handbook-2"
  },
@@ -72076,7 +72445,7 @@
   "text": "Izin dua peran global hanya bisa diubah Super Admin.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1968"
+   "frontend/src/pages/handbook/handbookContent.js:1981"
   ],
   "chunk": "handbook-2"
  },
@@ -72084,7 +72453,7 @@
   "text": "Tidak bisa mengatur atau mereset kata sandi: kata sandi dikelola oleh Super Admin saja.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1968"
+   "frontend/src/pages/handbook/handbookContent.js:1981"
   ],
   "chunk": "additions"
  },
@@ -72092,7 +72461,7 @@
   "text": "Akun yang dibuat Administrator Sistem masuk dengan akun Google kantor (tanpa kata sandi).",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1968"
+   "frontend/src/pages/handbook/handbookContent.js:1981"
   ],
   "chunk": "additions"
  },
@@ -72100,7 +72469,7 @@
   "text": "Semua perubahan tercatat di log aktivitas yang dibaca Super Admin.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1968"
+   "frontend/src/pages/handbook/handbookContent.js:1981"
   ],
   "chunk": "handbook-2"
  },
@@ -72108,7 +72477,7 @@
   "text": "Menggabungkan Administrator Sistem dengan peran divisi membuat pengguna itu bisa melihat data divisi tersebut. Aplikasi menampilkan peringatan bila ini terjadi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1969"
+   "frontend/src/pages/handbook/handbookContent.js:1982"
   ],
   "chunk": "handbook-2"
  },
@@ -72116,7 +72485,7 @@
   "text": "Menambah pengguna",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1974"
+   "frontend/src/pages/handbook/handbookContent.js:1987"
   ],
   "chunk": "handbook-2"
  },
@@ -72124,7 +72493,7 @@
   "text": "Buka \"Pengguna\", klik \"Tambah pengguna\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1981"
+   "frontend/src/pages/handbook/handbookContent.js:1994"
   ],
   "chunk": "handbook-2"
  },
@@ -72132,7 +72501,7 @@
   "text": "Isi \"Nama lengkap\" dan \"Email\" kantor, pilih \"Entitas\" dan \"Divisi\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1982"
+   "frontend/src/pages/handbook/handbookContent.js:1995"
   ],
   "chunk": "handbook-2"
  },
@@ -72140,7 +72509,7 @@
   "text": "Pilih \"Peran\" (muncul setelah divisi dipilih): Member, Supervisor, atau Head divisi itu.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1983"
+   "frontend/src/pages/handbook/handbookContent.js:1996"
   ],
   "chunk": "handbook-2"
  },
@@ -72148,7 +72517,7 @@
   "text": "Pilih \"Status awal\" Aktif.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1984"
+   "frontend/src/pages/handbook/handbookContent.js:1997"
   ],
   "chunk": "additions"
  },
@@ -72156,7 +72525,7 @@
   "text": "Khusus Super Admin: bila pengguna perlu masuk dengan kata sandi, isi \"Kata sandi sementara (opsional)\" (minimal 10 karakter). Kosongkan bila pengguna masuk dengan akun Google kantor.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1985"
+   "frontend/src/pages/handbook/handbookContent.js:1998"
   ],
   "chunk": "additions"
  },
@@ -72164,7 +72533,7 @@
   "text": "Simpan. Bila kata sandi sementara diisi, sampaikan lewat jalur aman; pengguna wajib menggantinya saat pertama masuk.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1986"
+   "frontend/src/pages/handbook/handbookContent.js:1999"
   ],
   "chunk": "additions"
  },
@@ -72172,7 +72541,7 @@
   "text": "Kata sandi dikelola oleh Super Admin saja. Administrator Sistem tidak melihat kolom kata sandi: akun yang ia buat masuk dengan akun Google kantor. Bila pengguna itu memerlukan kata sandi, minta Super Admin mengaturnya lewat \"Atur ulang kata sandi\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1989"
+   "frontend/src/pages/handbook/handbookContent.js:2002"
   ],
   "chunk": "additions"
  },
@@ -72180,7 +72549,7 @@
   "text": "Klik ikon ⓘ di samping peran untuk membaca isi peran itu.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1990"
+   "frontend/src/pages/handbook/handbookContent.js:2003"
   ],
   "chunk": "handbook-2"
  },
@@ -72188,7 +72557,7 @@
   "text": "Akun Super Admin / Administrator Sistem tidak perlu divisi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1990"
+   "frontend/src/pages/handbook/handbookContent.js:2003"
   ],
   "chunk": "handbook-2"
  },
@@ -72196,7 +72565,7 @@
   "text": "Mereset kata sandi atau menonaktifkan akun",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1995"
+   "frontend/src/pages/handbook/handbookContent.js:2008"
   ],
   "chunk": "handbook-2"
  },
@@ -72204,7 +72573,7 @@
   "text": "Mereset kata sandi hanya bisa dilakukan Super Admin. Tombol \"Atur ulang kata sandi\" tidak tampil untuk Administrator Sistem. Menonaktifkan akun bisa dilakukan Administrator Sistem maupun Super Admin.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:1999"
+   "frontend/src/pages/handbook/handbookContent.js:2012"
   ],
   "chunk": "additions"
  },
@@ -72212,7 +72581,7 @@
   "text": "Mereset kata sandi (Super Admin)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2000"
+   "frontend/src/pages/handbook/handbookContent.js:2013"
   ],
   "chunk": "additions"
  },
@@ -72220,8 +72589,8 @@
   "text": "Buka \"Pengguna\" dan cari akunnya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2000",
-   "frontend/src/pages/handbook/handbookContent.js:2001"
+   "frontend/src/pages/handbook/handbookContent.js:2013",
+   "frontend/src/pages/handbook/handbookContent.js:2014"
   ],
   "chunk": "additions"
  },
@@ -72229,7 +72598,7 @@
   "text": "Klik \"Atur ulang kata sandi\" di baris akun itu, lalu isi kata sandi sementara (minimal 10 karakter).",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2000"
+   "frontend/src/pages/handbook/handbookContent.js:2013"
   ],
   "chunk": "additions"
  },
@@ -72237,7 +72606,7 @@
   "text": "Sampaikan kata sandi sementara lewat jalur aman. Semua sesi lama akun itu berakhir, dan pengguna wajib membuat kata sandi baru saat masuk berikutnya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2000"
+   "frontend/src/pages/handbook/handbookContent.js:2013"
   ],
   "chunk": "additions"
  },
@@ -72245,7 +72614,7 @@
   "text": "Menonaktifkan akun",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2001"
+   "frontend/src/pages/handbook/handbookContent.js:2014"
   ],
   "chunk": "additions"
  },
@@ -72253,7 +72622,7 @@
   "text": "Klik tombol nonaktifkan di baris akun itu, atau buka akunnya dan ubah \"Status\" menjadi \"Nonaktif\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2001"
+   "frontend/src/pages/handbook/handbookContent.js:2014"
   ],
   "chunk": "additions"
  },
@@ -72261,7 +72630,7 @@
   "text": "Untuk karyawan keluar, penonaktifan akun mengikuti checklist offboarding dari People & Culture.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2002"
+   "frontend/src/pages/handbook/handbookContent.js:2015"
   ],
   "chunk": "handbook-2"
  },
@@ -72269,7 +72638,7 @@
   "text": "Mengambil daftar anggota terbaru dari Google Workspace. Tidak ada akun yang dibuat otomatis.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2011"
+   "frontend/src/pages/handbook/handbookContent.js:2024"
   ],
   "chunk": "handbook-2"
  },
@@ -72277,7 +72646,7 @@
   "text": "Buka \"Sinkronisasi Workspace\" dan ambil daftar terbaru.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2012"
+   "frontend/src/pages/handbook/handbookContent.js:2025"
   ],
   "chunk": "handbook-2"
  },
@@ -72285,7 +72654,7 @@
   "text": "Di \"Kandidat menunggu tinjauan\", pilih divisi dan peran tiap orang, atau \"Lewati kandidat\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2012"
+   "frontend/src/pages/handbook/handbookContent.js:2025"
   ],
   "chunk": "handbook-2"
  },
@@ -72293,7 +72662,7 @@
   "text": "Klik \"Sinkronkan akses\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2012"
+   "frontend/src/pages/handbook/handbookContent.js:2025"
   ],
   "chunk": "handbook-2"
  },
@@ -72301,7 +72670,7 @@
   "text": "Akun yang diterapkan oleh Administrator Sistem masuk dengan akun Google kantor, tanpa kata sandi. Hanya Super Admin yang mendapat kata sandi sementara untuk disampaikan ke pengguna.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2013"
+   "frontend/src/pages/handbook/handbookContent.js:2026"
   ],
   "chunk": "additions"
  },
@@ -72309,7 +72678,7 @@
   "text": "Setiap divisi punya tiga peran standar: Member, Supervisor, dan Head. Peran \"Custom\" bisa dibuat untuk kebutuhan khusus.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2022"
+   "frontend/src/pages/handbook/handbookContent.js:2035"
   ],
   "chunk": "handbook-2"
  },
@@ -72317,7 +72686,7 @@
   "text": "Seperti Member, ditambah menyetujui pekerjaan divisi (misalnya batch Accurate atau pergerakan barang) dan Dashboard divisi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2023"
+   "frontend/src/pages/handbook/handbookContent.js:2036"
   ],
   "chunk": "handbook-2"
  },
@@ -72325,7 +72694,7 @@
   "text": "Seperti Supervisor, ditambah dashboard manajemen, eskalasi, dan target yang dibatasi ke divisinya, serta cap surat dan template.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2023"
+   "frontend/src/pages/handbook/handbookContent.js:2036"
   ],
   "chunk": "handbook-2"
  },
@@ -72333,7 +72702,7 @@
   "text": "\"Ubah akses\" untuk mengubah izin peran; \"Kembalikan ke default\" untuk kembali ke izin standar.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2024"
+   "frontend/src/pages/handbook/handbookContent.js:2037"
   ],
   "chunk": "handbook-2"
  },
@@ -72341,7 +72710,7 @@
   "text": "Daftar hak akses yang bisa diberikan ke peran. Pemberiannya diatur di halaman \"Peran\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2032"
+   "frontend/src/pages/handbook/handbookContent.js:2045"
   ],
   "chunk": "handbook-2"
  },
@@ -72349,7 +72718,7 @@
   "text": "Divisi di setiap entitas: Finance, Procurement, Sales, People & Culture, Management Office, Retail Commerce, Warehouse, dan Marketing. Klik \"Tambah divisi\" atau \"Impor\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2039"
+   "frontend/src/pages/handbook/handbookContent.js:2052"
   ],
   "chunk": "handbook-2"
  },
@@ -72357,7 +72726,7 @@
   "text": "Badan usaha yang memakai Prakasa Workspace. Klik \"Tambah entitas\" untuk badan usaha baru.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2046"
+   "frontend/src/pages/handbook/handbookContent.js:2059"
   ],
   "chunk": "handbook-2"
  },
@@ -72365,7 +72734,7 @@
   "text": "Aturan approval & dokumen",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2053"
+   "frontend/src/pages/handbook/handbookContent.js:2066"
   ],
   "chunk": "handbook-2"
  },
@@ -72373,7 +72742,7 @@
   "text": "Siapa menyetujui apa, siapa menandatangani dokumen jenis apa, dan di folder Shared Drive mana dokumen disimpan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2058"
+   "frontend/src/pages/handbook/handbookContent.js:2071"
   ],
   "chunk": "handbook-2"
  },
@@ -72381,7 +72750,7 @@
   "text": "Alur approval per entitas, divisi, jenis permintaan, tipe dokumen, dan nominal: berurutan atau paralel, dengan pengingat dan eskalasi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2066"
+   "frontend/src/pages/handbook/handbookContent.js:2079"
   ],
   "chunk": "handbook-2"
  },
@@ -72389,7 +72758,7 @@
   "text": "Buat matrix: isi \"Nama matrix\", \"Jenis alur\", \"Jenis permintaan\", \"Tipe dokumen\", nominal minimum/maksimum, dan \"Prioritas\" (angka kecil didahulukan).",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2067"
+   "frontend/src/pages/handbook/handbookContent.js:2080"
   ],
   "chunk": "handbook-2"
  },
@@ -72397,7 +72766,7 @@
   "text": "Tambahkan langkah: \"Urutan\", \"Approver\", \"Grup paralel\", \"Penanda tangan\", dan \"Pengingat / eskalasi\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2067"
+   "frontend/src/pages/handbook/handbookContent.js:2080"
   ],
   "chunk": "handbook-2"
  },
@@ -72405,7 +72774,7 @@
   "text": "Nyalakan \"Matrix aktif\".",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2067"
+   "frontend/src/pages/handbook/handbookContent.js:2080"
   ],
   "chunk": "handbook-2"
  },
@@ -72413,7 +72782,7 @@
   "text": "Perubahan matriks langsung berlaku untuk pengajuan baru. Uji dengan nominal kecil dulu.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2068"
+   "frontend/src/pages/handbook/handbookContent.js:2081"
   ],
   "chunk": "handbook-2"
  },
@@ -72421,7 +72790,7 @@
   "text": "Per tipe dokumen: penanda tangan (pengguna atau peran, salah satu), level approval minimum, cek awal AI wajib, verifikasi QR wajib, izinkan delegasi, algoritma checksum (SHA-256 / SHA-512), dan ID folder arsip Drive.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2076"
+   "frontend/src/pages/handbook/handbookContent.js:2089"
   ],
   "chunk": "handbook-2"
  },
@@ -72429,7 +72798,7 @@
   "text": "Log cek awal AI (Lolos, Peringatan, Gagal, Dilewati). Hasilnya bersifat saran dan tidak menggantikan keputusan approval.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2083"
+   "frontend/src/pages/handbook/handbookContent.js:2096"
   ],
   "chunk": "handbook-2"
  },
@@ -72437,7 +72806,7 @@
   "text": "Jenis dokumen, folder bawaannya, dan apakah dokumen itu butuh tanda tangan atau cek awal AI.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2090"
+   "frontend/src/pages/handbook/handbookContent.js:2103"
   ],
   "chunk": "handbook-2"
  },
@@ -72445,7 +72814,7 @@
   "text": "Folder Shared Drive tujuan untuk setiap tipe dokumen, per entitas dan divisi. Pastikan setiap divisi punya folder Shared Drive sendiri.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2097"
+   "frontend/src/pages/handbook/handbookContent.js:2110"
   ],
   "chunk": "handbook-2"
  },
@@ -72453,7 +72822,7 @@
   "text": "Koneksi Accurate, mesin Prakasa AI, log integrasi, dan aturan notifikasi & email.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2109"
+   "frontend/src/pages/handbook/handbookContent.js:2122"
   ],
   "chunk": "handbook-2"
  },
@@ -72461,7 +72830,7 @@
   "text": "Menyambungkan Accurate Online: \"ID klien\", \"Rahasia klien\", dan \"URL callback OAuth\", lalu \"Simpan kredensial\". Kartu \"Status koneksi\" menunjukkan Tersambung atau Belum tersambung.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2117"
+   "frontend/src/pages/handbook/handbookContent.js:2130"
   ],
   "chunk": "handbook-2"
  },
@@ -72469,7 +72838,7 @@
   "text": "Hanya baca: aplikasi tidak pernah menulis ke Accurate. Administrator Sistem melihat status koneksi saja, bukan datanya. Menulis ke Accurate adalah tahap masa depan yang harus disetujui owner.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2118"
+   "frontend/src/pages/handbook/handbookContent.js:2131"
   ],
   "chunk": "handbook-2"
  },
@@ -72477,7 +72846,7 @@
   "text": "Mesin AI yang dipakai Prakasa AI: akun Claude Team, mesin default dan per divisi, serta kunci API penyedia lain. Semua peran otomatis punya akses AI; pengaturan ini hanya menentukan mesinnya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2127"
+   "frontend/src/pages/handbook/handbookContent.js:2140"
   ],
   "chunk": "handbook-2"
  },
@@ -72485,7 +72854,7 @@
   "text": "Bila Prakasa AI terputus, semua pengguna terdampak dan admin menerima email. Sambungkan ulang secepatnya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2128"
+   "frontend/src/pages/handbook/handbookContent.js:2141"
   ],
   "chunk": "handbook-2"
  },
@@ -72493,7 +72862,7 @@
   "text": "Ringkasan pemakaian Prakasa AI. Isi prompt dan percakapan tidak disimpan di riwayat penggunaan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2136"
+   "frontend/src/pages/handbook/handbookContent.js:2149"
   ],
   "chunk": "handbook-2"
  },
@@ -72501,7 +72870,7 @@
   "text": "Panggilan ke layanan luar (Google, Accurate, AI). Tab \"Kesehatan 24 jam\" untuk gambaran cepat dan \"Log detail\" per panggilan untuk mencari penyebab error.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2143"
+   "frontend/src/pages/handbook/handbookContent.js:2156"
   ],
   "chunk": "handbook-2"
  },
@@ -72509,7 +72878,7 @@
   "text": "Daftar setiap jenis notifikasi dengan kolom \"Di aplikasi\" dan \"Email\". Admin bisa menyalakan atau mematikan email per notifikasi; pilihan admin mengalahkan aturan bawaan. Klik \"Kembalikan bawaan\" untuk kembali.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2151"
+   "frontend/src/pages/handbook/handbookContent.js:2164"
   ],
   "chunk": "handbook-2"
  },
@@ -72517,7 +72886,7 @@
   "text": "Email hanya untuk yang menunggu keputusan atau tindakan dan terlambat itu merugikan. Terlalu banyak email membuat email penting terlewat.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2152"
+   "frontend/src/pages/handbook/handbookContent.js:2165"
   ],
   "chunk": "handbook-2"
  },
@@ -72525,7 +72894,7 @@
   "text": "Glosarium",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2162"
+   "frontend/src/pages/handbook/handbookContent.js:2175"
   ],
   "chunk": "handbook-2"
  },
@@ -72533,8 +72902,8 @@
   "text": "Semua karyawan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2165",
-   "frontend/src/pages/handbook/handbookContent.js:2207"
+   "frontend/src/pages/handbook/handbookContent.js:2178",
+   "frontend/src/pages/handbook/handbookContent.js:2220"
   ],
   "chunk": "handbook-2"
  },
@@ -72542,7 +72911,7 @@
   "text": "Istilah yang sering muncul di Prakasa Workspace.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2166"
+   "frontend/src/pages/handbook/handbookContent.js:2179"
   ],
   "chunk": "handbook-2"
  },
@@ -72550,7 +72919,7 @@
   "text": "Daftar istilah",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2170"
+   "frontend/src/pages/handbook/handbookContent.js:2183"
   ],
   "chunk": "handbook-2"
  },
@@ -72558,7 +72927,7 @@
   "text": "Istilah",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2174"
+   "frontend/src/pages/handbook/handbookContent.js:2187"
   ],
   "chunk": "handbook-2"
  },
@@ -72566,7 +72935,7 @@
   "text": "Arti",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2174"
+   "frontend/src/pages/handbook/handbookContent.js:2187"
   ],
   "chunk": "handbook-2"
  },
@@ -72574,7 +72943,7 @@
   "text": "Sistem akuntansi perusahaan. Sumber resmi transaksi; aplikasi hanya membacanya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2176"
+   "frontend/src/pages/handbook/handbookContent.js:2189"
   ],
   "chunk": "handbook-2"
  },
@@ -72582,7 +72951,7 @@
   "text": "Satu paket data tarikan dari Accurate yang menunggu persetujuan divisi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2177"
+   "frontend/src/pages/handbook/handbookContent.js:2190"
   ],
   "chunk": "handbook-2"
  },
@@ -72590,7 +72959,7 @@
   "text": "Dasar pengenaan pajak: nilai sebelum PPN. Omzet di aplikasi selalu DPP.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2178"
+   "frontend/src/pages/handbook/handbookContent.js:2191"
   ],
   "chunk": "handbook-2"
  },
@@ -72598,7 +72967,7 @@
   "text": "SO / SJ",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2179"
+   "frontend/src/pages/handbook/handbookContent.js:2192"
   ],
   "chunk": "handbook-2"
  },
@@ -72606,7 +72975,7 @@
   "text": "Sales order dan surat jalan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2179"
+   "frontend/src/pages/handbook/handbookContent.js:2192"
   ],
   "chunk": "handbook-2"
  },
@@ -72614,7 +72983,7 @@
   "text": "Purchase order (pesanan pembelian ke pemasok).",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2180"
+   "frontend/src/pages/handbook/handbookContent.js:2193"
   ],
   "chunk": "handbook-2"
  },
@@ -72622,7 +72991,7 @@
   "text": "New open outlet: pelanggan yang pertama kali difakturkan bulan itu.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2181"
+   "frontend/src/pages/handbook/handbookContent.js:2194"
   ],
   "chunk": "handbook-2"
  },
@@ -72630,7 +72999,7 @@
   "text": "Dormant / Lost",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2182"
+   "frontend/src/pages/handbook/handbookContent.js:2195"
   ],
   "chunk": "handbook-2"
  },
@@ -72638,7 +73007,7 @@
   "text": "Pelanggan yang lama tidak order / tidak order 60 hari atau lebih.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2182"
+   "frontend/src/pages/handbook/handbookContent.js:2195"
   ],
   "chunk": "handbook-2"
  },
@@ -72646,7 +73015,7 @@
   "text": "Penyerahan faktur ke pelanggan untuk ditagih, dengan tanda terima.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2183"
+   "frontend/src/pages/handbook/handbookContent.js:2196"
   ],
   "chunk": "handbook-2"
  },
@@ -72654,7 +73023,7 @@
   "text": "Shared Drive divisi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2184"
+   "frontend/src/pages/handbook/handbookContent.js:2197"
   ],
   "chunk": "handbook-2"
  },
@@ -72662,7 +73031,7 @@
   "text": "Folder Google Drive milik divisi, tempat semua dokumen resmi divisi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2184"
+   "frontend/src/pages/handbook/handbookContent.js:2197"
   ],
   "chunk": "handbook-2"
  },
@@ -72670,7 +73039,7 @@
   "text": "Kepala dan kaki surat divisi yang dipakai template dokumen.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2185"
+   "frontend/src/pages/handbook/handbookContent.js:2198"
   ],
   "chunk": "handbook-2"
  },
@@ -72678,7 +73047,7 @@
   "text": "Berita acara serah terima, misalnya perangkat atau nomor perusahaan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2186"
+   "frontend/src/pages/handbook/handbookContent.js:2199"
   ],
   "chunk": "handbook-2"
  },
@@ -72686,7 +73055,7 @@
   "text": "Persetujuan atasan atau penyetuju menurut matriks approval.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2187"
+   "frontend/src/pages/handbook/handbookContent.js:2200"
   ],
   "chunk": "handbook-2"
  },
@@ -72694,7 +73063,7 @@
   "text": "Pekerjaan lewat tenggat yang dinaikkan untuk ditindaklanjuti.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2188"
+   "frontend/src/pages/handbook/handbookContent.js:2201"
   ],
   "chunk": "handbook-2"
  },
@@ -72702,7 +73071,7 @@
   "text": "Member / Supervisor / Head",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2189"
+   "frontend/src/pages/handbook/handbookContent.js:2202"
   ],
   "chunk": "handbook-2"
  },
@@ -72710,7 +73079,7 @@
   "text": "Tiga level peran di setiap divisi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2189"
+   "frontend/src/pages/handbook/handbookContent.js:2202"
   ],
   "chunk": "handbook-2"
  },
@@ -72718,7 +73087,7 @@
   "text": "Pengelola konfigurasi aplikasi tanpa akses ke data divisi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2190"
+   "frontend/src/pages/handbook/handbookContent.js:2203"
   ],
   "chunk": "handbook-2"
  },
@@ -72726,7 +73095,7 @@
   "text": "Aplikasi HR untuk absensi, cuti, dan payroll. Tidak terhubung dengan Prakasa Workspace.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2191"
+   "frontend/src/pages/handbook/handbookContent.js:2204"
   ],
   "chunk": "handbook-2"
  },
@@ -72734,7 +73103,7 @@
   "text": "Aplikasi kunjungan lapangan Sales.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2192"
+   "frontend/src/pages/handbook/handbookContent.js:2205"
   ],
   "chunk": "handbook-2"
  },
@@ -72742,7 +73111,7 @@
   "text": "Aplikasi peminjaman kendaraan kantor.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2193"
+   "frontend/src/pages/handbook/handbookContent.js:2206"
   ],
   "chunk": "handbook-2"
  },
@@ -72750,7 +73119,7 @@
   "text": "Ruang diskusi tim di Google Chat; bisa punya Project Tracker sendiri.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2194"
+   "frontend/src/pages/handbook/handbookContent.js:2207"
   ],
   "chunk": "handbook-2"
  },
@@ -72758,7 +73127,7 @@
   "text": "Kalau ada masalah",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2204"
+   "frontend/src/pages/handbook/handbookContent.js:2217"
   ],
   "chunk": "handbook-2"
  },
@@ -72766,7 +73135,7 @@
   "text": "Siapa yang dihubungi, dan jawaban untuk pertanyaan yang sering muncul.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2208"
+   "frontend/src/pages/handbook/handbookContent.js:2221"
   ],
   "chunk": "handbook-2"
  },
@@ -72774,7 +73143,7 @@
   "text": "Siapa yang dihubungi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2212"
+   "frontend/src/pages/handbook/handbookContent.js:2225"
   ],
   "chunk": "handbook-2"
  },
@@ -72782,7 +73151,7 @@
   "text": "Masalah",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2216"
+   "frontend/src/pages/handbook/handbookContent.js:2229"
   ],
   "chunk": "handbook-2"
  },
@@ -72790,7 +73159,7 @@
   "text": "Hubungi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2216"
+   "frontend/src/pages/handbook/handbookContent.js:2229"
   ],
   "chunk": "handbook-2"
  },
@@ -72798,7 +73167,7 @@
   "text": "Laptop, internet, software, akun Google",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2218"
+   "frontend/src/pages/handbook/handbookContent.js:2231"
   ],
   "chunk": "handbook-2"
  },
@@ -72806,7 +73175,7 @@
   "text": "Tim IT lewat \"Butuh bantuan IT\" atau Tiket IT.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2218"
+   "frontend/src/pages/handbook/handbookContent.js:2231"
   ],
   "chunk": "handbook-2"
  },
@@ -72814,7 +73183,7 @@
   "text": "Lupa kata sandi atau ingin menggantinya",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2219"
+   "frontend/src/pages/handbook/handbookContent.js:2232"
   ],
   "chunk": "additions"
  },
@@ -72822,7 +73191,7 @@
   "text": "Super Admin. Kata sandi dikelola oleh Super Admin; tidak ada reset mandiri.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2219"
+   "frontend/src/pages/handbook/handbookContent.js:2232"
   ],
   "chunk": "additions"
  },
@@ -72830,7 +73199,7 @@
   "text": "Tidak bisa masuk karena akun atau akses belum disiapkan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2220"
+   "frontend/src/pages/handbook/handbookContent.js:2233"
   ],
   "chunk": "additions"
  },
@@ -72838,7 +73207,7 @@
   "text": "Administrator Sistem.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2220"
+   "frontend/src/pages/handbook/handbookContent.js:2233"
   ],
   "chunk": "handbook-2"
  },
@@ -72846,7 +73215,7 @@
   "text": "Menu yang dibutuhkan tidak ada",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2221"
+   "frontend/src/pages/handbook/handbookContent.js:2234"
   ],
   "chunk": "handbook-2"
  },
@@ -72854,7 +73223,7 @@
   "text": "Atasan Anda, lalu Administrator Sistem untuk mengatur peran.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2221"
+   "frontend/src/pages/handbook/handbookContent.js:2234"
   ],
   "chunk": "handbook-2"
  },
@@ -72862,7 +73231,7 @@
   "text": "Angka dari Accurate tidak muncul atau salah",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2222"
+   "frontend/src/pages/handbook/handbookContent.js:2235"
   ],
   "chunk": "handbook-2"
  },
@@ -72870,7 +73239,7 @@
   "text": "Supervisor/Head divisi Anda (persetujuan batch) atau pemilik data di Accurate.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2222"
+   "frontend/src/pages/handbook/handbookContent.js:2235"
   ],
   "chunk": "handbook-2"
  },
@@ -72878,7 +73247,7 @@
   "text": "ATK, fasilitas rusak, ruang rapat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2223"
+   "frontend/src/pages/handbook/handbookContent.js:2236"
   ],
   "chunk": "handbook-2"
  },
@@ -72886,7 +73255,7 @@
   "text": "GA lewat Layanan GA.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2223"
+   "frontend/src/pages/handbook/handbookContent.js:2236"
   ],
   "chunk": "handbook-2"
  },
@@ -72894,7 +73263,7 @@
   "text": "Absensi, cuti, slip gaji",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2224"
+   "frontend/src/pages/handbook/handbookContent.js:2237"
   ],
   "chunk": "handbook-2"
  },
@@ -72902,7 +73271,7 @@
   "text": "People & Culture, lewat KantorKu.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2224"
+   "frontend/src/pages/handbook/handbookContent.js:2237"
   ],
   "chunk": "handbook-2"
  },
@@ -72910,7 +73279,7 @@
   "text": "Pembayaran atau reimbursement",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2225"
+   "frontend/src/pages/handbook/handbookContent.js:2238"
   ],
   "chunk": "handbook-2"
  },
@@ -72918,7 +73287,7 @@
   "text": "Finance, lewat Pengajuan pembayaran.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2225"
+   "frontend/src/pages/handbook/handbookContent.js:2238"
   ],
   "chunk": "handbook-2"
  },
@@ -72926,7 +73295,7 @@
   "text": "Pertanyaan yang sering muncul",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2232"
+   "frontend/src/pages/handbook/handbookContent.js:2245"
   ],
   "chunk": "handbook-2"
  },
@@ -72934,7 +73303,7 @@
   "text": "Kenapa menu saya berbeda dengan rekan kerja?",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2237"
+   "frontend/src/pages/handbook/handbookContent.js:2250"
   ],
   "chunk": "handbook-2"
  },
@@ -72942,7 +73311,7 @@
   "text": "Menu dan panduan ini disesuaikan dengan divisi dan peran masing-masing. Anda hanya melihat yang boleh Anda buka.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2237"
+   "frontend/src/pages/handbook/handbookContent.js:2250"
   ],
   "chunk": "handbook-2"
  },
@@ -72950,7 +73319,7 @@
   "text": "Saya membuka tautan dari rekan, tapi kembali ke Dashboard.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2238"
+   "frontend/src/pages/handbook/handbookContent.js:2251"
   ],
   "chunk": "handbook-2"
  },
@@ -72958,7 +73327,7 @@
   "text": "Halaman itu bukan untuk peran Anda. Minta atasan bila Anda memang perlu aksesnya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2238"
+   "frontend/src/pages/handbook/handbookContent.js:2251"
   ],
   "chunk": "handbook-2"
  },
@@ -72966,7 +73335,7 @@
   "text": "Kenapa angka penjualan, stok, atau piutang belum berubah?",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2239"
+   "frontend/src/pages/handbook/handbookContent.js:2252"
   ],
   "chunk": "handbook-2"
  },
@@ -72974,7 +73343,7 @@
   "text": "Data Accurate baru dipakai setelah batch-nya disetujui Supervisor/Head divisi. Tanyakan apakah ada batch yang masih menunggu persetujuan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2239"
+   "frontend/src/pages/handbook/handbookContent.js:2252"
   ],
   "chunk": "handbook-2"
  },
@@ -72982,7 +73351,7 @@
   "text": "Bisakah saya membuat sales order atau mengubah data Accurate dari aplikasi?",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2240"
+   "frontend/src/pages/handbook/handbookContent.js:2253"
   ],
   "chunk": "handbook-2"
  },
@@ -72990,7 +73359,7 @@
   "text": "Tidak. Transaksi dibuat di Accurate. Prakasa Workspace hanya membaca dan memantau.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2240"
+   "frontend/src/pages/handbook/handbookContent.js:2253"
   ],
   "chunk": "handbook-2"
  },
@@ -72998,7 +73367,7 @@
   "text": "Di mana saya mengajukan cuti atau melihat absensi?",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2241"
+   "frontend/src/pages/handbook/handbookContent.js:2254"
   ],
   "chunk": "handbook-2"
  },
@@ -73006,7 +73375,7 @@
   "text": "Di KantorKu. Prakasa Workspace sengaja tidak mengurus absensi, cuti, dan payroll.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2241"
+   "frontend/src/pages/handbook/handbookContent.js:2254"
   ],
   "chunk": "handbook-2"
  },
@@ -73014,7 +73383,7 @@
   "text": "Apakah Prakasa AI bisa menyetujui atau mengirim sesuatu atas nama saya?",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2242"
+   "frontend/src/pages/handbook/handbookContent.js:2255"
   ],
   "chunk": "handbook-2"
  },
@@ -73022,7 +73391,7 @@
   "text": "Tidak. AI hanya menyiapkan draft atau usulan. Anda yang menekan Konfirmasi atau Simpan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2242"
+   "frontend/src/pages/handbook/handbookContent.js:2255"
   ],
   "chunk": "handbook-2"
  },
@@ -73030,7 +73399,7 @@
   "text": "Saya tidak menerima email notifikasi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2243"
+   "frontend/src/pages/handbook/handbookContent.js:2256"
   ],
   "chunk": "handbook-2"
  },
@@ -73038,7 +73407,7 @@
   "text": "Email hanya dikirim untuk hal yang menunggu keputusan atau tindakan Anda. Yang lain cukup di lonceng Notifikasi. Periksa juga folder Spam.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2243"
+   "frontend/src/pages/handbook/handbookContent.js:2256"
   ],
   "chunk": "handbook-2"
  },
@@ -73046,7 +73415,7 @@
   "text": "Di mana menyimpan dokumen kerja?",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2244"
+   "frontend/src/pages/handbook/handbookContent.js:2257"
   ],
   "chunk": "handbook-2"
  },
@@ -73054,7 +73423,7 @@
   "text": "Di Shared Drive divisi (menu Penyimpanan divisi atau Template dokumen), bukan di laptop atau My Drive pribadi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2244"
+   "frontend/src/pages/handbook/handbookContent.js:2257"
   ],
   "chunk": "handbook-2"
  },
@@ -73062,7 +73431,7 @@
   "text": "Bagaimana mencetak panduan ini?",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2245"
+   "frontend/src/pages/handbook/handbookContent.js:2258"
   ],
   "chunk": "handbook-2"
  },
@@ -73070,7 +73439,7 @@
   "text": "Klik \"Cetak / simpan PDF\" di atas halaman Panduan. Yang tercetak hanya bab untuk peran Anda.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:2245"
+   "frontend/src/pages/handbook/handbookContent.js:2258"
   ],
   "chunk": "handbook-2"
  },
@@ -77734,7 +78103,7 @@
   "text": "User bootstrap sudah soft-deleted. Restore secara manual.",
   "kind": "exact",
   "sources": [
-   "backend/src/services/adminBootstrap.service.js:112"
+   "backend/src/services/adminBootstrap.service.js:136"
   ],
   "chunk": "backend-services-1"
  },
@@ -77742,7 +78111,7 @@
   "text": "User bootstrap sudah ada di entity berbeda.",
   "kind": "exact",
   "sources": [
-   "backend/src/services/adminBootstrap.service.js:119"
+   "backend/src/services/adminBootstrap.service.js:143"
   ],
   "chunk": "backend-services-1"
  },

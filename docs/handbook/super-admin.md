@@ -1896,7 +1896,7 @@ Head Management Office melihat batch semua divisi untuk pengawasan. Keputusan me
 
 *Bagian: Pemantauan & manajemen*
 
-Angka utama divisi, perjalanan 12 bulan dalam grafik capaian bulanan, tren dengan garis target, dan pekerjaan yang lewat tenggat.
+Satu susunan dashboard yang sama untuk setiap divisi: angka utama, perlu perhatian, grafik capaian bulanan, tren 12 bulan, capaian terhadap target, dan pekerjaan lewat tenggat.
 
 **Siapa yang memakai:** Supervisor dan Head setiap divisi; Management Office memilih divisi mana pun.
 
@@ -1907,10 +1907,19 @@ Angka utama divisi, perjalanan 12 bulan dalam grafik capaian bulanan, tren denga
 ### Membaca dashboard divisi
 
 1. Buka "Dashboard divisi". Management Office memilih divisi di "Divisi".
-2. Lihat angka utama di bagian atas.
+2. Baca dari atas ke bawah: bagian yang sama selalu ada di urutan yang sama, apa pun divisinya.
 3. Klik "Muat ulang" untuk data terbaru.
 
-> **Catatan:** Angka yang berasal dari Accurate hanya mencakup batch yang sudah disetujui.
+| Urutan | Bagian | Isinya |
+| --- | --- | --- |
+| 1 | Angka utama | Posisi hari ini per modul divisi; angkanya naik saat halaman dibuka. |
+| 2 | Perlu perhatian | Jumlah pekerjaan lewat tenggat per sumber, dengan tombol ke Pusat eskalasi. |
+| 3 | Grafik capaian bulanan | Grafik bergerak 12 bulan terakhir. |
+| 4 | Tren 12 bulan | Satu kartu per ukuran, dengan garis target bila ada. |
+| 5 | Capaian terhadap target | Persentase capaian tiap ukuran pada bulan lengkap terakhir. |
+| 6 | Pekerjaan lewat tenggat | Daftar kerja yang paling lama menunggu. |
+
+> **Catatan:** Bagian yang datanya belum ada tetap tampil di tempatnya dengan keterangan "menunggu data", supaya dashboard setiap divisi terbaca sama. Angka yang berasal dari Accurate hanya mencakup batch yang sudah disetujui.
 
 <a id="dashboard-divisi-motion-chart"></a>
 
@@ -1926,11 +1935,17 @@ Grafik capaian bulanan menggambarkan perjalanan capaian divisi bulan demi bulan.
 
 Setiap grafik tren menampilkan realisasi per bulan dan garis target bulanan. Target ditetapkan manajemen di "Target & realisasi".
 
+<a id="dashboard-divisi-capaian-target"></a>
+
+### Capaian terhadap target
+
+Untuk setiap ukuran yang punya target bulanan, bagian ini menampilkan capaian bulan lengkap terakhir sebagai persentase: hijau bila target tercapai, oranye bila 80% atau lebih, merah bila di bawahnya. Ukuran "makin rendah makin baik" dianggap tercapai bila di bawah target. Tanpa target bulanan, bagian ini meminta target diisi di "Target".
+
 <a id="dashboard-divisi-lewat-tenggat"></a>
 
-### Lewat tenggat
+### Perlu perhatian dan pekerjaan lewat tenggat
 
-Bagian "Lewat tenggat" menghitung pekerjaan divisi yang menunggu tindak lanjut. Klik "Buka Pusat eskalasi" untuk menanganinya (Head dan manajemen).
+"Perlu perhatian" menghitung pekerjaan divisi yang lewat tenggat per sumber; "Pekerjaan lewat tenggat" mendaftar yang paling lama menunggu. Klik "Buka Pusat eskalasi" untuk menanganinya (Head dan manajemen).
 
 <a id="manajemen"></a>
 

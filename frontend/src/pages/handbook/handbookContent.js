@@ -1820,14 +1820,22 @@ const HANDBOOK = [
     route: '/division-dashboard',
     audience: { permissions: ['division_dashboard.view', 'management_dashboard.view'] },
     who: 'Supervisor dan Head setiap divisi; Management Office memilih divisi mana pun.',
-    summary: 'Angka utama divisi, perjalanan 12 bulan dalam grafik capaian bulanan, tren dengan garis target, dan pekerjaan yang lewat tenggat.',
+    summary: 'Satu susunan dashboard yang sama untuk setiap divisi: angka utama, perlu perhatian, grafik capaian bulanan, tren 12 bulan, capaian terhadap target, dan pekerjaan lewat tenggat.',
     sections: [
       {
         id: 'membaca',
         title: 'Membaca dashboard divisi',
         body: [
-          { type: 'steps', items: ['Buka "Dashboard divisi". Management Office memilih divisi di "Divisi".', 'Lihat angka utama di bagian atas.', 'Klik "Muat ulang" untuk data terbaru.'] },
-          { type: 'note', text: 'Angka yang berasal dari Accurate hanya mencakup batch yang sudah disetujui.' },
+          { type: 'steps', items: ['Buka "Dashboard divisi". Management Office memilih divisi di "Divisi".', 'Baca dari atas ke bawah: bagian yang sama selalu ada di urutan yang sama, apa pun divisinya.', 'Klik "Muat ulang" untuk data terbaru.'] },
+          { type: 'table', columns: ['Urutan', 'Bagian', 'Isinya'], rows: [
+            ['1', 'Angka utama', 'Posisi hari ini per modul divisi; angkanya naik saat halaman dibuka.'],
+            ['2', 'Perlu perhatian', 'Jumlah pekerjaan lewat tenggat per sumber, dengan tombol ke Pusat eskalasi.'],
+            ['3', 'Grafik capaian bulanan', 'Grafik bergerak 12 bulan terakhir.'],
+            ['4', 'Tren 12 bulan', 'Satu kartu per ukuran, dengan garis target bila ada.'],
+            ['5', 'Capaian terhadap target', 'Persentase capaian tiap ukuran pada bulan lengkap terakhir.'],
+            ['6', 'Pekerjaan lewat tenggat', 'Daftar kerja yang paling lama menunggu.'],
+          ] },
+          { type: 'note', text: 'Bagian yang datanya belum ada tetap tampil di tempatnya dengan keterangan "menunggu data", supaya dashboard setiap divisi terbaca sama. Angka yang berasal dari Accurate hanya mencakup batch yang sudah disetujui.' },
         ],
       },
       {
@@ -1844,9 +1852,14 @@ const HANDBOOK = [
         body: [{ type: 'p', text: 'Setiap grafik tren menampilkan realisasi per bulan dan garis target bulanan. Target ditetapkan manajemen di "Target & realisasi".' }],
       },
       {
+        id: 'capaian-target',
+        title: 'Capaian terhadap target',
+        body: [{ type: 'p', text: 'Untuk setiap ukuran yang punya target bulanan, bagian ini menampilkan capaian bulan lengkap terakhir sebagai persentase: hijau bila target tercapai, oranye bila 80% atau lebih, merah bila di bawahnya. Ukuran "makin rendah makin baik" dianggap tercapai bila di bawah target. Tanpa target bulanan, bagian ini meminta target diisi di "Target".' }],
+      },
+      {
         id: 'lewat-tenggat',
-        title: 'Lewat tenggat',
-        body: [{ type: 'p', text: 'Bagian "Lewat tenggat" menghitung pekerjaan divisi yang menunggu tindak lanjut. Klik "Buka Pusat eskalasi" untuk menanganinya (Head dan manajemen).' }],
+        title: 'Perlu perhatian dan pekerjaan lewat tenggat',
+        body: [{ type: 'p', text: '"Perlu perhatian" menghitung pekerjaan divisi yang lewat tenggat per sumber; "Pekerjaan lewat tenggat" mendaftar yang paling lama menunggu. Klik "Buka Pusat eskalasi" untuk menanganinya (Head dan manajemen).' }],
       },
     ],
   },

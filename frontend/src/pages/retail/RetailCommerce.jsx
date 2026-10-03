@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import api from '../../api/client';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
+import DashboardSection from '../../components/DashboardSection';
 import EmptyState, { LoadingState } from '../../components/EmptyState';
 import Page from '../../components/Page';
 import Select from '../../components/Select';
@@ -16,7 +17,7 @@ import DataGrid from '../../components/datagrid/DataGrid';
 import { formatDateTime, formatNumber, formatQty } from '../../components/format';
 import { Mixed, Translate } from '../../i18n/NoTranslate';
 import {
-  OTHER_PLATFORM, emptyReason, kpiCards, latestValue, monthOptions, motionSeries, platformRows, productChange, productRows,
+  OTHER_PLATFORM, attentionItems, emptyReason, kpiCards, latestValue, monthOptions, motionSeries, platformRows, productChange, productRows,
   receivableBars, receivableStatus, revenueBars, shipmentStatus, trendCards,
 } from './retailModel';
 import './retail.css';
@@ -182,6 +183,7 @@ export default function RetailCommerce() {
   const debts = receivableBars(platforms).map(otherLabel);
   const race = motionSeries(overview);
   const trends = trendCards(overview);
+  const attention = attentionItems(overview, shipments, receivables);
   const months = overview.months;
   const range = `${months[0].label} – ${months[months.length - 1].label}`;
   const productMonth = products?.month?.key || '';
@@ -192,8 +194,8 @@ export default function RetailCommerce() {
       description={`${description} Diperbarui ${formatDateTime(overview.generatedAt)}.`}
       actions={actions}
     >
-      <section className="retail__section" aria-label="Angka utama">
-        <div className="retail__kpis">
+      <DashboardSection title="Angka utama" subtitle={overview.latestMonth ? `Marketplace ditagih dengan satu faktur rekap per platform setiap bulan. Faktur terakhir: ${overview.latestMonth.label}.` : 'Dari faktur rekap marketplace yang sudah disetujui'}>
+        <div className="pw-dash-section__kpis">
           {cards.map((k) => (
             <StatCard
               key={k.key}
@@ -205,50 +207,29 @@ export default function RetailCommerce() {
             />
           ))}
         </div>
-        {overview.latestMonth ? (
-          <p className="pw-text-helper">
-            {`Marketplace ditagih dengan satu faktur rekap per platform setiap bulan. Faktur terakhir: ${overview.latestMonth.label}.`}
-          </p>
-        ) : null}
-      </section>
+      </DashboardSection>
 
-      {platforms.length ? (
-        <>
-          <div className="retail__split">
-            <Card title="Porsi omzet per platform" subtitle={`${range} · total ${compactMoney(overview.windowRevenue)}`}>
-              {bars.length ? <BarList dataLabels items={bars} label="Porsi omzet per platform" max={overview.windowRevenue} /> : <EmptyState compact icon="bar_chart" title="Belum ada omzet di periode ini" />}
-            </Card>
-            <Card title="Piutang marketplace" subtitle={debts.length ? `Belum cair ${compactMoney(overview.kpis.receivable.amount)} · nilai faktur termasuk PPN` : 'Tidak ada faktur yang belum cair'}>
-              {debts.length ? <BarList dataLabels items={debts} label="Piutang marketplace per platform" /> : <EmptyState compact icon="task_alt" title="Semua sudah cair" />}
-            </Card>
-          </div>
+      <DashboardSection title="Perlu perhatian" subtitle={attention.length ? 'Pesanan dan faktur marketplace yang masih menunggu' : 'Tidak ada pesanan atau faktur yang menunggu'}>
+        <Card>
+          {attention.length
+            ? <BarList items={attention} label="Pesanan dan faktur marketplace yang menunggu" />
+            : <EmptyState compact icon="task_alt" title="Semua beres" description="Semua SO marketplace terkirim dan semua faktur sudah cair." />}
+        </Card>
+      </DashboardSection>
 
-          <DataGrid
-            title="Perbandingan platform"
-            columns={PLATFORM_COLUMNS}
-            rows={platformRows(platforms)}
-            searchable={false}
-            exportName="retail-commerce-platform"
-            pageSize={10}
-            empty="Belum ada data platform"
-          />
-        </>
-      ) : (
-        <EmptyState icon="storefront" title="Belum ada penjualan marketplace" description={`Tidak ada faktur, SO, atau piutang marketplace di ${range}.`} />
-      )}
+      <DashboardSection title="Grafik capaian bulanan" subtitle={`Perjalanan omzet tiap platform dan jumlah pesanan, ${range}. Panjang batang dibanding bulan terbaik masing-masing.`}>
+        <Card variant="chart">
+          {race.length >= 2 ? (
+            <MotionChart months={months} series={race} title="Grafik capaian bulanan Retail Commerce" />
+          ) : (
+            <EmptyState compact icon="animation" title="Grafik capaian bulanan menunggu data" description="Grafik bergerak ini berjalan setelah minimal dua platform atau ukuran punya angka." />
+          )}
+        </Card>
+      </DashboardSection>
 
-      <Card title="Grafik capaian bulanan" subtitle={`Perjalanan omzet tiap platform dan jumlah pesanan, ${range}. Panjang batang dibanding bulan terbaik masing-masing.`}>
-        {race.length >= 2 ? (
-          <MotionChart months={months} series={race} title="Grafik capaian bulanan Retail Commerce" />
-        ) : (
-          <EmptyState compact icon="animation" title="Grafik capaian bulanan menunggu data" description="Grafik bergerak ini berjalan setelah minimal dua platform atau ukuran punya angka." />
-        )}
-      </Card>
-
-      {trends.length ? (
-        <section className="retail__section" aria-label="Tren 12 bulan">
-          <h2 className="pw-title-section">Tren 12 bulan</h2>
-          <div className="retail__trends">
+      <DashboardSection title="Tren 12 bulan" subtitle="Satu kartu per ukuran marketplace">
+        {trends.length ? (
+          <div className="pw-dash-section__trends">
             {trends.map((m) => {
               const head = latestValue(m.values, months);
               return (
@@ -263,70 +244,99 @@ export default function RetailCommerce() {
               );
             })}
           </div>
-        </section>
-      ) : null}
+        ) : (
+          <Card><EmptyState compact icon="monitoring" title="Belum ada tren bulanan" description="Tren 12 bulan muncul setelah ada dua bulan faktur marketplace." /></Card>
+        )}
+      </DashboardSection>
 
-      <Card
-        title={products?.month ? `Produk terlaris ${products.month.label}` : 'Produk terlaris'}
-        subtitle={products?.month
-          ? `${formatNumber(products.products)} produk terjual, total baris faktur ${formatMetric(products.monthRevenue, 'rupiah', { compact: true })} (DPP sebelum retur), dibanding ${products.prevMonth.label}. Angka ini sebelum retur, jadi bisa lebih besar dari omzet bersih retur di atas; retur tidak dialokasikan ke produk.${products.fallback ? ' Bulan ini belum ada faktur, jadi yang tampil bulan terakhir yang sudah ditagih.' : ''}`
-          : 'Nilai per baris faktur Accurate (DPP sebelum retur), dibanding bulan sebelumnya.'}
-        actions={overview.months.length ? (
-          <Select
-            label="Bulan"
-            dense
-            value={month || productMonth}
-            options={monthOptions(overview.months)}
-            onChange={(e) => setMonth(e.target.value)}
-          />
-        ) : null}
-        noPadding
-      >
+      <DashboardSection title="Komposisi per platform" subtitle={`${range} · total ${compactMoney(overview.windowRevenue)}`}>
+        {platforms.length ? (
+          <div className="pw-dash-section__split">
+            <Card title="Porsi omzet per platform">
+              {bars.length ? <BarList dataLabels items={bars} label="Porsi omzet per platform" max={overview.windowRevenue} /> : <EmptyState compact icon="bar_chart" title="Belum ada omzet di periode ini" />}
+            </Card>
+            <Card title="Piutang marketplace" subtitle={debts.length ? `Belum cair ${compactMoney(overview.kpis.receivable.amount)} · nilai faktur termasuk PPN` : 'Tidak ada faktur yang belum cair'}>
+              {debts.length ? <BarList dataLabels items={debts} label="Piutang marketplace per platform" /> : <EmptyState compact icon="task_alt" title="Semua sudah cair" />}
+            </Card>
+          </div>
+        ) : (
+          <Card><EmptyState compact icon="storefront" title="Belum ada penjualan marketplace" description={`Tidak ada faktur, SO, atau piutang marketplace di ${range}.`} /></Card>
+        )}
+      </DashboardSection>
+
+      <DashboardSection title="Tabel kerja" subtitle="Platform, produk terlaris, SO yang belum dikirim, dan faktur yang belum cair">
         <DataGrid
-          title="Produk terlaris"
-          showTitle={false}
-          flush
-          columns={PRODUCT_COLUMNS}
-          rows={productRows(products?.rows)}
-          loading={productsLoading}
-          error={productsError}
-          onRetry={loadProducts}
-          idKey="code"
+          title="Perbandingan platform"
+          columns={PLATFORM_COLUMNS}
+          rows={platformRows(platforms)}
           searchable={false}
-          exportName={`retail-commerce-produk-${productMonth}`}
-          exportNote="15 produk terlaris"
-          pageSize={15}
-          empty="Belum ada produk terjual di bulan ini"
+          exportName="retail-commerce-platform"
+          pageSize={10}
+          empty="Belum ada data platform"
         />
-      </Card>
 
-      <DataGrid
-        title={`SO belum dikirim${shipments?.total ? ` (${formatNumber(shipments.total)})` : ''}`}
-        columns={SHIPMENT_COLUMNS}
-        rows={shipments?.rows || []}
-        loading={loading && !shipments}
-        searchPlaceholder="Cari nomor SO"
-        exportName="retail-commerce-so-belum-dikirim"
-        exportNote={shipments?.total > shipments?.rows?.length ? `${formatNumber(shipments.rows.length)} SO tertua dari ${formatNumber(shipments.total)}` : ''}
-        empty="Semua SO marketplace sudah terkirim"
-      />
-      {shipments?.total > shipments?.rows?.length ? (
-        <p className="pw-text-helper">{`Menampilkan ${formatNumber(shipments.rows.length)} SO tertua dari ${formatNumber(shipments.total)}.`}</p>
-      ) : null}
+        <Card
+          title={products?.month ? `Produk terlaris ${products.month.label}` : 'Produk terlaris'}
+          subtitle={products?.month
+            ? `${formatNumber(products.products)} produk terjual, total baris faktur ${formatMetric(products.monthRevenue, 'rupiah', { compact: true })} (DPP sebelum retur), dibanding ${products.prevMonth.label}. Angka ini sebelum retur, jadi bisa lebih besar dari omzet bersih retur di atas; retur tidak dialokasikan ke produk.${products.fallback ? ' Bulan ini belum ada faktur, jadi yang tampil bulan terakhir yang sudah ditagih.' : ''}`
+            : 'Nilai per baris faktur Accurate (DPP sebelum retur), dibanding bulan sebelumnya.'}
+          actions={overview.months.length ? (
+            <Select
+              label="Bulan"
+              dense
+              value={month || productMonth}
+              options={monthOptions(overview.months)}
+              onChange={(e) => setMonth(e.target.value)}
+            />
+          ) : null}
+          noPadding
+        >
+          <DataGrid
+            title="Produk terlaris"
+            showTitle={false}
+            flush
+            columns={PRODUCT_COLUMNS}
+            rows={productRows(products?.rows)}
+            loading={productsLoading}
+            error={productsError}
+            onRetry={loadProducts}
+            idKey="code"
+            searchable={false}
+            exportName={`retail-commerce-produk-${productMonth}`}
+            exportNote="15 produk terlaris"
+            pageSize={15}
+            empty="Belum ada produk terjual di bulan ini"
+          />
+        </Card>
 
-      <DataGrid
-        title="Faktur marketplace belum cair"
-        columns={RECEIVABLE_COLUMNS}
-        rows={receivables?.rows || []}
-        loading={loading && !receivables}
-        searchPlaceholder="Cari nomor faktur"
-        exportName="retail-commerce-piutang"
-        exportNote={receivables?.total > receivables?.rows?.length ? `${formatNumber(receivables.rows.length)} faktur terlama dari ${formatNumber(receivables.total)}` : ''}
-        empty="Tidak ada faktur marketplace yang belum cair"
-      />
-      {receivables?.total > receivables?.rows?.length ? (
-        <p className="pw-text-helper">{`Menampilkan ${formatNumber(receivables.rows.length)} faktur dengan jatuh tempo terlama dari ${formatNumber(receivables.total)}.`}</p>
-      ) : null}
+        <DataGrid
+          title={`SO belum dikirim${shipments?.total ? ` (${formatNumber(shipments.total)})` : ''}`}
+          columns={SHIPMENT_COLUMNS}
+          rows={shipments?.rows || []}
+          loading={loading && !shipments}
+          searchPlaceholder="Cari nomor SO"
+          exportName="retail-commerce-so-belum-dikirim"
+          exportNote={shipments?.total > shipments?.rows?.length ? `${formatNumber(shipments.rows.length)} SO tertua dari ${formatNumber(shipments.total)}` : ''}
+          empty="Semua SO marketplace sudah terkirim"
+        />
+        {shipments?.total > shipments?.rows?.length ? (
+          <p className="pw-text-helper">{`Menampilkan ${formatNumber(shipments.rows.length)} SO tertua dari ${formatNumber(shipments.total)}.`}</p>
+        ) : null}
+
+        <DataGrid
+          title="Faktur marketplace belum cair"
+          columns={RECEIVABLE_COLUMNS}
+          rows={receivables?.rows || []}
+          loading={loading && !receivables}
+          searchPlaceholder="Cari nomor faktur"
+          exportName="retail-commerce-piutang"
+          exportNote={receivables?.total > receivables?.rows?.length ? `${formatNumber(receivables.rows.length)} faktur terlama dari ${formatNumber(receivables.total)}` : ''}
+          empty="Tidak ada faktur marketplace yang belum cair"
+        />
+        {receivables?.total > receivables?.rows?.length ? (
+          <p className="pw-text-helper">{`Menampilkan ${formatNumber(receivables.rows.length)} faktur dengan jatuh tempo terlama dari ${formatNumber(receivables.total)}.`}</p>
+        ) : null}
+      </DashboardSection>
     </Page>
   );
 }

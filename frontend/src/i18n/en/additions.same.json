@@ -10,5 +10,6 @@
  "failed",
  "invoice $1",
  "unpaid",
- "paid"
+ "paid",
+ "$1 $2 · $3 NOO"
 ]

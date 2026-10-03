@@ -1,0 +1,10 @@
+/* DashboardSection: the heading block shared by every dashboard. */
+.pw-dash-section { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pw-dash-section__head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; }
+.pw-dash-section__heading { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pw-dash-section__subtitle { margin: 0; color: var(--pw-text-meta); font-size: var(--pw-font-sm); line-height: 20px; }
+.pw-dash-section__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pw-dash-section__group { margin: 4px 0 0; color: var(--pw-text-meta); font-size: var(--pw-font-xs); font-weight: 500; line-height: 16px; letter-spacing: 0.3px; text-transform: uppercase; }
+.pw-dash-section__kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: 16px; }
+.pw-dash-section__trends { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr)); gap: 16px; }
+.pw-dash-section__split { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px; }

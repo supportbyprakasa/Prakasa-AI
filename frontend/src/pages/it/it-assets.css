@@ -17,11 +17,4 @@
 
 /* Dashboard bar lists (per status / type / location): a label, the count,
    and the shared ProgressBar under it. */
-.it-bars { display: flex; flex-direction: column; margin: 0; padding: 0 0 24px; list-style: none; }
-.it-bars__item { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; }
-.it-bars__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: var(--pw-font-body); line-height: 20px; }
-.it-bars__label { min-width: 0; color: var(--pw-text); overflow-wrap: anywhere; }
-.it-bars__label a { color: var(--pw-primary); text-decoration: none; }
-.it-bars__label a:hover { text-decoration: underline; }
-.it-bars__value { flex: 0 0 auto; color: var(--pw-text-muted); font-variant-numeric: tabular-nums; }
 .it-dashboard__grid { gap: 24px; }

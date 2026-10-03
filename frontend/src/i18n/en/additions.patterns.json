@@ -114,5 +114,14 @@
  "$1 dari $2 langganan": "$1 of $2 subscriptions",
  "Lewat tenggat $1 hari": "$1 days past deadline",
  "$1 (sumber masih lewat tenggat)": "$1 (source still past its deadline)",
- "· kurang $1": "· short by $1"
+ "· kurang $1": "· short by $1",
+ "$1 lewat batas kirim": "$1 past the shipping limit",
+ "$1 lewat jatuh tempo": "$1 past due",
+ "Angka utama, pekerjaan yang perlu perhatian, perjalanan 12 bulan, capaian terhadap target, dan daftar kerja. Diperbarui $1.": "Headline figures, work that needs attention, the 12-month journey, progress against target, and the work list. Updated $1.",
+ "$1 pekerjaan lewat tenggat, per sumber": "$1 overdue work items, by source",
+ "Perjalanan capaian $1": "Progress journey $1",
+ "Bulan $1, bulan lengkap terakhir": "$1, the last complete month",
+ "Capaian terhadap target $1": "Progress against target, $1",
+ "$1 paling lama dari $2": "The $1 longest-waiting of $2",
+ "$1 dari target $2": "$1 of the $2 target"
 }

@@ -1,4 +1,6 @@
-// Dashboard divisi: how the page arranges what the server sends.
+// Dashboard divisi: how the page arranges what the server sends, in the six
+// sections every dashboard keeps (components/DashboardSection.jsx).
+import { formatMetric } from '../../components/charts/chartModel.js';
 
 const PROVIDER_ORDER = ['retail_commerce', 'marketing', 'finance_ledger', 'finance', 'sales', 'warehouse', 'procurement', 'hrga', 'it', 'ga', 'accurate', 'flow', 'approvals', 'project_tracker'];
 const orderOf = (key) => { const i = PROVIDER_ORDER.indexOf(key); return i < 0 ? PROVIDER_ORDER.length : i; };
@@ -31,6 +33,58 @@ export function motionSeries(metrics = [], max = 8) {
     .filter((m) => known(m.values) >= 3 && new Set(m.values.filter((v) => v !== null)).size > 1)
     .slice(0, max)
     .map((m) => ({ key: `${m.provider}.${m.key}`, label: m.label, unit: m.unit, better: m.better, values: m.values, targets: m.targets }));
+}
+
+/**
+ * Section 2, "Perlu perhatian": how many open escalations each source holds,
+ * as bars (the longest bar is the busiest source). Red: every one is late.
+ */
+export function attentionItems(escalations) {
+  return (escalations?.bySource || [])
+    .filter((s) => Number(s.count) > 0)
+    .map((s) => ({ key: s.key, label: s.label, value: Number(s.count), display: String(Number(s.count)), tone: 'error' }));
+}
+
+const pct = (a, b) => (b > 0 ? Math.round((a / b) * 100) : null);
+
+/**
+ * Section 5, "Capaian terhadap target": for every measure that has a monthly
+ * target, how far the last complete month got — the month a trend card leads
+ * with — as a share of its target. A "lower is better" measure is met when it
+ * stays under the target; above it the share is target/actual. Only measures
+ * with a target that month are listed; none means no targets were set.
+ */
+export function targetProgress(metrics = [], months = []) {
+  const n = months.length;
+  const i = n - 2;
+  if (i < 0) return { month: null, items: [] };
+  const items = [];
+  for (const m of metrics) {
+    const target = m.targets?.[i];
+    const actual = m.values?.[i];
+    if (target === null || target === undefined || Number(target) <= 0) continue;
+    if (actual === null || actual === undefined) continue;
+    const a = Number(actual); const t = Number(target);
+    const lower = m.better === 'lower';
+    const met = lower ? a <= t : a >= t;
+    const share = met ? 100 : (lower ? pct(t, a) : pct(a, t)) ?? 0;
+    items.push({
+      key: `${m.provider}.${m.key}`,
+      label: m.label,
+      value: Math.max(0, Math.min(100, share)),
+      display: `${Math.max(0, Math.min(999, share))}%`,
+      note: `${formatMetric(a, m.unit, { compact: true })} dari target ${formatMetric(t, m.unit, { compact: true })}`,
+      tone: met ? 'success' : (share >= 80 ? 'warning' : 'error'),
+      met,
+    });
+  }
+  items.sort((a, b) => a.value - b.value || a.label.localeCompare(b.label));
+  return { month: months[i]?.label || null, items };
+}
+
+/** Section 6, "Pekerjaan lewat tenggat": the rows of the work table. */
+export function overdueRows(escalations) {
+  return (escalations?.top || []).map((i, n) => ({ ...i, id: `${i.source}-${n}` }));
 }
 
 /**

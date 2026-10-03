@@ -101,9 +101,8 @@ const ticketRow = (t, everyone) => ({
 });
 
 async function ticketDetail(user, id, manage) {
-  const ticket = await ticketService().getTicket(id, { userId: user.sub, canManage: manage });
-  // The page reaches a ticket by id; the agent also keeps it inside the user's company.
-  if (Number(ticket.entity_id) !== Number(user.entityId)) throw Object.assign(new Error('Tiket tidak ditemukan'), { status: 404, code: 'NOT_FOUND' });
+  // The service keeps the ticket inside the user's company, as on the page.
+  const ticket = await ticketService().getTicket(id, { userId: user.sub, canManage: manage, entityId: user.entityId });
   const comments = ticket.comments || [];
   return {
     id: Number(ticket.id),

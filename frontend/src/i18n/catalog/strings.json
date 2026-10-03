@@ -160,8 +160,8 @@
    "backend/src/services/accurate/salesPull.js:21",
    "backend/src/services/accurate/salesPull.js:141",
    "backend/src/services/accurate/warehouseCollector.js:17",
-   "backend/src/services/ai/agent/tools/it.js:194",
-   "backend/src/services/ai/agent/tools/it.js:372",
+   "backend/src/services/ai/agent/tools/it.js:193",
+   "backend/src/services/ai/agent/tools/it.js:371",
    "frontend/src/components/statusTone.js:34",
    "frontend/src/components/statusTone.js:139",
    "frontend/src/components/statusTone.js:176",
@@ -227,7 +227,7 @@
    "backend/src/config/itAssets.js:47",
    "backend/src/jobs/gaOpsReminders.js:68",
    "backend/src/management/providers/ga.js:90",
-   "backend/src/services/ai/agent/tools/it.js:194",
+   "backend/src/services/ai/agent/tools/it.js:193",
    "frontend/src/components/statusTone.js:143",
    "frontend/src/pages/ga/gaOpsModel.js:29",
    "frontend/src/pages/it/DeviceDetail.jsx:425",
@@ -245,7 +245,7 @@
    "backend/src/services/ai/agent/tools/it.js:77",
    "backend/src/services/ai/agent/tools/peopleCulture.js:32",
    "backend/src/services/ai/agent/tools/peopleCulture.js:37",
-   "backend/src/services/itTicket.service.js:228",
+   "backend/src/services/itTicket.service.js:247",
    "backend/src/services/marketingCampaigns.service.js:29",
    "frontend/src/components/ai/AISteps.jsx:26",
    "frontend/src/components/AppLauncher.jsx:144",
@@ -285,7 +285,7 @@
    "frontend/src/pages/projects/SprintDialog.jsx:37",
    "frontend/src/pages/projects/SprintDialog.jsx:168",
    "frontend/src/pages/projects/trackerModel.js:25",
-   "frontend/src/pages/projects/trackerModel.js:740",
+   "frontend/src/pages/projects/trackerModel.js:750",
    "frontend/src/pages/projects/TrackerPortfolio.jsx:67",
    "frontend/src/pages/projects/TrackerPortfolio.jsx:87",
    "frontend/src/pages/tasks/TaskBoard.jsx:164",
@@ -428,7 +428,7 @@
    "backend/src/config/itAssets.js:44",
    "backend/src/config/itInfra.js:17",
    "backend/src/config/itInfra.js:39",
-   "backend/src/services/ai/agent/tools/it.js:194",
+   "backend/src/services/ai/agent/tools/it.js:193",
    "frontend/src/components/statusTone.js:140",
    "frontend/src/components/statusTone.js:188",
    "frontend/src/components/statusTone.js:200",
@@ -447,7 +447,7 @@
   "sources": [
    "backend/src/config/itAssets.js:45",
    "backend/src/config/itInfra.js:17",
-   "backend/src/services/ai/agent/tools/it.js:195",
+   "backend/src/services/ai/agent/tools/it.js:194",
    "frontend/src/components/statusTone.js:141",
    "frontend/src/components/statusTone.js:189",
    "frontend/src/pages/documents/docTemplateModel.js:111",
@@ -465,7 +465,7 @@
    "backend/src/config/itInfra.js:17",
    "backend/src/config/itInfra.js:25",
    "backend/src/config/itInfra.js:34",
-   "backend/src/services/ai/agent/tools/it.js:195",
+   "backend/src/services/ai/agent/tools/it.js:194",
    "frontend/src/components/statusTone.js:142",
    "frontend/src/components/statusTone.js:190",
    "frontend/src/components/statusTone.js:194",
@@ -482,7 +482,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/config/itAssets.js:48",
-   "backend/src/services/ai/agent/tools/it.js:194",
+   "backend/src/services/ai/agent/tools/it.js:193",
    "frontend/src/components/statusTone.js:127",
    "frontend/src/components/statusTone.js:144",
    "frontend/src/pages/it/itModel.js:34"
@@ -494,7 +494,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/config/itAssets.js:49",
-   "backend/src/services/ai/agent/tools/it.js:195",
+   "backend/src/services/ai/agent/tools/it.js:194",
    "frontend/src/components/statusTone.js:116",
    "frontend/src/components/statusTone.js:145",
    "frontend/src/pages/it/itModel.js:35"
@@ -506,7 +506,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/config/itAssets.js:50",
-   "backend/src/services/ai/agent/tools/it.js:195",
+   "backend/src/services/ai/agent/tools/it.js:194",
    "frontend/src/components/statusTone.js:146",
    "frontend/src/pages/handbook/handbookContent.js:1640",
    "frontend/src/pages/it/itModel.js:36"
@@ -1503,9 +1503,9 @@
    "backend/src/services/ai/agent/tools/ga.js:28",
    "backend/src/services/ai/agent/tools/ga.js:36",
    "backend/src/services/ai/agent/tools/it.js:77",
-   "backend/src/services/ai/agent/tools/it.js:372",
+   "backend/src/services/ai/agent/tools/it.js:371",
    "backend/src/services/ai/agent/tools/peopleCulture.js:32",
-   "backend/src/services/itTicket.service.js:228",
+   "backend/src/services/itTicket.service.js:247",
    "backend/src/services/marketingCampaigns.service.js:29",
    "frontend/src/components/gantt/GanttLegend.jsx:10",
    "frontend/src/components/statusTone.js:111",
@@ -1607,7 +1607,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/ai/agent/tools/ga.js:36",
-   "backend/src/services/ai/agent/tools/it.js:375",
+   "backend/src/services/ai/agent/tools/it.js:374",
    "backend/src/services/gaWorkSummary.service.js:86",
    "frontend/src/components/statusTone.js:35",
    "frontend/src/components/statusTone.js:161",
@@ -1622,7 +1622,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/ai/agent/tools/ga.js:36",
-   "backend/src/services/ai/agent/tools/it.js:372",
+   "backend/src/services/ai/agent/tools/it.js:371",
    "frontend/src/components/ai/AIActionProposals.jsx:45",
    "frontend/src/components/statusTone.js:114",
    "frontend/src/components/statusTone.js:165",
@@ -1670,7 +1670,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/ai/agent/tools/it.js:77",
-   "backend/src/services/itTicket.service.js:228",
+   "backend/src/services/itTicket.service.js:247",
    "frontend/src/components/statusTone.js:29",
    "frontend/src/components/statusTone.js:75",
    "frontend/src/components/tasks/taskModel.js:16",
@@ -1688,7 +1688,7 @@
   "sources": [
    "backend/src/services/ai/agent/tools/it.js:86",
    "backend/src/services/itSupport.service.js:18",
-   "backend/src/services/itTracker.service.js:19",
+   "backend/src/services/itTracker.service.js:20",
    "frontend/src/components/ai/AIActionProposals.jsx:364",
    "frontend/src/components/statusTone.js:20",
    "frontend/src/components/statusTone.js:297",
@@ -1703,8 +1703,8 @@
   "sources": [
    "backend/src/services/ai/agent/tools/it.js:86",
    "backend/src/services/itSupport.service.js:18",
-   "backend/src/services/itTracker.service.js:19",
-   "backend/src/services/itTracker.service.js:69",
+   "backend/src/services/itTracker.service.js:20",
+   "backend/src/services/itTracker.service.js:70",
    "frontend/src/components/ai/AIActionProposals.jsx:365",
    "frontend/src/components/statusTone.js:298",
    "frontend/src/components/support/itHelpModel.js:11",
@@ -1718,7 +1718,7 @@
   "sources": [
    "backend/src/services/ai/agent/tools/it.js:86",
    "backend/src/services/itSupport.service.js:18",
-   "backend/src/services/itTracker.service.js:19",
+   "backend/src/services/itTracker.service.js:20",
    "frontend/src/components/ai/AIActionProposals.jsx:366",
    "frontend/src/components/statusTone.js:18",
    "frontend/src/components/statusTone.js:300",
@@ -1733,7 +1733,7 @@
   "sources": [
    "backend/src/services/ai/agent/tools/it.js:86",
    "backend/src/services/itSupport.service.js:18",
-   "backend/src/services/itTracker.service.js:19",
+   "backend/src/services/itTracker.service.js:20",
    "frontend/src/components/ai/AIActionProposals.jsx:367",
    "frontend/src/components/statusTone.js:14",
    "frontend/src/components/statusTone.js:301",
@@ -1746,7 +1746,7 @@
   "text": "Dijeda",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/it.js:372",
+   "backend/src/services/ai/agent/tools/it.js:371",
    "frontend/src/components/statusTone.js:49",
    "frontend/src/pages/projects/TrackerBits.jsx:30"
   ],
@@ -1756,7 +1756,7 @@
   "text": "Tersedia",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/it.js:375",
+   "backend/src/services/ai/agent/tools/it.js:374",
    "frontend/src/components/ai/aiEngineOptions.js:9",
    "frontend/src/components/statusTone.js:124"
   ],
@@ -1766,7 +1766,7 @@
   "text": "Dicabut",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/it.js:375",
+   "backend/src/services/ai/agent/tools/it.js:374",
    "frontend/src/components/statusTone.js:115"
   ],
   "chunk": "shell-2"
@@ -3116,8 +3116,8 @@
    "frontend/src/pages/procurement/ProcurementToday.jsx:76",
    "frontend/src/pages/procurement/ProcurementVendors.jsx:75",
    "frontend/src/pages/projects/IssueDrawer.jsx:192",
-   "frontend/src/pages/projects/ProjectTracker.jsx:235",
-   "frontend/src/pages/projects/ProjectTracker.jsx:270",
+   "frontend/src/pages/projects/ProjectTracker.jsx:237",
+   "frontend/src/pages/projects/ProjectTracker.jsx:272",
    "frontend/src/pages/projects/TrackerPortfolio.jsx:112",
    "frontend/src/pages/projects/TrackerReports.jsx:170",
    "frontend/src/pages/public/VerifyDocument.jsx:78",
@@ -4369,7 +4369,7 @@
    "frontend/src/pages/projects/PortfolioCharts.jsx:101",
    "frontend/src/pages/projects/Projects.jsx:47",
    "frontend/src/pages/projects/trackerModel.js:24",
-   "frontend/src/pages/projects/trackerModel.js:739",
+   "frontend/src/pages/projects/trackerModel.js:749",
    "frontend/src/pages/projects/TrackerPortfolio.jsx:66",
    "frontend/src/pages/projects/TrackerPortfolio.jsx:86",
    "frontend/src/pages/projects/TrackerPortfolio.jsx:94",
@@ -12625,7 +12625,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/components/tasks/taskModel.js:110",
-   "frontend/src/pages/projects/trackerModel.js:410"
+   "frontend/src/pages/projects/trackerModel.js:411"
   ],
   "chunk": "components-work"
  },
@@ -12634,7 +12634,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/components/tasks/taskModel.js:110",
-   "frontend/src/pages/projects/trackerModel.js:410"
+   "frontend/src/pages/projects/trackerModel.js:411"
   ],
   "chunk": "components-work"
  },
@@ -12643,7 +12643,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/components/tasks/taskModel.js:110",
-   "frontend/src/pages/projects/trackerModel.js:410"
+   "frontend/src/pages/projects/trackerModel.js:411"
   ],
   "chunk": "components-work"
  },
@@ -12652,8 +12652,8 @@
   "kind": "exact",
   "sources": [
    "frontend/src/components/tasks/taskModel.js:110",
-   "frontend/src/pages/projects/trackerModel.js:411",
-   "frontend/src/pages/projects/trackerModel.js:412"
+   "frontend/src/pages/projects/trackerModel.js:412",
+   "frontend/src/pages/projects/trackerModel.js:413"
   ],
   "chunk": "components-work"
  },
@@ -12663,8 +12663,8 @@
   "sources": [
    "frontend/src/components/tasks/taskModel.js:111",
    "frontend/src/pages/hrga/hrgaModel.js:549",
-   "frontend/src/pages/projects/trackerModel.js:410",
-   "frontend/src/pages/projects/trackerModel.js:411"
+   "frontend/src/pages/projects/trackerModel.js:411",
+   "frontend/src/pages/projects/trackerModel.js:412"
   ],
   "chunk": "components-work"
  },
@@ -16928,7 +16928,7 @@
    "backend/src/services/salesRecords.service.js:544",
    "backend/src/services/tracker.service.js:573",
    "backend/src/services/tracker.service.js:1015",
-   "backend/src/services/tracker.service.js:1349",
+   "backend/src/services/tracker.service.js:1366",
    "frontend/src/pages/admin/RoleEditorPanel.jsx:167"
   ],
   "chunk": "pages-admin-1"
@@ -17316,8 +17316,8 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/itSupport.service.js:74",
-   "backend/src/services/itTracker.service.js:50",
-   "backend/src/services/itTracker.service.js:69",
+   "backend/src/services/itTracker.service.js:51",
+   "backend/src/services/itTracker.service.js:70",
    "frontend/src/pages/admin/Users.jsx:267"
   ],
   "chunk": "pages-admin-1"
@@ -17495,7 +17495,7 @@
    "frontend/src/pages/google/Analytics.jsx:173",
    "frontend/src/pages/handbook/handbookContent.js:366",
    "frontend/src/pages/handbook/handbookContent.js:367",
-   "frontend/src/pages/projects/ProjectTracker.jsx:314"
+   "frontend/src/pages/projects/ProjectTracker.jsx:316"
   ],
   "chunk": "pages-admin-1"
  },
@@ -39268,7 +39268,7 @@
    "frontend/src/pages/projects/IssueDrawer.jsx:228",
    "frontend/src/pages/projects/TrackerBits.jsx:20",
    "frontend/src/pages/projects/TrackerFilters.jsx:26",
-   "frontend/src/pages/projects/trackerModel.js:753",
+   "frontend/src/pages/projects/trackerModel.js:763",
    "frontend/src/pages/projects/TrackerPortfolio.jsx:205",
    "frontend/src/pages/projects/TrackerReports.jsx:190",
    "frontend/src/pages/tasks/TaskBoard.jsx:816",
@@ -39356,7 +39356,7 @@
    "frontend/src/pages/people/PersonFormDialog.jsx:140",
    "frontend/src/pages/people/PersonFormDialog.jsx:180",
    "frontend/src/pages/projects/DivisionDialog.jsx:45",
-   "frontend/src/pages/projects/trackerModel.js:588",
+   "frontend/src/pages/projects/trackerModel.js:598",
    "frontend/src/pages/tasks/TaskBoard.jsx:306"
   ],
   "chunk": "pages-people-1"
@@ -44875,7 +44875,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/config/itInfra.js:28",
-   "backend/src/services/ai/agent/tools/it.js:373",
+   "backend/src/services/ai/agent/tools/it.js:372",
    "frontend/src/pages/it/infraModel.js:18",
    "frontend/src/pages/it/itModel.js:271"
   ],
@@ -45817,7 +45817,7 @@
   "text": "Tahunan",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/it.js:373",
+   "backend/src/services/ai/agent/tools/it.js:372",
    "frontend/src/pages/it/itModel.js:273"
   ],
   "chunk": "pages-it-2"
@@ -45826,7 +45826,7 @@
   "text": "Multi-tahun",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/it.js:373",
+   "backend/src/services/ai/agent/tools/it.js:372",
    "frontend/src/pages/it/itModel.js:274"
   ],
   "chunk": "pages-it-2"
@@ -45835,7 +45835,7 @@
   "text": "Sekali bayar",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/it.js:373",
+   "backend/src/services/ai/agent/tools/it.js:372",
    "frontend/src/pages/it/itModel.js:275"
   ],
   "chunk": "pages-it-2"
@@ -50544,7 +50544,7 @@
    "frontend/src/pages/projects/CreateIssueModal.jsx:33",
    "frontend/src/pages/projects/CreateIssueModal.jsx:121",
    "frontend/src/pages/projects/CreateIssueModal.jsx:126",
-   "frontend/src/pages/projects/ProjectTracker.jsx:322",
+   "frontend/src/pages/projects/ProjectTracker.jsx:324",
    "frontend/src/pages/projects/TrackerBacklog.jsx:136"
   ],
   "chunk": "pages-management-1"
@@ -50565,7 +50565,7 @@
   "sources": [
    "backend/src/services/ai/agent/forms/projects.js:24",
    "frontend/src/pages/handbook/aiForms.generated.js:22",
-   "frontend/src/pages/projects/ProjectTracker.jsx:261",
+   "frontend/src/pages/projects/ProjectTracker.jsx:263",
    "frontend/src/pages/projects/SprintDialog.jsx:16",
    "frontend/src/pages/projects/SprintDialog.jsx:17",
    "frontend/src/pages/projects/SprintDialog.jsx:41",
@@ -50594,7 +50594,7 @@
    "frontend/src/pages/handbook/aiForms.generated.js:24",
    "frontend/src/pages/projects/DivisionDialog.jsx:16",
    "frontend/src/pages/projects/DivisionDialog.jsx:79",
-   "frontend/src/pages/projects/ProjectTracker.jsx:262"
+   "frontend/src/pages/projects/ProjectTracker.jsx:264"
   ],
   "chunk": "pages-management-2"
  },
@@ -50657,7 +50657,7 @@
    "backend/src/services/ai/agent/tools/peopleCulture.js:37",
    "frontend/src/pages/projects/trackerModel.js:23",
    "frontend/src/pages/projects/trackerModel.js:32",
-   "frontend/src/pages/projects/trackerModel.js:738"
+   "frontend/src/pages/projects/trackerModel.js:748"
   ],
   "chunk": "pages-management-2"
  },
@@ -50824,7 +50824,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/advanced/Escalations.jsx:176",
-   "frontend/src/pages/projects/trackerModel.js:800"
+   "frontend/src/pages/projects/trackerModel.js:810"
   ],
   "chunk": "additions"
  },
@@ -53628,7 +53628,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/projects/IssueDrawer.jsx:190",
-   "frontend/src/pages/projects/ProjectTracker.jsx:276"
+   "frontend/src/pages/projects/ProjectTracker.jsx:278"
   ],
   "chunk": "pages-management-2"
  },
@@ -54214,7 +54214,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/projects/ProjectTracker.jsx:81",
-   "frontend/src/pages/projects/ProjectTracker.jsx:265"
+   "frontend/src/pages/projects/ProjectTracker.jsx:267"
   ],
   "chunk": "pages-management-2"
  },
@@ -54262,7 +54262,7 @@
   "text": "Perubahan gagal disimpan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:208",
+   "frontend/src/pages/projects/ProjectTracker.jsx:210",
    "frontend/src/pages/tasks/TaskDetail.jsx:198"
   ],
   "chunk": "pages-management-2"
@@ -54275,7 +54275,7 @@
    "issue.key"
   ],
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:215"
+   "frontend/src/pages/projects/ProjectTracker.jsx:217"
   ],
   "chunk": "pages-management-2"
  },
@@ -54283,7 +54283,7 @@
   "text": "Update issue akan dikirim ke space",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:223"
+   "frontend/src/pages/projects/ProjectTracker.jsx:225"
   ],
   "chunk": "pages-management-2"
  },
@@ -54291,7 +54291,7 @@
   "text": "Update issue tidak dikirim ke space",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:223"
+   "frontend/src/pages/projects/ProjectTracker.jsx:225"
   ],
   "chunk": "pages-management-2"
  },
@@ -54299,7 +54299,7 @@
   "text": "Pengaturan gagal disimpan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:225"
+   "frontend/src/pages/projects/ProjectTracker.jsx:227"
   ],
   "chunk": "pages-management-2"
  },
@@ -54307,7 +54307,7 @@
   "text": "Space tidak valid",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:232"
+   "frontend/src/pages/projects/ProjectTracker.jsx:234"
   ],
   "chunk": "pages-management-2"
  },
@@ -54315,7 +54315,7 @@
   "text": "Alamat project tidak dikenali.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:232"
+   "frontend/src/pages/projects/ProjectTracker.jsx:234"
   ],
   "chunk": "pages-management-2"
  },
@@ -54323,7 +54323,7 @@
   "text": "Memuat project…",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:233"
+   "frontend/src/pages/projects/ProjectTracker.jsx:235"
   ],
   "chunk": "pages-management-2"
  },
@@ -54331,7 +54331,7 @@
   "text": "Project tidak bisa dibuka",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:235"
+   "frontend/src/pages/projects/ProjectTracker.jsx:237"
   ],
   "chunk": "pages-management-2"
  },
@@ -54339,7 +54339,7 @@
   "text": "Project tracker hanya untuk space",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:242"
+   "frontend/src/pages/projects/ProjectTracker.jsx:244"
   ],
   "chunk": "pages-management-2"
  },
@@ -54347,7 +54347,7 @@
   "text": "Chat langsung dan grup chat tidak bisa punya project. Buat atau buka sebuah space untuk mengelola tugas tim.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:243"
+   "frontend/src/pages/projects/ProjectTracker.jsx:245"
   ],
   "chunk": "pages-management-2"
  },
@@ -54355,7 +54355,7 @@
   "text": "Jangan kirim update ke space",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:264"
+   "frontend/src/pages/projects/ProjectTracker.jsx:266"
   ],
   "chunk": "pages-management-2"
  },
@@ -54363,7 +54363,7 @@
   "text": "Issue gagal dimuat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:270"
+   "frontend/src/pages/projects/ProjectTracker.jsx:272"
   ],
   "chunk": "pages-management-2"
  },
@@ -54371,7 +54371,7 @@
   "text": "Pengaturan project",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:323"
+   "frontend/src/pages/projects/ProjectTracker.jsx:325"
   ],
   "chunk": "pages-management-2"
  },
@@ -54379,7 +54379,7 @@
   "text": "Buka layar penuh",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:325"
+   "frontend/src/pages/projects/ProjectTracker.jsx:327"
   ],
   "chunk": "pages-management-2"
  },
@@ -54387,7 +54387,7 @@
   "text": "Daftar anggota space tidak bisa dimuat saat ini, jadi issue hanya bisa ditugaskan ke Anda sendiri.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/ProjectTracker.jsx:333"
+   "frontend/src/pages/projects/ProjectTracker.jsx:335"
   ],
   "chunk": "pages-management-2"
  },
@@ -54600,8 +54600,8 @@
   "sources": [
    "frontend/src/pages/projects/TrackerBacklog.jsx:114",
    "frontend/src/pages/projects/TrackerBoard.jsx:157",
-   "frontend/src/pages/projects/trackerModel.js:412",
-   "frontend/src/pages/projects/trackerModel.js:412"
+   "frontend/src/pages/projects/trackerModel.js:413",
+   "frontend/src/pages/projects/trackerModel.js:413"
   ],
   "chunk": "pages-management-2"
  },
@@ -55025,7 +55025,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/projects/trackerModel.js:397",
-   "frontend/src/pages/projects/trackerModel.js:431"
+   "frontend/src/pages/projects/trackerModel.js:433"
   ],
   "chunk": "pages-management-2"
  },
@@ -55110,10 +55110,18 @@
   "chunk": "pages-management-2"
  },
  {
+  "text": "memindahkan issue, tetapi Tiket IT tidak ikut berubah",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/projects/trackerModel.js:408"
+  ],
+  "chunk": "additions"
+ },
+ {
   "text": "tipe",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/trackerModel.js:410"
+   "frontend/src/pages/projects/trackerModel.js:411"
   ],
   "chunk": "additions"
  },
@@ -55121,8 +55129,8 @@
   "text": "induk",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/trackerModel.js:413",
-   "frontend/src/pages/projects/trackerModel.js:413"
+   "frontend/src/pages/projects/trackerModel.js:414",
+   "frontend/src/pages/projects/trackerModel.js:414"
   ],
   "chunk": "pages-management-2"
  },
@@ -55130,7 +55138,7 @@
   "text": "aktivitas",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/trackerModel.js:423"
+   "frontend/src/pages/projects/trackerModel.js:424"
   ],
   "chunk": "pages-management-2"
  },
@@ -55138,9 +55146,45 @@
   "text": "Seseorang",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/projects/trackerModel.js:424"
+   "frontend/src/pages/projects/trackerModel.js:425"
   ],
   "chunk": "pages-management-2"
+ },
+ {
+  "text": "(Tiket IT #$1)",
+  "kind": "pattern",
+  "regex": "^\\(Tiket IT #([\\s\\S]*?)\\)$",
+  "vars": [
+   "Number(meta.ticketId)"
+  ],
+  "sources": [
+   "frontend/src/pages/projects/trackerModel.js:432"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Tiket IT #$1 ikut diperbarui.",
+  "kind": "pattern",
+  "regex": "^Tiket IT #([\\s\\S]*?) ikut diperbarui\\.$",
+  "vars": [
+   "sync.ticketId"
+  ],
+  "sources": [
+   "frontend/src/pages/projects/trackerModel.js:441"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Issue dipindahkan, tetapi Tiket IT #$1 tidak ikut berubah. Periksa halaman tiket.",
+  "kind": "pattern",
+  "regex": "^Issue dipindahkan, tetapi Tiket IT #([\\s\\S]*?) tidak ikut berubah\\. Periksa halaman tiket\\.$",
+  "vars": [
+   "sync.ticketId"
+  ],
+  "sources": [
+   "frontend/src/pages/projects/trackerModel.js:442"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "M$1,$2 V$3 Q$4,$5 $6,$7 H$8 Q$9,$10 $11,$12 V$13 Z",
@@ -55162,7 +55206,7 @@
    "y + h"
   ],
   "sources": [
-   "frontend/src/pages/projects/trackerModel.js:489"
+   "frontend/src/pages/projects/trackerModel.js:499"
   ],
   "chunk": "pages-management-2"
  },
@@ -55178,7 +55222,7 @@
    "baseline"
   ],
   "sources": [
-   "frontend/src/pages/projects/trackerModel.js:700"
+   "frontend/src/pages/projects/trackerModel.js:710"
   ],
   "chunk": "pages-management-2"
  },
@@ -75386,7 +75430,7 @@
   "text": "Tagihan utilitas lewat jatuh tempo",
   "kind": "exact",
   "sources": [
-   "backend/src/config/notificationPolicy.js:117",
+   "backend/src/config/notificationPolicy.js:118",
    "backend/src/management/providers/ga.js:233",
    "backend/src/services/morningBriefing.service.js:228"
   ],
@@ -77193,19 +77237,10 @@
   "chunk": "additions"
  },
  {
-  "text": "Tiket tidak ditemukan",
-  "kind": "exact",
-  "sources": [
-   "backend/src/services/ai/agent/tools/it.js:106",
-   "backend/src/services/itTicket.service.js:37"
-  ],
-  "chunk": "backend-services-3"
- },
- {
   "text": "Membaca tiket IT",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/it.js:646"
+   "backend/src/services/ai/agent/tools/it.js:645"
   ],
   "chunk": "additions"
  },
@@ -77213,7 +77248,7 @@
   "text": "Membaca ringkasan IT",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/it.js:673"
+   "backend/src/services/ai/agent/tools/it.js:672"
   ],
   "chunk": "additions"
  },
@@ -77221,7 +77256,7 @@
   "text": "Membaca perangkat yang Anda pegang",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/it.js:686"
+   "backend/src/services/ai/agent/tools/it.js:685"
   ],
   "chunk": "additions"
  },
@@ -77229,7 +77264,7 @@
   "text": "Membaca daftar perangkat",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/it.js:698"
+   "backend/src/services/ai/agent/tools/it.js:697"
   ],
   "chunk": "additions"
  },
@@ -77237,7 +77272,7 @@
   "text": "Membaca langganan software",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/it.js:723"
+   "backend/src/services/ai/agent/tools/it.js:722"
   ],
   "chunk": "additions"
  },
@@ -77245,7 +77280,7 @@
   "text": "Membaca biaya langganan software",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/it.js:748"
+   "backend/src/services/ai/agent/tools/it.js:747"
   ],
   "chunk": "additions"
  },
@@ -77253,7 +77288,7 @@
   "text": "Membaca register infrastruktur IT",
   "kind": "exact",
   "sources": [
-   "backend/src/services/ai/agent/tools/it.js:769"
+   "backend/src/services/ai/agent/tools/it.js:768"
   ],
   "chunk": "additions"
  },
@@ -79153,7 +79188,7 @@
   ],
   "sources": [
    "backend/src/services/aiToolContext.service.js:201",
-   "backend/src/services/itTracker.service.js:51"
+   "backend/src/services/itTracker.service.js:52"
   ],
   "chunk": "backend-services-1"
  },
@@ -85974,7 +86009,15 @@
   ],
   "sources": [
    "backend/src/services/itSupport.service.js:103",
-   "backend/src/services/itTracker.service.js:55"
+   "backend/src/services/itTracker.service.js:56"
+  ],
+  "chunk": "backend-services-3"
+ },
+ {
+  "text": "Tiket tidak ditemukan",
+  "kind": "exact",
+  "sources": [
+   "backend/src/services/itTicket.service.js:37"
   ],
   "chunk": "backend-services-3"
  },
@@ -86026,7 +86069,7 @@
   "text": "Tiket ini bukan milik Anda",
   "kind": "exact",
   "sources": [
-   "backend/src/services/itTicket.service.js:158"
+   "backend/src/services/itTicket.service.js:163"
   ],
   "chunk": "backend-services-3"
  },
@@ -86039,15 +86082,23 @@
    "nextStatus"
   ],
   "sources": [
-   "backend/src/services/itTicket.service.js:204"
+   "backend/src/services/itTicket.service.js:217"
   ],
   "chunk": "backend-services-3"
+ },
+ {
+  "text": "Status tiket baru saja berubah. Muat ulang tiket lalu coba lagi.",
+  "kind": "exact",
+  "sources": [
+   "backend/src/services/itTicket.service.js:234"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Open",
   "kind": "exact",
   "sources": [
-   "backend/src/services/itTicket.service.js:227"
+   "backend/src/services/itTicket.service.js:246"
   ],
   "chunk": "backend-services-3"
  },
@@ -86055,7 +86106,7 @@
   "text": "Sedang Dikerjakan",
   "kind": "exact",
   "sources": [
-   "backend/src/services/itTicket.service.js:227"
+   "backend/src/services/itTicket.service.js:246"
   ],
   "chunk": "backend-services-3"
  },
@@ -86063,7 +86114,7 @@
   "text": "Menunggu Respon Anda",
   "kind": "exact",
   "sources": [
-   "backend/src/services/itTicket.service.js:227"
+   "backend/src/services/itTicket.service.js:246"
   ],
   "chunk": "backend-services-3"
  },
@@ -86075,7 +86126,7 @@
    "STATUS_LABELS[nextStatus]"
   ],
   "sources": [
-   "backend/src/services/itTicket.service.js:233"
+   "backend/src/services/itTicket.service.js:252"
   ],
   "chunk": "backend-services-3"
  },
@@ -86083,7 +86134,7 @@
   "text": "Tiket dibatalkan oleh pengaju",
   "kind": "exact",
   "sources": [
-   "backend/src/services/itTicket.service.js:239"
+   "backend/src/services/itTicket.service.js:258"
   ],
   "chunk": "backend-services-3"
  },
@@ -86091,7 +86142,7 @@
   "text": "Komentar tidak boleh kosong",
   "kind": "exact",
   "sources": [
-   "backend/src/services/itTicket.service.js:249"
+   "backend/src/services/itTicket.service.js:268"
   ],
   "chunk": "backend-services-3"
  },
@@ -86099,7 +86150,7 @@
   "text": "Tanggapan baru di tiket Anda",
   "kind": "exact",
   "sources": [
-   "backend/src/services/itTicket.service.js:262"
+   "backend/src/services/itTicket.service.js:280"
   ],
   "chunk": "backend-services-3"
  },
@@ -86107,7 +86158,7 @@
   "text": "Balasan baru dari pengaju",
   "kind": "exact",
   "sources": [
-   "backend/src/services/itTicket.service.js:268"
+   "backend/src/services/itTicket.service.js:286"
   ],
   "chunk": "backend-services-3"
  },
@@ -86121,7 +86172,7 @@
    "requester?.departmentName ? ` (${requester.departmentName})` : ''"
   ],
   "sources": [
-   "backend/src/services/itTracker.service.js:50"
+   "backend/src/services/itTracker.service.js:51"
   ],
   "chunk": "backend-services-3"
  },
@@ -86133,7 +86184,7 @@
    "ticketLink(ticketId)"
   ],
   "sources": [
-   "backend/src/services/itTracker.service.js:52"
+   "backend/src/services/itTracker.service.js:53"
   ],
   "chunk": "backend-services-3"
  },
@@ -86147,7 +86198,7 @@
    "title"
   ],
   "sources": [
-   "backend/src/services/itTracker.service.js:68"
+   "backend/src/services/itTracker.service.js:69"
   ],
   "chunk": "backend-services-3"
  },
@@ -86161,9 +86212,47 @@
    "PRIORITY_LABELS[priority] || 'Normal'"
   ],
   "sources": [
-   "backend/src/services/itTracker.service.js:69"
+   "backend/src/services/itTracker.service.js:70"
   ],
   "chunk": "backend-services-3"
+ },
+ {
+  "text": "Tiket IT sudah ditutup atau dibatalkan dan tidak dapat dibuka lagi dari Project Tracker.",
+  "kind": "exact",
+  "sources": [
+   "backend/src/services/itTracker.service.js:101"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Tiket IT yang sudah dikerjakan tidak dapat kembali ke Open. Ubah statusnya dari halaman tiket.",
+  "kind": "exact",
+  "sources": [
+   "backend/src/services/itTracker.service.js:110"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "$1 (Tiket IT #$2: /it/tickets/$3)",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?) \\(Tiket IT #([\\s\\S]*?): /it/tickets/([\\s\\S]*?)\\)$",
+  "vars": [
+   "message",
+   "ticket.id",
+   "ticket.id"
+  ],
+  "sources": [
+   "backend/src/services/itTracker.service.js:121"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Issue ini terhubung ke Tiket IT; statusnya hanya dapat dipindahkan oleh pengelola tiket IT.",
+  "kind": "exact",
+  "sources": [
+   "backend/src/services/itTracker.service.js:132"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Lisensi tidak ditemukan",
@@ -88708,7 +88797,7 @@
    "backend/src/services/tracker.service.js:80",
    "backend/src/services/tracker.service.js:82",
    "backend/src/services/tracker.service.js:1033",
-   "backend/src/services/tracker.service.js:1174"
+   "backend/src/services/tracker.service.js:1191"
   ],
   "chunk": "backend-services-3"
  },
@@ -88878,7 +88967,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/tracker.service.js:704",
-   "backend/src/services/tracker.service.js:1290"
+   "backend/src/services/tracker.service.js:1307"
   ],
   "chunk": "backend-services-3"
  },
@@ -88957,10 +89046,19 @@
   "chunk": "backend-services-3"
  },
  {
+  "text": "failed",
+  "kind": "exact",
+  "sources": [
+   "backend/src/services/tracker.service.js:1165",
+   "backend/src/services/tracker.service.js:1170"
+  ],
+  "chunk": "additions"
+ },
+ {
   "text": "Komentar baru pada issue",
   "kind": "exact",
   "sources": [
-   "backend/src/services/tracker.service.js:1225"
+   "backend/src/services/tracker.service.js:1242"
   ],
   "chunk": "backend-services-3"
  },
@@ -88968,8 +89066,8 @@
   "text": "startDate harus <= endDate",
   "kind": "exact",
   "sources": [
-   "backend/src/services/tracker.service.js:1245",
-   "backend/src/services/tracker.service.js:1317"
+   "backend/src/services/tracker.service.js:1262",
+   "backend/src/services/tracker.service.js:1334"
   ],
   "chunk": "backend-services-3"
  },
@@ -88977,8 +89075,8 @@
   "text": "Sprint tidak ditemukan",
   "kind": "exact",
   "sources": [
-   "backend/src/services/tracker.service.js:1268",
-   "backend/src/services/tracker.service.js:1270"
+   "backend/src/services/tracker.service.js:1285",
+   "backend/src/services/tracker.service.js:1287"
   ],
   "chunk": "backend-services-3"
  },
@@ -88986,7 +89084,7 @@
   "text": "moveOpenIssuesTo tidak boleh sprint yang sama",
   "kind": "exact",
   "sources": [
-   "backend/src/services/tracker.service.js:1278"
+   "backend/src/services/tracker.service.js:1295"
   ],
   "chunk": "backend-services-3"
  },
@@ -88994,7 +89092,7 @@
   "text": "Sprint tidak bisa dimulai",
   "kind": "exact",
   "sources": [
-   "backend/src/services/tracker.service.js:1304"
+   "backend/src/services/tracker.service.js:1321"
   ],
   "chunk": "backend-services-3"
  },
@@ -89002,7 +89100,7 @@
   "text": "Sudah ada sprint aktif di project ini",
   "kind": "exact",
   "sources": [
-   "backend/src/services/tracker.service.js:1308"
+   "backend/src/services/tracker.service.js:1325"
   ],
   "chunk": "backend-services-3"
  },
@@ -89010,7 +89108,7 @@
   "text": "Hanya sprint aktif yang bisa diselesaikan",
   "kind": "exact",
   "sources": [
-   "backend/src/services/tracker.service.js:1321"
+   "backend/src/services/tracker.service.js:1338"
   ],
   "chunk": "backend-services-3"
  },
@@ -89018,7 +89116,7 @@
   "text": "moveOpenIssuesTo harus sprint yang direncanakan di project ini",
   "kind": "exact",
   "sources": [
-   "backend/src/services/tracker.service.js:1327"
+   "backend/src/services/tracker.service.js:1344"
   ],
   "chunk": "backend-services-3"
  },
@@ -90716,15 +90814,15 @@
   "chunk": "backend-management"
  },
  {
-  "text": "Batas pemakaian AI hampir habis",
+  "text": "Tercatat di aktivitas issue dan terlihat di halaman tiket",
   "kind": "exact",
   "sources": [
-   "backend/src/config/notificationPolicy.js:111"
+   "backend/src/config/notificationPolicy.js:109"
   ],
-  "chunk": "backend-management"
+  "chunk": "additions"
  },
  {
-  "text": "Prakasa AI terputus untuk semua pengguna",
+  "text": "Batas pemakaian AI hampir habis",
   "kind": "exact",
   "sources": [
    "backend/src/config/notificationPolicy.js:112"
@@ -90732,15 +90830,15 @@
   "chunk": "backend-management"
  },
  {
-  "text": "Perawatan berkala jatuh tempo",
+  "text": "Prakasa AI terputus untuk semua pengguna",
   "kind": "exact",
   "sources": [
-   "backend/src/config/notificationPolicy.js:115"
+   "backend/src/config/notificationPolicy.js:113"
   ],
   "chunk": "backend-management"
  },
  {
-  "text": "Kontrak/sewa segera berakhir — perlu keputusan",
+  "text": "Perawatan berkala jatuh tempo",
   "kind": "exact",
   "sources": [
    "backend/src/config/notificationPolicy.js:116"
@@ -90748,10 +90846,18 @@
   "chunk": "backend-management"
  },
  {
+  "text": "Kontrak/sewa segera berakhir — perlu keputusan",
+  "kind": "exact",
+  "sources": [
+   "backend/src/config/notificationPolicy.js:117"
+  ],
+  "chunk": "backend-management"
+ },
+ {
   "text": "Kampanye berakhir — catat hasilnya",
   "kind": "exact",
   "sources": [
-   "backend/src/config/notificationPolicy.js:118",
+   "backend/src/config/notificationPolicy.js:119",
    "backend/src/jobs/marketingReminders.js:55"
   ],
   "chunk": "backend-management"
@@ -90760,7 +90866,7 @@
   "text": "Bawaan: di aplikasi saja",
   "kind": "exact",
   "sources": [
-   "backend/src/config/notificationPolicy.js:121"
+   "backend/src/config/notificationPolicy.js:122"
   ],
   "chunk": "backend-management"
  },

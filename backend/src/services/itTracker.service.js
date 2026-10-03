@@ -9,7 +9,8 @@ const M = require('./trackerModel');
 //   "in progress", resolved / closed / cancelled → "done".
 // - Moving the issue in the tracker moves the ticket: "in progress" →
 //   Sedang dikerjakan, "done" → Selesai. Each side is a no-op when the other is
-//   already there, so the two never loop.
+//   already there, so the two never loop. Only an IT ticket manager of the same
+//   company may move a linked issue, and only along the ticket's lifecycle.
 // Every step is best effort: a Chat or tracker problem never loses a ticket.
 
 const CATEGORY_FOR_STATUS = Object.freeze({
@@ -85,21 +86,70 @@ async function onTicketStatus(ticketId, nextStatus, actorId) {
   return tracker().moveSystemIssue(Number(row.tracker_issue_id), category, actorId);
 }
 
-async function onIssueMoved(issueId, category, user) {
+// Moving a linked issue is a ticket action: only an IT ticket manager
+// (it_ticket.manage) of the ticket's own company may do it, and only along the
+// ticket's own lifecycle. Space membership alone moves ordinary issues, never a
+// ticket. Returns the steps the ticket takes, or the reason the move is refused.
+function hasTicketManage(user) {
+  return (user?.permissions || []).includes('it_ticket.manage');
+}
+
+function planIssueMove(ticketStatus, category) {
+  if (category === 'in_progress') {
+    if (['open', 'waiting_on_user', 'resolved'].includes(ticketStatus)) return { steps: ['in_progress'] };
+    if (ticketStatus === 'in_progress') return { steps: [] };
+    return { refuse: 'Tiket IT sudah ditutup atau dibatalkan dan tidak dapat dibuka lagi dari Project Tracker.' };
+  }
+  if (category === 'done') {
+    if (ticketStatus === 'open') return { steps: ['in_progress', 'resolved'] };
+    if (['in_progress', 'waiting_on_user'].includes(ticketStatus)) return { steps: ['resolved'] };
+    return { steps: [] };
+  }
+  if (category === 'todo') {
+    if (ticketStatus === 'open') return { steps: [] };
+    return { refuse: 'Tiket IT yang sudah dikerjakan tidak dapat kembali ke Open. Ubah statusnya dari halaman tiket.' };
+  }
+  return { steps: [] };
+}
+
+async function linkedTicket(issueId) {
   const [[ticket]] = await pool.query('SELECT id, status, entity_id FROM it_tickets WHERE tracker_issue_id = ? LIMIT 1', [issueId]);
-  if (!ticket || Number(ticket.entity_id) !== Number(user.entityId)) return false;
+  return ticket || null;
+}
+
+function refused(ticket, message) {
+  return Object.assign(new Error(`${message} (Tiket IT #${ticket.id}: /it/tickets/${ticket.id})`), {
+    status: 403, code: 'IT_TICKET_LINKED', ticketId: Number(ticket.id),
+  });
+}
+
+// Checked before the issue is moved: a move the ticket cannot follow is refused,
+// so the board never shows "done" for a ticket that was not resolved.
+async function assertIssueMove(issueId, category, user) {
+  const ticket = await linkedTicket(issueId);
+  if (!ticket) return null;
+  if (Number(ticket.entity_id) !== Number(user.entityId) || !hasTicketManage(user)) {
+    throw refused(ticket, 'Issue ini terhubung ke Tiket IT; statusnya hanya dapat dipindahkan oleh pengelola tiket IT.');
+  }
+  const plan = planIssueMove(ticket.status, category);
+  if (plan.refuse) throw refused(ticket, plan.refuse);
+  return ticket;
+}
+
+// After the issue moved: carry the move to the ticket, with the actor's own rights.
+async function onIssueMoved(issueId, category, user) {
+  const ticket = await linkedTicket(issueId);
+  if (!ticket) return null;
+  const result = { ticketId: Number(ticket.id), link: `/it/tickets/${ticket.id}`, from: ticket.status, status: ticket.status, synced: false };
+  if (Number(ticket.entity_id) !== Number(user.entityId) || !hasTicketManage(user)) return { ...result, reason: 'not_allowed' };
+  const plan = planIssueMove(ticket.status, category);
+  if (plan.refuse) return { ...result, reason: 'invalid_transition' };
   const svc = tickets();
-  const step = (status) => svc.updateStatus(ticket.id, { status, actorId: user.sub, canManage: true, fromTracker: true });
-  if (category === 'in_progress' && ['open', 'waiting_on_user', 'resolved'].includes(ticket.status)) {
-    await step('in_progress');
-    return true;
+  for (const status of plan.steps) {
+    await svc.updateStatus(ticket.id, { status, actorId: user.sub, canManage: true, entityId: user.entityId, fromTracker: true });
+    result.status = status;
   }
-  if (category === 'done' && ['open', 'in_progress', 'waiting_on_user'].includes(ticket.status)) {
-    if (ticket.status === 'open') await step('in_progress');
-    await step('resolved');
-    return true;
-  }
-  return false;
+  return { ...result, synced: true };
 }
 
 async function trackerIssueOf(issueId) {
@@ -119,5 +169,5 @@ async function trackerIssueOf(issueId) {
   };
 }
 
-module.exports = { CATEGORY_FOR_STATUS, linkNewTicket, onTicketStatus, onIssueMoved, trackerIssueOf };
+module.exports = { CATEGORY_FOR_STATUS, linkNewTicket, onTicketStatus, planIssueMove, assertIssueMove, onIssueMoved, trackerIssueOf };
 

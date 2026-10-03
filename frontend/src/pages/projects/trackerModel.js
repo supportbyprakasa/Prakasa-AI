@@ -405,6 +405,7 @@ const EVENT_LABELS = {
   completed: 'menyelesaikan issue',
   reopened: 'membuka kembali issue',
   sprint_changed: 'memindahkan sprint',
+  ticket_sync_failed: 'memindahkan issue, tetapi Tiket IT tidak ikut berubah',
 };
 const FIELD_LABELS = {
   title: 'judul', description: 'deskripsi', type: 'tipe', priority: 'prioritas', startDate: 'tanggal mulai',
@@ -428,8 +429,17 @@ export function activityParts(entry) {
     detail = fields ? [{ text: fields }] : [];
   } else if (event === 'status_changed') detail = meta.to ? [{ text: '→' }, { text: categoryLabel(meta.to) }] : [];
   else if (event === 'issue_moved' || event === 'assigned' || event === 'reassigned') detail = meta.to ? [{ text: String(meta.to), data: true }] : [];
+  else if (event === 'ticket_sync_failed' && meta.ticketId) detail = [{ text: `(Tiket IT #${Number(meta.ticketId)})` }];
   if (event === 'issue_updated' && !detail.length) return [who, { text: 'memperbarui issue' }];
   return [who, { text: label }, ...detail];
+}
+
+// What the board says after a move of an issue linked to an IT ticket: the
+// ticket follows only when the server says it did.
+export function ticketSyncMessage(sync) {
+  if (!sync || !sync.ticketId) return null;
+  if (sync.synced) return { tone: 'success', text: `Tiket IT #${sync.ticketId} ikut diperbarui.` };
+  return { tone: 'warning', text: `Issue dipindahkan, tetapi Tiket IT #${sync.ticketId} tidak ikut berubah. Periksa halaman tiket.` };
 }
 
 export function activityText(entry) {

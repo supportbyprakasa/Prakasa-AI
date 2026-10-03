@@ -425,3 +425,43 @@ test('an issue start date is accepted, and must not fall after the due date', ()
   // Clearing it is allowed.
   assert.equal(tracker.normalizeIssueInput({ startDate: null }, { create: false }).startDate, null);
 });
+
+// F23: an issue linked to an IT ticket moves only as the ticket may move.
+function linkedIssueDb(ticketStatus) {
+  const taskRow = { id: 900, board_id: 5, entity_id: 1, title: '[Tiket IT #55] Laptop mati', issue_number: 3, column_id: 1, position: 0, assignee_id: null, assignee_email: null, status: 'open', labels: null };
+  return fakeDb([
+    [/FROM boards\s+WHERE id = \?/, [[board]]],
+    [/SELECT id, board_id, entity_id, title, issue_number/, [[taskRow]]],
+    [/FROM tasks WHERE id = \? AND deleted_at IS NULL LIMIT 1 FOR UPDATE/, [[taskRow]]],
+    [/FROM board_columns WHERE id = \? AND board_id = \?/, (sql, args) => [[Number(args[0]) === 3 ? { id: 3, name: 'Done', category: 'done' } : { id: 1, name: 'To Do', category: 'todo' }]]],
+    [/FROM it_tickets WHERE tracker_issue_id/, [[{ id: 55, status: ticketStatus, entity_id: 1 }]]],
+    [/SELECT \* FROM it_tickets WHERE id=\? AND entity_id=\?/, [[{ id: 55, status: ticketStatus, entity_id: 1, requester_id: 9, title: 'Laptop mati' }]]],
+    [/^\s*UPDATE it_tickets/, [{ affectedRows: 1 }]],
+  ]);
+}
+
+test('F23: a Space member without it_ticket.manage cannot drag a ticket issue to Done — nothing is written', async (t) => {
+  const db = linkedIssueDb('open');
+  t.mock.method(pool, 'query', db.run);
+  t.mock.method(pool, 'getConnection', async () => db.conn);
+  t.mock.method(trackerChat, 'assertMember', async () => ({}));
+  await assert.rejects(tracker.updateIssue(user, '900', { columnId: 3 }), (e) => e.status === 403 && e.code === 'IT_TICKET_LINKED');
+  const sqls = db.statements.map((s) => s.sql);
+  assert.ok(sqls.includes('ROLLBACK'));
+  assert.ok(!sqls.some((s) => /^\s*UPDATE (tasks|it_tickets)/.test(s)), 'neither the issue nor the ticket changed');
+});
+
+test('F23: an IT ticket manager drags the issue to Done and the board is told the ticket followed', async (t) => {
+  const db = linkedIssueDb('in_progress');
+  t.mock.method(pool, 'query', db.run);
+  t.mock.method(pool, 'getConnection', async () => db.conn);
+  t.mock.method(trackerChat, 'assertMember', async () => ({}));
+  t.mock.method(chatUser, 'createMessage', async () => ({}));
+  const manager = { ...user, permissions: ['google.chat.use', 'it_ticket.manage'] };
+  const result = await tracker.updateIssue(manager, '900', { columnId: 3 });
+  assert.equal(result.ticketSync.synced, true);
+  assert.equal(result.ticketSync.status, 'resolved');
+  const ticketUpdate = db.statements.find((s) => /^\s*UPDATE it_tickets SET status = \?/.test(s.sql));
+  assert.ok(ticketUpdate, 'the ticket was resolved');
+  assert.equal(ticketUpdate.args[0], 'resolved');
+});

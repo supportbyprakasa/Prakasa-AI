@@ -153,23 +153,37 @@ async function listTickets({ entityId, requesterId, canManage, status, category,
   return { rows, page: safePage, limit: safeLimit, total: Number(total) };
 }
 
-async function assertTicketAccess(ticket, { userId, canManage }) {
+// A ticket is reached only inside the actor's own company (entity): a ticket of
+// another company reads as "not found" for everyone, IT managers included, before
+// any comment, attachment, upload or notification is touched. Inside the company,
+// IT (it_ticket.manage) sees every ticket and a requester only their own.
+async function assertTicketAccess(ticket, { userId, canManage, entityId }) {
+  if (entityId === undefined || entityId === null || Number(ticket.entity_id) !== Number(entityId)) throw notFoundError();
   if (canManage) return;
   if (Number(ticket.requester_id) !== Number(userId)) throw forbiddenError('Tiket ini bukan milik Anda');
 }
 
-async function getTicket(id, { userId, canManage }) {
+// The ticket row, read only inside the actor's company.
+async function loadTicketRow(id, entityId) {
+  if (entityId === undefined || entityId === null) throw notFoundError();
+  const [[ticket]] = await pool.query('SELECT * FROM it_tickets WHERE id=? AND entity_id=?', [id, entityId]);
+  if (!ticket) throw notFoundError();
+  return ticket;
+}
+
+async function getTicket(id, { userId, canManage, entityId }) {
+  if (entityId === undefined || entityId === null) throw notFoundError();
   const [[ticket]] = await pool.query(
     `SELECT t.*, u.name AS requesterName, u.email AS requesterEmail,
             d.asset_code AS deviceAssetCode, d.device_type AS deviceType, d.brand AS deviceBrand, d.model AS deviceModel
        FROM it_tickets t
        JOIN users u ON u.id = t.requester_id
-       LEFT JOIN devices d ON d.id = t.device_id
-      WHERE t.id=?`,
-    [id]
+       LEFT JOIN devices d ON d.id = t.device_id AND d.entity_id = t.entity_id
+      WHERE t.id=? AND t.entity_id=?`,
+    [id, entityId]
   );
   if (!ticket) throw notFoundError();
-  await assertTicketAccess(ticket, { userId, canManage });
+  await assertTicketAccess(ticket, { userId, canManage, entityId });
 
   const [comments] = await pool.query(
     `SELECT c.id, c.body, c.created_at AS createdAt,
@@ -194,10 +208,9 @@ async function getTicket(id, { userId, canManage }) {
   return { ...ticket, comments, attachments, trackerIssue };
 }
 
-async function updateStatus(id, { status: nextStatus, actorId, canManage, fromTracker = false }) {
-  const [[ticket]] = await pool.query('SELECT * FROM it_tickets WHERE id=?', [id]);
-  if (!ticket) throw notFoundError();
-  await assertTicketAccess(ticket, { userId: actorId, canManage });
+async function updateStatus(id, { status: nextStatus, actorId, canManage, entityId, fromTracker = false }) {
+  const ticket = await loadTicketRow(id, entityId);
+  await assertTicketAccess(ticket, { userId: actorId, canManage, entityId });
 
   const actor = canManage ? 'it' : 'requester';
   if (!canTransition(ticket.status, nextStatus, actor)) {
@@ -213,7 +226,13 @@ async function updateStatus(id, { status: nextStatus, actorId, canManage, fromTr
   if (ticket.status === 'resolved' && nextStatus === 'in_progress') { fields.push('resolved_at = NULL', 'resolved_by = NULL'); }
   args.push(id);
 
-  await pool.query(`UPDATE it_tickets SET ${fields.join(', ')} WHERE id=?`, args);
+  // The status read above is the one the transition was checked against: a
+  // concurrent change makes this update miss, and the caller is told to reload.
+  args.push(entityId, ticket.status);
+  const [updated] = await pool.query(`UPDATE it_tickets SET ${fields.join(', ')} WHERE id=? AND entity_id=? AND status=?`, args);
+  if (updated && updated.affectedRows === 0) {
+    throw Object.assign(new Error('Status tiket baru saja berubah. Muat ulang tiket lalu coba lagi.'), { status: 409, code: 'STALE_STATUS' });
+  }
   await activityLog({
     entityId: ticket.entity_id, userId: actorId, action: 'it_ticket.status_change',
     subjectType: 'it_ticket', subjectId: Number(id), metadata: { from: ticket.status, to: nextStatus, ...(fromTracker ? { source: 'project_tracker' } : {}) },
@@ -244,13 +263,12 @@ async function updateStatus(id, { status: nextStatus, actorId, canManage, fromTr
   return { id: Number(id), status: nextStatus };
 }
 
-async function addComment(id, { authorId, body, canManage }) {
+async function addComment(id, { authorId, body, canManage, entityId }) {
   const safeBody = String(body || '').trim();
   if (!safeBody) throw validationError('Komentar tidak boleh kosong');
 
-  const [[ticket]] = await pool.query('SELECT * FROM it_tickets WHERE id=?', [id]);
-  if (!ticket) throw notFoundError();
-  await assertTicketAccess(ticket, { userId: authorId, canManage });
+  const ticket = await loadTicketRow(id, entityId);
+  await assertTicketAccess(ticket, { userId: authorId, canManage, entityId });
 
   const [result] = await pool.query(
     'INSERT INTO it_ticket_comments (ticket_id, author_id, body) VALUES (?, ?, ?)',

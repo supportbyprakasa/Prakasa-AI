@@ -64,5 +64,9 @@
  "$1 batch Data Accurate menunggu keputusan": "$1 Data Accurate batches waiting for a decision",
  "$1 hal perlu Anda tindak hari ini": "$1 things need your action today",
  "Tidak ada yang menunggu tindakan Anda. $1 hal perlu diperhatikan": "Nothing is waiting for your action. $1 things need attention",
- "Pekerjaan yang menunggu Anda hari ini, $1.": "Work waiting for you today, $1."
+ "Pekerjaan yang menunggu Anda hari ini, $1.": "Work waiting for you today, $1.",
+ "(Tiket IT #$1)": "(IT ticket #$1)",
+ "Tiket IT #$1 ikut diperbarui.": "IT ticket #$1 was updated too.",
+ "Issue dipindahkan, tetapi Tiket IT #$1 tidak ikut berubah. Periksa halaman tiket.": "The issue moved, but IT ticket #$1 did not change. Check the ticket page.",
+ "$1 (Tiket IT #$2: /it/tickets/$3)": "$1 (IT ticket #$2: /it/tickets/$3)"
 }

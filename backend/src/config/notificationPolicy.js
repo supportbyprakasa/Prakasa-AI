@@ -106,6 +106,7 @@ const EVENTS = Object.freeze({
   'tracker.issue_reordered': P(false, false, 'Perubahan kecil'),
   'tracker.issue_deleted': P(false, false, 'Tercatat di aktivitas project'),
   'tracker.sprint_changed': P(false, false, 'Terlihat di papan sprint'),
+  'tracker.ticket_sync_failed': P(false, false, 'Tercatat di aktivitas issue dan terlihat di halaman tiket'),
 
   // ---------------------------------------------------------------- Prakasa AI (admins)
   'ai.claude_team_limit': P(true, false, 'Batas pemakaian AI hampir habis'),

@@ -69,13 +69,56 @@ test('ticket status moves the issue to the matching column category', async (t) 
 
 test('moving the issue moves the ticket (done from open goes through Sedang dikerjakan), never loops back', async (t) => {
   const steps = [];
-  t.mock.method(itTicket, 'updateStatus', async (id, opts) => { steps.push([id, opts.status, opts.fromTracker]); return {}; });
+  t.mock.method(itTicket, 'updateStatus', async (id, opts) => { steps.push([id, opts.status, opts.fromTracker, opts.entityId]); return {}; });
   db(t, { 'FROM it_tickets WHERE tracker_issue_id': [[{ id: 55, status: 'open', entity_id: 1 }]] });
-  assert.equal(await itTracker.onIssueMoved(900, 'done', { sub: 3, entityId: 1 }), true);
-  assert.deepEqual(steps, [[55, 'in_progress', true], [55, 'resolved', true]]);
+  const manager = { sub: 3, entityId: 1, permissions: ['it_ticket.manage'] };
+  const result = await itTracker.onIssueMoved(900, 'done', manager);
+  assert.equal(result.synced, true);
+  assert.equal(result.status, 'resolved');
+  assert.deepEqual(steps, [[55, 'in_progress', true, 1], [55, 'resolved', true, 1]]);
   steps.length = 0;
-  assert.equal(await itTracker.onIssueMoved(900, 'done', { sub: 3, entityId: 2 }), false, 'another company: nothing');
+  const other = await itTracker.onIssueMoved(900, 'done', { ...manager, entityId: 2 });
+  assert.equal(other.synced, false, 'another company: nothing');
   assert.deepEqual(steps, []);
+});
+
+test('F23: a Space member without it_ticket.manage cannot move a ticket through the tracker', async (t) => {
+  const steps = [];
+  t.mock.method(itTicket, 'updateStatus', async (id, opts) => { steps.push([id, opts.status]); return {}; });
+  db(t, { 'FROM it_tickets WHERE tracker_issue_id': [[{ id: 55, status: 'open', entity_id: 1 }]] });
+  const member = { sub: 8, entityId: 1, permissions: ['google.chat.use'] };
+  await assert.rejects(itTracker.assertIssueMove(900, 'done', member), (e) => e.status === 403 && e.code === 'IT_TICKET_LINKED' && /\/it\/tickets\/55/.test(e.message));
+  await assert.rejects(itTracker.assertIssueMove(900, 'in_progress', member), { code: 'IT_TICKET_LINKED' });
+  const after = await itTracker.onIssueMoved(900, 'done', member);
+  assert.equal(after.synced, false, 'the ticket does not follow a move the actor may not make');
+  assert.equal(after.reason, 'not_allowed');
+  assert.deepEqual(steps, [], 'no ticket step without the permission');
+  // A manager of another company is refused the same way.
+  await assert.rejects(itTracker.assertIssueMove(900, 'done', { sub: 3, entityId: 2, permissions: ['it_ticket.manage'] }), { code: 'IT_TICKET_LINKED' });
+});
+
+test('F23: the tracker follows the ticket lifecycle — closed/cancelled never reopen, worked tickets never return to Open', async (t) => {
+  const manager = { sub: 3, entityId: 1, permissions: ['it_ticket.manage'] };
+  const cases = [
+    ['open', 'in_progress', ['in_progress']],
+    ['open', 'done', ['in_progress', 'resolved']],
+    ['waiting_on_user', 'done', ['resolved']],
+    ['resolved', 'in_progress', ['in_progress']],
+    ['resolved', 'done', []],
+    ['open', 'todo', []],
+  ];
+  for (const [status, category, steps] of cases) assert.deepEqual(itTracker.planIssueMove(status, category).steps, steps, `${status} → ${category}`);
+  for (const [status, category] of [['closed', 'in_progress'], ['cancelled', 'in_progress'], ['in_progress', 'todo'], ['resolved', 'todo'], ['closed', 'todo']]) {
+    assert.ok(itTracker.planIssueMove(status, category).refuse, `${status} → ${category} is refused`);
+  }
+  for (const status of ['closed', 'cancelled']) {
+    t.mock.method(pool, 'query', async () => [[{ id: 55, status, entity_id: 1 }]]);
+    await assert.rejects(itTracker.assertIssueMove(900, 'in_progress', manager), { code: 'IT_TICKET_LINKED' });
+    pool.query.mock.restore();
+  }
+  // An issue with no ticket moves freely.
+  t.mock.method(pool, 'query', async () => [[]]);
+  assert.equal(await itTracker.assertIssueMove(901, 'done', { sub: 8, entityId: 1, permissions: [] }), null);
 });
 
 test('a status change that came from the tracker does not move the issue again', async (t) => {
@@ -85,8 +128,8 @@ test('a status change that came from the tracker does not move the issue again',
     'SELECT \\* FROM it_tickets WHERE id': [[{ id: 55, status: 'open', entity_id: 1, requester_id: 9, title: 'x' }]],
     'SELECT tracker_issue_id FROM it_tickets': [[{ tracker_issue_id: 900 }]],
   });
-  await itTicket.updateStatus(55, { status: 'in_progress', actorId: 3, canManage: true, fromTracker: true });
+  await itTicket.updateStatus(55, { status: 'in_progress', actorId: 3, canManage: true, entityId: 1, fromTracker: true });
   assert.equal(moves.length, 0);
-  await itTicket.updateStatus(55, { status: 'in_progress', actorId: 3, canManage: true });
+  await itTicket.updateStatus(55, { status: 'in_progress', actorId: 3, canManage: true, entityId: 1 });
   assert.equal(moves.length, 1);
 });

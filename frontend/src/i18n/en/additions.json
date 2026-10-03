@@ -673,5 +673,11 @@
  "Target yang tertinggal": "Targets off track",
  "Batch Data Accurate menunggu keputusan Anda": "Data Accurate batches waiting for your decision",
  "Semua beres. Tidak ada yang perlu Anda tindak hari ini": "All clear. Nothing needs your action today",
- "Terlalu sering memeriksa batch. Pemeriksaan dibatasi 6 kali per jam; coba lagi nanti.": "Too many batch reviews. Reviews are limited to 6 per hour; try again later."
+ "Terlalu sering memeriksa batch. Pemeriksaan dibatasi 6 kali per jam; coba lagi nanti.": "Too many batch reviews. Reviews are limited to 6 per hour; try again later.",
+ "memindahkan issue, tetapi Tiket IT tidak ikut berubah": "moved the issue, but the IT ticket did not change",
+ "Status tiket baru saja berubah. Muat ulang tiket lalu coba lagi.": "The ticket status just changed. Reload the ticket and try again.",
+ "Tiket IT sudah ditutup atau dibatalkan dan tidak dapat dibuka lagi dari Project Tracker.": "The IT ticket is already closed or cancelled and cannot be reopened from Project Tracker.",
+ "Tiket IT yang sudah dikerjakan tidak dapat kembali ke Open. Ubah statusnya dari halaman tiket.": "An IT ticket that is already being worked on cannot go back to Open. Change its status on the ticket page.",
+ "Issue ini terhubung ke Tiket IT; statusnya hanya dapat dipindahkan oleh pengelola tiket IT.": "This issue is linked to an IT ticket; only IT ticket managers can move its status.",
+ "Tercatat di aktivitas issue dan terlihat di halaman tiket": "Recorded in the issue activity and visible on the ticket page"
 }

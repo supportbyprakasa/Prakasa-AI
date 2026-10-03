@@ -70,7 +70,7 @@ async function list(req, res, next) {
 
 async function detail(req, res, next) {
   try {
-    const ticket = await itTicket.getTicket(req.params.id, { userId: req.user.sub, canManage: canManage(req) });
+    const ticket = await itTicket.getTicket(req.params.id, { userId: req.user.sub, canManage: canManage(req), entityId: req.user.entityId });
     return ok(res, ticket);
   } catch (error) {
     return handleServiceError(error, res, next);
@@ -96,7 +96,7 @@ async function myDevices(req, res, next) {
 async function updateStatus(req, res, next) {
   try {
     const result = await itTicket.updateStatus(req.params.id, {
-      status: req.body.status, actorId: req.user.sub, canManage: canManage(req),
+      status: req.body.status, actorId: req.user.sub, canManage: canManage(req), entityId: req.user.entityId,
     });
     return ok(res, result);
   } catch (error) {
@@ -107,7 +107,7 @@ async function updateStatus(req, res, next) {
 async function addComment(req, res, next) {
   try {
     const result = await itTicket.addComment(req.params.id, {
-      authorId: req.user.sub, body: req.body.body, canManage: canManage(req),
+      authorId: req.user.sub, body: req.body.body, canManage: canManage(req), entityId: req.user.entityId,
     });
     return ok(res, result, undefined, 201);
   } catch (error) {
@@ -118,7 +118,7 @@ async function addComment(req, res, next) {
 async function uploadAttachment(req, res, next) {
   try {
     const { id } = req.params;
-    const ticket = await itTicket.getTicket(id, { userId: req.user.sub, canManage: canManage(req) });
+    const ticket = await itTicket.getTicket(id, { userId: req.user.sub, canManage: canManage(req), entityId: req.user.entityId });
 
     if (!req.file) return fail(res, 'VALIDATION_ERROR', 'Wajib melampirkan file', 400);
 

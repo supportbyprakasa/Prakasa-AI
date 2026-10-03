@@ -28,6 +28,8 @@ import useSalesList from './useSalesList';
 import SalesAging from './SalesAging';
 import './sales.css';
 import { Mixed, data } from '../../i18n/NoTranslate';
+import AccurateWriteForm from '../accurate/AccurateWriteForm';
+import { requestStatus } from '../accurate/accurateWriteModel';
 
 const TABS = [
   { key: 'overview', label: 'Ikhtisar' },
@@ -130,6 +132,19 @@ export default function SalesCustomerDetail() {
   useOpenFromUrl('ubah', () => { if (canManage) setEditOpen(true); }, { enabled: Boolean(state.data) });
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  // "Ajukan ke Accurate" (owner, 3 Oct 2026): this customer proposed for
+  // Accurate; the Sales Supervisor/Head decides. An open proposal is shown.
+  const canPropose = permissions.includes('accurate.write.request');
+  const [proposeOpen, setProposeOpen] = useState(false);
+  const [openRequest, setOpenRequest] = useState(null);
+  const loadRequest = useCallback(async () => {
+    if (!canPropose) return;
+    try {
+      const r = await api.get('/accurate-write/requests', { params: { localId: id, status: 'open', limit: 1 } });
+      setOpenRequest((r.data.data || [])[0] || null);
+    } catch { setOpenRequest(null); }
+  }, [id, canPropose]);
+  useEffect(() => { loadRequest(); }, [loadRequest]);
 
   const load = useCallback(async () => {
     try {
@@ -170,8 +185,14 @@ export default function SalesCustomerDetail() {
   const tabs = TABS.filter((t) => t.key !== 'orders' || canSeeOrders);
   const canOrder = canCreateOrder && !accurate;
   const menu = [
+    canPropose && !openRequest ? { label: 'Ajukan ke Accurate', icon: 'send', onClick: () => setProposeOpen(true) } : null,
+    canPropose && openRequest ? { label: 'Lihat pengajuan ke Accurate', icon: 'fact_check', onClick: () => nav(`/data-accurate/pengajuan/${openRequest.id}`) } : null,
     canManage && !(orders?.count > 0) ? { label: 'Hapus pelanggan', icon: 'delete', tone: 'danger', onClick: () => setDeleteOpen(true) } : null,
   ].filter(Boolean);
+  const proposal = {
+    number: customer.customer_code, name: customer.name, category: customer.channel, contactPerson: customer.contact_person, phone: customer.phone,
+    businessPhone: customer.business_phone, email: customer.email, address: customer.address, city: customer.city,
+  };
   const lastOrder = customer.last_order_date
     ? `Order terakhir ${formatDate(customer.last_order_date)} (${daysAgoText(customer.daysSinceOrder).toLowerCase()})`
     : 'Belum pernah order';
@@ -188,8 +209,9 @@ export default function SalesCustomerDetail() {
             <span><Mixed parts={[data(customer.customer_code), data(customer.channel), lastOrder]} /></span>
           </span>
         )}
-        actions={(canManage || canOrder) ? (
+        actions={(canManage || canOrder || menu.length) ? (
           <>
+            {openRequest ? <StatusBadge status={requestStatus(openRequest.status).status} label={`Accurate: ${requestStatus(openRequest.status).label}`} /> : null}
             {canManage ? <Button variant="secondary" icon="edit" onClick={() => setEditOpen(true)}>Ubah pelanggan</Button> : null}
             {canOrder && orders?.lastOrderId ? (
               <Button variant="secondary" icon="repeat" to={`/sales/orders/new?customer=${customer.id}&dari=${orders.lastOrderId}`}>Order lagi</Button>
@@ -287,6 +309,10 @@ export default function SalesCustomerDetail() {
       </div>
 
       <CustomerFormModal open={editOpen} mode="edit" customer={customer} onClose={() => setEditOpen(false)} onSaved={load} />
+      <AccurateWriteForm
+        open={proposeOpen} recordType="customer" action="create" localId={Number(id)} initial={proposal}
+        onClose={() => setProposeOpen(false)} onSaved={loadRequest}
+      />
       <ConfirmDialog
         open={deleteOpen}
         title="Hapus pelanggan?"

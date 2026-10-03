@@ -123,5 +123,22 @@
  "Bulan $1, bulan lengkap terakhir": "$1, the last complete month",
  "Capaian terhadap target $1": "Progress against target, $1",
  "$1 paling lama dari $2": "The $1 longest-waiting of $2",
- "$1 dari target $2": "$1 of the $2 target"
+ "$1 dari target $2": "$1 of the $2 target",
+ "Ajukan perubahan $1 ke Accurate": "Request a $1 change in Accurate",
+ "Ajukan $1 baru ke Accurate": "Request a new $1 in Accurate",
+ "$1: $2 (tidak diubah dari sini).": "$1: $2 (not changed from here).",
+ "Disetujui. $1": "Approved. $1",
+ "Ditolak: $1": "Rejected: $1",
+ "Accurate menolak: $1": "Accurate refused: $1",
+ "Pelanggan di aplikasi: $1 · sama: $2 · belum ada di Accurate: $3 · nama berbeda: $4.": "Customers in the app: $1 · matching: $2 · not in Accurate: $3 · name differs: $4.",
+ "Pengajuan ke Accurate $1": "Request to Accurate $1",
+ "Kolom \"$1\" tidak bisa dikirim ke Accurate": "Field \"$1\" cannot be sent to Accurate",
+ "Kolom \"$1\" harus teks": "Field \"$1\" must be text",
+ "Kolom \"$1\" maksimal $2 karakter": "Field \"$1\" is at most $2 characters",
+ "Divisi $1 belum ada, jadi pengajuan belum bisa dibuat.": "Division $1 does not exist yet, so the request cannot be created.",
+ "$1 itu belum ada di data Accurate yang disetujui, jadi belum bisa diubah dari sini.": "That $1 is not in the approved Accurate data yet, so it cannot be changed from here.",
+ "$1 $2 sudah ada di Accurate ($3). Ajukan perubahan, bukan data baru.": "$1 $2 already exists in Accurate ($3). Request a change, not a new record.",
+ "$1 ini sudah punya pengajuan #$2 yang belum selesai.": "This $1 already has an open request #$2.",
+ "Kolom: $1": "Fields: $1",
+ "Matrix approval \"Pengajuan ke Accurate\" untuk $1 belum ada (migrasi 145), jadi pengajuan belum bisa dibuat.": "The \"Requests to Accurate\" approval matrix for $1 is missing (migration 145), so the request cannot be created."
 }

@@ -1,6 +1,6 @@
 {
  "note": "Dibuat oleh frontend/scripts/build-handbook-json.mjs dari frontend/src/pages/handbook/handbookContent.js. Jangan diubah dengan tangan.",
- "sourceHash": "bc75ef1c5f6dc77e0df50751ff731d2d1fa05ef464024e13a809c49d922ac177",
+ "sourceHash": "126660eaf171dfe1195721275e54ea211d3c7e119963b3533090e5cfeba09090",
  "routeAccess": {
   "/": {
    "open": true
@@ -116,6 +116,7 @@
   "/data-accurate": {
    "anyOf": [
     "accurate.batch.view",
+    "accurate.write.request",
     "sales.master.manage"
    ]
   },
@@ -4894,6 +4895,78 @@
       {
        "type": "p",
        "text": "Tab \"Perlu dibereskan di Accurate\" berisi data Accurate yang tidak lengkap atau tidak wajar (misalnya stok minus). Perbaikannya dilakukan di Accurate oleh pemilik datanya; tarikan berikutnya membawa data yang sudah benar."
+      }
+     ]
+    },
+    {
+     "id": "pengajuan-ke-accurate",
+     "title": "Pengajuan ke Accurate: pelanggan dan pemasok dari aplikasi",
+     "audience": {
+      "permissions": [
+       "accurate.write.request",
+       "accurate.batch.view"
+      ],
+      "roles": [
+       "sales",
+       "retail_commerce",
+       "procurement"
+      ]
+     },
+     "route": null,
+     "body": [
+      {
+       "type": "p",
+       "text": "Accurate tetap sumber kebenaran. Pelanggan atau pemasok yang dibuat atau diperbaiki di aplikasi tidak langsung masuk ke Accurate: ia menjadi \"Pengajuan ke Accurate\" yang diputuskan Supervisor atau Head divisi, lalu menunggu di antrean kirim. Tujuannya satu: data di aplikasi dan di Accurate sama, tanpa dobel dan tanpa selisih."
+      },
+      {
+       "type": "steps",
+       "items": [
+        "Buka pelanggan di \"Pelanggan\" → menu titik tiga → \"Ajukan ke Accurate\", atau tab \"Selisih pelanggan\" di \"Data Accurate\" → ikon kirim pada baris yang belum ada di Accurate. Pemasok: tab \"Pemasok\" di Procurement → \"Ajukan pemasok baru\" atau \"Ajukan perubahan ke Accurate\" di detail pemasok.",
+        "Periksa kolom yang akan dikirim (nama wajib; ID boleh kosong bila Accurate yang memberi nomor), lalu klik \"Ajukan\".",
+        "Supervisor atau Head divisi membuka notifikasinya atau \"Data Accurate\" → \"Pengajuan ke Accurate\", lalu \"Setujui\" atau \"Tolak\" dengan alasan. Pengaju tidak bisa memutuskan pengajuannya sendiri.",
+        "Setelah disetujui, pengajuan berstatus \"Disetujui, antre kirim\". Ia terkirim saat saluran kirim ke Accurate dinyalakan pemilik, dan berstatus \"Terkonfirmasi di Accurate\" setelah tarikan berikutnya menampilkannya."
+       ]
+      },
+      {
+       "type": "table",
+       "columns": [
+        "Status pengajuan",
+        "Artinya"
+       ],
+       "rows": [
+        [
+         "Menunggu persetujuan",
+         "Belum diputuskan; belum ada yang dikirim."
+        ],
+        [
+         "Disetujui, antre kirim",
+         "Disetujui; menunggu saluran kirim ke Accurate."
+        ],
+        [
+         "Terkirim ke Accurate",
+         "Sudah dikirim; menunggu tarikan berikutnya sebagai bukti."
+        ],
+        [
+         "Terkonfirmasi di Accurate",
+         "Accurate menampilkan data yang sama. Selesai."
+        ],
+        [
+         "Ditolak / Dibatalkan",
+         "Tidak ada yang dikirim. Ajukan ulang bila perlu."
+        ],
+        [
+         "Gagal dikirim",
+         "Accurate menolak; alasannya tertulis di pengajuan."
+        ]
+       ]
+      },
+      {
+       "type": "warning",
+       "text": "Satu data hanya boleh punya satu pengajuan yang belum selesai, dan ID yang sudah ada di Accurate tidak bisa diajukan sebagai data baru. Dengan begitu Accurate tidak pernah menerima data dobel dari aplikasi."
+      },
+      {
+       "type": "note",
+       "text": "Pengajuan bisa dibatalkan oleh pengaju atau Supervisor/Head selama belum terkirim. Tab \"Selisih pelanggan\" membandingkan pelanggan di aplikasi dengan data Accurate yang disetujui, per ID pelanggan; selisih diselesaikan dengan pengajuan, bukan dengan mengubah aplikasi."
       }
      ]
     },

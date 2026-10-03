@@ -48,6 +48,7 @@ export default function SalesCustomers() {
   const canManage = permissions.includes('sales.customer.manage');
   const canSeeOrders = permissions.includes('sales.order.view');
   const canMapPeople = permissions.includes('sales.master.manage');
+  const canPropose = permissions.includes('accurate.write.request');
   const [params, setParams] = useSearchParams();
   const status = STATUS_FILTERS.some((f) => f.key === params.get('status')) ? params.get('status') : '';
   const channel = params.get('channel') || '';
@@ -71,8 +72,9 @@ export default function SalesCustomers() {
       <PageHeader
         title="Pelanggan"
         description="Semua pelanggan Prakasa. Status Aktif, Dormant, dan Lost dihitung otomatis dari order terakhir."
-        actions={(canManage || canMapPeople) ? (
+        actions={(canManage || canMapPeople || canPropose) ? (
           <>
+            {canPropose ? <Button variant="secondary" icon="fact_check" to="/data-accurate?view=selisih">Selisih dengan Accurate</Button> : null}
             {canMapPeople ? <Button variant="secondary" icon="manage_accounts" onClick={() => setFilter('pemetaan', '1')}>Pemetaan sales</Button> : null}
             {canManage ? <Button icon="add" onClick={() => setOpen(true)}>Tambah pelanggan</Button> : null}
           </>

@@ -12,6 +12,8 @@ import useSalesList from '../sales/useSalesList';
 import { apiError } from '../sales/salesModel';
 import { PO_STATUS, VENDOR_FILTERS, daysText, formatDate, rateText, receivedText, rupiah } from './procurementModel';
 import { usePublishPrakasaAIContext } from '../../context/PrakasaAIToolContext';
+import { useAuth } from '../../context/AuthContext';
+import AccurateWriteForm from '../accurate/AccurateWriteForm';
 
 // Vendors from approved Accurate data: only what the vendor list gives. Contact,
 // address, NPWP, KTP and bank data are never taken from Accurate.
@@ -41,7 +43,7 @@ function vendorColumns(prices) {
 
 // A vendor has its own ID, but no page of its own in the app yet: its detail
 // opens in a dialog over the list.
-function VendorModal({ vendor, prices, onClose }) {
+function VendorModal({ vendor, prices, onClose, onPropose }) {
   const [state, setState] = useState({ loading: false, error: '', full: null });
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
@@ -92,6 +94,11 @@ function VendorModal({ vendor, prices, onClose }) {
             <DataGrid title="Harga terakhir per barang" columns={priceColumns} rows={full.lastPrices.map((p, i) => ({ ...p, id: i }))} searchable={false} exportName={`harga-${full.vendorNo}`} />
           ) : null}
           <div className="pw-text-helper">Kontak, alamat, NPWP, KTP, dan rekening pemasok tidak diambil dari Accurate — lihat di Accurate.</div>
+          {onPropose ? (
+            <div className="pw-row">
+              <Button variant="secondary" icon="send" onClick={() => onPropose(full)}>Ajukan perubahan ke Accurate</Button>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </Modal>
@@ -99,9 +106,14 @@ function VendorModal({ vendor, prices, onClose }) {
 }
 
 export default function ProcurementVendors({ status }) {
+  const { user } = useAuth();
+  const canPropose = (user?.permissions || []).includes('accurate.write.request');
   const [filter, setFilter] = useState('all');
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(null);
+  // "Ajukan ke Accurate": a new vendor, or a change to one (decided by the
+  // Procurement Supervisor/Head; nothing is sent from here).
+  const [propose, setPropose] = useState(null);
   const prices = Boolean(status?.prices);
   const list = useSalesList('/procurement/vendors', { filter: filter === 'all' ? '' : filter, q });
   usePublishPrakasaAIContext({ toolKey: 'procurement', visibleState: { tab: 'vendors', filter: filter === 'all' ? '' : filter, q, kode_pemasok: open?.vendorNo || '' } });
@@ -124,9 +136,17 @@ export default function ProcurementVendors({ status }) {
         filters={VENDOR_FILTERS.map((f) => <Chip key={f.key} selected={filter === f.key} onClick={() => setFilter(f.key)}>{f.label}</Chip>)}
         exportName={`pemasok-${filter}`}
         onRowClick={setOpen}
+        toolbarActions={canPropose ? <Button variant="secondary" icon="send" onClick={() => setPropose({ action: 'create' })}>Ajukan pemasok baru</Button> : null}
       />
       <div className="pw-text-helper">Kontak, alamat, NPWP, KTP, dan rekening pemasok tidak diambil dari Accurate.</div>
-      <VendorModal vendor={open} prices={prices} onClose={() => setOpen(null)} />
+      <VendorModal
+        vendor={open} prices={prices} onClose={() => setOpen(null)}
+        onPropose={canPropose ? (full) => { setOpen(null); setPropose({ action: 'update', accurateId: String(full.id), initial: { number: full.vendorNo, name: full.name, category: full.category || '' } }); } : null}
+      />
+      <AccurateWriteForm
+        open={Boolean(propose)} recordType="vendor" action={propose?.action} accurateId={propose?.accurateId} initial={propose?.initial}
+        onClose={() => setPropose(null)}
+      />
     </div>
   );
 }

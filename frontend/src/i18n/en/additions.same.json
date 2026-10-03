@@ -11,5 +11,10 @@
  "invoice $1",
  "unpaid",
  "paid",
- "$1 $2 · $3 NOO"
+ "$1 $2 · $3 NOO",
+ "pw-",
+ "semua",
+ "create",
+ "customer",
+ "vendor"
 ]

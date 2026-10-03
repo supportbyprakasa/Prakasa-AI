@@ -58,6 +58,8 @@ router.use('/integrations/accurate', require('./accurateIntegration.routes'));
 // Prakasa AI Wave D2: "Periksa dengan AI" on a Data Accurate batch. Not under
 // /sales: a review reads only, so it must not drop the cached Sales figures.
 router.use('/accurate', require('./accurateReview.routes'));
+// Pengajuan ke Accurate (master data proposed from the app, migration 145).
+router.use('/accurate-write', writes('sales:'), require('./accurateWrite.routes'));
 router.use('/approval-matrix', require('./approvalMatrix.routes'));
 router.use('/approval-delegations', require('./approvalDelegations.routes'));
 router.use('/signature-precheck', require('./signaturePrecheck.routes'));

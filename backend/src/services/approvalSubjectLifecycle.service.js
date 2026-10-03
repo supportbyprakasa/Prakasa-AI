@@ -55,6 +55,16 @@ register(['sales_accurate_batch', 'sales_accurate_sync'], {
   afterDecision: (outcome, actor) => require('./salesAccurateBatches.service').afterDecision(outcome, actor),
 });
 
+// Pengajuan ke Accurate (owner, 3 Oct 2026): a proposed customer or vendor is
+// decided by the division's Supervisor or Head; approving queues it for
+// Accurate, nothing is sent inside the decision. Request type registered too.
+register(['accurate_write_request', 'accurate_write'], {
+  assertCanDecide: (args) => require('./accurateWriteRequests.service').assertCanDecide(args),
+  canUserDecide: (args) => require('./accurateWriteRequests.service').canUserDecide(args),
+  applyApprovalDecision: (args) => require('./accurateWriteRequests.service').applyApprovalDecision(args),
+  afterDecision: (outcome, actor) => require('./accurateWriteRequests.service').afterDecision(outcome, actor),
+});
+
 // Layanan GA (People & Culture wave 2, row 2.2): "Lainnya" requests and vehicle
 // bookings are decided by the resolved approver; the requester never decides.
 // Request types registered too, so nobody opens such an approval by hand.

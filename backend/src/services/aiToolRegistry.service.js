@@ -710,8 +710,10 @@ const TOOLS = Object.freeze([
   tool('sales-orders', 'Data Sales', ['/sales/orders', '/sales/orders/new', '/sales/orders/:id', '/sales/orders/:id/edit', '/sales/orders/accurate/:id'], 'sales.order.view', {
     queryKeys: ['tab', 'periode', 'channel', 'status'],
   }),
-  tool('accurate-batches', 'Data Accurate', ['/data-accurate', '/data-accurate/:id'], ['accurate.batch.view', 'sales.master.manage'], {
-    queryKeys: ['status'],
+  // A "Pengajuan ke Accurate" (owner, 3 Oct 2026) has its own page under
+  // /data-accurate; proposers without the batch view get no AI page context there.
+  tool('accurate-batches', 'Data Accurate', ['/data-accurate', '/data-accurate/pengajuan/:id', '/data-accurate/:id'], ['accurate.batch.view', 'sales.master.manage'], {
+    queryKeys: ['status', 'view'],
   }),
   // Movements, or stock from Accurate only (Management Office oversight) — the same as the menu.
   tool('warehouse', 'Warehouse', ['/warehouse', '/warehouse/movements/:type/new', '/warehouse/movements/:type/:id', '/warehouse/movements/:type/:id/edit'], ['warehouse.movement.view', 'warehouse.stock.view'], {

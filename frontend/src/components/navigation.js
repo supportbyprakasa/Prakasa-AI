@@ -283,7 +283,9 @@ const EXTRA_ROUTE_PERMISSIONS = [
   ['/tasks', 'task.view'],
   // Accurate batches of the user's own division; opened from each division's
   // module (e.g. Data Sales → Data Accurate) and from approval notifications.
-  ['/data-accurate', ['accurate.batch.view', 'sales.master.manage']],
+  // Proposers (Sales, Retail Commerce, Procurement members) open the page for
+  // its "Pengajuan ke Accurate" tabs; the batch tabs stay with the deciders.
+  ['/data-accurate', ['accurate.batch.view', 'sales.master.manage', 'accurate.write.request']],
 ].map(([to, permission]) => ({ to, permission }));
 
 // Retired from the app entirely: no menu card, and no direct access either —

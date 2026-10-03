@@ -46,6 +46,7 @@ const SalesOrders = lazyPage(() => import('./pages/sales/SalesOrders'));
 const SalesOrderDetail = lazyPage(() => import('./pages/sales/SalesOrderDetail'));
 const SalesAccurateBatch = lazyPage(() => import('./pages/sales/SalesAccurateBatch'));
 const DataAccurate = lazyPage(() => import('./pages/accurate/DataAccurate'));
+const AccurateWriteRequestDetail = lazyPage(() => import('./pages/accurate/AccurateWriteRequestDetail'));
 const ProcurementDashboard = lazyPage(() => import('./pages/procurement/ProcurementDashboard'));
 const SalesOrderForm = lazyPage(() => import('./pages/sales/SalesOrderForm'));
 const SalesPrint = lazyPage(() => import('./pages/sales/SalesPrint'));
@@ -180,6 +181,7 @@ export default function App() {
           <Route path="sales/orders/:id" element={<SalesOrderDetail />} />
           <Route path="sales/orders/accurate/:id" element={<BatchRedirect />} />
           <Route path="data-accurate" element={<DataAccurate />} />
+          <Route path="data-accurate/pengajuan/:id" element={<AccurateWriteRequestDetail />} />
           <Route path="data-accurate/:id" element={<SalesAccurateBatch />} />
           <Route path="warehouse" element={<WarehouseDashboard />} />
           <Route path="warehouse/movements/:type/new" element={<WarehouseMovementForm />} />

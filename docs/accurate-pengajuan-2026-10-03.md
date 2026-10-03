@@ -59,7 +59,7 @@ Tab **Selisih pelanggan** (Data Accurate) membandingkan `sales_customers` dengan
 
 ### Kode
 
-- Migrasi `backend/migrations/145_accurate_write_requests.sql`: tabel `accurate_write_requests`, izin `accurate.write.request` (Sales, Retail Commerce, Procurement; Super Admin), matrix `accurate_write` untuk tiga divisi.
+- Migrasi `backend/migrations/145_accurate_write_requests.sql`: tabel `accurate_write_requests` dan matrix `accurate_write` untuk tiga divisi. Migrasi `146_accurate_write_permission.sql`: izin `accurate.write.request` (Sales, Retail Commerce, Procurement; Super Admin). Dipisah supaya skema bisa ikut deploy lebih dulu dan fitur dinyalakan belakangan: tanpa 146, tidak ada tombol atau tab pengajuan yang tampil ke pengguna.
 - `backend/src/services/accurateWriteRequests.service.js` (aturan, antrean, konfirmasi, rekonsiliasi), `services/accurate/accurateWriteTransport.js` (saluran kirim, tertutup), `controllers/accurateWrite.controller.js`, `routes/accurateWrite.routes.js` (`/api/v1/accurate-write/*`), `jobs/accurateWriteDispatch.js`, pendaftaran di `approvalSubjectLifecycle.service.js` dan `approvalLink.js`.
 - Frontend: `pages/accurate/accurateWriteModel.js`, `AccurateWriteForm.jsx`, `AccurateWriteRequests.jsx`, `AccurateWriteRequestDetail.jsx`; tab baru di `DataAccurate.jsx`; tombol di `SalesCustomerDetail.jsx`, `SalesCustomers.jsx`, `ProcurementVendors.jsx`; rute `/data-accurate/pengajuan/:id`.
 - Panduan: bab Data Accurate → "Pengajuan ke Accurate: pelanggan dan pemasok dari aplikasi".

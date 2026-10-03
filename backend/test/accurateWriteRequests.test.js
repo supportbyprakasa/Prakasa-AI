@@ -382,7 +382,7 @@ test('reconciliation: app customers Accurate lacks or names differently, with an
 
 // ------------------------------------------------------------------ policy
 
-test('standard roles: Sales, Retail Commerce and Procurement may propose; nobody else; migration 145 seeds the permission and the matrix', () => {
+test('standard roles: Sales, Retail Commerce and Procurement may propose; nobody else; migrations 145/146 seed the matrix and the permission', () => {
   const may = STANDARD_ROLES.filter((r) => r.permissions.includes('accurate.write.request')).map((r) => r.key).sort();
   assert.deepEqual(may, [
     'procurement.head', 'procurement.member', 'procurement.supervisor',
@@ -392,8 +392,11 @@ test('standard roles: Sales, Retail Commerce and Procurement may propose; nobody
   const sql = fs.readFileSync(path.join(__dirname, '../migrations/145_accurate_write_requests.sql'), 'utf8');
   assert.match(sql, /CREATE TABLE IF NOT EXISTS accurate_write_requests/);
   assert.match(sql, /UNIQUE KEY uq_accurate_write_key \(entity_id, request_key\)/);
-  assert.match(sql, /\('accurate\.write\.request'/);
   assert.match(sql, /'accurate_write', 1, 1, supervisor\.id, head\.id/);
   assert.match(sql, /d\.code IN \('sales', 'retail_commerce', 'procurement'\)/);
-  for (const key of ['sales.member', 'retail_commerce.head', 'procurement.supervisor']) assert.match(sql, new RegExp(`'${key}'`));
+  // The permission (what makes the feature visible) is its own migration, so it can be switched on later.
+  assert.doesNotMatch(sql, /accurate\.write\.request/);
+  const grant = fs.readFileSync(path.join(__dirname, '../migrations/146_accurate_write_permission.sql'), 'utf8');
+  assert.match(grant, /\('accurate\.write\.request'/);
+  for (const key of ['sales.member', 'retail_commerce.head', 'procurement.supervisor']) assert.match(grant, new RegExp(`'${key}'`));
 });

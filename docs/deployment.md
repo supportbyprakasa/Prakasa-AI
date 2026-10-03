@@ -500,7 +500,8 @@ Catatan:
   mendukung `CRON_TZ` (job jalan 7 jam lebih awal/lambat), hapus baris itu
   dan geser jam ke zona server (`date` di Terminal; WIB = UTC+7, mis. 07:00
   WIB = `0 0 * * *` UTC).
-- `accurateWriteDispatch.js` (Pengajuan ke Accurate, migrasi 145) hanya
+- `accurateWriteDispatch.js` (Pengajuan ke Accurate, migrasi 145; fitur tampil
+  ke pengguna setelah migrasi 146 dijalankan) hanya
   mencoba antrean dan mengonfirmasi pengajuan dari mirror. Selama
   `ACCURATE_WRITE_ENABLED` kosong ia tidak mengirim apa pun ke Accurate.
 - `accurateSync.js` memakai kunci database (`GET_LOCK`), jadi dua jalan yang

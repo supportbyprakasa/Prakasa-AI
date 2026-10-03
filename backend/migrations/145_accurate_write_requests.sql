@@ -7,7 +7,8 @@
 -- division's Supervisor or Head, then waits in the queue until the send
 -- channel is switched on (ACCURATE_WRITE_ENABLED) and confirmed by the next
 -- pull. One open request per target, one request_key per submission, so a
--- change can never reach Accurate twice. Idempotent.
+-- change can never reach Accurate twice. The permission that shows the
+-- feature to users is migration 146, so it can be switched on later. Idempotent.
 -- ============================================================
 SET NAMES utf8mb4;
 
@@ -50,30 +51,6 @@ CREATE TABLE IF NOT EXISTS accurate_write_requests (
   CONSTRAINT fk_accurate_write_department FOREIGN KEY (department_id) REFERENCES departments(id),
   CONSTRAINT fk_accurate_write_requested_by FOREIGN KEY (requested_by) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Who may propose: everyone who keeps customers (Sales, Retail Commerce) or
--- works with vendors (Procurement). Deciding stays with the approval engine
--- (approval.decide + the matrix below). Mirrors standardOrganization.js.
-INSERT IGNORE INTO permissions (code, description) VALUES
-('accurate.write.request', 'Ajukan perubahan data master (pelanggan, pemasok) ke Accurate lewat persetujuan Supervisor/Head');
-
-INSERT IGNORE INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id
-  FROM roles r
-  JOIN permissions p ON p.code = 'accurate.write.request'
- WHERE r.deleted_at IS NULL
-   AND r.role_key IN (
-     'sales.member', 'sales.supervisor', 'sales.head',
-     'retail_commerce.member', 'retail_commerce.supervisor', 'retail_commerce.head',
-     'procurement.member', 'procurement.supervisor', 'procurement.head'
-   );
-
-INSERT IGNORE INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id
-  FROM roles r
-  JOIN permissions p ON p.code = 'accurate.write.request'
- WHERE (r.role_key = 'system.super_admin' OR LOWER(r.name) IN ('super admin', 'superadmin'))
-   AND r.deleted_at IS NULL;
 
 -- (role_key and departments.code differ in collation on databases upgraded
 -- over time, hence the explicit COLLATE.)

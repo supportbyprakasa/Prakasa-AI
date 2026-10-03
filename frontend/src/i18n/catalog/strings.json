@@ -99380,14 +99380,6 @@
   "chunk": "backend-seeds"
  },
  {
-  "text": "Ajukan perubahan data master (pelanggan, pemasok) ke Accurate lewat persetujuan Supervisor/Head",
-  "kind": "exact",
-  "sources": [
-   "backend/migrations/145_accurate_write_requests.sql:58"
-  ],
-  "chunk": "backend-seeds"
- },
- {
   "text": "Pengajuan ke Accurate — $1",
   "kind": "pattern",
   "regex": "^Pengajuan ke Accurate — ([\\s\\S]*?)$",
@@ -99395,7 +99387,15 @@
    "d.name"
   ],
   "sources": [
-   "backend/migrations/145_accurate_write_requests.sql:87"
+   "backend/migrations/145_accurate_write_requests.sql:64"
+  ],
+  "chunk": "backend-seeds"
+ },
+ {
+  "text": "Ajukan perubahan data master (pelanggan, pemasok) ke Accurate lewat persetujuan Supervisor/Head",
+  "kind": "exact",
+  "sources": [
+   "backend/migrations/146_accurate_write_permission.sql:15"
   ],
   "chunk": "backend-seeds"
  }

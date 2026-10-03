@@ -25,6 +25,7 @@
     "check:batch5": "node src/scripts/checkBatch5.js",
     "check:batch6": "node src/scripts/checkBatch6.js",
     "check:ledger": "node src/scripts/checkLedger.js",
+    "report:subscriptions": "node src/scripts/reportSubscriptionReconcile.js",
     "test:db-config": "node --test test/dbConnectionConfig.test.js",
     "test:ai-documents": "node --test test/aiDocumentArtifact.test.js",
     "gateway:claude-team": "node src/scripts/claudeTeamGateway.js"

@@ -4,6 +4,20 @@ Panduan untuk mencoba revisi F01–F27 di mesin lokal (folder `prakasa-work-os`)
 
 Semua langkah di bawah memakai **database lokal**, bukan database produksi. Jangan mengisi `backend/.env` lokal dengan kredensial produksi.
 
+## Cara cepat: satu perintah
+
+Butuh Node.js dan MySQL 8 (di Mac: `brew install node mysql@8.0 && brew services start mysql@8.0 && brew link mysql@8.0 --force`). Setelah branch diambil (langkah 1):
+
+```bash
+bash scripts/run-local.sh
+```
+
+Skrip ini membuat database dan user MySQL lokal, `backend/.env` dan `frontend/.env` untuk lokal (file yang sudah ada tidak ditimpa), memasang dependensi, menjalankan migrasi, membuat Super Admin lokal, lalu menyalakan backend dan frontend. Buka `http://localhost:5173/login` dan masuk dengan `superadmin@prakasagroup.com` / `Uji-Lokal-2026!x`. Hentikan dengan Ctrl+C; jalankan ulang perintah yang sama untuk menyalakan lagi.
+
+Skrip berhenti bila `backend/.env` berisi `NODE_ENV=production` atau menunjuk ke database di luar komputer ini. Bila root MySQL memakai kata sandi: `MYSQL_ADMIN="mysql -uroot -p" bash scripts/run-local.sh`.
+
+Langkah 2–3 di bawah adalah cara manual yang sama.
+
 ## 1. Ambil branch revisi
 
 ```bash

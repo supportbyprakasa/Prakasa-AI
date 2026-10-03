@@ -58,13 +58,16 @@ function validDate(value, field, { notAfterToday = false, now } = {}) {
   return text;
 }
 
-// What an invoice's recorded payments mean, from the ledger.
+// What an invoice's recorded payments mean, from the ledger. An invoice marked
+// paid whose recorded payments fall short (older data: zero or partial
+// payments before the revision) is 'paid_short', never shown as settled.
 function paymentState(invoice, paidCents) {
   const totalCents = Math.round(Number(invoice.total_amount ?? invoice.totalAmount ?? 0) * 100);
   const outstanding = Math.max(0, totalCents - paidCents);
   let state = 'unpaid';
   if (invoice.status === 'void') state = 'void';
-  else if (invoice.status === 'paid' || (totalCents > 0 && outstanding === 0)) state = 'paid';
+  else if (totalCents > 0 && outstanding === 0) state = 'paid';
+  else if (invoice.status === 'paid') state = 'paid_short';
   else if (paidCents > 0) state = 'partial';
   return { paidAmount: fromCents(paidCents), outstandingAmount: fromCents(outstanding), paymentState: state };
 }

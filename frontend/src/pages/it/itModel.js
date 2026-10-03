@@ -293,7 +293,20 @@ export const INVOICE_STATUS_HELP = {
   void: 'Invoice dibatalkan dan tidak dapat dibayar.',
 };
 // What the payments recorded against an invoice add up to (server: paymentState).
-export const PAYMENT_STATE_LABELS = { unpaid: 'Belum ada pembayaran', partial: 'Dibayar sebagian', paid: 'Lunas', void: 'Batal' };
+export const PAYMENT_STATE_LABELS = { unpaid: 'Belum ada pembayaran', partial: 'Dibayar sebagian', paid: 'Lunas', paid_short: 'Pembayaran tercatat kurang', void: 'Batal' };
+
+// An invoice marked paid whose recorded payments do not cover it (older data,
+// see npm run report:subscriptions): flagged, never shown as settled.
+export function invoicePaymentView(inv) {
+  if (inv.paymentState === 'paid_short') {
+    return {
+      status: 'paid_short',
+      label: 'Lunas, perlu dicek',
+      help: 'Invoice ditandai lunas, tetapi pembayaran yang tercatat belum menutup totalnya. Periksa bukti bayar bersama Finance.',
+    };
+  }
+  return { status: inv.status, label: INVOICE_STATUS_LABELS[inv.status], help: INVOICE_STATUS_HELP[inv.status] || '' };
+}
 
 // The bookkeeping reference typed by hand: Finance books in Accurate. The app
 // neither reads nor writes Accurate from here (the database column keeps its

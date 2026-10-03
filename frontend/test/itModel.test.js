@@ -201,6 +201,16 @@ test('F26: invoice next steps — attach a PDF, verify only after upload, void o
   assert.equal(itModel.INVOICE_STATUS_LABELS.paid, 'Lunas (tercatat)', 'paid names the register, not a bank confirmation');
 });
 
+test('F25: an invoice marked paid whose payments fall short is flagged, not shown as settled', () => {
+  const short = itModel.invoicePaymentView({ status: 'paid', paymentState: 'paid_short' });
+  assert.equal(short.status, 'paid_short');
+  assert.equal(short.label, 'Lunas, perlu dicek');
+  assert.doesNotMatch(short.help, /sudah menutup/);
+  assert.deepEqual(itModel.invoicePaymentView({ status: 'paid', paymentState: 'paid' }), {
+    status: 'paid', label: 'Lunas (tercatat)', help: 'Pembayaran yang dicatat di sini sudah menutup total invoice.',
+  });
+});
+
 test('F03: a renewal within 30 days or past its date is flagged; paused or cancelled are not', () => {
   const today = new Date('2026-10-03T03:00:00Z');
   assert.deepEqual(itModel.renewalNotice({ renewalDate: '2026-10-13', status: 'expiring' }, today), { days: 10, overdue: false });

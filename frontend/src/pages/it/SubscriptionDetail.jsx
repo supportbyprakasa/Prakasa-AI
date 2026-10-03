@@ -24,8 +24,8 @@ import { defineAIForm, f } from '../../components/ai/aiFormFields';
 import useOpenFromUrl from '../../components/ai/useOpenFromUrl';
 import usePrakasaAIForm from '../../components/ai/usePrakasaAIForm';
 import {
-  BILLING_CYCLE_LABELS, CURRENCY_HINT, DEFAULT_CURRENCY, INVOICE_STATUS_HELP, INVOICE_STATUS_LABELS, LEDGER_REFERENCE_HINT, LEDGER_REFERENCE_LABEL,
-  PAYMENT_STATE_LABELS, formatAmount, invoiceActions, labelFor, licenseActions, newRequestKey, optionsFrom,
+  BILLING_CYCLE_LABELS, CURRENCY_HINT, DEFAULT_CURRENCY, LEDGER_REFERENCE_HINT, LEDGER_REFERENCE_LABEL,
+  PAYMENT_STATE_LABELS, formatAmount, invoiceActions, invoicePaymentView, labelFor, licenseActions, newRequestKey, optionsFrom,
   payableInvoiceOptions, renewalNotice, subscriptionAbilities,
 } from './itModel';
 import './it-tickets.css';
@@ -328,16 +328,17 @@ export default function SubscriptionDetail() {
               <ul className="it-lines">
                 {sub.invoices.map((inv) => {
                   const actions = invoiceActions(inv, can);
+                  const view = invoicePaymentView(inv);
                   return (
                     <li key={inv.id} className="it-line">
                       <div className="it-line__main">
                         <span data-no-translate="" className="it-line__title">{inv.invoiceNumber}</span>
                         <span className="it-line__meta">
-                          {`${formatAmount(inv.totalAmount, inv.currency)} · ${PAYMENT_STATE_LABELS[inv.paymentState] || EMPTY}${inv.paymentState === 'partial' ? ` · sisa ${formatAmount(inv.outstandingAmount, inv.currency)}` : ''}${inv.hasFile ? '' : ' · belum ada PDF'}`}
+                          {`${formatAmount(inv.totalAmount, inv.currency)} · ${PAYMENT_STATE_LABELS[inv.paymentState] || EMPTY}${inv.paymentState === 'partial' ? ` · sisa ${formatAmount(inv.outstandingAmount, inv.currency)}` : ''}${inv.paymentState === 'paid_short' ? ` · kurang ${formatAmount(inv.outstandingAmount, inv.currency)}` : ''}${inv.hasFile ? '' : ' · belum ada PDF'}`}
                         </span>
-                        <span className="it-line__meta">{INVOICE_STATUS_HELP[inv.status] || ''}</span>
+                        <span className="it-line__meta">{view.help}</span>
                       </div>
-                      <StatusBadge status={inv.status} label={INVOICE_STATUS_LABELS[inv.status]} />
+                      <StatusBadge status={view.status} label={view.label} />
                       {inv.fileUrl ? <IconButton label="Buka PDF invoice" icon="open_in_new" size="sm" href={inv.fileUrl} target="_blank" rel="noreferrer" /> : null}
                       {actions.includes('attach') ? <IconButton label="Unggah PDF invoice" icon="upload_file" size="sm" onClick={() => setFileTarget(inv)} /> : null}
                       {actions.includes('verify') ? <IconButton label="Tandai terverifikasi" icon="task_alt" size="sm" onClick={() => setVerifyTarget({ invoice: inv, status: 'verified' })} /> : null}

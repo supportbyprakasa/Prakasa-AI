@@ -196,11 +196,14 @@ test('F25: a payment date in the future or not a date is refused', async (t) => 
   assert.equal(ok.paymentState, 'partial');
 });
 
-test('paymentState reads the ledger: unpaid, partial, paid, void', () => {
+test('paymentState reads the ledger: unpaid, partial, paid, paid_short, void', () => {
   assert.equal(billing.paymentState({ status: 'verified', total_amount: 1000 }, 0).paymentState, 'unpaid');
   assert.deepEqual(billing.paymentState({ status: 'verified', total_amount: 1000 }, 10000), { paidAmount: 100, outstandingAmount: 900, paymentState: 'partial' });
   assert.equal(billing.paymentState({ status: 'paid', total_amount: 1000 }, 100000).paymentState, 'paid');
   assert.equal(billing.paymentState({ status: 'void', total_amount: 1000 }, 0).paymentState, 'void');
+  // Older data: marked paid, but the recorded payments do not cover the total.
+  assert.deepEqual(billing.paymentState({ status: 'paid', total_amount: 1000 }, 0), { paidAmount: 0, outstandingAmount: 1000, paymentState: 'paid_short' });
+  assert.equal(billing.paymentState({ status: 'paid', total_amount: 1000 }, 40000).paymentState, 'paid_short');
 });
 
 // ------------------------------------------------------------------- F26

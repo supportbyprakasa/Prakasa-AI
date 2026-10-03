@@ -42,6 +42,7 @@ const STATUSES = {
   pending_approval: ['warning', 'Menunggu persetujuan'],
   pending_document_check: ['warning', 'Pemeriksaan dokumen'],
   pending_upload: ['warning', 'Menunggu unggah'],
+  paid_short: ['warning', 'Lunas, perlu dicek'],
   waiting_on_user: ['warning', 'Menunggu balasan'],
   revision_requested: ['warning', 'Perlu revisi'],
   need_follow_up: ['warning', 'Perlu follow-up'],

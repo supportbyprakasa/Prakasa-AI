@@ -6,7 +6,7 @@ Semua langkah di bawah memakai **database lokal**, bukan database produksi. Jang
 
 ## Cara cepat: satu perintah
 
-Butuh Node.js dan MySQL 8 (di Mac: `brew install node mysql@8.0 && brew services start mysql@8.0 && brew link mysql@8.0 --force`). Setelah branch diambil (langkah 1):
+Butuh Node.js dan MySQL 8 atau 9 (MySQL 9 dari Homebrew juga bisa; nyalakan servernya dengan `mysql.server start`). Tanpa Homebrew: installer resmi Node.js (.pkg dari nodejs.org) dan MySQL (DMG dari dev.mysql.com). Setelah branch diambil (langkah 1):
 
 ```bash
 bash scripts/run-local.sh
@@ -31,7 +31,7 @@ Bila ada perubahan lokal yang belum di-commit, simpan dulu (`git stash`) atau pa
 
 ## 2. Siapkan backend dan database lokal
 
-Butuh MySQL 8 lokal (migrasi memakai collation `utf8mb4_0900_ai_ci`; MariaDB tidak bisa).
+Butuh MySQL 8 atau 9 lokal (migrasi memakai collation `utf8mb4_0900_ai_ci`; MariaDB tidak bisa). Pengujian revisi dijalankan di MySQL 8.0.
 
 ```bash
 cd backend

@@ -4,7 +4,7 @@
 #   bash scripts/run-local.sh
 #
 # Yang dilakukan:
-#   1. Memeriksa Node.js dan MySQL 8 lokal.
+#   1. Memeriksa Node.js dan MySQL lokal (8 atau 9).
 #   2. Membuat database dan user MySQL lokal (bila belum ada).
 #   3. Membuat backend/.env dan frontend/.env untuk lokal (bila belum ada).
 #      File .env yang sudah ada tidak ditimpa; skrip berhenti bila isinya
@@ -41,15 +41,17 @@ command -v mysql >/dev/null || fail "MySQL belum terpasang. Pasang dulu:
   brew install mysql@8.0 && brew services start mysql@8.0 && brew link mysql@8.0 --force"
 MYSQL_VERSION="$(mysql --version)"
 case "$MYSQL_VERSION" in
-  *MariaDB*) fail "Terdeteksi MariaDB ($MYSQL_VERSION). Butuh MySQL 8 (collation utf8mb4_0900_ai_ci)." ;;
-  *" 8."*|*"Ver 8"*|*"Distrib 8"*) ;;
-  *) fail "Butuh MySQL 8, terdeteksi: $MYSQL_VERSION" ;;
+  *MariaDB*) fail "Terdeteksi MariaDB ($MYSQL_VERSION). Butuh MySQL 8 atau 9 (collation utf8mb4_0900_ai_ci)." ;;
+  # MySQL 8 is what CI and the sandbox run; 9 keeps utf8mb4_0900_ai_ci and the
+  # syntax the migrations use, so it is accepted too.
+  *" 8."*|*"Ver 8"*|*"Distrib 8"*|*" 9."*|*"Ver 9"*|*"Distrib 9"*) ;;
+  *) fail "Butuh MySQL 8 atau 9, terdeteksi: $MYSQL_VERSION" ;;
 esac
 
 # 2. Database dan user lokal
 say "Menyiapkan database lokal $DB_NAME"
 $MYSQL_ADMIN -e "SELECT 1" >/dev/null 2>&1 \
-  || fail "Tidak bisa masuk ke MySQL dengan '$MYSQL_ADMIN'. Pastikan MySQL berjalan (brew services start mysql@8.0),
+  || fail "Tidak bisa masuk ke MySQL dengan '$MYSQL_ADMIN'. Pastikan server MySQL berjalan (mysql.server start),
   atau jalankan ulang dengan MYSQL_ADMIN=\"mysql -uroot -p\" bila root memakai kata sandi."
 $MYSQL_ADMIN -e "
   CREATE DATABASE IF NOT EXISTS \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;

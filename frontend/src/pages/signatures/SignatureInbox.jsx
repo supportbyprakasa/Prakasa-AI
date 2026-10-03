@@ -1,142 +1,79 @@
-import { Eye } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
-import Badge from '../../components/Badge';
-import Button from '../../components/Button';
-import DataTable from '../../components/DataTable';
-import FilterBar from '../../components/FilterBar';
-import { toast } from '../../components/Toast';
+import Chip from '../../components/Chip';
+import Page from '../../components/Page';
+import StatusBadge from '../../components/StatusBadge';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { Translate } from '../../i18n/NoTranslate';
+import { statusLabel } from '../../components/statusTone';
+import { SIGNATURE_LEVEL_LABELS, assignedSignerLabel, signedByLabel } from './signatureModel';
 
-const STATUS_TONE = {
-  pending: 'warning',
-  approved: 'info',
-  rejected: 'error',
-  signed: 'success',
-  cancelled: 'default',
-};
+const STATUS_FILTERS = [
+  { value: '', label: 'Semua status' },
+  ...['pending', 'approved', 'rejected', 'signed', 'cancelled'].map((value) => ({ value, label: statusLabel(value) })),
+];
+const errorMessage = (error, fallback) => error.response?.data?.error?.message || fallback;
 
 export default function SignatureInbox() {
   const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const response = await api.get('/signatures', {
         params: { status: status || undefined },
       });
       setRows(response.data.data || []);
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal memuat signature request', 'error');
+      setLoadError(errorMessage(error, 'Permintaan tanda tangan gagal dimuat.'));
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    load();
   }, [status]);
 
+  useEffect(() => { load(); }, [load]);
+
   return (
-    <div>
-      <div style={{ marginBottom: 12 }}>
-        <h2 style={{ margin: 0 }}>Signatures</h2>
-        <div
-          style={{
-            marginTop: 4,
-            fontSize: 13,
-            color: 'var(--color-text-muted)',
-          }}
-        >
-          Signature request menampilkan signer yang ditunjuk terpisah dari user
-          yang benar-benar sudah menandatangani.
-        </div>
-      </div>
-
-      <FilterBar
-        filters={[
-          {
-            name: 'status',
-            label: 'Status',
-            type: 'select',
-            options: [
-              { value: 'pending', label: 'Pending' },
-              { value: 'approved', label: 'Approved' },
-              { value: 'rejected', label: 'Rejected' },
-              { value: 'signed', label: 'Signed' },
-              { value: 'cancelled', label: 'Cancelled' },
-            ],
-          },
-        ]}
-        values={{ status }}
-        onChange={(next) => setStatus(next.status || '')}
-        onReset={() => setStatus('')}
-      />
-
-      <DataTable
+    <Page
+      title="Permintaan tanda tangan"
+      description="Penanda tangan yang ditunjuk tampil terpisah dari orang yang benar-benar sudah menandatangani."
+    >
+      <DataGrid
+        title="Permintaan tanda tangan"
+        showTitle={false}
+        exportName="permintaan-tanda-tangan"
         loading={loading}
+        error={loadError}
+        onRetry={load}
         rows={rows}
-        empty="Belum ada signature request"
+        empty="Belum ada permintaan tanda tangan"
+        onRowClick={(row) => navigate(`/signatures/${row.id}`)}
+        filters={STATUS_FILTERS.map((option) => (
+          <Chip key={option.value || 'all'} selected={status === option.value} onClick={() => setStatus(option.value)}>
+            {option.label}
+          </Chip>
+        ))}
         columns={[
-          { key: 'id', title: 'ID' },
-          { key: 'documentTitle', title: 'Dokumen' },
-          {
-            key: 'assignedSigner',
-            title: 'Signer Ditunjuk',
-            render: (row) =>
-              row.assignedSignerUserName ||
-              row.assignedSignerRoleName ||
-              (row.assignedSignerUserId
-                ? `User #${row.assignedSignerUserId}`
-                : row.assignedSignerRoleId
-                  ? `Role #${row.assignedSignerRoleId}`
-                  : '—'),
-          },
-          {
-            key: 'signedBy',
-            title: 'Signed By',
-            render: (row) =>
-              row.signedByName ||
-              (row.signedBy ? `User #${row.signedBy}` : '—'),
-          },
+          { key: 'id', header: 'ID', width: 64 },
+          { key: 'documentTitle', header: 'Dokumen' },
+          { key: 'assignedSigner', header: 'Penanda tangan ditunjuk', exportValue: assignedSignerLabel, render: (row) => (row.assignedSignerUserName ? assignedSignerLabel(row) : <Translate>{assignedSignerLabel(row)}</Translate>) },
+          { key: 'signedBy', header: 'Ditandatangani oleh', exportValue: signedByLabel, render: (row) => (row.signedByName ? signedByLabel(row) : <Translate>{signedByLabel(row)}</Translate>) },
           {
             key: 'signatureType',
-            title: 'Level',
-            render: (row) => row.signatureType || '—',
+            header: 'Level',
+            exportValue: (row) => SIGNATURE_LEVEL_LABELS[row.signatureType] || row.signatureType || '',
+            render: (row) => SIGNATURE_LEVEL_LABELS[row.signatureType] || row.signatureType,
           },
-          {
-            key: 'status',
-            title: 'Status',
-            render: (row) => (
-              <Badge tone={STATUS_TONE[row.status] || 'default'}>{row.status}</Badge>
-            ),
-          },
-          {
-            key: 'signedAt',
-            title: 'Ditandatangani',
-            render: (row) =>
-              row.signedAt
-                ? new Date(row.signedAt).toLocaleString('id-ID')
-                : '—',
-          },
-          {
-            key: 'actions',
-            title: 'Aksi',
-            render: (row) => (
-              <Button
-                variant="secondary"
-                onClick={() => navigate(`/signatures/${row.id}`)}
-              >
-                <Eye size={14} />
-                Detail
-              </Button>
-            ),
-          },
+          { key: 'status', header: 'Status', exportValue: (row) => statusLabel(row.status), render: (row) => <StatusBadge status={row.status} /> },
+          { key: 'signedAt', header: 'Waktu tanda tangan', type: 'datetime' },
         ]}
       />
-    </div>
+    </Page>
   );
 }

@@ -1,0 +1,8 @@
+{
+ "Paling banyak $1 lampiran per pesan": "At most $1 attachments per message",
+ "Lampirkan foto, scan, atau dokumen (maks. $1 file per pesan, $2 per file) — bisa juga seret atau tempel": "Attach a photo, scan, or document (max. $1 files per message, $2 per file) — you can also drag or paste",
+ "Ukuran file maksimum $1.": "Maximum file size $1.",
+ "Foto lebih dari $1 tidak bisa dibaca AI. Perkecil fotonya atau potong bagian yang penting.": "A photo over $1 cannot be read by the AI. Shrink the photo or crop the important part.",
+ "Paling banyak $1 lampiran per pesan. $2 file tidak dilampirkan.": "At most $1 attachments per message. $2 files were not attached.",
+ "Paling banyak $1 lampiran per pesan.": "At most $1 attachments per message."
+}

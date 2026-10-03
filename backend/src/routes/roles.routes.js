@@ -17,5 +17,6 @@ router.get('/', requirePermission('role.manage'), ctrl.list);
 router.get('/:id', requirePermission('role.manage'), ctrl.detail);
 router.post('/', requirePermission('role.manage'), validate(createSchema), ctrl.create);
 router.patch('/:id', requirePermission('role.manage'), validate(updateSchema), ctrl.update);
+router.post('/:id/reset-standard', requirePermission('role.manage'), ctrl.resetStandard);
 router.delete('/:id', requirePermission('role.manage'), ctrl.remove);
 module.exports = router;

@@ -1,0 +1,39 @@
+/* Global search result rows (SearchResultCard) — list rows inside a white
+   panel, like DataGrid rows (docs/ui-guideline.md §4.9): 1px --pw-divider
+   between rows, hover/focus/press from .pw-state-layer. */
+.pw-search-results { margin: 0; padding: 0; list-style: none; }
+.pw-search-result + .pw-search-result { border-top: 1px solid var(--pw-divider); }
+
+.pw-search-result__row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  min-height: 72px;
+  padding: 12px 24px;
+  color: var(--pw-text);
+  font-family: var(--pw-font-roboto);
+  text-decoration: none;
+}
+a.pw-search-result__row:hover { text-decoration: none; }
+.pw-search-result__row.pw-state-layer:focus-visible { outline-offset: -2px; }
+
+.pw-search-result__icon { display: flex; height: 24px; color: var(--pw-text-muted); }
+.pw-search-result__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pw-search-result__title { color: var(--pw-text); font-size: var(--pw-font-body); font-weight: 500; line-height: 20px; overflow-wrap: anywhere; }
+.pw-search-result__subtitle { color: var(--pw-text-muted); font-size: var(--pw-font-sm); line-height: 20px; overflow-wrap: anywhere; }
+.pw-search-result__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 16px;
+  color: var(--pw-text-meta);
+  font-size: var(--pw-font-xs);
+  line-height: 18px;
+}
+.pw-search-result__pair { white-space: nowrap; }
+
+@media (max-width: 600px) {
+  .pw-search-result__row { gap: 12px; padding: 12px 16px; }
+  .pw-search-result__pair { white-space: normal; }
+}

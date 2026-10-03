@@ -1,0 +1,81 @@
+/* Button — generation B pill (docs/ui-guideline.md §4.1). IconButton lives in
+   icon-button.css. Hover is the state layer only (state.css): 5% on the filled
+   variants, 4% on the others, `opacity 75ms linear`; no hover shadow. */
+.pw-button {
+  --pw-state-layer-hover: var(--pw-state-hover);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-content: safe center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: var(--pw-control-height);
+  max-width: 100%;
+  margin: 0;
+  padding: 0 24px;
+  border: 0;
+  border-radius: var(--pw-radius-full);
+  font-family: var(--pw-font-flex);
+  font-size: var(--pw-font-body);
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: normal;
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Each variant sets its colours once; a loading button (disabled, aria-busy)
+   reads them again so it keeps its look. */
+.pw-button--primary { --pw-state-layer-hover: var(--pw-state-hover-filled); --pw-button-bg: var(--pw-primary); --pw-button-fg: var(--pw-on-primary); }
+.pw-button--danger { --pw-state-layer-hover: var(--pw-state-hover-filled); --pw-button-bg: var(--pw-error); --pw-button-fg: var(--pw-on-primary); }
+.pw-button--tonal { --pw-state-layer-hover: var(--pw-state-hover-filled); --pw-button-bg: var(--pw-secondary-container); --pw-button-fg: var(--pw-on-secondary-container); }
+.pw-button--secondary { --pw-button-bg: transparent; --pw-button-fg: var(--pw-primary); box-shadow: inset 0 0 0 1px var(--pw-outline-control); }
+.pw-button--text { --pw-button-bg: transparent; --pw-button-fg: var(--pw-primary); padding: 0 12px; }
+.pw-button,
+.pw-button[aria-busy="true"] { background: var(--pw-button-bg); color: var(--pw-button-fg); }
+.pw-button--block { width: 100%; }
+
+/* Icon 18 through the `icon` prop (Material standard: 16px leading space with
+   an icon, 12/16 on a text button). Older pages pass a lucide svg as a child:
+   it is sized the same. */
+.pw-button--icon { padding-left: 16px; }
+.pw-button--text.pw-button--icon { padding: 0 16px 0 12px; }
+.pw-button > svg,
+.pw-button__content > svg {
+  flex: 0 0 auto;
+  width: var(--pw-icon-sm);
+  height: var(--pw-icon-sm);
+}
+
+/* Disabled (§1.10). A loading button is disabled too but keeps its colours. */
+.pw-button:disabled:not([aria-busy="true"]),
+.pw-button[aria-disabled="true"] {
+  background: var(--pw-disabled-bg);
+  color: var(--pw-disabled-text);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.pw-button--text:disabled:not([aria-busy="true"]),
+.pw-button--text[aria-disabled="true"] { background: transparent; }
+.pw-button--secondary:disabled:not([aria-busy="true"]),
+.pw-button--secondary[aria-disabled="true"] { background: transparent; box-shadow: inset 0 0 0 1px var(--pw-outline-panel); }
+.pw-button[aria-busy="true"] { cursor: progress; }
+
+/* A plain-text label is cut with an ellipsis when the button is too narrow. */
+.pw-button__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* Loading: the label stays in place (hidden) so the width does not change. */
+.pw-button__content { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.pw-button__content--hidden { visibility: hidden; }
+.pw-button__spinner.pw-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--pw-icon-sm);
+  height: var(--pw-icon-sm);
+  margin: calc(var(--pw-icon-sm) / -2) 0 0 calc(var(--pw-icon-sm) / -2);
+  color: currentColor;
+}

@@ -1,0 +1,81 @@
+/* Snackbar (docs/ui-guideline.md §4.13, values sementara = Material): bottom
+   left 24px (full width with 8px margins on phones), --pw-snackbar-bg, white
+   Roboto 14/20, radius 4, at least 48px tall, padding 6px 16px,
+   --pw-elev-snackbar, on top of every dialog (--pw-z-snackbar). Enters with
+   scale .8 and a fade in 150ms decelerate, leaves with a 75ms fade. */
+.pw-snackbar-host {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: var(--pw-z-snackbar);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: calc(100vw - 48px);
+  pointer-events: none;
+}
+.pw-snackbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* A fixed 344px: a percentage of the shrink-to-fit host resolved to the
+     text width (measured 234px). Phones go full width below. */
+  min-width: 344px;
+  max-width: 672px;
+  min-height: 48px;
+  padding: 6px 16px;
+  border-radius: var(--pw-radius-md);
+  background: var(--pw-snackbar-bg);
+  box-shadow: var(--pw-elev-snackbar);
+  color: var(--pw-on-primary);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+  font-weight: 400;
+  line-height: 20px;
+  pointer-events: auto;
+  transform-origin: bottom left;
+  animation: pw-scale-in var(--pw-dur-enter) var(--pw-ease-decelerate);
+}
+.pw-snackbar[data-state="closing"] {
+  pointer-events: none;
+  animation: pw-fade-out var(--pw-dur-state) linear forwards;
+}
+.pw-snackbar__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 0;
+  overflow-wrap: anywhere;
+}
+.pw-snackbar__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  margin-right: -8px;
+}
+/* Text action and close button sized to the 48px bar (36px targets inside a
+   6px padding, as in Material's snackbar). */
+.pw-snackbar .pw-button.pw-snackbar__action {
+  min-height: 36px;
+  height: 36px;
+  padding: 0 8px;
+  background: transparent;
+  color: var(--pw-snackbar-action);
+}
+.pw-snackbar .pw-icon-button.pw-snackbar__close {
+  width: 36px;
+  height: 36px;
+  color: var(--pw-on-primary);
+}
+
+@media (max-width: 600px) {
+  .pw-snackbar-host {
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    align-items: stretch;
+    max-width: none;
+  }
+  .pw-snackbar { min-width: 0; max-width: none; }
+}
+

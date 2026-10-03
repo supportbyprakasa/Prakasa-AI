@@ -1,5 +1,7 @@
-export const MOBILE_BREAKPOINT = 700;
-export const DESKTOP_BREAKPOINT = 1180;
+// Same app-wide breakpoints as the CSS (docs/ui-guideline.md §1.9):
+// phone <=600, compact 601-1023, desktop >=1024.
+export const MOBILE_BREAKPOINT = 601;
+export const DESKTOP_BREAKPOINT = 1024;
 export const DEFAULT_DOCUMENT_PANEL_WIDTH = 400;
 export const MIN_DOCUMENT_PANEL_WIDTH = 320;
 export const MAX_DOCUMENT_PANEL_WIDTH = 576;

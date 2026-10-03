@@ -1,0 +1,13 @@
+/* Piutang & Utang (Finance, migration 117). */
+.fin-reports__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.fin-reports__kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: 16px; }
+.fin-reports__cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px; align-items: start; }
+.fin-reports__card { min-width: 0; }
+.fin-reports__chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.fin-reports__trend-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 8px; color: var(--pw-text); font-family: var(--pw-font-sans); font-size: var(--pw-font-page); line-height: 32px; font-variant-numeric: tabular-nums; }
+.fin-reports__delta { display: inline-flex; align-items: center; gap: 4px; font-family: var(--pw-font-roboto); font-size: var(--pw-font-xs); line-height: 16px; }
+.fin-reports__delta.is-up { color: var(--pw-success); }
+.fin-reports__delta.is-down { color: var(--pw-error); }
+.fin-reports__delta.is-flat { color: var(--pw-text-meta); }
+.fin-reports__meta { margin: 0 0 8px; color: var(--pw-text-meta); font-size: var(--pw-font-xs); line-height: 16px; }
+.fin-reports__panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; }

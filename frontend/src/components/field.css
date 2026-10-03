@@ -1,0 +1,271 @@
+/* Input / Select / Textarea / DateInput / Field — generation A: underline with a
+   floating label (docs/ui-guideline.md §4.3).
+   62px = area 50 (10px top, 16px for the floated label, 24px input line, the
+   underline on its bottom edge) + 8px assist + 4px bottom. A hint or an error
+   turns the assist into a 24px block. Without a label the area is 36px; `dense`
+   (table cells, pager) is 36px in all. The field owns no outer margin: the
+   container's gap spaces fields (§1.8). */
+.pw-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  padding-bottom: 4px;
+  font-family: var(--pw-font-roboto);
+}
+
+.pw-field__area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  height: 50px;
+  padding-top: 10px;
+  background: transparent;
+}
+.pw-field--bare > .pw-field__area { height: 36px; padding: 6px 0; }
+.pw-field--dense { padding-bottom: 0; }
+
+/* Underline: 1px at rest; on focus a 2px accent line grows from the centre. */
+.pw-field__area::before,
+.pw-field__area::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.pw-field__area::before { height: 1px; background: var(--pw-outline-panel); }
+.pw-field__area::after {
+  height: 2px;
+  background: var(--pw-accent);
+  transform: scaleX(0);
+  transition: transform var(--pw-dur-sm) var(--pw-ease-standard);
+}
+.pw-field__area:focus-within::after { transform: scaleX(1); }
+
+/* The control itself: a bare 24px line, text 14px black. */
+.pw-field__input {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+  color: var(--pw-text-input);
+  caret-color: var(--pw-accent);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+  font-weight: 400;
+  line-height: 24px;
+}
+.pw-field__input::placeholder { color: var(--pw-text-muted); opacity: 1; }
+.pw-field__input--mono { font-family: var(--pw-font-mono); font-size: var(--pw-font-sm); }
+
+/* Floating label: rests on the input line (14px), floats to the top (12px). */
+.pw-field__area > .pw-field__label {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-body);
+  font-weight: 400;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateY(20px);
+  transition:
+    transform var(--pw-dur-sm) var(--pw-ease-standard),
+    font-size var(--pw-dur-sm) var(--pw-ease-standard),
+    color var(--pw-dur-sm) var(--pw-ease-standard);
+}
+.pw-field.has-trailing > .pw-field__area > .pw-field__label { right: 24px; }
+.pw-field--labeled.is-floated > .pw-field__area > .pw-field__label,
+.pw-field--labeled.pw-field--select > .pw-field__area > .pw-field__label,
+.pw-field--labeled > .pw-field__area > .pw-field__input:focus ~ .pw-field__label,
+.pw-field--labeled > .pw-field__area > .pw-field__input:not(:placeholder-shown) ~ .pw-field__label {
+  font-size: var(--pw-font-xs);
+  transform: translateY(0);
+}
+.pw-field--labeled > .pw-field__area > .pw-field__input:autofill ~ .pw-field__label {
+  font-size: var(--pw-font-xs);
+  transform: translateY(0);
+}
+/* A select shows its option text, so its label floats — except over an option
+   without text (placeholder="") or an empty list. */
+.pw-field--labeled.pw-field--select > .pw-field__area > .pw-field__input:not(:focus):is(:has(option:checked:empty), :not(:has(option))) ~ .pw-field__label {
+  font-size: var(--pw-font-body);
+  transform: translateY(20px);
+}
+/* The placeholder is an example value: only visible while the label floats. */
+.pw-field--labeled:not(.is-floated) > .pw-field__area > .pw-field__input:not(:focus)::placeholder { color: transparent; }
+.pw-field > .pw-field__area > .pw-field__input:focus ~ .pw-field__label { color: var(--pw-accent); }
+/* Dense: the label stays for screen readers only. */
+.pw-field--dense > .pw-field__area > .pw-field__label {
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.pw-field__required { color: inherit; }
+
+/* Trailing icon (select arrow, date/time picker), 24px on the input line. */
+.pw-field__trailing {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  color: var(--pw-text-muted);
+  pointer-events: none;
+}
+.pw-field--bare > .pw-field__area > .pw-field__trailing { bottom: 6px; }
+.pw-field.has-trailing > .pw-field__area > .pw-field__input { padding-right: 28px; }
+.pw-field--select > .pw-field__area > .pw-field__input:focus ~ .pw-field__trailing { color: var(--pw-accent); }
+/* The browser's picker button stays clickable, invisible, under our icon. */
+.pw-field__input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+select.pw-field__input {
+  appearance: none;
+  padding-right: 24px;
+  overflow: hidden;
+  color: var(--pw-text-select);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.pw-field--textarea > .pw-field__area { height: auto; min-height: 50px; padding-top: 26px; padding-bottom: 4px; }
+.pw-field--textarea.pw-field--bare > .pw-field__area { min-height: 36px; padding-top: 6px; }
+textarea.pw-field__input {
+  height: auto;
+  min-height: 24px;
+  padding-top: 2px;
+  line-height: 20px;
+  resize: vertical;
+}
+
+input[type="file"].pw-field__input {
+  height: auto;
+  min-height: 24px;
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-sm);
+  line-height: 24px;
+  cursor: pointer;
+}
+input[type="file"].pw-field__input::file-selector-button {
+  height: 24px;
+  margin: 0 8px 0 0;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--pw-radius-full);
+  background: var(--pw-selected);
+  color: var(--pw-accent);
+  font-family: var(--pw-font-flex);
+  font-size: var(--pw-font-sm);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Hint and error: Roboto 12, a 24px block; the error replaces the hint. */
+.pw-field__assist { min-height: 8px; }
+.pw-field--dense > .pw-field__assist { min-height: 0; }
+.pw-field__hint,
+.pw-field__error {
+  display: block;
+  box-sizing: border-box;
+  min-height: 24px;
+  padding: 4px 0;
+  font-size: var(--pw-font-xs);
+  font-weight: 400;
+  line-height: 16px;
+  overflow-wrap: anywhere;
+}
+.pw-field__hint { color: var(--pw-text-muted); }
+.pw-field__error { color: var(--pw-error); }
+
+/* Error (sementara): 2px red underline and a red label. */
+.pw-field.has-error > .pw-field__area::after { background: var(--pw-error); transform: scaleX(1); }
+.pw-field.has-error > .pw-field__area > .pw-field__input ~ .pw-field__label { color: var(--pw-error); }
+
+/* Disabled: dotted underline, faded text. */
+.pw-field.is-disabled > .pw-field__area::before {
+  background: linear-gradient(to right, var(--pw-disabled-text) 0, var(--pw-disabled-text) 33%, transparent 0) repeat-x;
+  background-size: 4px 1px;
+}
+.pw-field__input:disabled { color: var(--pw-disabled-text); cursor: not-allowed; }
+.pw-field.is-disabled > .pw-field__area > .pw-field__label,
+.pw-field.is-disabled > .pw-field__area > .pw-field__trailing { color: var(--pw-disabled-text); }
+
+/* Field: a small label above any other control (checkbox group, file picker). */
+.pw-field--static { gap: 4px; }
+.pw-field--static > .pw-field__label {
+  padding-top: 10px;
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-xs);
+  font-weight: 400;
+  line-height: 16px;
+}
+.pw-field--static:focus-within > .pw-field__label { color: var(--pw-accent); }
+.pw-field--static.has-error > .pw-field__label { color: var(--pw-error); }
+
+/* Filled by Prakasa AI and not reviewed yet (Wave C): the area is tinted, the
+   underline turns --pw-info, and a "diisi AI" tag sits on the label's line.
+   The same tag marks checkboxes, radios, switches and segmented buttons
+   (choice.css, segmented.css). It goes when the user edits the field or saves. */
+.pw-ai-tag {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  height: 16px;
+  padding: 0 6px;
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-selected);
+  color: var(--pw-info-on-tint);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-xs);
+  font-weight: 500;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.pw-field.is-ai-filled > .pw-field__area { background: var(--pw-selected); }
+.pw-field.is-ai-filled > .pw-field__area::before { height: 2px; background: var(--pw-info); }
+.pw-field.is-ai-filled > .pw-field__area > .pw-field__label { right: 72px; color: var(--pw-text-muted-on-tint); }
+.pw-field.is-ai-filled > .pw-field__area > .pw-field__ai {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  background: var(--pw-surface);
+  pointer-events: none;
+}
+.pw-field--static.is-ai-filled > .pw-field__ai { align-self: flex-start; }
+/* A row of line items Prakasa AI added (usePrakasaAIForm ai.rowClass): the mark
+   is on the row; one control in it carries the "diisi AI" tag (ai.row). */
+.is-ai-row { border-radius: var(--pw-radius-md); box-shadow: inset 2px 0 0 var(--pw-info); padding-left: 6px; }

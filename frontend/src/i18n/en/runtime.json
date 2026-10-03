@@ -1,0 +1,15 @@
+{
+ "Hapus pemantau": "Remove watcher",
+ "Buat BAST serah terima untuk pemegang": "Create handover BAST for the holder",
+ "Buat BAST pengembalian dari pemegang": "Create return BAST from the holder",
+ "Penugasan ke pemegangnya ditutup (dikembalikan hari ini).": "The assignment to its holder is closed (returned today).",
+ "Untuk pemegang perangkat. Data perangkat dan karyawan diisi otomatis.": "For the device holder. Device and employee data is filled in automatically.",
+ "“Percakapan” akan hilang untuk semua anggota divisi. Tindakan ini tidak dapat dibatalkan dari antarmuka.": "“Conversation” will disappear for all division members. This action cannot be undone from the interface.",
+ "“Percakapan” tidak akan tampil lagi. Tindakan ini tidak dapat dibatalkan dari antarmuka.": "“Conversation” will no longer be shown. This action cannot be undone from the interface.",
+ "barang masuk": "inbound goods",
+ "barang keluar": "outbound goods",
+ "atasan langsung": "direct manager",
+ "head divisi": "division head",
+ "head management office": "Head of the Management Office",
+ "HP": "Mobile"
+}

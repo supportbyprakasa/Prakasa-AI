@@ -19,8 +19,32 @@ function handleUnauthorized() {
  * Resolves with the same payload as POST /messages; throws an axios-like error.
  * Throws with `streamUnavailable: true` when the backend has no stream endpoint.
  */
-export async function streamSessionMessage(sessionId, message, { onDelta, onStatus, editMessageId = null }) {
+// Page tools (Wave C): `surface` says where the conversation is shown ('panel'
+// on a page, 'full' in the Command Center) and `route` which page the panel is
+// on. A `client_tool` event asks this browser to open a page or fill a
+// registered form: `onClientTool(call)` resolves with { ok, result | error }
+// (components/ai/aiClientTools.js) and the result is posted back, once.
+async function postToolResult(sessionId, token, callId, outcome) {
+  try {
+    await fetch(`${apiBaseUrl}/ai-command/sessions/${sessionId}/tool-results`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify(outcome.ok ? { callId, ok: true, result: outcome.result || {} } : { callId, ok: false, error: String(outcome.error || '').slice(0, 300) }),
+    });
+  } catch { /* the server times the request out and tells the model */ }
+}
+
+export async function streamSessionMessage(sessionId, message, {
+  onDelta, onStatus, editMessageId = null, surface = null, route = null, onClientTool = null, attachmentIds = [],
+}) {
   const token = localStorage.getItem('prakasa.token');
+  const handleClientTool = (call) => {
+    if (!call?.callId) return;
+    const run = typeof onClientTool === 'function'
+      ? Promise.resolve().then(() => onClientTool(call)).catch((error) => ({ ok: false, error: error?.message }))
+      : Promise.resolve({ ok: false, error: 'Halaman ini tidak menjalankan alat halaman.' });
+    run.then((outcome) => postToolResult(sessionId, token, call.callId, outcome || { ok: false, error: 'Tidak ada hasil.' }));
+  };
   const response = await fetch(`${apiBaseUrl}/ai-command/sessions/${sessionId}/messages/stream`, {
     method: 'POST',
     headers: {
@@ -28,7 +52,14 @@ export async function streamSessionMessage(sessionId, message, { onDelta, onStat
       Accept: 'text/event-stream',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify(editMessageId ? { message, editMessageId } : { message }),
+    body: JSON.stringify({
+      message,
+      ...(editMessageId ? { editMessageId } : {}),
+      ...(surface ? { surface } : {}),
+      ...(surface && route ? { route: String(route).slice(0, 300) } : {}),
+      // Files attached to this message (ids from POST /sessions/:id/files).
+      ...(attachmentIds?.length ? { attachmentIds } : {}),
+    }),
   });
 
   const isEventStream = (response.headers.get('content-type') || '').includes('text/event-stream');
@@ -59,6 +90,7 @@ export async function streamSessionMessage(sessionId, message, { onDelta, onStat
       const payload = JSON.parse(data);
       if (event === 'delta') onDelta(payload.text || '');
       else if (event === 'status') onStatus?.(payload);
+      else if (event === 'client_tool') handleClientTool(payload);
       else if (event === 'done') outcome = { ok: true, payload };
       else if (event === 'error') outcome = { ok: false, payload };
     }

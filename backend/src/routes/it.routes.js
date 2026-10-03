@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { z } = require('zod');
+const { httpsUrl } = require('../utils/safeUrl');
 const requireAuth = require('../middleware/requireAuth');
 const requirePermission = require('../middleware/requirePermission');
 const validate = require('../middleware/validate');
@@ -15,8 +16,23 @@ const licCtrl = require('../controllers/subscriptionLicenses.controller');
 const invCtrl = require('../controllers/subscriptionInvoices.controller');
 const payCtrl = require('../controllers/subscriptionPayments.controller');
 const dashCtrl = require('../controllers/itDashboard.controller');
+const locationsCtrl = require('../controllers/orgLocations.controller');
+const importCtrl = require('../controllers/deviceImport.controller');
+const infraCtrl = require('../controllers/itInfrastructure.controller');
+const { importMatrix } = require('./importSchemas');
+const { guardSecretBody } = require('../services/secretText');
+const { VENDOR_KINDS } = require('../config/itInfra');
+const { DEVICE_TYPES, DEVICE_STATUSES, LOCATION_KINDS } = require('../config/itAssets');
 
 router.use(requireAuth);
+
+// ---------- Tickets (open to every role, not just IT — mounted first, own permissions)
+router.use('/tickets', require('./itTickets.routes'));
+
+// ---------- Infrastructure registers (People & Culture wave 2, row 2.3; own permissions)
+router.use('/infrastructure', require('./itInfrastructure.routes'));
+// A person's active company lines (number/extension only) for the directory profile — every directory viewer.
+router.get('/phone-lines/person/:personId', requirePermission('people.directory.view'), infraCtrl.personLines);
 
 // ---------- Dashboard (taruh paling atas biar tidak ketutup /:id)
 router.get('/dashboard/summary', requirePermission('it.dashboard.view'), dashCtrl.summary);
@@ -24,17 +40,20 @@ router.post('/dashboard/ai-report', requirePermission('it.dashboard.view'), dash
 
 // ---------- Devices
 const deviceBody = z.object({
-  entityId: z.number().int().positive(),
+  entityId: z.number().int().positive().optional(), // ignored: the company is the signed-in user's
   departmentId: z.number().int().positive().nullable().optional(),
-  assetCode: z.string().min(1).max(80),
-  deviceType: z.enum([
-    'laptop','pc','macbook','smartphone','tablet','printer',
-    'router','switch','access_point','cctv_nvr','monitor',
-    'external_hdd','peripheral','other',
-  ]),
+  // Optional and not unique: the real PFN report reuses asset numbers (rule 16).
+  assetCode: z.string().trim().max(80).nullable().optional(),
+  deviceType: z.enum(DEVICE_TYPES),
   brand: z.string().max(100).nullable().optional(),
+  // "Merek / model" is one field in the form, stored in model (rule 20).
   model: z.string().max(150).nullable().optional(),
-  serialNumber: z.string().max(150).nullable().optional(),
+  serialNumber: z.string().trim().max(150).nullable().optional(),
+  ramGb: z.number().int().min(1).max(4096).nullable().optional(),
+  storageGb: z.number().int().min(1).max(1048576).nullable().optional(),
+  osVersion: z.string().trim().max(80).nullable().optional(),
+  purchaseYear: z.number().int().min(1990).max(2100).nullable().optional(),
+  locationId: z.number().int().positive().nullable().optional(),
   imei: z.string().max(40).nullable().optional(),
   macAddress: z.string().max(40).nullable().optional(),
   purchaseDate: z.string().nullable().optional(),
@@ -50,19 +69,86 @@ const deviceBody = z.object({
   notes: z.string().nullable().optional(),
 });
 
+// Import of the owner's device report ("Device Inventory" + optional "User List").
+const deviceImportBody = z.object({
+  devices: importMatrix,
+  people: importMatrix.nullable().optional(),
+  createLocations: z.boolean().optional(),
+  personChoices: z.record(z.string().regex(/^p:\d+$/), z.enum(['link', 'new'])).optional(),
+  companyCode: z.string().trim().max(20).optional(),
+  fingerprint: z.string().regex(/^[0-9a-f]{64}$/).optional(),
+  updates: z.array(z.string().regex(/^[dp]:\d+$/)).max(10000).optional(),
+}).strict();
+
+// The holder of an Aktif device: exactly one of an account, a directory person or a team label.
+const holderFields = {
+  assignedTo: z.number().int().positive().optional(),
+  personId: z.number().int().positive().optional(),
+  holderLabel: z.string().trim().min(1).max(120).optional(),
+};
+
 router.get('/devices', requirePermission('device.view'), devicesCtrl.list);
+router.get('/devices/export', requirePermission('device.view'), devicesCtrl.exportRows);
 router.get('/devices/warranty-due', requirePermission('device.view'), devicesCtrl.warrantyDue);
+router.post('/devices/import/preview', requirePermission('device.manage'), validate(deviceImportBody), importCtrl.preview);
+router.post('/devices/import/apply', requirePermission('device.manage'), validate(deviceImportBody), importCtrl.apply);
 router.get('/devices/:id', requirePermission('device.view'), devicesCtrl.detail);
 router.post('/devices', requirePermission('device.manage'), validate(deviceBody), devicesCtrl.create);
 router.patch('/devices/:id', requirePermission('device.manage'), validate(deviceBody.partial()), devicesCtrl.update);
+router.patch('/devices/:id/status',
+  requirePermission('device.manage'),
+  validate(z.object({
+    status: z.enum(DEVICE_STATUSES),
+    note: z.string().trim().max(500).nullable().optional(),
+    ...holderFields,
+  }).strict().superRefine((body, ctx) => {
+    // IT Lead: a device leaving service always carries its reason in the audit log.
+    if (['damaged', 'retired', 'lost', 'disposed'].includes(body.status) && !String(body.note || '').trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['note'], message: 'Tulis alasan perubahan status ini.' });
+    }
+  })),
+  devicesCtrl.setStatus);
 router.delete('/devices/:id', requirePermission('device.manage'), devicesCtrl.remove);
+
+// ---------- Locations (shared by devices and the directory)
+const locationBody = z.object({
+  name: z.string().trim().min(1).max(120),
+  kind: z.enum(LOCATION_KINDS).optional(),
+  notes: z.string().trim().max(255).nullable().optional(),
+}).strict();
+// BAST (berita acara serah terima) made as a Google Doc from the built-in
+// templates, with the division kop — IT and GA together (migration 115).
+const docTemplatesCtrl = require('../controllers/docTemplates.controller');
+const bastBody = z.object({
+  kind: z.enum(['handover', 'return']),
+  team: z.enum(['it', 'ga']),
+  acknowledgerUserId: z.number().int().positive().nullable().optional(),
+  accessories: z.string().trim().max(500).nullable().optional(),
+  condition: z.string().trim().max(300).nullable().optional(),
+  conditionCode: z.enum(['excellent', 'good', 'fair', 'poor', 'broken']).nullable().optional(),
+  notes: z.string().trim().max(1000).nullable().optional(),
+  location: z.string().trim().max(150).nullable().optional(),
+  holderName: z.string().trim().max(150).nullable().optional(),
+  holderPosition: z.string().trim().max(150).nullable().optional(),
+  holderDivision: z.string().trim().max(150).nullable().optional(),
+}).strict();
+router.get('/bast/options', requirePermission(['device.handover.manage', 'it.infra.manage', 'ga.ops.manage']), docTemplatesCtrl.bastOptions);
+router.post('/assignments/:id/bast', requirePermission(['device.handover.manage', 'ga.ops.manage']), validate(bastBody), docTemplatesCtrl.deviceBast);
+router.post('/infrastructure/phone-lines/:id/bast', requirePermission(['it.infra.manage', 'ga.ops.manage']), validate(bastBody), docTemplatesCtrl.phoneBast);
+
+router.get('/locations', requirePermission(['device.view', 'people.directory.view', 'it.infra.view', 'ga.ops.view']), locationsCtrl.list);
+router.post('/locations', requirePermission('device.manage'), validate(locationBody), locationsCtrl.create);
+router.patch('/locations/:id',
+  requirePermission('device.manage'),
+  validate(locationBody.partial().extend({ isActive: z.boolean().optional() }).strict()),
+  locationsCtrl.update);
 
 // ---------- Assignments
 const assignBody = z.object({
-  entityId: z.number().int().positive(),
+  entityId: z.number().int().positive().optional(), // ignored: the company is the signed-in user's
   departmentId: z.number().int().positive().nullable().optional(),
   deviceId: z.number().int().positive(),
-  assignedTo: z.number().int().positive(),
+  ...holderFields,
   expectedReturnDate: z.string().nullable().optional(),
   location: z.string().max(190).nullable().optional(),
   purpose: z.string().max(500).nullable().optional(),
@@ -142,35 +228,41 @@ router.post('/devices/:id/warranties',
   logsCtrl.createWarranty);
 
 // ---------- Software vendors
-router.get('/vendors', requirePermission('subscription.view'), vendorCtrl.list);
+// IT vendors (ISP, CCTV, network …) extend the software vendors (wave 2, §4.1):
+// the IT registers' managers may add and edit them too; delete is unchanged.
+router.get('/vendors', requirePermission(['subscription.view', 'it.infra.view']), vendorCtrl.list);
 router.post('/vendors',
-  requirePermission('software_vendor.manage'),
+  requirePermission(['software_vendor.manage', 'it.infra.manage']),
   validate(z.object({
-    entityId: z.number().int().positive(),
+    entityId: z.number().int().positive().optional(), // ignored: the company is the signed-in user's
     name: z.string().min(1).max(190),
+    vendorKind: z.enum(VENDOR_KINDS).optional(),
     contactPerson: z.string().max(150).nullable().optional(),
     email: z.string().email().max(190).nullable().optional(),
     phone: z.string().max(40).nullable().optional(),
-    portalUrl: z.string().url().max(500).nullable().optional(),
+    portalUrl: httpsUrl({ max: 500 }).nullable().optional(),
     notes: z.string().nullable().optional(),
   })),
+  guardSecretBody(),
   vendorCtrl.create);
 router.patch('/vendors/:id',
-  requirePermission('software_vendor.manage'),
+  requirePermission(['software_vendor.manage', 'it.infra.manage']),
   validate(z.object({
     name: z.string().min(1).max(190).optional(),
+    vendorKind: z.enum(VENDOR_KINDS).optional(),
     contactPerson: z.string().max(150).nullable().optional(),
     email: z.string().email().max(190).nullable().optional(),
     phone: z.string().max(40).nullable().optional(),
-    portalUrl: z.string().url().max(500).nullable().optional(),
+    portalUrl: httpsUrl({ max: 500 }).nullable().optional(),
     notes: z.string().nullable().optional(),
   })),
+  guardSecretBody(),
   vendorCtrl.update);
 router.delete('/vendors/:id', requirePermission('software_vendor.manage'), vendorCtrl.remove);
 
 // ---------- Subscriptions
 const subsBody = z.object({
-  entityId: z.number().int().positive(),
+  entityId: z.number().int().positive().optional(), // ignored: the company is the signed-in user's
   departmentId: z.number().int().positive().nullable().optional(),
   vendorId: z.number().int().positive().nullable().optional(),
   productName: z.string().min(1).max(190),
@@ -202,10 +294,10 @@ router.delete('/subscriptions/:id', requirePermission('subscription.manage'), su
 // ---------- Licenses
 router.post('/subscriptions/:id/licenses',
   requirePermission('subscription.license.manage'),
+  // No licenseKey: the API neither accepts nor returns licence keys (wave 2, §4.1).
   validate(z.object({
-    licenseKey: z.string().max(255).nullable().optional(),
     seatLabel: z.string().max(150).nullable().optional(),
-  })),
+  }).strict()),
   licCtrl.createLicense);
 router.post('/licenses/:id/assign',
   requirePermission('subscription.license.manage'),

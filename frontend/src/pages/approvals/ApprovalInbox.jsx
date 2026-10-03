@@ -1,24 +1,39 @@
-import { Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/client';
 import Badge from '../../components/Badge';
 import Button from '../../components/Button';
-import Card from '../../components/Card';
-import DataTable from '../../components/DataTable';
-import FilterBar from '../../components/FilterBar';
+import Chip from '../../components/Chip';
+import ConfirmDialog from '../../components/ConfirmDialog';
+import { LoadingState } from '../../components/EmptyState';
 import Input from '../../components/Input';
+import KeyValue from '../../components/KeyValue';
 import Modal from '../../components/Modal';
+import Page from '../../components/Page';
+import StatusBadge from '../../components/StatusBadge';
 import { toast } from '../../components/Toast';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { EMPTY, formatDateTime, formatMoney, formatQty } from '../../components/format';
+import { statusLabel } from '../../components/statusTone';
 import { useAuth } from '../../context/AuthContext';
+import { NoTranslate } from '../../i18n/NoTranslate';
+import './approval-inbox.css';
 
-const STATUS_TONE = {
-  pending: 'warning',
-  approved: 'success',
-  rejected: 'error',
-  revision_requested: 'warning',
-  cancelled: 'default',
-};
+// /approvals is a closed route (decision K11): restyled only through the
+// shared components.
+const STATUS_OPTIONS = [
+  { value: '', label: 'Semua status' },
+  ...['pending', 'approved', 'rejected', 'revision_requested', 'cancelled'].map((value) => ({ value, label: statusLabel(value) })),
+];
+const errorMessage = (error, fallback) => error.response?.data?.error?.message || fallback;
+function formatAmount(amount, currency) {
+  if (amount == null) return EMPTY;
+  if (!currency || String(currency).toLowerCase() === 'idr') return formatMoney(amount);
+  return `${currency} ${formatQty(amount)}`;
+}
+const approverLabel = (step) => step.approverUserName
+  || step.approverRoleName
+  || (step.approverUserId ? `Pengguna #${step.approverUserId}` : step.approverRoleId ? `Peran #${step.approverRoleId}` : 'Approver lama');
 
 const WAREHOUSE_SUBJECTS = { warehouse_inbound: 'inbound', warehouse_outbound: 'outbound' };
 
@@ -34,16 +49,19 @@ export default function ApprovalInbox() {
   });
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [detail, setDetail] = useState(null);
   const [pendingSteps, setPendingSteps] = useState([]);
   const [detailLoading, setDetailLoading] = useState(false);
   const [note, setNote] = useState('');
+  const [noteError, setNoteError] = useState('');
   const [decidingStepId, setDecidingStepId] = useState(null);
 
   const canDecide = (user?.permissions || []).includes('approval.decide');
 
   const load = async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const response = await api.get('/approvals', {
         params: {
@@ -54,9 +72,9 @@ export default function ApprovalInbox() {
         },
       });
       setRows(response.data.data || []);
-      setMeta(response.data.meta || null);
+      setMeta({ page, limit: 20, total: 0, ...(response.data.meta || {}) });
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal memuat approval', 'error');
+      setLoadError(errorMessage(error, 'Periksa koneksi, lalu coba lagi.'));
     } finally {
       setLoading(false);
     }
@@ -77,6 +95,7 @@ export default function ApprovalInbox() {
     setDetail(null);
     setPendingSteps([]);
     setNote('');
+    setNoteError('');
 
     try {
       const [detailResponse, pendingResponse] = await Promise.all([
@@ -91,7 +110,7 @@ export default function ApprovalInbox() {
       setDetail(detailResponse.data.data);
       setPendingSteps(pendingResponse.data.data || []);
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal membuka approval', 'error');
+      toast(errorMessage(error, 'Approval gagal dibuka'), 'error');
     } finally {
       setDetailLoading(false);
     }
@@ -117,9 +136,10 @@ export default function ApprovalInbox() {
       ['reject', 'skip', 'request_revision'].includes(action) &&
       !note.trim()
     ) {
-      toast('Catatan wajib untuk reject, skip, atau request revision', 'error');
+      setNoteError('Catatan wajib diisi untuk menolak, melewati, atau meminta revisi.');
       return;
     }
+    setNoteError('');
 
     setDecidingStepId(step.id);
     try {
@@ -132,99 +152,88 @@ export default function ApprovalInbox() {
       setNote('');
       await Promise.all([refreshDetail(), load()]);
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal menyimpan keputusan', 'error');
+      toast(errorMessage(error, 'Keputusan gagal disimpan'), 'error');
     } finally {
       setDecidingStepId(null);
     }
   };
 
+  const applyRequestType = (text) => {
+    const value = text.trim();
+    if (value === filters.requestType) return;
+    setPage(1);
+    setFilters((current) => ({ ...current, requestType: value }));
+  };
+
   return (
-    <div>
-      <div style={{ marginBottom: 12 }}>
-        <h2 style={{ margin: 0 }}>Approvals</h2>
-        <div
-          style={{
-            marginTop: 4,
-            fontSize: 13,
-            color: 'var(--color-text-muted)',
-          }}
-        >
-          Sequential dan parallel approval menggunakan assignment, delegation,
-          escalation, dan active stage dari backend.
-        </div>
-      </div>
-
-      <FilterBar
-        filters={[
-          {
-            name: 'status',
-            label: 'Status',
-            type: 'select',
-            options: [
-              { value: 'pending', label: 'Pending' },
-              { value: 'approved', label: 'Approved' },
-              { value: 'rejected', label: 'Rejected' },
-              { value: 'revision_requested', label: 'Revision Requested' },
-              { value: 'cancelled', label: 'Cancelled' },
-            ],
-          },
-          {
-            name: 'requestType',
-            label: 'Request Type',
-            type: 'text',
-            placeholder: 'payment / document / form_submission',
-          },
-        ]}
-        values={filters}
-        onChange={(next) => {
-          setPage(1);
-          setFilters(next);
-        }}
-        onReset={() => {
-          setPage(1);
-          setFilters({ status: '', requestType: '' });
-        }}
-      />
-
-      <DataTable
+    <Page
+      title="Approval"
+      description="Approval berurutan dan paralel, dengan penugasan, delegasi, eskalasi, dan tahap aktif dari server."
+    >
+      <DataGrid
+        title="Approval"
+        showTitle={false}
         loading={loading}
+        error={loadError}
+        onRetry={load}
         rows={rows}
-        meta={meta}
+        meta={meta || { page, limit: 20, total: rows.length }}
         onPageChange={setPage}
+        onRowClick={openDetail}
+        empty="Belum ada approval"
+        filters={(
+          <>
+            {STATUS_OPTIONS.map((option) => (
+              <Chip
+                key={option.value || 'all'}
+                selected={filters.status === option.value}
+                onClick={() => { setPage(1); setFilters((current) => ({ ...current, status: option.value })); }}
+              >
+                {option.label}
+              </Chip>
+            ))}
+            <Input
+              dense
+              label="Jenis permintaan"
+              aria-label="Jenis permintaan"
+              placeholder="Jenis permintaan, mis. payment"
+              fieldClassName="approval-filter"
+              defaultValue={filters.requestType}
+              onKeyDown={(event) => { if (event.key === 'Enter') applyRequestType(event.currentTarget.value); }}
+              onBlur={(event) => applyRequestType(event.currentTarget.value)}
+            />
+          </>
+        )}
         columns={[
-          { key: 'id', title: 'ID' },
-          { key: 'title', title: 'Judul' },
+          { key: 'id', header: 'ID', width: 64 },
+          { key: 'title', header: 'Judul' },
           {
             key: 'flowType',
-            title: 'Flow',
-            render: (row) => (
-              <Badge tone={row.flowType === 'parallel' ? 'warning' : 'info'}>
-                {row.flowType || 'legacy'}
-              </Badge>
-            ),
+            header: 'Alur',
+            exportValue: (row) => statusLabel(row.flowType || 'legacy'),
+            render: (row) => <StatusBadge status={row.flowType || 'legacy'} label={row.flowType ? undefined : 'Lama'} />,
           },
           {
             key: 'matrixKey',
-            title: 'Matrix',
-            render: (row) =>
-              row.matrixKey ? <code style={{ fontSize: 11 }}>{row.matrixKey}</code> : '—',
+            header: 'Matriks',
+            render: (row) => (row.matrixKey ? <code className="approval-code">{row.matrixKey}</code> : null),
           },
           {
             key: 'amount',
-            title: 'Amount',
-            render: (row) =>
-              row.amount == null
-                ? '—'
-                : `${row.currency || 'IDR'} ${Number(row.amount).toLocaleString('id-ID')}`,
+            header: 'Jumlah',
+            type: 'money',
+            exportValue: (row) => row.amount,
+            render: (row) => (row.amount == null ? null : formatAmount(row.amount, row.currency)),
           },
           {
             key: 'progress',
-            title: 'Progress',
+            header: 'Progres',
+            exportValue: (row) => `${Number(row.approvedSteps || 0)} / ${Number(row.totalSteps || 0)}`,
             render: (row) => (
               <span>
                 {Number(row.approvedSteps || 0)} / {Number(row.totalSteps || 0)}
                 {Number(row.activeSteps || 0) > 0 && (
-                  <span style={{ color: 'var(--color-text-muted)' }}>
+                  <span data-translate="" className="pw-muted">
                     {' '}· {row.activeSteps} aktif
                   </span>
                 )}
@@ -233,22 +242,11 @@ export default function ApprovalInbox() {
           },
           {
             key: 'status',
-            title: 'Status',
-            render: (row) => (
-              <Badge tone={STATUS_TONE[row.status] || 'default'}>{row.status}</Badge>
-            ),
+            header: 'Status',
+            exportValue: (row) => statusLabel(row.status),
+            render: (row) => <StatusBadge status={row.status} />,
           },
-          { key: 'requesterName', title: 'Requester' },
-          {
-            key: 'actions',
-            title: 'Aksi',
-            render: (row) => (
-              <Button variant="secondary" onClick={() => openDetail(row)}>
-                <Eye size={14} />
-                Detail
-              </Button>
-            ),
-          },
+          { key: 'requesterName', header: 'Pengaju' },
         ]}
       />
 
@@ -260,24 +258,25 @@ export default function ApprovalInbox() {
           setNote('');
           if (routeId) navigate('/approvals', { replace: true });
         }}
-        title={detail ? `Approval #${detail.id} — ${detail.title}` : 'Memuat approval…'}
-        maxWidth={980}
+        title={detail ? <>{`Approval #${detail.id} — `}<NoTranslate>{detail.title}</NoTranslate></> : 'Approval'}
+        size="lg"
       >
         {detailLoading && !detail ? (
-          <div style={{ padding: 24 }}>Memuat detail…</div>
+          <LoadingState label="Memuat detail…" />
         ) : detail ? (
           <ApprovalDetail
             approval={detail}
             pendingSteps={pendingSteps}
             note={note}
-            setNote={setNote}
+            setNote={(value) => { setNote(value); setNoteError(''); }}
+            noteError={noteError}
             decidingStepId={decidingStepId}
             decide={decide}
             canDecide={canDecide}
           />
         ) : null}
       </Modal>
-    </div>
+    </Page>
   );
 }
 
@@ -286,10 +285,12 @@ function ApprovalDetail({
   pendingSteps,
   note,
   setNote,
+  noteError,
   decidingStepId,
   decide,
   canDecide,
 }) {
+  const [rejectStep, setRejectStep] = useState(null);
   const pendingIds = new Set((pendingSteps || []).map((step) => Number(step.id)));
   const stages = new Map();
 
@@ -302,72 +303,44 @@ function ApprovalDetail({
   const movementType = WAREHOUSE_SUBJECTS[approval.subjectType];
 
   return (
-    <div>
+    <div className="pw-stack">
       {movementType && approval.subjectId && (
-        <p style={{ margin: '0 0 14px', fontSize: 14 }}>
+        <p className="approval-movement">
           Approval ini untuk pergerakan barang Warehouse.{' '}
-          <Link to={`/warehouse/movements/${movementType}/${approval.subjectId}`} style={{ color: 'var(--pw-primary)', fontWeight: 500 }}>
+          <Link to={`/warehouse/movements/${movementType}/${approval.subjectId}`} className="pw-link">
             Buka detail pergerakan
           </Link>
         </p>
       )}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
-          gap: 10,
-          marginBottom: 14,
-        }}
-      >
-        <Summary label="Status">
-          <Badge tone={STATUS_TONE[approval.status] || 'default'}>
-            {approval.status}
-          </Badge>
-        </Summary>
-        <Summary label="Flow">
-          <Badge tone={approval.flowType === 'parallel' ? 'warning' : 'info'}>
-            {approval.flowType || 'legacy'}
-          </Badge>
-        </Summary>
-        <Summary label="Matrix">
-          {approval.matrixKey ? <code>{approval.matrixKey}</code> : '—'}
-        </Summary>
-        <Summary label="Request Type">{approval.requestType || '—'}</Summary>
-        <Summary label="Amount">
-          {approval.amount == null
-            ? '—'
-            : `${approval.currency || 'IDR'} ${Number(approval.amount).toLocaleString('id-ID')}`}
-        </Summary>
-        <Summary label="Current Stage">{approval.currentLevel || '—'}</Summary>
-      </div>
+      <KeyValue
+        columns={2}
+        items={[
+          { label: 'Status', value: <StatusBadge status={approval.status} /> },
+          {
+            label: 'Alur',
+            value: <StatusBadge status={approval.flowType || 'legacy'} label={approval.flowType ? undefined : 'Lama'} />,
+          },
+          { label: 'Matriks', value: approval.matrixKey ? <code className="approval-code">{approval.matrixKey}</code> : null },
+          { label: 'Jenis permintaan', value: approval.requestType },
+          {
+            label: 'Jumlah',
+            value: approval.amount == null ? null : formatAmount(approval.amount, approval.currency),
+          },
+          { label: 'Tahap saat ini', value: approval.currentLevel },
+        ]}
+      />
 
-      <Card title="Approval Steps">
+      <section className="approval-steps" aria-labelledby="approval-steps-title">
+        <h3 id="approval-steps-title" className="pw-title-section">Tahap approval</h3>
         {[...stages.entries()]
           .sort(([a], [b]) => a - b)
           .map(([order, steps]) => (
-            <div
-              key={order}
-              style={{
-                boxShadow: 'inset 0 0 0 1px var(--color-border)',
-                borderRadius: 10,
-                marginBottom: 10,
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  padding: '8px 10px',
-                  background: '#f8fafc',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  gap: 8,
-                  alignItems: 'center',
-                }}
-              >
-                <b style={{ fontSize: 13 }}>Stage #{order}</b>
+            <div key={order} className="approval-stage">
+              <div className="pw-row pw-row--between approval-stage__head">
+                <span className="approval-stage__title">Tahap {order}</span>
                 {steps[0]?.parallelGroup && (
-                  <Badge tone="warning">
-                    Parallel · {steps[0].parallelGroup}
+                  <Badge>
+                    Paralel · <NoTranslate>{steps[0].parallelGroup}</NoTranslate>
                   </Badge>
                 )}
               </div>
@@ -384,55 +357,29 @@ function ApprovalDetail({
                 return (
                   <div
                     key={step.id}
-                    style={{
-                      padding: 10,
-                      boxShadow: 'inset 0 1px 0 0 var(--color-border)',
-                      display: 'grid',
-                      gridTemplateColumns: 'minmax(160px, 1.2fr) minmax(130px, .8fr) minmax(180px, 1fr) auto',
-                      gap: 10,
-                      alignItems: 'center',
-                    }}
+                    className="approval-step"
                   >
                     <div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        <b>
-                          {step.approverUserName ||
-                            step.approverRoleName ||
-                            (step.approverUserId
-                              ? `User #${step.approverUserId}`
-                              : step.approverRoleId
-                                ? `Role #${step.approverRoleId}`
-                                : 'Legacy approver')}
-                        </b>
-                        {step.isOptional && <Badge tone="info">Optional</Badge>}
-                        {active && <Badge tone="warning">Active</Badge>}
+                      <div className="pw-row">
+                        <span className="approval-step__who" data-no-translate={step.approverUserName ? '' : undefined}>{approverLabel(step)}</span>
+                        {step.isOptional && <Badge>Opsional</Badge>}
+                        {active && <StatusBadge status="active" />}
                       </div>
 
                       {step.delegatedFromUserId && (
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: 'var(--color-text-muted)',
-                            marginTop: 3,
-                          }}
-                        >
-                          Delegated from{' '}
-                          {step.delegatedFromUserName ||
-                            `User #${step.delegatedFromUserId}`}
+                        <div className="pw-muted approval-step__meta">
+                          Didelegasikan dari{' '}
+                          {step.delegatedFromUserName
+                            ? <NoTranslate>{step.delegatedFromUserName}</NoTranslate>
+                            : `Pengguna #${step.delegatedFromUserId}`}
                         </div>
                       )}
 
                       {(step.escalatedAt ||
                         step.escalatedToUserId ||
                         step.escalatedToRoleId) && (
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: '#92400e',
-                            marginTop: 3,
-                          }}
-                        >
-                          Escalated
+                        <div className="approval-step__meta">
+                          Dieskalasi
                           {step.escalatedToUserName
                             ? ` ke ${step.escalatedToUserName}`
                             : step.escalatedToRoleName
@@ -443,94 +390,64 @@ function ApprovalDetail({
                     </div>
 
                     <div>
-                      <Badge tone={stepTone(step.status)}>{step.status}</Badge>
+                      <StatusBadge status={step.status} />
                       {step.decidedByName && (
-                        <div
-                          style={{
-                            marginTop: 3,
-                            fontSize: 11,
-                            color: 'var(--color-text-muted)',
-                          }}
-                        >
-                          oleh {step.decidedByName}
+                        <div className="pw-muted approval-step__meta">
+                          oleh <NoTranslate>{step.decidedByName}</NoTranslate>
                         </div>
                       )}
                     </div>
 
-                    <div style={{ fontSize: 12 }}>
+                    <div className="approval-step__meta">
                       <div>
-                        Activated:{' '}
-                        {step.activatedAt
-                          ? new Date(step.activatedAt).toLocaleString('id-ID')
-                          : 'Belum aktif'}
+                        Aktif sejak:{' '}
+                        {step.activatedAt ? formatDateTime(step.activatedAt) : 'Belum aktif'}
                       </div>
                       <div>
-                        Deadline:{' '}
-                        {step.deadlineAt
-                          ? new Date(step.deadlineAt).toLocaleString('id-ID')
-                          : '—'}
+                        Tenggat: {formatDateTime(step.deadlineAt)}
                       </div>
                       {step.note && (
-                        <div
-                          style={{
-                            marginTop: 4,
-                            color: 'var(--color-text-muted)',
-                          }}
-                        >
-                          Note: {step.note}
+                        <div className="pw-muted approval-step__note">
+                          Catatan: <NoTranslate>{step.note}</NoTranslate>
                         </div>
                       )}
                     </div>
 
                     <div>
                       {actionable ? (
-                        <div
-                          style={{
-                            display: 'flex',
-                            gap: 5,
-                            flexWrap: 'wrap',
-                            justifyContent: 'flex-end',
-                          }}
-                        >
-                          <Button
-                            onClick={() => decide(step, 'approve')}
-                            disabled={decidingStepId === step.id}
-                          >
-                            Approve
-                          </Button>
-                          <Button
-                            variant="danger"
-                            onClick={() => decide(step, 'reject')}
-                            disabled={decidingStepId === step.id}
-                          >
-                            Reject
-                          </Button>
+                        <div className="pw-row pw-row--end">
+                          {step.isOptional && (
+                            <Button
+                              variant="text"
+                              onClick={() => decide(step, 'skip')}
+                              disabled={decidingStepId === step.id}
+                            >
+                              Lewati
+                            </Button>
+                          )}
                           <Button
                             variant="secondary"
                             onClick={() => decide(step, 'request_revision')}
                             disabled={decidingStepId === step.id}
                           >
-                            Revision
+                            Minta revisi
                           </Button>
-                          {step.isOptional && (
-                            <Button
-                              variant="secondary"
-                              onClick={() => decide(step, 'skip')}
-                              disabled={decidingStepId === step.id}
-                            >
-                              Skip
-                            </Button>
-                          )}
+                          <Button
+                            variant="danger"
+                            onClick={() => setRejectStep(step)}
+                            disabled={decidingStepId === step.id}
+                          >
+                            Tolak
+                          </Button>
+                          <Button
+                            onClick={() => decide(step, 'approve')}
+                            loading={decidingStepId === step.id}
+                          >
+                            Setujui
+                          </Button>
                         </div>
                       ) : (
-                        <span
-                          style={{
-                            fontSize: 12,
-                            color: 'var(--color-text-muted)',
-                          }}
-                        >
-                          —
-                        </span>
+                        <span className="pw-muted">—</span>
                       )}
                     </div>
                   </div>
@@ -538,48 +455,32 @@ function ApprovalDetail({
               })}
             </div>
           ))}
-      </Card>
+      </section>
 
       {canDecide && pendingSteps.length > 0 && (
-        <div style={{ marginTop: 12 }}>
-          <Input
-            label="Catatan keputusan"
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            placeholder="Wajib untuk reject, skip, dan request revision"
-          />
-        </div>
+        <Input
+          label="Catatan keputusan"
+          value={note}
+          error={noteError}
+          onChange={(event) => setNote(event.target.value)}
+          hint="Wajib diisi untuk menolak, melewati, atau meminta revisi."
+        />
       )}
-    </div>
-  );
-}
 
-function Summary({ label, children }) {
-  return (
-    <div
-      style={{
-        boxShadow: 'inset 0 0 0 1px var(--color-border)',
-        borderRadius: 8,
-        padding: 10,
-      }}
-    >
-      <div
-        style={{
-          fontSize: 11,
-          color: 'var(--color-text-muted)',
-          marginBottom: 4,
+      <ConfirmDialog
+        open={Boolean(rejectStep)}
+        tone="danger"
+        title="Tolak approval?"
+        message={`Approval #${approval.id} — ${approval.title} akan ditolak.`}
+        confirmLabel="Tolak"
+        loading={Boolean(rejectStep) && decidingStepId === rejectStep?.id}
+        onClose={() => setRejectStep(null)}
+        onConfirm={async () => {
+          const step = rejectStep;
+          await decide(step, 'reject');
+          setRejectStep(null);
         }}
-      >
-        {label}
-      </div>
-      <div style={{ fontSize: 13 }}>{children}</div>
+      />
     </div>
   );
-}
-
-function stepTone(status) {
-  if (status === 'approved') return 'success';
-  if (status === 'rejected') return 'error';
-  if (status === 'pending') return 'warning';
-  return 'default';
 }

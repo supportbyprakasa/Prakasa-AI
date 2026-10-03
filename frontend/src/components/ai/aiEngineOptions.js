@@ -2,6 +2,9 @@ export function engineMenuItems(providers = []) {
   return providers.map((item) => ({
     value: item.id,
     label: item.label,
+    // An engine's name comes from the server's configuration: never translated.
+    data: true,
+    dataDescription: false,
     description: item.available
       ? (item.model ? `Model ${item.model}` : 'Tersedia')
       : 'Belum tersedia untuk akun Anda',
@@ -22,7 +25,7 @@ export function visibilityMenuItems(user) {
     ...(user?.departmentId || (user?.permissions || []).includes('ai_command.admin.view')
       ? [{ value: 'department', label: 'Divisi', description: 'Semua anggota divisi bisa membaca dan ikut bertanya' }]
       : []),
-    { value: 'entity', label: 'Lintas divisi', description: 'Dibagikan sesuai akses entity' },
+    { value: 'entity', label: 'Lintas divisi', description: 'Dibagikan sesuai akses entitas' },
   ];
 }
 

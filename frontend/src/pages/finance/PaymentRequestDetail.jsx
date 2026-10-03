@@ -1,414 +1,408 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useId, useState } from 'react';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/client';
-import Card from '../../components/Card';
+import ActionMenu from '../../components/ActionMenu';
+import Banner from '../../components/Banner';
 import Button from '../../components/Button';
-import Input from '../../components/Input';
-import Badge from '../../components/Badge';
-import Modal from '../../components/Modal';
+import Card from '../../components/Card';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import { SkeletonCard } from '../../components/Skeleton';
+import EmptyState, { LoadingState } from '../../components/EmptyState';
+import Input from '../../components/Input';
+import KeyValue from '../../components/KeyValue';
+import { Mixed, NoTranslate, Translate, data, strictTranslate } from '../../i18n/NoTranslate';
+import Modal from '../../components/Modal';
+import Page from '../../components/Page';
+import ReasonDialog from '../../components/ReasonDialog';
+import Select from '../../components/Select';
+import StatusBadge from '../../components/StatusBadge';
 import { toast } from '../../components/Toast';
+import { formatDate, formatDateTime } from '../../components/format';
+import PaymentRequestForm from './PaymentRequestForm';
+import {
+  ATTACHMENT_ACCEPT, ATTACHMENT_TYPES, MAX_ATTACHMENT_BYTES, PAYEE_TYPES, PAYROLL_NOTE, attachmentTypeLabel, docCheck,
+  financeMoney, historyParts, lastDecisionNote, requestActions, stepStatusKey, summaryLines, workflowTypeLabel,
+} from './financeModel';
+import './payment-requests.css';
 
+const apiMessage = (err, fallback) => err?.response?.data?.error?.message || fallback;
+
+// One payment request or reimbursement (detail template, docs/ui-guideline.md
+// §3.2): status and the actions in the header by role and state — Ajukan for
+// the requester, Setujui / Tolak / Minta revisi for the approver (through the
+// approval engine), Proses / Tandai dibayar for Finance, Batalkan in ⋮.
 export default function PaymentRequestDetail() {
   const { id } = useParams();
-  const nav = useNavigate();
-  const [wf, setWf] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [check, setCheck] = useState(null);
-  const [running, setRunning] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [cancelOpen, setCancelOpen] = useState(false);
-  const [paidOpen, setPaidOpen] = useState(false);
+  if (id === 'new') return <Navigate to="/finance/payment-requests?baru=1" replace />;
+  return <RequestDetail id={id} />;
+}
 
-  const load = async () => {
+function RequestDetail({ id }) {
+  const navigate = useNavigate();
+  const attachFormId = useId();
+  const paidFormId = useId();
+  const [request, setRequest] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [dialog, setDialog] = useState(null); // edit | approve | decline | revise | paid | cancel | remove | attach
+  const [busy, setBusy] = useState('');
+  const [check, setCheck] = useState(null);
+  const [upload, setUpload] = useState({ file: null, type: 'invoice', error: '' });
+  const [accurateReference, setAccurateReference] = useState('');
+
+  const load = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const r = await api.get(`/finance/payment-requests/${id}`);
-      setWf(r.data.data);
-    } catch {
-      toast('Pengajuan tidak ditemukan', 'error');
-      nav('/finance/payment-requests');
+      setRequest(r.data.data);
+    } catch (error) {
+      setLoadError(error?.response?.status === 404 ? 'Pengajuan ini tidak ada atau bukan untuk Anda.' : apiMessage(error, 'Periksa koneksi, lalu coba lagi.'));
     } finally {
       setLoading(false);
     }
-  };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  }, [id]);
+  useEffect(() => { load(); }, [load]);
 
-  const upload = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
+  // Runs an action with its button in the loading state, then reloads.
+  // → true when it worked.
+  const run = async (key, fn, success, { reload = true } = {}) => {
+    setBusy(key);
     try {
-      await api.post(`/finance/payment-requests/${id}/attachments`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      toast('Lampiran diunggah', 'success');
-      e.target.reset();
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
-    }
-  };
-
-  const runCheck = async () => {
-    setRunning(true);
-    setCheck(null);
-    try {
-      const r = await api.post(`/finance/payment-requests/${id}/document-check`);
-      setCheck(r.data.data);
-      toast('Document check selesai', 'success');
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
+      await fn();
+      if (success) toast(success, 'success');
+      setDialog(null);
+      if (reload) await load();
+      return true;
+    } catch (error) {
+      toast(apiMessage(error, 'Belum berhasil. Coba lagi.'), 'error');
+      return false;
     } finally {
-      setRunning(false);
+      setBusy('');
     }
   };
 
-  const submit = async () => {
-    try {
-      await api.post(`/finance/payment-requests/${id}/submit-approval`);
-      toast('Dikirim ke approval queue', 'success');
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
-    }
+  if (loading && !request) return <Page><LoadingState label="Memuat pengajuan" /></Page>;
+  if (loadError || !request) {
+    return (
+      <Page>
+        <EmptyState tone="error" title="Pengajuan tidak dapat dimuat" description={loadError || undefined} action={<Button variant="secondary" onClick={load}>Coba lagi</Button>} />
+      </Page>
+    );
+  }
+
+  const base = `/finance/payment-requests/${id}`;
+  const employee = request.workflowType === 'reimbursement';
+  const money = (value) => financeMoney(value || 0, request.currency);
+  const decide = (action, note) => run(action, () => api.post(`/approvals/${request.approvalRequestId}/decide`, { action, note: note || null }), {
+    approve: 'Pengajuan disetujui', reject: 'Pengajuan ditolak', request_revision: 'Pengajuan dikembalikan untuk revisi',
+  }[action]);
+  const runCheck = () => run('check', async () => {
+    setCheck(null);
+    const r = await api.post(`${base}/document-check`);
+    setCheck(r.data.data);
+  }, 'Dokumen sudah diperiksa');
+
+  const BUTTONS = {
+    approve: { label: 'Setujui', icon: 'check', onClick: () => setDialog('approve') },
+    decline: { label: 'Tolak', icon: 'close', onClick: () => setDialog('decline') },
+    revise: { label: 'Minta revisi', icon: 'edit_note', onClick: () => setDialog('revise') },
+    submit: { label: 'Ajukan', icon: 'send', onClick: () => run('submit', () => api.post(`${base}/submit-approval`), 'Pengajuan dikirim untuk disetujui') },
+    process: { label: 'Proses', icon: 'play_arrow', onClick: () => run('process', () => api.patch(`${base}/processing`, { status: 'processing' }), 'Pengajuan sedang diproses') },
+    paid: { label: 'Tandai dibayar', icon: 'payments', onClick: () => { setAccurateReference(''); setDialog('paid'); } },
+    edit: { label: 'Ubah', icon: 'edit', onClick: () => setDialog('edit') },
+    check: { label: 'Periksa dokumen', icon: 'fact_check', onClick: runCheck },
+    applyDecision: {
+      label: 'Terapkan keputusan approval', icon: 'sync',
+      onClick: () => run('applyDecision', () => api.post(`${base}/apply-approval`, {}), 'Keputusan approval diterapkan'),
+    },
+    remove: { label: 'Hapus draf', icon: 'delete', tone: 'danger', onClick: () => setDialog('remove') },
+    cancel: { label: 'Batalkan pengajuan', icon: 'cancel', tone: 'danger', onClick: () => setDialog('cancel') },
   };
+  const actions = requestActions(request);
+  const header = (
+    <>
+      {actions.secondary.map((k) => (
+        <Button key={k} variant="secondary" icon={BUTTONS[k].icon} onClick={BUTTONS[k].onClick} loading={busy === k} disabled={Boolean(busy) && busy !== k}>{BUTTONS[k].label}</Button>
+      ))}
+      {actions.primary.map((k) => (
+        <Button key={k} icon={BUTTONS[k].icon} onClick={BUTTONS[k].onClick} loading={busy === k} disabled={Boolean(busy) && busy !== k}>{BUTTONS[k].label}</Button>
+      ))}
+      {actions.menu.length ? <ActionMenu label="Aksi lainnya" items={actions.menu.map((k) => BUTTONS[k])} /> : null}
+    </>
+  );
 
-  const applyApproval = async (status) => {
-    try {
-      await api.post(`/finance/payment-requests/${id}/apply-approval`, { status });
-      toast(`Status diubah ke ${status}`, 'success');
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
+  const docStatus = docCheck(request.documentCheckStatus);
+  const checkLines = summaryLines(check?.notes || request.documentCheckSummary);
+  const attachments = request.attachments || [];
+  const uploadedTypes = new Set(attachments.map((a) => a.attachmentType));
+  const missingRequired = (request.requiredAttachments || []).filter((t) => !uploadedTypes.has(t));
+  const steps = request.approvalSteps || [];
+  const decisionNote = lastDecisionNote(steps);
+
+  const sendAttachment = async (event) => {
+    event.preventDefault();
+    const { file, type } = upload;
+    if (!file) { setUpload((u) => ({ ...u, error: 'Pilih file.' })); return; }
+    if (file.size > MAX_ATTACHMENT_BYTES || !ATTACHMENT_ACCEPT.split(',').includes(file.type)) {
+      setUpload((u) => ({ ...u, error: 'PDF atau foto (PNG, JPG, WebP), paling besar 10 MB.' }));
+      return;
     }
+    const data = new FormData();
+    data.append('attachmentType', type);
+    data.append('file', file);
+    await run('attach', () => api.post(`${base}/attachments`, data), 'Lampiran ditambahkan');
   };
-
-  const doCancel = async () => {
-    try {
-      await api.patch(`/finance/payment-requests/${id}/processing`, { status: 'cancelled' });
-      toast('Pengajuan dibatalkan', 'success');
-      setCancelOpen(false);
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
-    }
+  const openAttach = () => {
+    setUpload({ file: null, type: missingRequired[0] || (request.status === 'paid' ? 'bank_proof' : 'other'), error: '' });
+    setDialog('attach');
   };
-
-  const markPaid = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    try {
-      await api.patch(`/finance/payment-requests/${id}/processing`, {
-        status: 'paid',
-        jurnalReferenceId: fd.get('jurnalReferenceId') || null,
-        jurnalReferenceUrl: fd.get('jurnalReferenceUrl') || null,
-      });
-      toast('Ditandai paid', 'success');
-      setPaidOpen(false);
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
-    }
-  };
-
-  const saveEdit = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    try {
-      await api.patch(`/finance/payment-requests/${id}`, {
-        title: fd.get('title'),
-        description: fd.get('description') || null,
-        category: fd.get('category') || null,
-        payeeName: fd.get('payeeName') || null,
-        payeeBank: fd.get('payeeBank') || null,
-        payeeAccountNumber: fd.get('payeeAccountNumber') || null,
-        payeeAccountName: fd.get('payeeAccountName') || null,
-        amount: Number(fd.get('amount')),
-        taxAmount: Number(fd.get('taxAmount') || 0),
-        totalAmount: Number(fd.get('totalAmount')),
-        dueDate: fd.get('dueDate') || null,
-        notes: fd.get('notes') || null,
-      });
-      toast('Pengajuan diperbarui', 'success');
-      setEditOpen(false);
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
-    }
-  };
-
-  if (loading) return <SkeletonCard lines={10} />;
-  if (!wf) return null;
-
-  const editable = ['draft', 'revision_requested', 'pending_document_check'].includes(wf.status);
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Button variant="secondary" onClick={() => nav('/finance/payment-requests')}>
-          ← Kembali
-        </Button>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {editable && <Button variant="secondary" onClick={() => setEditOpen(true)}>Edit</Button>}
-          {!['paid', 'cancelled'].includes(wf.status) && (
-            <Button variant="danger" onClick={() => setCancelOpen(true)}>
-              Batalkan
-            </Button>
-          )}
-        </div>
-      </div>
+    <Page
+      eyebrow={workflowTypeLabel(request.workflowType)}
+      title={request.title}
+      dataTitle
+      description={(
+        <span className="pw-row">
+          <StatusBadge status={request.status} />
+          <span data-no-translate="">{request.requestNumber}</span>
+          <span>{`Diajukan ${request.requesterName || '—'}, ${formatDate(request.requestDate)}`}</span>
+        </span>
+      )}
+      actions={header}
+    >
+      {request.can?.decide ? (
+        <Banner tone="info" title="Menunggu keputusan Anda">Periksa rincian dan lampiran, lalu setujui, tolak, atau minta revisi.</Banner>
+      ) : null}
+      {request.status === 'pending_approval' && !request.can?.decide ? (
+        <Banner tone="info">Menunggu persetujuan. Pengaju dan Finance mendapat notifikasi saat sudah diputuskan.</Banner>
+      ) : null}
+      {request.can?.applyDecision ? (
+        <Banner tone="warning" title="Approval sudah diputuskan" action={<Button variant="text" loading={busy === 'applyDecision'} onClick={BUTTONS.applyDecision.onClick}>Terapkan</Button>}>
+          Keputusan approval belum tercatat di pengajuan ini.
+        </Banner>
+      ) : null}
+      {request.status === 'revision_requested' ? (
+        <Banner tone="warning" title="Perlu revisi">{decisionNote ? <NoTranslate>{decisionNote}</NoTranslate> : 'Perbaiki pengajuan, lalu ajukan lagi.'}</Banner>
+      ) : null}
+      {request.status === 'rejected' ? <Banner tone="error" title="Ditolak">{decisionNote ? <NoTranslate>{decisionNote}</NoTranslate> : 'Pengajuan ini ditolak penyetuju.'}</Banner> : null}
+      {request.status === 'approved' ? <Banner tone="info">Disetujui. Finance akan memproses pembayarannya.</Banner> : null}
+      {request.status === 'paid' ? (
+        <Banner tone="success" title={`Dibayar ${formatDateTime(request.paidAt)}`}>
+          {request.accurateReference ? `Nomor bukti di Accurate: ${request.accurateReference}` : 'Nomor bukti di Accurate belum dicatat.'}
+        </Banner>
+      ) : null}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-        <h2>
-          {wf.request_number} — {wf.title}
-        </h2>
-        <Badge
-          tone={
-            wf.status === 'paid'
-              ? 'success'
-              : wf.status === 'rejected' || wf.status === 'cancelled'
-              ? 'error'
-              : wf.status === 'pending_approval'
-              ? 'warning'
-              : 'info'
-          }
-        >
-          {wf.status}
-        </Badge>
-      </div>
-      <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-        {wf.workflow_type} · diajukan oleh {wf.requesterName} pada {new Date(wf.request_date).toLocaleDateString('id-ID')}
-      </div>
+      <div className="pw-cols-sidebar">
+        <div className="pw-stack pw-stack--lg">
+          <Card title="Rincian">
+            <KeyValue
+              columns={2}
+              items={[
+                { label: 'Jenis', translate: true, value: workflowTypeLabel(request.workflowType) },
+                { label: 'Kategori', value: request.category },
+                { label: 'Tanggal pengajuan', value: formatDate(request.requestDate) },
+                { label: 'Tanggal bayar yang diminta', value: request.requestedPaymentDate ? formatDate(request.requestedPaymentDate) : null },
+                employee ? null : { label: 'Jatuh tempo', value: request.dueDate ? formatDate(request.dueDate) : null },
+                { label: 'Keterangan dan referensi', value: request.description ? <span className="fin-text">{request.description}</span> : null },
+                request.notes ? { label: 'Catatan untuk Finance', value: <span data-no-translate="" className="fin-text">{request.notes}</span> } : null,
+              ]}
+            />
+          </Card>
 
-      <div className="prakasa-detail-columns" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
-        <Card title="Informasi">
-          <div style={{ fontSize: 13, lineHeight: 1.9 }}>
-            <div>Kategori: <b>{wf.category || '—'}</b></div>
-            <div>Penerima: <b>{wf.payee_name || '—'}</b> ({wf.payee_type})</div>
-            <div>Bank: {wf.payee_bank || '—'} · {wf.payee_account_number || '—'}</div>
-            <div>Atas Nama: {wf.payee_account_name || '—'}</div>
-            <div>Subtotal: {wf.currency} {Number(wf.amount).toLocaleString('id-ID')}</div>
-            <div>Pajak: {wf.currency} {Number(wf.tax_amount || 0).toLocaleString('id-ID')}</div>
-            <div><b>Total: {wf.currency} {Number(wf.total_amount).toLocaleString('id-ID')}</b></div>
-            <div>Jatuh tempo: {wf.due_date || '—'}</div>
-            <div>Finance PIC: {wf.financePicName || '—'}</div>
-            <div>
-              Referensi Jurnal.id:{' '}
-              {wf.jurnal_reference_id ? (
-                <a href={wf.jurnal_reference_url || '#'} target="_blank" rel="noreferrer">
-                  {wf.jurnal_reference_id}
-                </a>
-              ) : (
-                '—'
-              )}
+          <Card title="Penerima dan nilai">
+            <KeyValue
+              columns={2}
+              items={employee ? [
+                { label: 'Karyawan', value: request.payeeName || request.requesterName },
+                { label: 'Rekening', translate: true, value: PAYROLL_NOTE },
+                { label: 'Subtotal', value: money(request.amount) },
+                { label: 'Pajak', value: money(request.taxAmount) },
+                { label: 'Total', value: <span className="pw-strong">{money(request.totalAmount)}</span> },
+              ] : [
+                { label: 'Penerima', value: request.payeeName ? <>{request.payeeName}{request.payeeType ? <> (<Translate>{PAYEE_TYPES[request.payeeType] || request.payeeType}</Translate>)</> : ''}</> : null },
+                { label: 'Bank', value: request.payeeBank },
+                { label: 'Nomor rekening', value: request.payeeAccountNumber },
+                { label: 'Atas nama', value: request.payeeAccountName },
+                { label: 'Subtotal', value: money(request.amount) },
+                { label: 'Pajak', value: money(request.taxAmount) },
+                { label: 'Total', value: <span className="pw-strong">{money(request.totalAmount)}</span> },
+              ]}
+            />
+          </Card>
+
+          <Card title="Lampiran" actions={request.can?.attach ? <Button variant="secondary" icon="attach_file" onClick={openAttach}>Lampirkan</Button> : null}>
+            <div className="pw-stack">
+              {missingRequired.length && request.can?.submit ? (
+                <Banner tone="warning">{`Wajib dilampirkan sebelum diajukan: ${missingRequired.map(attachmentTypeLabel).join(', ')}.`}</Banner>
+              ) : null}
+              {attachments.length ? (
+                <ul className="fin-list">
+                  {attachments.map((a) => (
+                    <li key={a.id} className="fin-list__item">
+                      {a.webViewLink ? <a href={a.webViewLink} target="_blank" rel="noreferrer" data-no-translate={a.name ? '' : undefined}>{a.name || 'Lampiran'}</a> : <span data-no-translate={a.name ? '' : undefined}>{a.name || 'Lampiran'}</span>}
+                      <span className="pw-text-meta"><Mixed parts={[attachmentTypeLabel(a.attachmentType), data(a.uploadedByName), formatDateTime(a.createdAt)]} /></span>
+                    </li>
+                  ))}
+                </ul>
+              ) : <EmptyState compact icon="attach_file" title="Belum ada lampiran" />}
             </div>
-          </div>
-        </Card>
+          </Card>
 
-        <Card
-          title="AI Document Check"
-          actions={
-            <Button onClick={runCheck} disabled={running}>
-              {running ? 'Memeriksa…' : 'Jalankan'}
-            </Button>
-          }
-        >
-          <div style={{ fontSize: 13 }}>
-            Status:{' '}
-            <Badge
-              tone={
-                wf.document_check_status === 'passed'
-                  ? 'success'
-                  : wf.document_check_status === 'warning'
-                  ? 'warning'
-                  : wf.document_check_status === 'failed'
-                  ? 'error'
-                  : 'default'
-              }
-            >
-              {wf.document_check_status}
-            </Badge>
-          </div>
-          {wf.document_check_summary && (
-            <pre
-              style={{
-                whiteSpace: 'pre-wrap',
-                fontSize: 12,
-                background: '#f8fafc',
-                padding: 10,
-                borderRadius: 6,
-                marginTop: 8,
-                maxHeight: 220,
-                overflowY: 'auto',
-              }}
-            >
-              {wf.document_check_summary}
-            </pre>
-          )}
-          {check && check.missing?.length > 0 && (
-            <div style={{ marginTop: 8, fontSize: 12, color: 'var(--color-error)' }}>
-              Dokumen wajib kurang: {check.missing.join(', ')}
+          <Card title="Pemeriksaan dokumen" actions={request.can?.check ? <Button variant="secondary" icon="fact_check" loading={busy === 'check'} onClick={runCheck}>Periksa</Button> : null}>
+            <div className="pw-stack">
+              <KeyValue items={[
+                { label: 'Hasil', value: <StatusBadge status={docStatus.status} label={docStatus.label} /> },
+                request.documentCheckAt ? { label: 'Diperiksa', value: formatDateTime(request.documentCheckAt) } : null,
+              ]}
+              />
+              {check?.missing?.length ? (
+                <Banner tone="warning" title="Dokumen wajib belum ada">{check.missing.map(attachmentTypeLabel).join(', ')}</Banner>
+              ) : null}
+              {checkLines.length ? (
+                <ul className="fin-notes" {...strictTranslate}>
+                  {checkLines.map((line, index) => <li key={index}>{line}</li>)}
+                </ul>
+              ) : <p className="pw-text-helper fin-hint">Pemeriksaan melihat kelengkapan lampiran. AI hanya memberi catatan; keputusan tetap di penyetuju.</p>}
             </div>
-          )}
-        </Card>
-      </div>
+          </Card>
 
-      <div style={{ marginTop: 12 }}>
-        <Card title={`Lampiran (${wf.attachments?.length || 0})`}>
-          {wf.attachments?.map((a) => (
-            <div
-              key={a.id}
-              style={{
-                display: 'flex',
-                justify: 'space-between',
-                alignItems: 'center',
-                fontSize: 13,
-                padding: 8,
-                boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
-              }}
-            >
-              <div>
-                <Badge tone="info">{a.attachmentType}</Badge> <b>{a.name}</b>
-              </div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {a.webViewLink && (
-                  <a href={a.webViewLink} target="_blank" rel="noreferrer">
-                    <Button variant="secondary">Buka</Button>
-                  </a>
-                )}
-              </div>
-            </div>
-          ))}
-          {!wf.attachments?.length && (
-            <div style={{ color: 'var(--color-text-muted)', fontSize: 13, padding: 8 }}>
-              Belum ada lampiran
-            </div>
-          )}
+          <Card title="Persetujuan">
+            {steps.length ? (
+              <ul className="fin-list">
+                {steps.map((s) => (
+                  <li key={s.id} className="fin-list__item">
+                    <span className="fin-list__main">
+                      <span data-no-translate={s.approverName ? '' : undefined}>{s.approverName || 'Penyetuju'}</span>
+                      <StatusBadge status={stepStatusKey(s.status)} />
+                    </span>
+                    {s.note ? <span className="fin-text" data-no-translate="">{s.note}</span> : null}
+                    <span className="pw-text-meta">
+                      {s.decidedAt ? <Mixed parts={[s.decidedByName ? data(s.decidedByName) : 'Penyetuju', formatDateTime(s.decidedAt)]} /> : `Sejak ${formatDateTime(s.activatedAt)}`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : <EmptyState compact icon="approval" title="Belum diajukan" description="Penyetuju ditentukan saat pengajuan dikirim." />}
+          </Card>
 
-          {editable && (
-            <form
-              onSubmit={upload}
-              style={{
-                marginTop: 12,
-                display: 'flex',
-                gap: 8,
-                alignItems: 'flex-end',
-                flexWrap: 'wrap',
-              }}
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={{ fontSize: 13 }}>Tipe</label>
-                <select
-                  name="attachmentType"
-                  style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
-                >
-                  <option value="invoice">Invoice</option>
-                  <option value="receipt">Receipt</option>
-                  <option value="quotation">Quotation</option>
-                  <option value="po">PO</option>
-                  <option value="bank_proof">Bukti Transfer</option>
-                  <option value="tax_doc">Dokumen Pajak</option>
-                  <option value="other">Lain-lain</option>
-                </select>
-              </div>
-              <Input label="File" name="file" type="file" style={{ margin: 0 }} />
-              <Button type="submit">Unggah</Button>
-            </form>
-          )}
-        </Card>
-      </div>
-
-      {wf.notes && (
-        <div style={{ marginTop: 12 }}>
-          <Card title="Catatan">
-            <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, margin: 0 }}>{wf.notes}</pre>
+          <Card title="Riwayat">
+            {request.history?.length ? (
+              <ul className="fin-list">
+                {request.history.map((h) => (
+                  <li key={h.id} className="fin-list__item">
+                    <span><Mixed parts={historyParts(h)} separator=" — " /></span>
+                    <span className="pw-text-meta"><Mixed parts={[h.userName ? data(h.userName) : 'Sistem', formatDateTime(h.at)]} /></span>
+                  </li>
+                ))}
+              </ul>
+            ) : <EmptyState compact icon="history" title="Belum ada riwayat" />}
           </Card>
         </div>
-      )}
 
-      {/* Action bar */}
-      <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {editable && wf.document_check_status !== 'failed' && wf.document_check_status !== 'not_run' && (
-          <Button onClick={submit}>Submit ke Approval Queue</Button>
-        )}
-        {editable && wf.document_check_status === 'not_run' && (
-          <Button onClick={runCheck} disabled={running}>
-            Jalankan Document Check dulu
-          </Button>
-        )}
-        {wf.status === 'pending_approval' && (
-          <>
-            <Button onClick={() => applyApproval('approved')}>Tandai Approved</Button>
-            <Button variant="danger" onClick={() => applyApproval('rejected')}>
-              Tandai Rejected
-            </Button>
-            <Button variant="secondary" onClick={() => applyApproval('revision_requested')}>
-              Minta Revisi
-            </Button>
-          </>
-        )}
-        {wf.status === 'approved' && <Button onClick={() => setPaidOpen(true)}>Tandai Sudah Dibayar</Button>}
+        <aside className="pw-stack pw-stack--lg">
+          <Card title="Ringkasan">
+            <KeyValue items={[
+              { label: 'Nomor', value: request.requestNumber },
+              { label: 'Status', value: <StatusBadge status={request.status} /> },
+              { label: 'Total', value: money(request.totalAmount) },
+              { label: 'Pengaju', value: request.requesterName },
+              { label: 'Divisi', translate: true, value: request.departmentName },
+              { label: 'PIC Finance', value: request.financePicName },
+              request.paidAt ? { label: 'Dibayar', value: <Mixed parts={[formatDateTime(request.paidAt), data(request.paidByName)]} /> } : null,
+              { label: 'Nomor bukti di Accurate', value: request.accurateReference },
+            ]}
+            />
+          </Card>
+        </aside>
       </div>
 
-      {/* Edit modal */}
-      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Pengajuan">
-        <form onSubmit={saveEdit}>
-          <Input label="Judul" name="title" defaultValue={wf.title} required />
-          <Input label="Deskripsi" name="description" defaultValue={wf.description || ''} />
-          <Input label="Kategori" name="category" defaultValue={wf.category || ''} />
-          <Input label="Nama Penerima" name="payeeName" defaultValue={wf.payee_name || ''} />
-          <Input label="Bank" name="payeeBank" defaultValue={wf.payee_bank || ''} />
-          <Input label="No. Rekening" name="payeeAccountNumber" defaultValue={wf.payee_account_number || ''} />
-          <Input label="Atas Nama" name="payeeAccountName" defaultValue={wf.payee_account_name || ''} />
-          <Input label="Subtotal" name="amount" type="number" defaultValue={wf.amount} required />
-          <Input label="Pajak" name="taxAmount" type="number" defaultValue={wf.tax_amount || 0} />
-          <Input label="Total" name="totalAmount" type="number" defaultValue={wf.total_amount} required />
-          <Input label="Jatuh Tempo" name="dueDate" type="date" defaultValue={wf.due_date || ''} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-            <label style={{ fontSize: 13 }}>Catatan</label>
-            <textarea
-              name="notes"
-              rows={3}
-              defaultValue={wf.notes || ''}
-              style={{ padding: 10, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
-            />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button variant="secondary" type="button" onClick={() => setEditOpen(false)}>
-              Batal
-            </Button>
-            <Button type="submit">Simpan</Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Paid modal */}
-      <Modal open={paidOpen} onClose={() => setPaidOpen(false)} title="Tandai Sudah Dibayar">
-        <form onSubmit={markPaid}>
-          <Input label="Referensi Jurnal.id (nomor jurnal)" name="jurnalReferenceId" />
-          <Input label="URL Jurnal.id" name="jurnalReferenceUrl" placeholder="https://..." />
-          <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 12 }}>
-            Platform tidak menyimpan data akuntansi. Referensi di atas hanya untuk deep-link ke Jurnal.id.
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button variant="secondary" type="button" onClick={() => setPaidOpen(false)}>
-              Batal
-            </Button>
-            <Button type="submit">Konfirmasi Paid</Button>
-          </div>
-        </form>
-      </Modal>
-
+      <PaymentRequestForm open={dialog === 'edit'} request={request} onClose={() => setDialog(null)} onSaved={load} />
       <ConfirmDialog
-        open={cancelOpen}
-        title="Batalkan pengajuan?"
-        message="Pengajuan akan ditandai sebagai cancelled dan tidak bisa dilanjutkan."
-        confirmLabel="Ya, batalkan"
-        onConfirm={doCancel}
-        onClose={() => setCancelOpen(false)}
+        open={dialog === 'approve'}
+        title="Setujui pengajuan ini?"
+        message={`${request.requestNumber} · ${money(request.totalAmount)}. Setelah disetujui, Finance memproses pembayarannya.`}
+        confirmLabel="Setujui"
+        tone="primary"
+        loading={busy === 'approve'}
+        onConfirm={() => decide('approve')}
+        onClose={() => setDialog(null)}
       />
-    </div>
+      <ReasonDialog open={dialog === 'decline'} title="Tolak pengajuan" confirmLabel="Tolak" tone="danger" hint="Pengaju membaca alasan ini." onClose={() => setDialog(null)} onConfirm={(text) => decide('reject', text)} />
+      <ReasonDialog open={dialog === 'revise'} title="Minta revisi" label="Yang perlu diperbaiki" confirmLabel="Minta revisi" hint="Pengaju memperbaiki, lalu mengajukan lagi." onClose={() => setDialog(null)} onConfirm={(text) => decide('request_revision', text)} />
+      <ReasonDialog
+        open={dialog === 'cancel'}
+        title="Batalkan pengajuan"
+        confirmLabel="Batalkan pengajuan"
+        tone="danger"
+        hint={request.status === 'pending_approval' ? 'Approval yang masih menunggu ikut ditarik.' : undefined}
+        onClose={() => setDialog(null)}
+        onConfirm={(text) => run('cancel', () => api.post(`${base}/cancel`, { reason: text }), 'Pengajuan dibatalkan')}
+      />
+      <ConfirmDialog
+        open={dialog === 'remove'}
+        title="Hapus draf ini?"
+        message={`${request.requestNumber} dihapus dari daftar.`}
+        confirmLabel="Hapus draf"
+        tone="danger"
+        loading={busy === 'remove'}
+        onConfirm={async () => {
+          const done = await run('remove', () => api.delete(base), 'Draf dihapus', { reload: false });
+          if (done) navigate('/finance/payment-requests');
+        }}
+        onClose={() => setDialog(null)}
+      />
+      <Modal
+        open={dialog === 'paid'}
+        size="sm"
+        title="Tandai sudah dibayar"
+        onClose={busy ? undefined : () => setDialog(null)}
+        footer={(
+          <>
+            <Button variant="text" type="button" onClick={() => setDialog(null)} disabled={Boolean(busy)}>Batal</Button>
+            <Button type="submit" form={paidFormId} loading={busy === 'paid'}>Tandai dibayar</Button>
+          </>
+        )}
+      >
+        <form
+          id={paidFormId}
+          onSubmit={(e) => {
+            e.preventDefault();
+            run('paid', () => api.patch(`${base}/processing`, { status: 'paid', accurateReference: accurateReference.trim() || null }), 'Ditandai sudah dibayar');
+          }}
+        >
+          <Input
+            label="Nomor bukti di Accurate"
+            value={accurateReference}
+            onChange={(e) => setAccurateReference(e.target.value)}
+            hint="Nomor bukti kas/bank keluar yang dicatat Finance di Accurate Online. Aplikasi tidak menulis ke Accurate."
+          />
+        </form>
+      </Modal>
+      <Modal
+        open={dialog === 'attach'}
+        size="sm"
+        title="Lampirkan dokumen"
+        onClose={busy ? undefined : () => setDialog(null)}
+        footer={(
+          <>
+            <Button variant="text" type="button" onClick={() => setDialog(null)} disabled={Boolean(busy)}>Batal</Button>
+            <Button type="submit" form={attachFormId} loading={busy === 'attach'}>Lampirkan</Button>
+          </>
+        )}
+      >
+        <form id={attachFormId} className="pw-stack" onSubmit={sendAttachment}>
+          <Select label="Jenis dokumen" value={upload.type} onChange={(e) => setUpload((u) => ({ ...u, type: e.target.value }))} options={ATTACHMENT_TYPES} />
+          <Input
+            label="File"
+            type="file"
+            accept={ATTACHMENT_ACCEPT}
+            onChange={(e) => setUpload((u) => ({ ...u, file: e.target.files?.[0] || null, error: '' }))}
+            error={upload.error}
+            hint="PDF atau foto, paling besar 10 MB. Disimpan di Shared Drive."
+          />
+        </form>
+      </Modal>
+    </Page>
   );
 }

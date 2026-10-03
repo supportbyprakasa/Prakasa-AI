@@ -1,0 +1,46 @@
+/* Direktori (People & Culture) — layout specifics only. Fields, grids,
+   sheets, dialogs and status text come from the shared components. */
+
+/* Name cell: avatar + name + marks. */
+.people-name { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.people-name__marks { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+
+/* Side sheet. */
+.people-heading { margin: 0; }
+.people-sheet__head { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.people-sheet__name { color: var(--pw-text); font-family: var(--pw-font-sans); font-size: var(--pw-font-md); line-height: 24px; overflow-wrap: anywhere; }
+.people-sheet__note { margin: 0; color: var(--pw-warning); font-size: var(--pw-font-body); line-height: 20px; }
+.people-sheet__reports { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.people-sheet__report {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 4px 8px;
+  border-radius: var(--pw-radius-md);
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Bagan: nested lists, each level indented under a guide line. */
+.people-org__tree { display: flex; flex-direction: column; gap: 2px; margin: 0 0 0 20px; padding: 0 0 0 12px; list-style: none; box-shadow: inset 1px 0 0 0 var(--pw-divider); }
+.people-org__tree--root { margin: 0; padding: 0; box-shadow: none; }
+.people-org__node { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.people-org__person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 4px 8px;
+  border-radius: var(--pw-radius-md);
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+.people-org__person .pw-cell { flex: 1 1 auto; }
+
+@media (max-width: 600px) {
+  .people-org__tree { margin-left: 12px; padding-left: 8px; }
+  .people-org__tree--root { margin-left: 0; padding-left: 0; }
+  .people-org__person { gap: 8px; padding: 4px; }
+}

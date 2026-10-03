@@ -1,28 +1,34 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Archive, Building2, Inbox, Lock, MessagesSquare, MoreHorizontal, Pencil, Pin, PinOff,
-  Settings2, SquarePen, Trash2, Users,
-} from 'lucide-react';
 import ConfirmDialog from '../ConfirmDialog';
 import api from '../../api/client';
 import Button from '../Button';
+import CountBadge from '../CountBadge';
+import EmptyState from '../EmptyState';
+import FormActions from '../FormActions';
+import Icon from '../Icon';
+import IconButton from '../IconButton';
 import Input from '../Input';
+import Menu from '../Menu';
 import Modal from '../Modal';
+import Select from '../Select';
+import Textarea from '../Textarea';
+import { SkeletonLine } from '../Skeleton';
 import { toast } from '../Toast';
 import { useAuth } from '../../context/AuthContext';
-import { visibilityHelper } from './AIVisibilityBadge';
+import { visibilityOptions } from './AIVisibilityBadge';
 import { groupSessionsByRecency } from '../../pages/ai/aiCommandCenterModel';
+import './ai-components.css';
 
 const PAGE_SIZE = 30;
 
 const SPACES = [
-  { value: '', label: 'Semua percakapan', icon: MessagesSquare },
-  { value: 'private', label: 'Pribadi', icon: Lock },
-  { value: 'department', label: 'Divisi', icon: Users },
-  { value: 'entity', label: 'Lintas divisi', icon: Building2 },
+  { value: '', label: 'Semua percakapan', icon: 'forum' },
+  { value: 'private', label: 'Pribadi', icon: 'lock' },
+  { value: 'department', label: 'Divisi', icon: 'group' },
+  { value: 'entity', label: 'Lintas divisi', icon: 'domain' },
 ];
 
-const SHARED_ICONS = { department: Users, entity: Building2 };
+const SHARED_ICONS = { department: 'group', entity: 'domain' };
 
 export default function AISessionList({
   selectedSessionId,
@@ -133,76 +139,76 @@ export default function AISessionList({
   return (
     <div className="ai-session-list">
       {canCreate && (
-        <button type="button" className="ai-new-chat-button ai-ripple" onClick={onNewChat}>
-          <SquarePen size={18} />
-          <span>Percakapan baru</span>
-        </button>
+        <Button className="ai-sidebar-new" icon="edit_square" onClick={onNewChat}>
+          Percakapan baru
+        </Button>
       )}
 
       {onOpenInbox && (
         <button
           type="button"
-          className={`ai-nav-item ai-ripple ai-inbox-nav${inboxActive ? ' is-active' : ''}`}
+          className={`ai-nav-item pw-state-layer ai-inbox-nav${inboxActive ? ' is-active' : ''}`}
           aria-current={inboxActive ? 'page' : undefined}
           onClick={onOpenInbox}
         >
-          <Inbox size={18} />
-          <span>Kotak aksi</span>
-          {inboxCount > 0 && <span className="ai-nav-badge" aria-label={`${inboxCount} menunggu`}>{inboxCount > 99 ? '99+' : inboxCount}</span>}
+          <Icon name="inbox" size="md" />
+          <span className="ai-nav-label">Kotak aksi</span>
+          <CountBadge count={inboxCount} label={`${inboxCount} menunggu`} />
         </button>
       )}
 
       <nav className="ai-sidebar-section" aria-label="Ruang kerja">
         <div className="ai-sidebar-label">Ruang kerja</div>
-        {SPACES.map(({ value, label, icon: Icon }) => {
+        {SPACES.map(({ value, label, icon }) => {
           const active = visibility === value;
           return (
             <button
               key={value || 'all'}
               type="button"
-              className={`ai-nav-item ai-ripple${active ? ' is-active' : ''}`}
+              className={`ai-nav-item pw-state-layer${active ? ' is-active' : ''}`}
               aria-current={active ? 'true' : undefined}
               onClick={() => setVisibility(value)}
             >
-              <Icon size={18} />
-              <span>{label}</span>
+              <Icon name={icon} size="md" />
+              <span className="ai-nav-label">{label}</span>
             </button>
           );
         })}
         <button
           type="button"
-          className={`ai-nav-item ai-ripple${archived ? ' is-active' : ''}`}
+          className={`ai-nav-item pw-state-layer${archived ? ' is-active' : ''}`}
           aria-pressed={archived}
           onClick={() => setArchived((current) => !current)}
         >
-          <Archive size={18} />
-          <span>{archived ? 'Menampilkan arsip' : 'Arsip'}</span>
+          <Icon name="archive" size="md" />
+          <span className="ai-nav-label">{archived ? 'Menampilkan arsip' : 'Arsip'}</span>
         </button>
         {visibility === 'department' && canStartDivisionChat && onNewDivisionChat && (
-          <button type="button" className="ai-text-button ai-ripple ai-division-new" onClick={onNewDivisionChat}>
-            <Users size={16} />
-            <span>Percakapan divisi baru</span>
-          </button>
+          <Button variant="text" icon="group" className="ai-division-new" onClick={onNewDivisionChat}>
+            Buat percakapan divisi
+          </Button>
         )}
       </nav>
 
       <div className="ai-recents" aria-label="Riwayat percakapan">
         {loading && (
-          <div className="ai-skeleton-list" aria-hidden="true">
-            {[72, 56, 84, 64, 48].map((width) => (
-              <span key={width} className="ai-skeleton-line" style={{ width: `${width}%` }} />
+          <div className="ai-skeleton-list" role="status" aria-label="Memuat percakapan">
+            {['72%', '56%', '84%', '64%', '48%'].map((width) => (
+              <SkeletonLine key={width} width={width} height={12} />
             ))}
           </div>
         )}
 
         {!loading && !rows.length && (
-          <div className="ai-session-empty">
-            {archived
+          <EmptyState
+            compact
+            icon={archived ? 'archive' : 'forum'}
+            description={archived
               ? 'Tidak ada percakapan yang diarsipkan.'
               : visibility === 'department'
                 ? 'Belum ada percakapan divisi. Mulai satu agar tim bisa bertanya bersama.'
                 : 'Belum ada percakapan di ruang ini.'}
-          </div>
+          />
         )}
 
         {!loading && groups.map((group) => (
@@ -212,12 +218,12 @@ export default function AISessionList({
               const isSelected = !inboxActive && Number(session.id) === Number(selectedSessionId);
               const isOwner = Number(session.ownerUserId) === Number(user?.id);
               const title = session.title || `Percakapan #${session.id}`;
-              const SharedIcon = SHARED_ICONS[session.visibility];
+              const sharedIcon = SHARED_ICONS[session.visibility];
               if (renamingId === session.id) {
                 return (
-                  <input
+                  <Input
                     key={session.id}
-                    className="ai-rename-input"
+                    fieldClassName="ai-rename-field"
                     value={renameText}
                     autoFocus
                     maxLength={255}
@@ -233,18 +239,20 @@ export default function AISessionList({
               }
               return (
                 <div key={session.id} className={`ai-session-row${isSelected ? ' is-active' : ''}`}>
-                  <button
-                    type="button"
-                    title={title}
-                    onClick={() => onSelectSession(session.id)}
-                    className={`ai-session-link ai-ripple${isSelected ? ' is-active' : ''}`}
-                    aria-current={isSelected ? 'page' : undefined}
-                  >
-                    {session.pinned && <Pin size={13} className="ai-session-pin" aria-label="Disematkan" />}
-                    <span className="ai-session-title">{title}</span>
-                    {!isOwner && <small className="ai-session-owner">{session.ownerName || 'user lain'}</small>}
-                    {SharedIcon && <SharedIcon size={14} className="ai-session-shared" aria-label="Dibagikan" />}
-                  </button>
+                  {/* The full title on hover: long titles are cut with an ellipsis. */}
+                  <span className="pw-tooltip-anchor ai-session-tip" data-pw-tooltip={title}>
+                    <button
+                      type="button"
+                      onClick={() => onSelectSession(session.id)}
+                      className={`ai-session-link pw-state-layer${isSelected ? ' is-active' : ''}`}
+                      aria-current={isSelected ? 'page' : undefined}
+                    >
+                      {session.pinned && <Icon name="keep" size="sm" className="ai-session-pin" label="Disematkan" />}
+                      <span className="ai-session-title" data-no-translate={session.title ? '' : undefined}>{title}</span>
+                      {!isOwner && <span className="ai-session-owner" data-no-translate={session.ownerName ? '' : undefined}>{session.ownerName || 'user lain'}</span>}
+                      {sharedIcon && <Icon name={sharedIcon} size="sm" className="ai-session-shared" label="Dibagikan" />}
+                    </button>
+                  </span>
                   <SessionMenu
                     title={title}
                     pinned={session.pinned}
@@ -261,14 +269,15 @@ export default function AISessionList({
         ))}
 
         {!loading && hasMore && (
-          <button
-            type="button"
-            className="ai-text-button ai-ripple ai-load-more"
+          <Button
+            variant="text"
+            block
+            className="ai-load-more"
             onClick={() => load((meta.page || 1) + 1, true)}
-            disabled={loadingMore}
+            loading={loadingMore}
           >
-            {loadingMore ? 'Memuat…' : 'Muat lebih banyak'}
-          </button>
+            Muat lebih banyak
+          </Button>
         )}
       </div>
 
@@ -278,7 +287,7 @@ export default function AISessionList({
         message={deleteTarget?.visibility === 'department'
           ? `“${deleteTarget?.title || 'Percakapan'}” akan hilang untuk semua anggota divisi. Tindakan ini tidak dapat dibatalkan dari antarmuka.`
           : `“${deleteTarget?.title || 'Percakapan'}” tidak akan tampil lagi. Tindakan ini tidak dapat dibatalkan dari antarmuka.`}
-        confirmLabel="Hapus"
+        confirmLabel="Hapus percakapan"
         tone="danger"
         loading={busy}
         onConfirm={confirmDelete}
@@ -288,61 +297,34 @@ export default function AISessionList({
   );
 }
 
+// Conversation options (the shared Menu, §4.14): pin, rename, edit, delete.
 function SessionMenu({ title, pinned, canManage, onPin, onRename, onEdit, onDelete }) {
   const [open, setOpen] = useState(false);
-  const rootRef = useRef(null);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const onPointerDown = (event) => { if (!rootRef.current?.contains(event.target)) setOpen(false); };
-    const onKeyDown = (event) => { if (event.key === 'Escape') setOpen(false); };
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open]);
-
-  const choose = (action) => () => { setOpen(false); action(); };
+  const triggerRef = useRef(null);
   const items = [
-    { key: 'pin', icon: pinned ? PinOff : Pin, label: pinned ? 'Lepas sematan' : 'Sematkan', run: onPin },
+    { key: 'pin', icon: pinned ? 'keep_off' : 'keep', label: pinned ? 'Lepas sematan' : 'Sematkan', onClick: onPin },
     ...(canManage ? [
-      { key: 'rename', icon: Pencil, label: 'Ganti nama', run: onRename },
-      { key: 'edit', icon: Settings2, label: 'Edit detail', run: onEdit },
-      { key: 'delete', icon: Trash2, label: 'Hapus', run: onDelete, danger: true },
+      { key: 'rename', icon: 'edit', label: 'Ganti nama', onClick: onRename },
+      { key: 'edit', icon: 'settings', label: 'Ubah detail', onClick: onEdit },
+      { divider: true, key: 'divider' },
+      { key: 'delete', icon: 'delete', label: 'Hapus', onClick: onDelete, tone: 'danger' },
     ] : []),
   ];
 
   return (
-    <div className={`ai-dropdown is-bottom is-right ai-session-menu${open ? ' is-open' : ''}`} ref={rootRef}>
-      <button
-        type="button"
-        className="ai-icon-button is-small ai-ripple ai-session-menu-trigger"
+    <div className={`ai-session-menu${open ? ' is-open' : ''}`}>
+      <IconButton
+        ref={triggerRef}
+        size="sm"
+        label="Opsi"
+        icon="more_vert"
+        className="ai-session-menu-trigger"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`Opsi untuk ${title}`}
-        title="Opsi"
         onClick={() => setOpen((current) => !current)}
-      >
-        <MoreHorizontal size={16} />
-      </button>
-      {open && (
-        <div className="ai-menu" role="menu" aria-label={`Opsi untuk ${title}`}>
-          {items.map(({ key, icon: Icon, label, run, danger }) => (
-            <button
-              key={key}
-              type="button"
-              role="menuitem"
-              className={`ai-menu-item ai-ripple${danger ? ' is-danger' : ''}`}
-              onClick={choose(run)}
-            >
-              <Icon size={16} aria-hidden="true" />
-              <span className="ai-menu-item-text"><strong>{label}</strong></span>
-            </button>
-          ))}
-        </div>
-      )}
+      />
+      <Menu open={open} anchorRef={triggerRef} onClose={() => setOpen(false)} items={items} align="end" label={`Opsi untuk ${title}`} />
     </div>
   );
 }
@@ -405,122 +387,86 @@ export function CreateSessionModal({ open, onClose, onCreated }) {
       toast('Percakapan dibuat', 'success');
       onCreated?.(r.data.data.id);
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal membuat', 'error');
+      toast(e.response?.data?.error?.message || 'Gagal membuat percakapan', 'error');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Percakapan Baru" maxWidth={520}>
-      <Input
-        label="Judul (opsional)"
-        value={form.title}
-        onChange={(e) => setForm({ ...form, title: e.target.value })}
-        placeholder="Contoh: Analisa pipeline Q4"
-      />
+    <Modal open={open} onClose={onClose} title="Percakapan baru" size="md">
+      <div className="pw-stack">
+        <Input
+          label="Judul (opsional)"
+          value={form.title}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+          placeholder="Contoh: Analisa pipeline Q4"
+        />
 
-      <div style={{ marginTop: 12 }}>
-        <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Tipe Session</label>
-        <select
-          value={form.sessionType}
-          onChange={(e) => setForm({ ...form, sessionType: e.target.value })}
-          style={{
-            width: '100%', padding: 8, borderRadius: 8,
-            boxShadow: 'inset 0 0 0 1px var(--color-border)',
-          }}
-        >
-          <option value="general">Umum</option>
-          <option value="analysis">Analisa</option>
-          <option value="drafting">Drafting</option>
-          <option value="research">Research</option>
-        </select>
-      </div>
+        <div className="pw-form-grid">
+          <Select
+            label="Tipe percakapan"
+            value={form.sessionType}
+            onChange={(e) => setForm({ ...form, sessionType: e.target.value })}
+            options={[
+              { value: 'general', label: 'Umum' },
+              { value: 'analysis', label: 'Analisa' },
+              { value: 'drafting', label: 'Penyusunan draf' },
+              { value: 'research', label: 'Riset' },
+            ]}
+          />
 
-      <div style={{ marginTop: 12 }}>
-        <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>AI Engine</label>
-        <select
+          <Input
+            label="ID divisi (opsional)"
+            type="number"
+            min="1"
+            value={form.departmentId}
+            onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
+            hint="Kosongkan untuk memakai divisi Anda"
+          />
+        </div>
+
+        <Select
+          label="Engine AI"
           value={form.provider}
           onChange={(e) => setForm({ ...form, provider: e.target.value })}
           disabled={providersLoading}
-          style={{
-            width: '100%', padding: 8, borderRadius: 8,
-            boxShadow: 'inset 0 0 0 1px var(--color-border)',
-          }}
-        >
-          {!providers.length && (
-            <option value="">
-              {providersLoading ? 'Memuat engine…' : 'Belum ada engine yang dikonfigurasi'}
-            </option>
-          )}
-          {providers.map((item) => (
-            <option key={item.id} value={item.id} disabled={!item.available}>
-              {item.label}
-              {item.model ? ` · ${item.model}` : ''}
-              {!item.available ? ' · belum dikonfigurasi' : ''}
-            </option>
-          ))}
-        </select>
-        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
-          Credential dan model dikontrol oleh server. User tidak dapat memasukkan API key sendiri.
-        </div>
-      </div>
+          hint="Kredensial dan model diatur oleh server. Pengguna tidak dapat memasukkan API key sendiri."
+          placeholder={providers.length ? undefined : (providersLoading ? 'Pilih engine' : 'Belum ada engine yang dikonfigurasi')}
+          options={providers.map((item) => ({
+            value: item.id,
+            disabled: !item.available,
+            label: `${item.label}${item.model ? ` · ${item.model}` : ''}${!item.available ? ' · belum dikonfigurasi' : ''}`,
+          }))}
+        />
 
-      <div style={{ marginTop: 12 }}>
-        <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Visibilitas</label>
-        <select
+        <Select
+          label="Visibilitas"
           value={form.visibility}
           onChange={(e) => setForm({ ...form, visibility: e.target.value })}
-          style={{
-            width: '100%', padding: 8, borderRadius: 8,
-            boxShadow: 'inset 0 0 0 1px var(--color-border)',
-          }}
-        >
-          <option value="private">Private — {visibilityHelper('private')}</option>
-          <option value="department">Department — {visibilityHelper('department')}</option>
-          <option value="entity">Entity — {visibilityHelper('entity')}</option>
-        </select>
-        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
-          Default: Private. Visibilitas dapat diubah di pengaturan session.
-        </div>
-      </div>
+          hint="Bawaan: Pribadi. Visibilitas dapat diubah di pengaturan percakapan."
+          options={visibilityOptions()}
+        />
 
-      <Input
-        label="Department ID (opsional)"
-        type="number"
-        min="1"
-        value={form.departmentId}
-        onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
-        placeholder="Kosong = department user"
-      />
-
-      <div style={{ marginTop: 12 }}>
-        <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>
-          Catatan / Instruksi Session (opsional)
-        </label>
-        <textarea
+        <Textarea
+          label="Catatan atau instruksi percakapan (opsional)"
           value={form.systemContext}
           onChange={(e) => setForm({ ...form, systemContext: e.target.value })}
           rows={3}
           placeholder="Konteks tambahan yang Anda kontrol untuk percakapan ini."
-          style={{
-            width: '100%', padding: 10, borderRadius: 8,
-            boxShadow: 'inset 0 0 0 1px var(--color-border)', fontSize: 13,
-          }}
+          hint="Catatan percakapan adalah konteks tambahan yang Anda kontrol, bukan izin atau otorisasi."
         />
-        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
-          Catatan session adalah konteks tambahan yang Anda kontrol. Ini bukan permission atau otorisasi.
-        </div>
-      </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-        <Button variant="secondary" onClick={onClose}>Batal</Button>
-        <Button
-          onClick={submit}
-          disabled={saving || providersLoading || !providers.some((item) => item.available)}
-        >
-          {saving ? 'Membuat…' : 'Buat Percakapan'}
-        </Button>
+        <FormActions>
+          <Button variant="text" onClick={onClose}>Batal</Button>
+          <Button
+            onClick={submit}
+            loading={saving}
+            disabled={providersLoading || !providers.some((item) => item.available)}
+          >
+            Buat percakapan
+          </Button>
+        </FormActions>
       </div>
     </Modal>
   );

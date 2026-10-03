@@ -1,0 +1,29 @@
+/* Decorative doodles on welcoming screens (Login, AI new chat). */
+/* Ambient decorative doodles: small, semi-transparent, gently floating in the
+   background of a welcoming screen. The host element supplies size/position
+   per doodle (see .pw-login, .ai-new-chat); this only sets the shared motion. */
+.pw-doodles {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.pw-doodle {
+  position: absolute;
+  opacity: 0.4;
+  will-change: transform;
+  user-select: none;
+}
+.pw-doodle--a { animation: pw-doodle-float-a 9s var(--pw-ease-standard) infinite; }
+.pw-doodle--b { animation: pw-doodle-float-b 12s var(--pw-ease-standard) infinite; animation-delay: -4s; }
+.pw-doodle--c { animation: pw-doodle-float-a 11s var(--pw-ease-standard) infinite; animation-delay: -7s; }
+.pw-doodle--d { animation: pw-doodle-float-b 8s var(--pw-ease-standard) infinite; animation-delay: -2s; }
+@keyframes pw-doodle-float-a {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(6deg); }
+}
+@keyframes pw-doodle-float-b {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(12px) rotate(-5deg); }
+}

@@ -1,30 +1,34 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Network, X } from 'lucide-react';
 import api from '../../api/client';
-import Modal from '../Modal';
-import Button from '../Button';
 import Badge from '../Badge';
-import { toast } from '../Toast';
+import Banner from '../Banner';
+import Button from '../Button';
+import EmptyState, { LoadingState } from '../EmptyState';
+import Icon from '../Icon';
+import Modal from '../Modal';
+import StatusBadge from '../StatusBadge';
+import './gantt.css';
 
 /**
- * Minimal graph viewer — nodes listed by depth level.
- * Full visual graph rendering is intentionally not implemented here
- * (would require a layout engine). The backend graph endpoint is
+ * Minimal graph viewer — nodes listed by level (how many dependency steps away
+ * from the task). Full visual graph rendering is intentionally not implemented
+ * here (would require a layout engine). The backend graph endpoint is
  * available for future visualization work.
  */
 export default function DependencyGraphModal({ taskId, onClose }) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState({ loading: true, error: '', data: null });
 
-  useEffect(() => {
-    setLoading(true);
+  const load = useCallback(() => {
+    setState({ loading: true, error: '', data: null });
     api.get(`/tasks/${taskId}/dependencies/graph`)
-      .then((r) => setData(r.data.data))
-      .catch((e) => toast(e.response?.data?.error?.message || 'Gagal memuat graph', 'error'))
-      .finally(() => setLoading(false));
+      .then((r) => setState({ loading: false, error: '', data: r.data.data }))
+      .catch((e) => setState({ loading: false, error: e.response?.data?.error?.message || 'Periksa koneksi, lalu coba lagi.', data: null }));
   }, [taskId]);
 
+  useEffect(() => { load(); }, [load]);
+
+  const { loading, error, data } = state;
   const grouped = (data?.nodes || []).reduce((acc, n) => {
     const d = n.depth;
     if (!acc[d]) acc[d] = [];
@@ -33,52 +37,54 @@ export default function DependencyGraphModal({ taskId, onClose }) {
   }, {});
 
   return (
-    <Modal open={true} onClose={onClose} title="Dependency Graph" width={640}>
-      {loading && <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Memuat…</div>}
+    <Modal
+      open={true}
+      onClose={onClose}
+      title="Graf dependensi"
+      size="md"
+      footer={<Button variant="text" type="button" onClick={onClose}>Tutup</Button>}
+    >
+      {loading ? <LoadingState compact label="Memuat graf dependensi…" /> : null}
 
-      {!loading && !data && (
-        <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Tidak ada data.</div>
-      )}
+      {!loading && error ? (
+        <EmptyState
+          tone="error"
+          compact
+          title="Graf dependensi gagal dimuat"
+          description={error}
+          action={<Button variant="secondary" type="button" onClick={load}>Coba lagi</Button>}
+        />
+      ) : null}
 
-      {!loading && data && (
-        <>
-          <div style={{ display: 'flex', gap: 12, marginBottom: 12, fontSize: 12, color: 'var(--color-text-muted)' }}>
-            <span><Network size={12} /> {data.meta?.nodeCount || 0} node</span>
-            <span>{data.meta?.edgeCount || 0} edge</span>
-            <span>depth ≤ {data.meta?.depth || 3}</span>
-            {data.meta?.truncated && <Badge tone="warning">truncated</Badge>}
+      {!loading && !error && !data?.nodes?.length ? <EmptyState compact icon="lan" title="Belum ada dependensi" /> : null}
+
+      {!loading && !error && data?.nodes?.length ? (
+        <div className="pw-stack">
+          <div className="gantt-graph__stats">
+            <Icon name="lan" size="sm" />
+            <span>{`${data.meta?.nodeCount || 0} tugas · ${data.meta?.edgeCount || 0} hubungan · paling jauh ${data.meta?.depth || 3} tingkat`}</span>
           </div>
+          {data.meta?.truncated ? <Banner tone="warning">Grafik terpotong — hanya sebagian dependensi yang ditampilkan.</Banner> : null}
 
           {Object.keys(grouped).sort((a, b) => Number(a) - Number(b)).map((depth) => (
-            <div key={depth} style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                Depth {depth}
-              </div>
-              {grouped[depth].map((n) => (
-                <div key={n.id} style={{
-                  padding: 8, marginBottom: 4,
-                  background: n.isRoot ? 'rgba(31,78,216,.08)' : '#f8fafc',
-                  boxShadow: `inset 0 0 0 1px ${n.isRoot ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                  borderRadius: 6, fontSize: 13,
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                }}>
-                  <Link to={`/tasks/${n.id}`} style={{ color: 'inherit', textDecoration: 'none', flex: 1 }}>
-                    {n.isRoot && '★ '}{n.title}
-                  </Link>
-                  <div style={{ display: 'flex', gap: 6, fontSize: 11 }}>
-                    {n.viaType && <Badge tone={n.viaType === 'blocks' ? 'warning' : 'default'}>{n.viaType}</Badge>}
-                    <Badge tone="default">{n.status}</Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <section key={depth} className="gantt-graph__level" aria-label={`Tingkat ${depth}`}>
+              <span className="pw-overline">{`Tingkat ${depth}`}</span>
+              <ul className="gantt-graph__nodes">
+                {grouped[depth].map((n) => (
+                  <li key={n.id} className={`gantt-graph__node${n.isRoot ? ' gantt-graph__node--root' : ''}`}>
+                    <Link to={`/tasks/${n.id}`} className="pw-link gantt-graph__node-link" data-no-translate="">{n.title}</Link>
+                    <span className="gantt-graph__node-badges">
+                      {n.isRoot ? <Badge>Tugas ini</Badge> : null}
+                      {n.viaType ? <StatusBadge status={n.viaType} /> : null}
+                      <StatusBadge status={n.status} />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
-            <Button variant="secondary" onClick={onClose}>Tutup</Button>
-          </div>
-        </>
-      )}
+        </div>
+      ) : null}
     </Modal>
   );
 }

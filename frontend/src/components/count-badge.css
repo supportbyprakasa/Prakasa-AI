@@ -1,0 +1,22 @@
+/* CountBadge (docs/ui-guideline.md §4.12; referensi §8 badge "NEW"). */
+.pw-count-badge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--pw-radius-full);
+  background: var(--pw-accent);
+  color: var(--pw-on-primary);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-xs);
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0.3px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.pw-count-badge--dot { width: 8px; min-width: 8px; height: 8px; padding: 0; }

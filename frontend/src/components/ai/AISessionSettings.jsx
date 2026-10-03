@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react';
 import api from '../../api/client';
 import Modal from '../Modal';
 import Button from '../Button';
+import FormActions from '../FormActions';
 import Input from '../Input';
+import Select from '../Select';
+import Textarea from '../Textarea';
 import ConfirmDialog from '../ConfirmDialog';
 import { toast } from '../Toast';
-import { visibilityHelper } from './AIVisibilityBadge';
+import { visibilityOptions } from './AIVisibilityBadge';
+import './ai-components.css';
 
 /**
  * Edit / archive / delete modal for a session.
@@ -19,6 +23,7 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
     provider: session.provider || '',
   });
   const [saving, setSaving] = useState(false);
+  const [titleError, setTitleError] = useState('');
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [providers, setProviders] = useState([]);
@@ -44,7 +49,7 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
 
   const save = async () => {
     if (!form.title.trim()) {
-      toast('Judul percakapan wajib', 'error');
+      setTitleError('Judul percakapan wajib diisi.');
       return;
     }
     setSaving(true);
@@ -55,7 +60,7 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
         systemContext: form.systemContext || null,
         provider: form.provider || null,
       });
-      toast('Session diperbarui', 'success');
+      toast('Percakapan diperbarui', 'success');
       onUpdated?.();
       onClose?.();
     } catch (e) {
@@ -68,7 +73,7 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
   const archive = async () => {
     try {
       await api.post(`/ai-command/sessions/${session.id}/archive`);
-      toast('Session diarsipkan', 'success');
+      toast('Percakapan diarsipkan', 'success');
       setArchiveOpen(false);
       onArchived?.();
       onClose?.();
@@ -91,106 +96,72 @@ export default function AISessionSettings({ session, onClose, onUpdated, onArchi
 
   return (
     <>
-      <Modal open={true} onClose={onClose} title="Pengaturan Session" maxWidth={560}>
-        <Input
-          label="Judul Percakapan"
-          value={form.title}
-          onChange={(e) => set('title', e.target.value)}
-          placeholder="Judul singkat"
-        />
+      <Modal open={true} onClose={onClose} title="Pengaturan percakapan" size="md">
+        <div className="pw-stack">
+          <Input
+            label="Judul percakapan"
+            required
+            value={form.title}
+            error={titleError}
+            onChange={(e) => { set('title', e.target.value); setTitleError(''); }}
+            placeholder="Contoh: Analisa pipeline Q4"
+          />
 
-        <div style={{ marginTop: 12 }}>
-          <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>AI Engine</label>
-          <select
+          <Select
+            label="Engine AI"
             value={form.provider}
             onChange={(e) => set('provider', e.target.value)}
             disabled={providersLoading || session.generationStatus === 'generating'}
-            style={{
-              width: '100%', padding: 8, borderRadius: 8,
-              boxShadow: 'inset 0 0 0 1px var(--color-border)',
-            }}
-          >
-            <option value="">Default server</option>
-            {providers.map((item) => (
-              <option key={item.id} value={item.id} disabled={!item.available}>
-                {item.label}
-                {item.model ? ` · ${item.model}` : ''}
-                {!item.available ? ' · belum dikonfigurasi' : ''}
-              </option>
-            ))}
-          </select>
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
-            Engine dapat diganti per conversation. Credential tetap tersimpan di backend.
-          </div>
-        </div>
+            hint="Engine dapat diganti per percakapan. Kredensial tetap tersimpan di server."
+            placeholder="Bawaan server"
+            options={providers.map((item) => ({
+              value: item.id,
+              disabled: !item.available,
+              label: `${item.label}${item.model ? ` · ${item.model}` : ''}${!item.available ? ' · belum dikonfigurasi' : ''}`,
+            }))}
+          />
 
-        <div style={{ marginTop: 12 }}>
-          <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Visibilitas</label>
-          <select
+          <Select
+            label="Visibilitas"
             value={form.visibility}
             onChange={(e) => set('visibility', e.target.value)}
-            style={{
-              width: '100%', padding: 8, borderRadius: 8,
-              boxShadow: 'inset 0 0 0 1px var(--color-border)',
-            }}
-          >
-            <option value="private">Private — {visibilityHelper('private')}</option>
-            <option value="department">Department — {visibilityHelper('department')}</option>
-            <option value="entity">Entity — {visibilityHelper('entity')}</option>
-          </select>
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
-            Visibilitas mengikuti kebijakan akses backend. Tidak dapat mem-bypass izin entity.
-          </div>
-        </div>
+            hint="Visibilitas mengikuti kebijakan akses server dan tidak dapat melewati izin entitas."
+            options={visibilityOptions()}
+          />
 
-        <div style={{ marginTop: 12 }}>
-          <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>
-            Catatan / Instruksi Session
-          </label>
-          <textarea
+          <Textarea
+            label="Catatan atau instruksi percakapan"
             value={form.systemContext}
             onChange={(e) => set('systemContext', e.target.value)}
             rows={4}
             placeholder="Konteks tambahan yang Anda kontrol untuk percakapan ini."
-            style={{
-              width: '100%', padding: 10, borderRadius: 8,
-              boxShadow: 'inset 0 0 0 1px var(--color-border)', fontSize: 13,
-            }}
+            hint="Catatan percakapan adalah konteks tambahan yang Anda kontrol, bukan izin atau otorisasi."
           />
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4 }}>
-            Catatan session adalah konteks tambahan yang Anda kontrol. Ini bukan permission atau otorisasi.
-          </div>
-        </div>
 
-        <div style={{
-          display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', marginTop: 20,
-          paddingTop: 12, boxShadow: 'inset 0 1px 0 0 var(--color-border)',
-        }}>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {session.status === 'active' && (
+          <FormActions align="between">
+            <div className="pw-row">
+              {session.status === 'active' && (
+                <Button
+                  variant="secondary"
+                  onClick={() => setArchiveOpen(true)}
+                  disabled={session.generationStatus === 'generating'}
+                >
+                  Arsipkan percakapan
+                </Button>
+              )}
               <Button
-                variant="secondary"
-                onClick={() => setArchiveOpen(true)}
+                variant="danger"
+                onClick={() => setDeleteOpen(true)}
                 disabled={session.generationStatus === 'generating'}
               >
-                Arsipkan
+                Hapus percakapan
               </Button>
-            )}
-            <Button
-              variant="danger"
-              onClick={() => setDeleteOpen(true)}
-              disabled={session.generationStatus === 'generating'}
-            >
-              Hapus
-            </Button>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Button variant="secondary" onClick={onClose}>Batal</Button>
-            <Button onClick={save} disabled={saving}>
-              {saving ? 'Menyimpan…' : 'Simpan'}
-            </Button>
-          </div>
+            </div>
+            <div className="pw-row">
+              <Button variant="text" onClick={onClose}>Batal</Button>
+              <Button onClick={save} loading={saving}>Simpan perubahan</Button>
+            </div>
+          </FormActions>
         </div>
       </Modal>
 

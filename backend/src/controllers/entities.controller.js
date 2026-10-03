@@ -43,9 +43,17 @@ async function update(req, res, next) {
   try {
     const { id } = req.params;
     const { name, brandCode, logoUrl } = req.body;
+    // The route validates a partial body, so only touch the fields that were
+    // actually sent — otherwise a rename would blank the brand code and logo.
+    const fields = [];
+    const values = [];
+    if (name !== undefined) { fields.push('name = ?'); values.push(name); }
+    if (brandCode !== undefined) { fields.push('brand_code = ?'); values.push(brandCode); }
+    if (logoUrl !== undefined) { fields.push('logo_url = ?'); values.push(logoUrl || null); }
+    if (!fields.length) return fail(res, 'VALIDATION_ERROR', 'Tidak ada perubahan', 400);
     const [r] = await pool.query(
-      `UPDATE entities SET name=?, brand_code=?, logo_url=? WHERE id=? AND deleted_at IS NULL`,
-      [name, brandCode, logoUrl || null, id]
+      `UPDATE entities SET ${fields.join(', ')} WHERE id=? AND deleted_at IS NULL`,
+      [...values, id]
     );
     if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'Entity tidak ditemukan', 404);
     await log({
@@ -54,12 +62,35 @@ async function update(req, res, next) {
       metadata: { name, brandCode },
     });
     return ok(res, { id: Number(id) });
-  } catch (e) { next(e); }
+  } catch (e) {
+    if (e.code === 'ER_DUP_ENTRY') return fail(res, 'CONFLICT', 'brandCode sudah dipakai', 409);
+    next(e);
+  }
 }
 
 async function remove(req, res, next) {
   try {
     const { id } = req.params;
+    // An entity is the top of the tree: dozens of tables carry its entity_id.
+    // Hiding one that still holds people or structure would orphan all of it
+    // silently, so refuse while anything still belongs to it.
+    const [[users]] = await pool.query(
+      'SELECT COUNT(*) AS total FROM users WHERE entity_id = ? AND deleted_at IS NULL', [id]
+    );
+    const [[departments]] = await pool.query(
+      'SELECT COUNT(*) AS total FROM departments WHERE entity_id = ? AND deleted_at IS NULL', [id]
+    );
+    const [[roles]] = await pool.query(
+      'SELECT COUNT(*) AS total FROM roles WHERE entity_id = ? AND deleted_at IS NULL', [id]
+    );
+    if (Number(users.total) || Number(departments.total) || Number(roles.total)) {
+      return fail(
+        res,
+        'ENTITY_IN_USE',
+        `Entity masih dipakai ${Number(users.total)} pengguna, ${Number(departments.total)} divisi, dan ${Number(roles.total)} role. Pindahkan atau hapus semuanya terlebih dahulu.`,
+        409,
+      );
+    }
     const [r] = await pool.query(
       `UPDATE entities SET deleted_at = NOW() WHERE id=? AND deleted_at IS NULL`,
       [id]

@@ -27,7 +27,7 @@ async function buildGraph({ taskId, user, depth }) {
     e.code = 'NOT_FOUND';
     throw e;
   }
-  taskAccess.assertTaskAccess({ user, task: rootTask, action: 'view' });
+  await taskAccess.assertTaskAccess({ user, task: rootTask, action: 'view' });
 
   const requestedDepth = Number(depth);
   const maxDepth = Math.min(
@@ -35,6 +35,9 @@ async function buildGraph({ taskId, user, depth }) {
     Math.max(1, Number.isInteger(requestedDepth) ? requestedDepth : MAX_DEPTH)
   );
   const entityId = Number(rootTask.entity_id);
+  // Neighbours the user may not see (other divisions) are left out of the graph.
+  const predVisible = taskAccess.taskDivisionSql(user, 'p');
+  const succVisible = taskAccess.taskDivisionSql(user, 's');
 
   const visited = new Map();
   visited.set(Number(rootTask.id), {
@@ -67,13 +70,15 @@ async function buildGraph({ taskId, user, depth }) {
          JOIN tasks p ON p.id=d.predecessor_task_id
                      AND p.deleted_at IS NULL
                      AND p.entity_id=?
+                     AND ${predVisible.sql}
          JOIN tasks s ON s.id=d.successor_task_id
                      AND s.deleted_at IS NULL
                      AND s.entity_id=?
+                     AND ${succVisible.sql}
         WHERE d.predecessor_task_id IN (?)
            OR d.successor_task_id IN (?)
         ORDER BY d.id ASC`,
-      [entityId, entityId, frontier, frontier]
+      [entityId, ...predVisible.args, entityId, ...succVisible.args, frontier, frontier]
     );
 
     const next = new Set();

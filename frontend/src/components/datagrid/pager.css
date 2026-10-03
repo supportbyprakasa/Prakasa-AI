@@ -1,0 +1,69 @@
+/* Pager — admin console pagination (docs/ui-guideline.md §4.9 item 5;
+   docs/referensi-desain-admin-console.md §7 "Paginasi"). 57px = 1px divider +
+   4px + 48px icon buttons + 4px. */
+.pw-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0 24px;
+  min-height: var(--pw-pager-height);
+  padding: 4px 24px;
+  border-top: 1px solid var(--pw-divider);
+  background: var(--pw-surface);
+  color: var(--pw-text);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+  line-height: 20px;
+}
+
+.pw-pager__size { display: inline-flex; align-items: center; gap: 8px; }
+.pw-pager__label { color: var(--pw-text); white-space: nowrap; }
+
+/* Dense dropdown: 56×46, radius 3, text #444 (--pw-text-select). Hover and
+   keyboard focus are the shared state layer on the wrapper (a <select> has no
+   ::before), never a local background. */
+.pw-pager__select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--pw-radius-sm);
+  color: var(--pw-text-select);
+}
+.pw-pager__select:has(select:focus-visible)::before { opacity: var(--pw-state-focus); }
+.pw-pager__select:has(select:disabled)::before { opacity: 0; }
+.pw-pager__select select {
+  width: 56px;
+  height: var(--pw-search-height);
+  padding: 0 24px 0 8px;
+  border: 0;
+  border-radius: var(--pw-radius-sm);
+  background: transparent;
+  color: var(--pw-text-select);
+  font: inherit;
+  appearance: none;
+  cursor: pointer;
+}
+.pw-pager__select select:focus-visible { outline: 2px solid var(--pw-primary); outline-offset: -2px; }
+.pw-pager__select select:disabled { color: var(--pw-disabled-text); cursor: not-allowed; }
+.pw-pager__arrow {
+  position: absolute;
+  right: 0;
+  color: var(--pw-text-muted);
+  pointer-events: none;
+}
+
+.pw-pager__range,
+.pw-pager__status { white-space: nowrap; }
+.pw-pager__nav { display: inline-flex; align-items: center; }
+/* Always the 48px navigation buttons of the measurement, whatever the default
+   IconButton size is. */
+.pw-pager__nav .pw-icon-button { width: var(--pw-icon-button); height: var(--pw-icon-button); }
+
+/* Phones: "Halaman x dari y" + previous/next only (referensi §15, ~400 px). */
+@media (max-width: 600px) {
+  .pw-pager { gap: 0 8px; padding: 4px 8px 4px 16px; }
+  .pw-pager__size { display: none; }
+  .pw-pager__nav .pw-tooltip-anchor:has(.pw-pager__edge),
+  .pw-pager__nav > .pw-pager__edge { display: none; }
+}

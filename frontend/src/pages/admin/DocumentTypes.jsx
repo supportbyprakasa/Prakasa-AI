@@ -1,188 +1,206 @@
-import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import api from '../../api/client';
-import DataTable from '../../components/DataTable';
 import Button from '../../components/Button';
-import Input from '../../components/Input';
-import Modal from '../../components/Modal';
-import Badge from '../../components/Badge';
+import Checkbox from '../../components/Checkbox';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { apiErrorMessage, fieldErrorsFromApi } from '../../components/datagrid/gridModel';
+import FullScreenDialog, { FullScreenSection } from '../../components/FullScreenDialog';
+import IconButton from '../../components/IconButton';
+import Input from '../../components/Input';
+import Page from '../../components/Page';
+import PageHeader from '../../components/PageHeader';
+import StatusBadge from '../../components/StatusBadge';
 import { toast } from '../../components/Toast';
+import './admin-editors.css';
+
+const FORM_ID = 'document-type-form';
+
+function formFrom(row) {
+  return {
+    code: row?.code || '',
+    name: row?.name || '',
+    category: row?.category || '',
+    defaultFolderId: row?.defaultFolderId || '',
+    isActive: row ? Boolean(row.isActive) : true,
+    requiresSignature: Boolean(row?.requiresSignature),
+    requiresAiPrecheck: Boolean(row?.requiresAiPrecheck),
+  };
+}
 
 export default function DocumentTypes() {
   const [rows, setRows] = useState([]);
-  const [workflows, setWorkflows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState(formFrom(null));
+  const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
   const [del, setDel] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
-  const load = () => {
+  const load = useCallback(() => {
     setLoading(true);
-    Promise.all([
-      api.get('/document-types'),
-      api.get('/workflows', { params: { activeOnly: '1' } }).catch(() => ({ data: { data: [] } })),
-    ])
-      .then(([r1, r2]) => {
-        setRows(r1.data.data || []);
-        setWorkflows(r2.data.data || []);
-      })
-      .catch((e) => toast(e.response?.data?.error?.message || 'Gagal memuat', 'error'))
+    setLoadError('');
+    api.get('/document-types')
+      .then((r) => setRows(r.data.data || []))
+      .catch((e) => setLoadError(apiErrorMessage(e, 'Daftar tipe dokumen tidak dapat dimuat.')))
       .finally(() => setLoading(false));
-  };
-  useEffect(load, []);
+  }, []);
+  useEffect(() => { load(); }, [load]);
 
-  const openCreate = () => {
-    setEditing(null);
-    setOpen(true);
-  };
-
-  const openEdit = (row) => {
+  const openEditor = (row) => {
     setEditing(row);
+    setForm(formFrom(row));
+    setErrors({});
     setOpen(true);
+  };
+  const close = () => { if (!saving) setOpen(false); };
+  const setField = (key, value) => {
+    setForm((current) => ({ ...current, [key]: value }));
+    setErrors((current) => ({ ...current, [key]: undefined }));
   };
 
   const submit = async (e) => {
     e.preventDefault();
-    const fd = new FormData(e.target);
+    const nextErrors = {};
+    if (!editing && !form.code.trim()) nextErrors.code = 'Isi kode tipe dokumen.';
+    if (!form.name.trim()) nextErrors.name = 'Isi nama tipe dokumen.';
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors);
+      return;
+    }
     const payload = {
-      code: fd.get('code'),
-      name: fd.get('name'),
-      category: fd.get('category') || null,
-      defaultWorkflowId: fd.get('defaultWorkflowId') ? Number(fd.get('defaultWorkflowId')) : null,
-      defaultFolderId: fd.get('defaultFolderId') || null,
-      requiresSignature: fd.get('requiresSignature') === 'on',
-      requiresAiPrecheck: fd.get('requiresAiPrecheck') === 'on',
-      isActive: fd.get('isActive') === 'on',
+      code: form.code,
+      name: form.name,
+      category: form.category || null,
+      defaultFolderId: form.defaultFolderId || null,
+      requiresSignature: form.requiresSignature,
+      requiresAiPrecheck: form.requiresAiPrecheck,
+      isActive: form.isActive,
     };
 
+    setSaving(true);
     try {
       if (editing) {
-        const { code, ...patch } = payload;
+        const { code, ...patch } = payload; // eslint-disable-line no-unused-vars
         await api.patch(`/document-types/${editing.id}`, patch);
-        toast('Document type diperbarui', 'success');
+        toast('Tipe dokumen diperbarui', 'success');
       } else {
         await api.post('/document-types', payload);
-        toast('Document type dibuat', 'success');
+        toast('Tipe dokumen dibuat', 'success');
       }
-      setOpen(false); load();
-    } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal menyimpan', 'error');
+      setOpen(false);
+      load();
+    } catch (error) {
+      const fieldErrors = fieldErrorsFromApi(error);
+      if (Object.keys(fieldErrors).length) setErrors(fieldErrors);
+      else toast(apiErrorMessage(error, 'Tipe dokumen gagal disimpan.'), 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
   const doDelete = async () => {
+    setDeleting(true);
     try {
       await api.delete(`/document-types/${del.id}`);
-      toast('Dinonaktifkan', 'success');
-      setDel(null); load();
+      toast('Tipe dokumen dinonaktifkan', 'success');
+      setDel(null);
+      load();
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal', 'error');
+      toast(apiErrorMessage(e, 'Tipe dokumen gagal dinonaktifkan.'), 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
-  return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h2 style={{ margin: 0 }}>Document Types</h2>
-        <Button onClick={openCreate}><Plus size={14} /> Baru</Button>
-      </div>
+  const columns = [
+    { key: 'code', header: 'Kode', render: (r) => <code data-no-translate="" className="admin-code">{r.code}</code> },
+    { key: 'name', header: 'Nama', translate: true },
+    { key: 'category', header: 'Kategori' },
+    { key: 'requiresSignature', header: 'Tanda tangan', translate: true, render: (r) => (r.requiresSignature ? 'Wajib' : 'Tidak') },
+    { key: 'requiresAiPrecheck', header: 'AI precheck', translate: true, render: (r) => (r.requiresAiPrecheck ? 'Wajib' : 'Tidak') },
+    { key: 'isActive', header: 'Status', render: (r) => <StatusBadge status={r.isActive ? 'active' : 'inactive'} /> },
+  ];
 
-      <DataTable
-        loading={loading}
-        rows={rows}
-        empty="Belum ada document type"
-        columns={[
-          { key: 'code', title: 'Code', render: (r) => <code>{r.code}</code> },
-          { key: 'name', title: 'Nama' },
-          { key: 'category', title: 'Kategori' },
-          { key: 'defaultWorkflowName', title: 'Workflow' },
-          {
-            key: 'requiresSignature', title: 'Signature',
-            render: (r) => r.requiresSignature ? <Badge tone="warning">Perlu</Badge> : '—',
-          },
-          {
-            key: 'requiresAiPrecheck', title: 'AI Precheck',
-            render: (r) => r.requiresAiPrecheck ? <Badge tone="info">Ya</Badge> : '—',
-          },
-          {
-            key: 'isActive', title: 'Status',
-            render: (r) => r.isActive
-              ? <Badge tone="success">Aktif</Badge>
-              : <Badge>Nonaktif</Badge>,
-          },
-          {
-            key: 'actions', title: 'Aksi',
-            render: (r) => (
-              <div style={{ display: 'flex', gap: 4 }}>
-                <Button variant="secondary" onClick={() => openEdit(r)}>
-                  <Pencil size={14} />
-                </Button>
-                <Button variant="danger" onClick={() => setDel(r)}>
-                  <Trash2 size={14} />
-                </Button>
-              </div>
-            ),
-          },
-        ]}
+  return (
+    <Page>
+      <PageHeader
+        title="Jenis dokumen"
+        description="Jenis dokumen, folder bawaan, dan apakah dokumen butuh tanda tangan atau cek awal AI."
+        actions={<Button icon="add" onClick={() => openEditor(null)}>Tambah tipe dokumen</Button>}
       />
 
-      <Modal
+      <DataGrid
+        title="Semua tipe dokumen"
+        exportName="tipe-dokumen"
+        columns={columns}
+        rows={rows}
+        loading={loading}
+        error={loadError}
+        onRetry={load}
+        empty="Belum ada tipe dokumen"
+        onRowClick={openEditor}
+        rowActions={(r) => (
+          <>
+            <IconButton size="sm" icon="edit" label="Ubah" onClick={() => openEditor(r)} />
+            <IconButton size="sm" icon="block" label="Nonaktifkan" tone="danger" onClick={() => setDel(r)} />
+          </>
+        )}
+      />
+
+      <FullScreenDialog
         open={open}
-        onClose={() => setOpen(false)}
-        title={editing ? `Edit: ${editing.name}` : 'Document Type Baru'}
+        onClose={close}
+        title={editing ? `Ubah tipe dokumen ${editing.name}` : 'Tambah tipe dokumen'}
+        card={false}
+        actions={(
+          <>
+            <Button variant="text" type="button" onClick={close} disabled={saving}>Batal</Button>
+            <Button type="submit" form={FORM_ID} loading={saving}>{editing ? 'Simpan perubahan' : 'Tambah tipe dokumen'}</Button>
+          </>
+        )}
       >
-        <form onSubmit={submit}>
-          <Input label="Code *" name="code" defaultValue={editing?.code || ''}
-            required disabled={!!editing}
-            placeholder="sop / proposal / invoice" />
-          <Input label="Nama *" name="name" defaultValue={editing?.name || ''} required />
-          <Input label="Kategori" name="category" defaultValue={editing?.category || ''} />
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Default Workflow</label>
-            <select
-              name="defaultWorkflowId"
-              defaultValue={editing?.defaultWorkflowId || ''}
-              style={{ width: '100%', padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
-            >
-              <option value="">Tidak ada</option>
-              {workflows.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
-            </select>
-          </div>
-          <Input label="Default Drive Folder ID" name="defaultFolderId"
-            defaultValue={editing?.defaultFolderId || ''} />
-          <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
-            <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
-              <input type="checkbox" name="isActive"
-                defaultChecked={editing ? !!editing.isActive : true} />
-              Aktif
-            </label>
-            <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
-              <input type="checkbox" name="requiresSignature"
-                defaultChecked={!!editing?.requiresSignature} />
-              Butuh signature
-            </label>
-            <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 13 }}>
-              <input type="checkbox" name="requiresAiPrecheck"
-                defaultChecked={!!editing?.requiresAiPrecheck} />
-              Butuh AI precheck
-            </label>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button variant="secondary" type="button" onClick={() => setOpen(false)}>Batal</Button>
-            <Button type="submit">Simpan</Button>
-          </div>
+        <form id={FORM_ID} className="admin-dialog-form" onSubmit={submit} noValidate>
+          <FullScreenSection title="Informasi tipe dokumen">
+            <div className="pw-fsdialog__fields">
+              <Input
+                label="Kode"
+                mono
+                value={form.code}
+                error={errors.code}
+                hint={editing ? 'Kode tidak bisa diubah.' : 'Contoh invoice.'}
+                onChange={(event) => setField('code', event.target.value)}
+                required={!editing}
+                disabled={Boolean(editing)}
+                autoFocus={!editing}
+              />
+              <Input label="Nama" value={form.name} error={errors.name} onChange={(event) => setField('name', event.target.value)} required />
+              <Input label="Kategori" value={form.category} error={errors.category} onChange={(event) => setField('category', event.target.value)} />
+              <Input label="ID folder Drive bawaan" mono value={form.defaultFolderId} error={errors.defaultFolderId} onChange={(event) => setField('defaultFolderId', event.target.value)} />
+            </div>
+          </FullScreenSection>
+          <FullScreenSection title="Aturan">
+            <div className="admin-choice-list">
+              <Checkbox label="Aktif" checked={form.isActive} onChange={(event) => setField('isActive', event.target.checked)} />
+              <Checkbox label="Butuh tanda tangan" checked={form.requiresSignature} onChange={(event) => setField('requiresSignature', event.target.checked)} />
+              <Checkbox label="Butuh cek awal AI" checked={form.requiresAiPrecheck} onChange={(event) => setField('requiresAiPrecheck', event.target.checked)} />
+            </div>
+          </FullScreenSection>
         </form>
-      </Modal>
+      </FullScreenDialog>
 
       <ConfirmDialog
         open={!!del}
-        title="Nonaktifkan document type?"
+        title="Nonaktifkan tipe dokumen?"
         message={`"${del?.name}" akan dinonaktifkan.`}
-        confirmLabel="Ya, nonaktifkan"
+        confirmLabel="Nonaktifkan"
+        loading={deleting}
         onConfirm={doDelete}
-        onClose={() => setDel(null)}
+        onClose={() => { if (!deleting) setDel(null); }}
       />
-    </div>
+    </Page>
   );
 }

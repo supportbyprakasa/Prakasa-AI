@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import api from '../api/client';
+import { accountLanguageToApply, setLanguage } from '../i18n/language.js';
 
 const AuthContext = createContext(null);
 
@@ -45,10 +46,25 @@ export function AuthProvider({ children }) {
 
   const loginWithToken = async (token) => {
     localStorage.setItem('prakasa.token', token);
-    return refreshUser();
+    const signedIn = await refreshUser();
+    // The interface follows the language saved on the account. setLanguage()
+    // reloads once; afterwards this browser and the account agree, so it
+    // cannot loop.
+    const language = accountLanguageToApply(signedIn?.language);
+    if (language) setLanguage(language);
+    return signedIn;
   };
 
-  const logout = () => {
+  // "Keluar" ends this account's sessions on every device (POST /auth/logout).
+  // Best effort: the browser is signed out even when the call fails.
+  const logout = async () => {
+    if (localStorage.getItem('prakasa.token')) {
+      try {
+        await api.post('/auth/logout', null, { timeout: 4000 });
+      } catch {
+        // Offline or the session already ended; clearing locally is enough.
+      }
+    }
     localStorage.removeItem('prakasa.token');
     setUser(null);
     location.href = '/login';

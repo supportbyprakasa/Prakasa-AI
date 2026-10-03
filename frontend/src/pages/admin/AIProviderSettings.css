@@ -1,0 +1,35 @@
+/* AI provider settings: settings cards (shared Card variant="panel") and
+   their field rows. */
+.ai-provider__note {
+  margin: 0;
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-sm);
+  line-height: 20px;
+}
+
+/* Two columns of fields, like the admin console's settings rows. */
+.ai-provider__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 24px;
+  max-width: 944px;
+}
+
+.ai-provider__switches {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.ai-provider__dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .ai-provider__fields { grid-template-columns: minmax(0, 1fr); }
+  .ai-provider__dialog-form { gap: 16px; }
+}

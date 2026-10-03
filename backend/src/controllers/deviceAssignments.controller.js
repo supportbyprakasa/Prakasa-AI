@@ -1,14 +1,17 @@
 const pool = require('../db/pool');
 const { ok, fail } = require('../utils/response');
-const { log } = require('../services/activityLog.service');
+const { logWith } = require('../services/activityLog.service');
 const notif = require('../services/notification.service');
+const lifecycle = require('../services/deviceLifecycle.service');
 
 async function list(req, res, next) {
   try {
-    const where = ['1=1'];
-    const args = [];
+    // Always the signed-in user's company; never from the request.
+    const where = ['a.entity_id = ?'];
+    const args = [req.user.entityId];
     if (req.query.deviceId) { where.push('a.device_id = ?'); args.push(req.query.deviceId); }
     if (req.query.assignedTo) { where.push('a.assigned_to = ?'); args.push(req.query.assignedTo); }
+    if (req.query.personId) { where.push('a.person_id = ?'); args.push(req.query.personId); }
     if (req.query.status) { where.push('a.status = ?'); args.push(req.query.status); }
 
     const [rows] = await pool.query(
@@ -16,83 +19,83 @@ async function list(req, res, next) {
               a.device_id AS deviceId, d.asset_code AS assetCode,
               d.device_type AS deviceType, d.brand, d.model,
               a.assigned_to AS assignedTo, u.name AS assignedToName,
+              a.person_id AS personId, a.holder_label AS holderLabel,
+              COALESCE(u.name, pu.name, p.full_name, a.holder_label) AS holderName,
               a.assigned_by AS assignedBy, a.assigned_at AS assignedAt,
               a.expected_return_date AS expectedReturnDate,
               a.actual_return_date AS actualReturnDate,
               a.status, a.location, a.purpose
          FROM device_assignments a
-         JOIN devices d ON d.id = a.device_id
+         JOIN devices d ON d.id = a.device_id AND d.entity_id = a.entity_id
          LEFT JOIN users u ON u.id = a.assigned_to
+         LEFT JOIN people_directory p ON p.id = a.person_id AND p.entity_id = a.entity_id
+         LEFT JOIN users pu ON pu.id = p.user_id
         WHERE ${where.join(' AND ')}
-        ORDER BY a.id DESC LIMIT 200`, args
+        ORDER BY a.id DESC LIMIT 200`, args,
     );
-    return ok(res, rows);
+    return ok(res, rows.map((r) => ({
+      ...r,
+      holderKind: r.assignedTo != null ? 'user' : (r.personId != null ? 'person' : 'label'),
+    })));
   } catch (e) { next(e); }
 }
 
 /**
- * Assign device ke user. Otomatis:
- *  - set device.status = 'assigned', current_assignee_id
- *  - buat row device_assignments
- *  - notifikasi ke assignee
+ * Hands a device to a holder — an app account (assignedTo), a directory person
+ * without an account (personId) or a team label (holderLabel), exactly one.
+ * 409 only while the device has an ACTIVE assignment. Sets the device Aktif,
+ * caches the holder, and notifies the holder when it is an app account.
  */
 async function create(req, res, next) {
   const conn = await pool.getConnection();
   try {
-    const {
-      entityId, departmentId, deviceId, assignedTo,
-      expectedReturnDate, location, purpose,
-    } = req.body;
+    const entityId = req.user.entityId;
+    const { departmentId, deviceId, expectedReturnDate, location, purpose } = req.body;
+    const holder = lifecycle.holderFromBody(req.body);
+    if (!holder) return fail(res, 'HOLDER_REQUIRED', 'Pilih pemegang: akun, orang di direktori, atau label tim', 400);
 
     await conn.beginTransaction();
     const [dRows] = await conn.query(
-      `SELECT * FROM devices WHERE id=? AND deleted_at IS NULL FOR UPDATE`, [deviceId]
+      `SELECT * FROM devices WHERE id=? AND entity_id=? AND deleted_at IS NULL FOR UPDATE`, [deviceId, entityId],
     );
     const dev = dRows[0];
     if (!dev) { await conn.rollback(); return fail(res, 'NOT_FOUND', 'Device tidak ditemukan', 404); }
-    if (dev.status === 'assigned' || dev.current_assignee_id) {
-      await conn.rollback();
-      return fail(res, 'CONFLICT', 'Device sedang dipegang user lain', 409);
-    }
 
-    const [a] = await conn.query(
-      `INSERT INTO device_assignments
-       (entity_id, department_id, device_id, assigned_to, assigned_by,
-        expected_return_date, location, purpose, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
-      [entityId, departmentId || null, deviceId, assignedTo, req.user.sub,
-       expectedReturnDate || null, location || null, purpose || null]
-    );
-    await conn.query(
-      `UPDATE devices SET status='assigned', current_assignee_id=?, current_location=?
-        WHERE id=?`, [assignedTo, location || null, deviceId]
-    );
+    const out = await lifecycle.openAssignment(conn, {
+      entityId, device: dev, holder, actorId: req.user.sub,
+      departmentId: departmentId || null, expectedReturnDate, location, purpose,
+    });
+    await logWith(conn, {
+      entityId, userId: req.user.sub,
+      action: 'device.assign', subjectType: 'device_assignment', subjectId: out.assignmentId,
+      metadata: { deviceId, assignedTo: out.holder.userId || null, personId: out.holder.personId || null, holderLabel: out.holder.label || null },
+    });
     await conn.commit();
 
-    await log({
-      entityId, userId: req.user.sub,
-      action: 'device.assign', subjectType: 'device_assignment', subjectId: a.insertId,
-      metadata: { deviceId, assignedTo },
-    });
+    if (out.holder.userId) {
+      await notif.create({
+        userId: out.holder.userId, entityId,
+        title: 'Device ditugaskan ke Anda',
+        body: `${dev.asset_code || dev.serial_number || dev.model || ''} (${dev.device_type})`.trim(),
+        event: 'device.assigned',
+        subjectType: 'device_assignment', subjectId: out.assignmentId,
+        actionUrl: `/it/devices/${deviceId}`,
+      });
+    }
 
-    await notif.create({
-      userId: assignedTo, entityId,
-      title: 'Device ditugaskan ke Anda',
-      body: `${dev.asset_code} (${dev.device_type})`,
-      event: 'device.assigned',
-      subjectType: 'device_assignment', subjectId: a.insertId,
-      actionUrl: `/it/devices/${deviceId}`,
-    });
-
-    return ok(res, { id: a.insertId }, undefined, 201);
-  } catch (e) { await conn.rollback(); next(e); }
-  finally { conn.release(); }
+    return ok(res, { id: out.assignmentId }, undefined, 201);
+  } catch (e) {
+    try { await conn.rollback(); } catch { /* noop */ }
+    if (e instanceof lifecycle.DeviceError) return fail(res, e.code, e.message, e.status);
+    next(e);
+  } finally { conn.release(); }
 }
 
 /**
  * Return device. Otomatis:
- *  - set device.status kembali 'available' (atau 'repair'/'maintenance' kalau kondisi jelek)
- *  - update assignment
+ *  - set device.status kembali 'available' (Cadangan), atau 'damaged' (Rusak)
+ *    kalau kondisinya kurang/rusak — rusak di tangan IT, belum di vendor
+ *  - tutup assignment dan kosongkan pemegang di perangkat
  */
 async function returnDevice(req, res, next) {
   const conn = await pool.getConnection();
@@ -101,38 +104,18 @@ async function returnDevice(req, res, next) {
     const { conditionOnReturn, notes } = req.body;
 
     await conn.beginTransaction();
-    const [aRows] = await conn.query(
-      `SELECT * FROM device_assignments WHERE id=? AND status='active' FOR UPDATE`, [id]
-    );
-    const a = aRows[0];
-    if (!a) { await conn.rollback(); return fail(res, 'NOT_FOUND', 'Assignment aktif tidak ditemukan', 404); }
-
-    await conn.query(
-      `UPDATE device_assignments
-          SET status='returned', actual_return_date=CURDATE(), notes=?
-        WHERE id=?`, [notes || null, id]
-    );
-
-    // kondisi menentukan status device
-    let newStatus = 'available';
-    if (['poor', 'broken'].includes(conditionOnReturn)) newStatus = 'repair';
-    await conn.query(
-      `UPDATE devices
-          SET status=?, condition_state=COALESCE(?, condition_state),
-              current_assignee_id=NULL, current_location=NULL
-        WHERE id=?`, [newStatus, conditionOnReturn || null, a.device_id]
-    );
-    await conn.commit();
-
-    await log({
-      entityId: a.entity_id, userId: req.user.sub,
-      action: 'device.return', subjectType: 'device_assignment', subjectId: Number(id),
-      metadata: { deviceId: a.device_id, conditionOnReturn, newStatus },
+    const out = await lifecycle.returnAssignment(conn, {
+      entityId: req.user.entityId, assignmentId: id, conditionOnReturn, notes, actorId: req.user.sub,
     });
+    if (!out) { await conn.rollback(); return fail(res, 'NOT_FOUND', 'Assignment aktif tidak ditemukan', 404); }
+    await conn.commit();
+    const { newStatus } = out;
 
     return ok(res, { id: Number(id), newStatus });
-  } catch (e) { await conn.rollback(); next(e); }
-  finally { conn.release(); }
+  } catch (e) {
+    try { await conn.rollback(); } catch { /* noop */ }
+    next(e);
+  } finally { conn.release(); }
 }
 
 module.exports = { list, create, returnDevice };

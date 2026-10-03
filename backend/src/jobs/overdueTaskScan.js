@@ -1,5 +1,6 @@
 require('dotenv').config();
 const pool = require('../db/pool');
+const { drainAndEnd } = require('../utils/pendingWork');
 const notif = require('../services/notification.service');
 const logger = require('../utils/logger');
 
@@ -11,13 +12,13 @@ const logger = require('../utils/logger');
   try {
     const [rows] = await pool.query(
       `SELECT t.id, t.entity_id AS entityId, t.title, t.assignee_id AS assigneeId,
-              t.due_date AS dueDate, DATEDIFF(CURDATE(), t.due_date) AS daysOverdue
+              t.due_date AS dueDate, DATEDIFF(DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR), t.due_date) AS daysOverdue
          FROM tasks t
         WHERE t.deleted_at IS NULL
           AND t.assignee_id IS NOT NULL
-          AND t.due_date < CURDATE()
+          AND t.due_date < DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR)
           AND t.status NOT IN ('done','closed','cancelled')
-          AND DATEDIFF(CURDATE(), t.due_date) >= 3`
+          AND DATEDIFF(DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR), t.due_date) >= 3`
     );
     let created = 0;
     for (const t of rows) {
@@ -38,6 +39,6 @@ const logger = require('../utils/logger');
     console.error(e);
     process.exitCode = 1;
   } finally {
-    await pool.end();
+    await drainAndEnd(pool);
   }
 })();

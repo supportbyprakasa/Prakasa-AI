@@ -1,0 +1,27 @@
+/* BarList: ranked horizontal bars (aging buckets). The fill grows from 0 to
+   its share once the list is on screen; prefers-reduced-motion shows it at once. */
+.pw-bar-list { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; min-width: 0; }
+.pw-bar-list__row { display: grid; grid-template-columns: minmax(112px, 24%) 1fr minmax(120px, auto); align-items: center; gap: 12px; }
+.pw-bar-list__label { overflow: hidden; color: var(--pw-text); font-size: var(--pw-font-sm); line-height: 18px; text-overflow: ellipsis; white-space: nowrap; }
+.pw-bar-list__track { position: relative; height: 12px; border-radius: var(--pw-radius-full); background: var(--pw-surface-container); overflow: hidden; }
+.pw-bar-list__fill {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 0; border-radius: inherit; background: var(--pw-accent);
+  transition: width var(--pw-dur-chart) var(--pw-ease-chart);
+}
+.is-seen .pw-bar-list__fill { width: var(--pw-bar-share, 0%); }
+.pw-bar-list__fill.is-info { background: var(--pw-info); }
+.pw-bar-list__fill.is-success { background: var(--pw-success); }
+.pw-bar-list__fill.is-warning { background: var(--pw-warning); }
+.pw-bar-list__fill.is-error { background: var(--pw-error); }
+.pw-bar-list__value { display: flex; flex-direction: column; align-items: flex-end; text-align: right; font-variant-numeric: tabular-nums; }
+.pw-bar-list__amount { color: var(--pw-text); font-size: var(--pw-font-sm); font-weight: 500; line-height: 18px; white-space: nowrap; }
+.pw-bar-list__note { color: var(--pw-text-meta); font-size: var(--pw-font-xs); line-height: 16px; white-space: nowrap; }
+
+@media (max-width: 600px) {
+  .pw-bar-list__row { grid-template-columns: 1fr auto; row-gap: 4px; }
+  .pw-bar-list__track { grid-column: 1 / -1; grid-row: 2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pw-bar-list__fill { transition: none; }
+}

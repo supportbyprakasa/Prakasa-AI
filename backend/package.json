@@ -3,14 +3,21 @@
   "version": "0.9.1",
   "private": true,
   "main": "src/app.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node src/app.js",
     "dev": "node --watch src/app.js",
+    "test": "node --test test/*.test.js",
     "migrate": "node src/db/migrate.js",
     "bootstrap:admin": "node src/scripts/bootstrapAdmin.js",
     "setup:local": "npm run migrate && npm run bootstrap:admin",
-    "check:batch1": "node src/scripts/checkBatch1.js",
     "job:approval-reminders": "node src/jobs/approvalReminders.js",
+    "job:people-culture-reminders": "node src/jobs/peopleCultureReminders.js",
+    "job:ga-ops-reminders": "node src/jobs/gaOpsReminders.js",
+    "job:marketing-reminders": "node src/jobs/marketingReminders.js",
+    "job:retention": "node src/jobs/retention.js",
     "check:batch2": "node src/scripts/checkBatch2.js",
     "check:batch3": "node src/scripts/checkBatch3.js",
     "check:batch4": "node src/scripts/checkBatch4.js",
@@ -18,24 +25,31 @@
     "check:batch5": "node src/scripts/checkBatch5.js",
     "check:batch6": "node src/scripts/checkBatch6.js",
     "check:ledger": "node src/scripts/checkLedger.js",
-    "test:db-config": "node --test test/dbConnectionConfig.test.js"
+    "test:db-config": "node --test test/dbConnectionConfig.test.js",
+    "test:ai-documents": "node --test test/aiDocumentArtifact.test.js",
+    "gateway:claude-team": "node src/scripts/claudeTeamGateway.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "docx": "^9.5.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^7.4.0",
-    "google-auth-library": "^9.14.1",
+    "google-auth-library": "^10.9.1",
+    "googleapis": "^150.0.1",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.11.3",
-    "pino": "^9.4.0",
-    "pino-http": "^10.3.0",
-    "zod": "^3.23.8",
-    "googleapis": "^144.0.0",
+    "jszip": "^3.10.1",
     "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.11.3",
     "openai": "^4.67.3",
     "pdf-lib": "^1.17.1",
-    "qrcode": "^1.5.4"
+    "pdf-parse": "^1.1.1",
+    "pino": "^9.4.0",
+    "pino-http": "^10.3.0",
+    "qrcode": "^1.5.4",
+    "read-excel-file": "^9.3.10",
+    "zod": "^3.23.8"
   }
 }

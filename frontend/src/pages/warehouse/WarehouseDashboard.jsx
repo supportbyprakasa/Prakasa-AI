@@ -1,534 +1,477 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../../api/client';
-import Card from '../../components/Card';
+import Banner from '../../components/Banner';
 import Button from '../../components/Button';
+import DateInput from '../../components/DateInput';
+import EmptyState from '../../components/EmptyState';
+import IconButton from '../../components/IconButton';
 import Input from '../../components/Input';
 import Modal from '../../components/Modal';
-import DataTable from '../../components/DataTable';
-import Badge from '../../components/Badge';
-import ConfirmDialog from '../../components/ConfirmDialog';
+import Page from '../../components/Page';
+import PageHeader from '../../components/PageHeader';
+import PriorityBadge from '../../components/PriorityBadge';
+import Select from '../../components/Select';
+import StatusBadge from '../../components/StatusBadge';
+import TabBar from '../../components/TabBar';
+import Textarea from '../../components/Textarea';
 import { toast } from '../../components/Toast';
-import { useSearchParams } from 'react-router-dom';
+import { statusLabel } from '../../components/statusTone';
+import DataGrid from '../../components/datagrid/DataGrid';
 import { useAuth } from '../../context/AuthContext';
+import { defineAIForm, f } from '../../components/ai/aiFormFields';
+import useOpenFromUrl from '../../components/ai/useOpenFromUrl';
+import usePrakasaAIForm from '../../components/ai/usePrakasaAIForm';
 import MovementList from './WarehouseMovements';
+import WarehouseStock from './WarehouseStock';
+import WarehouseToday from './WarehouseToday';
+import WarehouseShipping from './WarehouseShipping';
+import WarehouseAccurateDocs from './WarehouseAccurateDocs';
+import WarehouseRecon from './WarehouseRecon';
+import { AccurateBatchList } from '../sales/SalesAccurateBatch';
+import { todayLocal } from './warehouseMovementModel';
+import { dateOnly, dayText } from './warehouseStockModel';
+import './warehouse-movements.css';
+import { Translate } from '../../i18n/NoTranslate';
 
 const TABS = [
-  { k: 'inbound', l: 'Barang Masuk', permission: 'warehouse.movement.view' },
-  { k: 'outbound', l: 'Barang Keluar', permission: 'warehouse.movement.view' },
+  // From approved Accurate data: the day at a glance, first for whoever may see stock.
+  { k: 'today', l: 'Hari ini', permission: 'warehouse.stock.view' },
+  { k: 'shipping', l: 'Jadwal kirim', permission: 'warehouse.stock.view' },
+  { k: 'inbound', l: 'Barang masuk', permission: 'warehouse.movement.view' },
+  { k: 'outbound', l: 'Barang keluar', permission: 'warehouse.movement.view' },
+  { k: 'stock', l: 'Stok', permission: 'warehouse.stock.view' },
+  { k: 'documents', l: 'Dokumen Accurate', permission: 'warehouse.stock.view' },
+  { k: 'recon', l: 'Cocokkan Accurate', permission: 'warehouse.recon.view' },
   { k: 'approval', l: 'Approval Supervisor', permission: 'warehouse.movement.approve' },
-  { k: 'history', l: 'Riwayat Transaksi', permission: 'warehouse.movement.view' },
-  { k: 'queue', l: 'Sample Queue', permission: 'warehouse.sample.view' },
-  { k: 'delivery', l: 'Delivery Proof', permission: 'warehouse.sample.view' },
+  { k: 'history', l: 'Riwayat transaksi', permission: 'warehouse.movement.view' },
   { k: 'checklist', l: 'Checklist', permission: 'warehouse.checklist.view' },
-  { k: 'incidents', l: 'Incidents', permission: 'warehouse.incident.view' },
+  { k: 'incidents', l: 'Insiden', permission: 'warehouse.incident.view' },
+  // Warehouse batches are decided by the Warehouse Supervisor or Head.
+  { k: 'accurate', l: 'Data Accurate', permission: 'warehouse.accurate.sync' },
 ];
+
+const errorMessage = (error, fallback) => error.response?.data?.error?.message || fallback;
 
 export default function WarehouseDashboard() {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const permissions = user?.permissions || [];
-  const tabs = TABS.filter((entry) => permissions.includes(entry.permission));
+  const can = (code) => permissions.includes(code);
+  const tabs = TABS.filter((entry) => can(entry.permission));
   const requested = searchParams.get('tab');
   const tab = tabs.some((entry) => entry.k === requested) ? requested : tabs[0]?.k;
-  const setTab = (next) => setSearchParams({ tab: next }, { replace: true });
+  // A link to a tab this user may not open (e.g. from an escalation) says so.
+  const denied = requested && !tabs.some((entry) => entry.k === requested) ? TABS.find((entry) => entry.k === requested) : null;
+  // Which create dialog the header button opened (checklist, incidents).
+  const [creating, setCreating] = useState('');
+  const setTab = (next) => {
+    setCreating('');
+    setSearchParams({ tab: next }, { replace: true });
+  };
+
+  // The one "create" action of the open tab sits in the page header (§3.1).
+  const headerAction = {
+    inbound: can('warehouse.movement.create') ? <Button icon="add" to="/warehouse/movements/inbound/new">Buat barang masuk</Button> : null,
+    outbound: can('warehouse.movement.create') ? <Button icon="add" to="/warehouse/movements/outbound/new">Buat barang keluar</Button> : null,
+    checklist: can('warehouse.checklist.manage') ? <Button icon="add" onClick={() => setCreating('checklist')}>Buat checklist</Button> : null,
+    incidents: can('warehouse.incident.manage') ? <Button icon="add" onClick={() => setCreating('incidents')}>Laporkan insiden</Button> : null,
+  }[tab] || null;
+  // /warehouse?tab=checklist&baru=1 and ?tab=incidents&baru=1 open the tab's
+  // create dialog (a link, or Prakasa AI's buka_halaman). It only opens.
+  useOpenFromUrl('baru', () => {
+    if (tab === 'checklist' && can('warehouse.checklist.manage')) setCreating('checklist');
+    else if (tab === 'incidents' && can('warehouse.incident.manage')) setCreating('incidents');
+    // One state for both create dialogs: an unsaved one is never replaced by a link (keepUnsaved).
+  }, { keepUnsaved: true });
 
   return (
-    <div>
-      <h2>Warehouse</h2>
-      <div className="wm-tabs" role="tablist" aria-label="Menu Warehouse">
-        {tabs.map((t) => (
-          <button
-            key={t.k}
-            type="button"
-            role="tab"
-            id={`wh-tab-${t.k}`}
-            aria-selected={tab === t.k}
-            aria-controls="wh-tabpanel"
-            className="wm-tab pw-state-layer"
-            onClick={() => setTab(t.k)}
-          >
-            {t.l}
-          </button>
-        ))}
-      </div>
-      <div id="wh-tabpanel" role="tabpanel" aria-labelledby={tab ? `wh-tab-${tab}` : undefined} style={{ marginTop: 20 }}>
-        {!tab && <p style={{ color: 'var(--pw-on-surface-variant)' }}>Anda belum memiliki akses ke menu Warehouse.</p>}
-        {['inbound', 'outbound', 'approval', 'history'].includes(tab) && <MovementList key={tab} mode={tab} />}
-        {tab === 'queue' && <SampleQueueTab />}
-        {tab === 'delivery' && <DeliveryProofTab />}
-        {tab === 'checklist' && <ChecklistTab />}
-        {tab === 'incidents' && <IncidentsTab />}
-      </div>
-    </div>
-  );
-}
-
-/* ============================ SAMPLE QUEUE ============================ */
-
-function SampleQueueTab() {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [assign, setAssign] = useState(null);
-  const [deliver, setDeliver] = useState(null);
-
-  const load = () => {
-    setLoading(true);
-    api.get('/warehouse/sample-tasks').then((r) => setTasks(r.data.data)).finally(() => setLoading(false));
-  };
-  useEffect(load, []);
-
-  const update = async (id, status) => {
-    try {
-      await api.patch(`/warehouse/sample-tasks/${id}/status`, { status });
-      toast(`Status → ${status}`, 'success');
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
-    }
-  };
-
-  const doAssign = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    try {
-      await api.patch(`/warehouse/sample-tasks/${assign.id}/assign`, {
-        assignedTo: Number(fd.get('assignedTo')),
-      });
-      toast('Ditugaskan', 'success');
-      setAssign(null);
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
-    }
-  };
-
-  return (
-    <>
-      <DataTable
-        loading={loading}
-        rows={tasks}
-        empty="Tidak ada sample task"
-        columns={[
-          { key: 'id', title: 'ID', render: (r) => `#${r.id}` },
-          { key: 'customerName', title: 'Customer' },
-          { key: 'productName', title: 'Produk' },
-          { key: 'quantity', title: 'Qty' },
-          {
-            key: 'priority',
-            title: 'Prioritas',
-            render: (r) => <Badge tone={r.priority === 'urgent' ? 'error' : 'default'}>{r.priority}</Badge>,
-          },
-          {
-            key: 'status',
-            title: 'Status',
-            render: (r) => (
-              <Badge tone={r.status === 'delivered' ? 'success' : r.status === 'ready' ? 'info' : 'warning'}>
-                {r.status}
-              </Badge>
-            ),
-          },
-          {
-            key: 'assignedTo',
-            title: 'PIC',
-            render: (r) =>
-              r.assignedTo ? (
-                `User #${r.assignedTo}`
-              ) : (
-                <Button variant="secondary" onClick={() => setAssign(r)}>
-                  Assign
-                </Button>
-              ),
-          },
-          {
-            key: 'actions',
-            title: 'Aksi',
-            render: (r) => (
-              <div style={{ display: 'flex', gap: 4 }}>
-                {r.status === 'queued' && <Button onClick={() => update(r.id, 'preparing')}>Prepare</Button>}
-                {r.status === 'preparing' && <Button onClick={() => update(r.id, 'ready')}>Ready</Button>}
-                {r.status === 'ready' && <Button onClick={() => setDeliver(r)}>Deliver</Button>}
-              </div>
-            ),
-          },
-        ]}
+    <Page>
+      <PageHeader
+        title="Warehouse"
+        description="Barang masuk dan keluar, stok dan dokumen dari Accurate, checklist, serta insiden gudang. Hanya jumlah barang, tanpa harga."
+        actions={headerAction}
       />
-
-      <Modal open={!!assign} onClose={() => setAssign(null)} title="Assign ke Warehouse Staff">
-        <form onSubmit={doAssign}>
-          <Input label="User ID" name="assignedTo" type="number" required />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button variant="secondary" type="button" onClick={() => setAssign(null)}>
-              Batal
-            </Button>
-            <Button type="submit">Assign</Button>
-          </div>
-        </form>
-      </Modal>
-
-      <DeliveryModal task={deliver} onClose={() => { setDeliver(null); load(); }} />
-    </>
+      {tabs.length ? <TabBar tabs={tabs} value={tab} onChange={setTab} label="Menu Warehouse" idPrefix="wh-tab" panelId="wh-tabpanel" /> : null}
+      {denied ? (
+        <Banner tone="warning" title={`Anda tidak punya akses ke tab ${denied.l}`}>Yang ditampilkan adalah tab lain yang boleh Anda buka.</Banner>
+      ) : null}
+      <div id="wh-tabpanel" role="tabpanel" aria-labelledby={tab ? `wh-tab-${tab}` : undefined}>
+        {!tab && <EmptyState title="Belum ada akses" description="Anda belum memiliki akses ke menu Warehouse." />}
+        {['inbound', 'outbound', 'approval', 'history'].includes(tab) && <MovementList key={tab} mode={tab} />}
+        {tab === 'checklist' && (
+          <ChecklistTab createOpen={creating === 'checklist'} onCreateClose={() => setCreating('')} />
+        )}
+        {tab === 'incidents' && (
+          <IncidentsTab
+            canManage={can('warehouse.incident.manage')}
+            createOpen={creating === 'incidents'}
+            onCreateClose={() => setCreating('')}
+          />
+        )}
+        {tab === 'today' && <WarehouseToday />}
+        {tab === 'shipping' && <WarehouseShipping />}
+        {tab === 'stock' && <WarehouseStock />}
+        {tab === 'documents' && <WarehouseAccurateDocs />}
+        {tab === 'recon' && <WarehouseRecon />}
+        {tab === 'accurate' && (
+          <AccurateBatchList
+            detailBase="/data-accurate"
+            division="warehouse"
+            canPull
+            syncEndpoint="/warehouse/accurate/sync"
+            note="Stok dari Accurate baru dipakai di aplikasi setelah disetujui Supervisor atau Head Warehouse. Hanya jumlah barang — tanpa harga atau biaya."
+          />
+        )}
+      </div>
+    </Page>
   );
 }
 
-/* ============================ DELIVERY PROOF ============================ */
-
-function DeliveryModal({ task, onClose }) {
-  const [submitting, setSubmitting] = useState(false);
-  if (!task) return null;
-
-  const submit = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    fd.append('sampleTaskId', task.id);
-    fd.append('entityId', task.entityId || 1);
-    setSubmitting(true);
+// A list loaded once from `path`, with the failure kept for the grid's retry.
+function useWarehouseList(path, fallback) {
+  const [state, setState] = useState({ loading: true, error: '', rows: [] });
+  const load = useCallback(async () => {
+    setState((current) => ({ ...current, loading: true, error: '' }));
     try {
-      await api.post('/warehouse/delivery-proofs', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      toast('Delivery proof tersimpan · Follow-up otomatis ke Sales', 'success');
-      onClose();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
-    } finally {
-      setSubmitting(false);
+      const response = await api.get(path);
+      setState({ loading: false, error: '', rows: response.data.data || [] });
+    } catch (error) {
+      setState({ loading: false, error: errorMessage(error, fallback), rows: [] });
     }
-  };
-
-  return (
-    <Modal open={true} onClose={onClose} title={`Delivery Proof — ${task.productName}`}>
-      <form onSubmit={submit}>
-        <Input label="Nama Penerima" name="recipientName" required />
-        <Input label="Telepon Penerima" name="recipientPhone" />
-        <Input label="Tanggal/Waktu Terkirim" name="deliveredAt" type="datetime-local" />
-        <Input label="Alamat" name="address" />
-        <Input label="Catatan" name="notes" />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-          <label style={{ fontSize: 13 }}>Foto Bukti (opsional)</label>
-          <input type="file" name="photo" accept="image/*" />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-          <Button variant="secondary" type="button" onClick={onClose}>
-            Batal
-          </Button>
-          <Button type="submit" disabled={submitting}>
-            {submitting ? 'Mengunggah…' : 'Simpan & Tandai Delivered'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
-  );
+  }, [path, fallback]);
+  useEffect(() => { load(); }, [load]);
+  return { ...state, reload: load };
 }
 
-function DeliveryProofTab() {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get('/warehouse/delivery-proofs').then((r) => setRows(r.data.data)).finally(() => setLoading(false));
-  }, []);
-
+// A short form in a Modal (≤ 5 fields, §3.3): the <form> in the body, Batal and
+// the submit button in the footer, tied to the form by its id.
+function FormDialog({ open, title, submitLabel, busy, onClose, onSubmit, children }) {
+  const formId = useId();
+  const close = () => { if (!busy) onClose(); };
   return (
-    <DataTable
-      loading={loading}
-      rows={rows}
-      empty="Belum ada delivery proof"
-      columns={[
-        { key: 'id', title: 'ID', render: (r) => `#${r.id}` },
-        { key: 'customerName', title: 'Customer' },
-        { key: 'productName', title: 'Produk' },
-        { key: 'recipientName', title: 'Penerima' },
-        {
-          key: 'deliveredAt',
-          title: 'Terkirim',
-          render: (r) => (r.deliveredAt ? new Date(r.deliveredAt).toLocaleString('id-ID') : '—'),
-        },
-        { key: 'deliveredByName', title: 'Di-deliver oleh' },
-        {
-          key: 'photoWebViewLink',
-          title: 'Foto',
-          render: (r) =>
-            r.photoWebViewLink ? (
-              <a href={r.photoWebViewLink} target="_blank" rel="noreferrer">
-                Lihat
-              </a>
-            ) : (
-              '—'
-            ),
-        },
-      ]}
-    />
+    <Modal
+      open={open}
+      onClose={close}
+      title={title}
+      size="md"
+      footer={(
+        <>
+          <Button type="button" variant="text" onClick={close} disabled={busy}>Batal</Button>
+          <Button type="submit" form={formId} loading={busy}>{submitLabel}</Button>
+        </>
+      )}
+    >
+      <form id={formId} className="pw-stack" onSubmit={onSubmit} noValidate>{children}</form>
+    </Modal>
   );
 }
 
 /* ============================ CHECKLIST ============================ */
 
-function ChecklistTab() {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
+function checklistItems(row) {
+  if (Array.isArray(row.items)) return row.items;
+  if (typeof row.items !== 'string') return [];
+  try {
+    const items = JSON.parse(row.items);
+    return Array.isArray(items) ? items : [];
+  } catch {
+    return [];
+  }
+}
+const checklistProgress = (row) => {
+  const items = checklistItems(row);
+  return `${items.filter((item) => item.checked).length}/${items.length} selesai`;
+};
 
-  const load = () => {
-    setLoading(true);
-    api.get('/warehouse/checklists').then((r) => setRows(r.data.data)).finally(() => setLoading(false));
+const CHECKLIST_COLUMNS = [
+  { key: 'checklistDate', header: 'Tanggal', render: (row) => dayText(row.checklistDate), exportValue: (row) => dateOnly(row.checklistDate) },
+  { key: 'title', header: 'Judul' },
+  { key: 'items', header: 'Item', translate: true, render: checklistProgress, exportValue: checklistProgress },
+  {
+    key: 'completed',
+    header: 'Status',
+    render: (row) => <StatusBadge status={row.completed ? 'completed' : 'pending'} label={row.completed ? 'Selesai' : 'Belum selesai'} />,
+    exportValue: (row) => (row.completed ? 'Selesai' : 'Belum selesai'),
+  },
+];
+
+function ChecklistTab({ createOpen, onCreateClose }) {
+  const list = useWarehouseList('/warehouse/checklists', 'Checklist belum bisa dimuat.');
+  return (
+    <>
+      <DataGrid
+        title="Checklist"
+        showTitle={false}
+        exportName="checklist-gudang"
+        columns={CHECKLIST_COLUMNS}
+        rows={list.rows}
+        loading={list.loading}
+        error={list.error}
+        onRetry={list.reload}
+        searchPlaceholder="Cari judul checklist"
+        empty="Belum ada checklist"
+      />
+      <ChecklistDialog open={createOpen} onClose={onCreateClose} onCreated={list.reload} />
+    </>
+  );
+}
+
+const blankChecklist = () => ({ checklistDate: todayLocal(), title: '', items: '' });
+
+// Prakasa AI may fill the checklist; the user reviews it and presses
+// "Simpan checklist" (docs/prakasa-ai-rencana.md §9.9).
+const AI_CHECKLIST = defineAIForm({
+  id: 'warehouse-checklist',
+  title: 'Buat checklist harian',
+  permission: 'warehouse.checklist.manage',
+  submitLabel: 'Simpan checklist',
+  fields: [
+    f.date('checklistDate', 'Tanggal', { required: true }),
+    f.text('title', 'Judul', { required: true, maxLength: 190 }),
+    f.textarea('items', 'Item', { maxLength: 4000, hint: 'Satu item per baris.' }),
+  ],
+});
+
+function ChecklistDialog({ open, onClose, onCreated }) {
+  const [form, setForm] = useState(blankChecklist);
+  const [errors, setErrors] = useState({});
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (open) { setForm(blankChecklist()); setErrors({}); }
+  }, [open]);
+  const set = (key, value) => {
+    setForm((current) => ({ ...current, [key]: value }));
+    setErrors((current) => ({ ...current, [key]: undefined }));
   };
-  useEffect(load, []);
 
-  const create = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const itemLabels = (fd.get('items') || '').toString().split('\n').map((s) => s.trim()).filter(Boolean);
+  const ai = usePrakasaAIForm(AI_CHECKLIST, {
+    enabled: open,
+    values: form,
+    setValues: setForm,
+    setErrors,
+    initialValues: blankChecklist(),
+  });
+
+  const submit = async (event) => {
+    event.preventDefault();
+    const next = {};
+    if (!form.checklistDate) next.checklistDate = 'Tanggal wajib diisi.';
+    if (!form.title.trim()) next.title = 'Judul wajib diisi.';
+    setErrors(next);
+    if (Object.keys(next).length) return;
+    const labels = form.items.split('\n').map((line) => line.trim()).filter(Boolean);
+    setBusy(true);
     try {
       await api.post('/warehouse/checklists', {
-        entityId: Number(fd.get('entityId')),
-        checklistDate: fd.get('checklistDate'),
-        title: fd.get('title'),
-        items: itemLabels.map((label) => ({ label, checked: false })),
+        checklistDate: form.checklistDate,
+        title: form.title.trim(),
+        items: labels.map((label) => ({ label, checked: false })),
       });
       toast('Checklist dibuat', 'success');
-      setOpen(false);
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
+      onClose();
+      onCreated();
+    } catch (error) {
+      toast(errorMessage(error, 'Checklist gagal dibuat'), 'error');
+    } finally {
+      setBusy(false);
     }
   };
 
   return (
-    <>
-      <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button onClick={() => setOpen(true)}>+ Checklist</Button>
-      </div>
-      <DataTable
-        loading={loading}
-        rows={rows}
-        empty="Belum ada checklist"
-        columns={[
-          { key: 'checklistDate', title: 'Tanggal' },
-          { key: 'title', title: 'Judul' },
-          {
-            key: 'items',
-            title: 'Item',
-            render: (r) => {
-              const items = typeof r.items === 'string' ? JSON.parse(r.items) : r.items || [];
-              const done = items.filter((i) => i.checked).length;
-              return `${done}/${items.length} selesai`;
-            },
-          },
-          {
-            key: 'completed',
-            title: 'Status',
-            render: (r) => (
-              <Badge tone={r.completed ? 'success' : 'warning'}>
-                {r.completed ? 'Selesai' : 'Pending'}
-              </Badge>
-            ),
-          },
-        ]}
+    <FormDialog open={open} title="Buat checklist harian" submitLabel="Simpan checklist" busy={busy} onClose={onClose} onSubmit={submit}>
+      {ai.notice}
+      <DateInput label="Tanggal" required value={form.checklistDate} error={errors.checklistDate} {...ai.field('checklistDate')} onChange={(event) => set('checklistDate', event.target.value)} />
+      <Input label="Judul" required value={form.title} error={errors.title} placeholder="Checklist harian gudang" {...ai.field('title')} onChange={(event) => set('title', event.target.value)} />
+      <Textarea
+        label="Item"
+        rows={6}
+        value={form.items}
+        hint="Satu item per baris."
+        placeholder={'Sapu lantai\nCek suhu ruangan\nCek stok barang'}
+        {...ai.field('items')}
+        onChange={(event) => set('items', event.target.value)}
       />
-
-      <Modal open={open} onClose={() => setOpen(false)} title="Buat Checklist Harian">
-        <form onSubmit={create}>
-          <Input label="Entity ID" name="entityId" type="number" required />
-          <Input
-            label="Tanggal"
-            name="checklistDate"
-            type="date"
-            required
-            defaultValue={new Date().toISOString().slice(0, 10)}
-          />
-          <Input label="Judul" name="title" required placeholder="Checklist Harian Gudang" />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-            <label style={{ fontSize: 13 }}>Item (satu per baris)</label>
-            <textarea
-              name="items"
-              rows={6}
-              placeholder={'Sapu lantai\nCek suhu ruangan\nCek stok sample'}
-              style={{
-                padding: 10,
-                borderRadius: 8,
-                boxShadow: 'inset 0 0 0 1px var(--color-border)',
-                fontFamily: 'monospace',
-                fontSize: 13,
-              }}
-            />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button variant="secondary" type="button" onClick={() => setOpen(false)}>
-              Batal
-            </Button>
-            <Button type="submit">Simpan</Button>
-          </div>
-        </form>
-      </Modal>
-    </>
+    </FormDialog>
   );
 }
 
 /* ============================ INCIDENTS ============================ */
 
-function IncidentsTab() {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-  const [resolve, setResolve] = useState(null);
+// The category is free text, stored exactly as typed (owner's data keeps its
+// meaning); the old English codes read in Indonesian.
+const CATEGORY_LABEL = { damage: 'Kerusakan', lost: 'Kehilangan', delay: 'Keterlambatan' };
+const categoryText = (category) => CATEGORY_LABEL[String(category || '').toLowerCase()] || category;
+const SEVERITIES = [
+  { value: 'low', label: 'Rendah' },
+  { value: 'medium', label: 'Sedang' },
+  { value: 'high', label: 'Tinggi' },
+  { value: 'critical', label: 'Kritis' },
+];
+const RESOLVE_STATUSES = [
+  { value: 'investigating', label: 'Diselidiki' },
+  { value: 'resolved', label: 'Selesai' },
+  { value: 'closed', label: 'Ditutup' },
+];
+const shortText = (text) => {
+  const value = text || '';
+  return value.length > 60 ? `${value.slice(0, 60)}…` : value;
+};
 
-  const load = () => {
-    setLoading(true);
-    api.get('/warehouse/incidents').then((r) => setRows(r.data.data)).finally(() => setLoading(false));
+const INCIDENT_COLUMNS = [
+  { key: 'id', header: 'Nomor', render: (row) => `#${row.id}`, exportValue: (row) => row.id },
+  { key: 'incidentDate', header: 'Tanggal', render: (row) => dayText(row.incidentDate), exportValue: (row) => dateOnly(row.incidentDate) },
+  { key: 'category', header: 'Kategori', render: (row) => (categoryText(row.category) === row.category ? row.category : <Translate>{categoryText(row.category)}</Translate>), exportValue: (row) => categoryText(row.category) },
+  { key: 'severity', header: 'Tingkat', render: (row) => <PriorityBadge priority={row.severity} />, exportValue: (row) => SEVERITIES.find((s) => s.value === row.severity)?.label || row.severity },
+  { key: 'description', header: 'Deskripsi', render: (row) => shortText(row.description), exportValue: (row) => row.description },
+  { key: 'status', header: 'Status', render: (row) => <StatusBadge status={row.status} />, exportValue: (row) => statusLabel(row.status) },
+];
+
+function IncidentsTab({ canManage, createOpen, onCreateClose }) {
+  const list = useWarehouseList('/warehouse/incidents', 'Insiden belum bisa dimuat.');
+  const [resolving, setResolving] = useState(null);
+  return (
+    <>
+      <DataGrid
+        title="Insiden"
+        showTitle={false}
+        exportName="insiden-gudang"
+        columns={INCIDENT_COLUMNS}
+        rows={list.rows}
+        loading={list.loading}
+        error={list.error}
+        onRetry={list.reload}
+        searchPlaceholder="Cari kategori atau deskripsi"
+        empty="Belum ada insiden"
+        rowActions={canManage ? (row) => (['resolved', 'closed'].includes(row.status) ? null : (
+          <IconButton label="Selesaikan insiden" icon="task_alt" size="sm" onClick={() => setResolving(row)} />
+        )) : undefined}
+      />
+      <IncidentDialog open={createOpen} onClose={onCreateClose} onCreated={list.reload} />
+      <ResolveDialog incident={resolving} onClose={() => setResolving(null)} onResolved={list.reload} />
+    </>
+  );
+}
+
+const blankIncident = () => ({ incidentDate: todayLocal(), category: '', severity: 'low', description: '' });
+
+// Prakasa AI may fill the incident report; the user reviews it and presses
+// "Laporkan insiden". Closing an incident (ResolveDialog) is a decision: not registered.
+const AI_INCIDENT = defineAIForm({
+  id: 'warehouse-incident',
+  title: 'Laporkan insiden',
+  permission: 'warehouse.incident.manage',
+  submitLabel: 'Laporkan insiden',
+  fields: [
+    f.date('incidentDate', 'Tanggal', { required: true }),
+    f.text('category', 'Kategori', { required: true, maxLength: 80, hint: 'Mis. kerusakan, kehilangan, keterlambatan' }),
+    f.select('severity', 'Tingkat', SEVERITIES),
+    f.textarea('description', 'Deskripsi', { required: true, maxLength: 4000 }),
+  ],
+});
+
+function IncidentDialog({ open, onClose, onCreated }) {
+  const [form, setForm] = useState(blankIncident);
+  const [errors, setErrors] = useState({});
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (open) { setForm(blankIncident()); setErrors({}); }
+  }, [open]);
+  const set = (key, value) => {
+    setForm((current) => ({ ...current, [key]: value }));
+    setErrors((current) => ({ ...current, [key]: undefined }));
   };
-  useEffect(load, []);
 
-  const create = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
+  const ai = usePrakasaAIForm(AI_INCIDENT, {
+    enabled: open,
+    values: form,
+    setValues: setForm,
+    setErrors,
+    initialValues: blankIncident(),
+  });
+
+  const submit = async (event) => {
+    event.preventDefault();
+    const next = {};
+    if (!form.incidentDate) next.incidentDate = 'Tanggal wajib diisi.';
+    if (!form.category) next.category = 'Kategori wajib diisi.';
+    if (!form.description.trim()) next.description = 'Deskripsi wajib diisi.';
+    setErrors(next);
+    if (Object.keys(next).length) return;
+    setBusy(true);
     try {
       await api.post('/warehouse/incidents', {
-        entityId: Number(fd.get('entityId')),
-        incidentDate: fd.get('incidentDate'),
-        category: fd.get('category'),
-        severity: fd.get('severity'),
-        description: fd.get('description'),
+        incidentDate: form.incidentDate,
+        category: form.category,
+        severity: form.severity,
+        description: form.description.trim(),
       });
-      toast('Incident dilaporkan', 'success');
-      setOpen(false);
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
-    }
-  };
-
-  const doResolve = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    try {
-      await api.patch(`/warehouse/incidents/${resolve.id}/resolve`, {
-        status: fd.get('status'),
-        resolution: fd.get('resolution'),
-      });
-      toast('Incident di-resolve', 'success');
-      setResolve(null);
-      load();
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal', 'error');
+      toast('Insiden dilaporkan', 'success');
+      onClose();
+      onCreated();
+    } catch (error) {
+      toast(errorMessage(error, 'Insiden gagal dilaporkan'), 'error');
+    } finally {
+      setBusy(false);
     }
   };
 
   return (
-    <>
-      <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button onClick={() => setOpen(true)}>+ Laporkan Incident</Button>
+    <FormDialog open={open} title="Laporkan insiden" submitLabel="Laporkan insiden" busy={busy} onClose={onClose} onSubmit={submit}>
+      {ai.notice}
+      <div className="pw-form-grid">
+        <DateInput label="Tanggal" required value={form.incidentDate} error={errors.incidentDate} {...ai.field('incidentDate')} onChange={(event) => set('incidentDate', event.target.value)} />
+        <Input label="Kategori" required value={form.category} error={errors.category} hint="Mis. kerusakan, kehilangan, keterlambatan" {...ai.field('category')} onChange={(event) => set('category', event.target.value)} />
+        <Select label="Tingkat" value={form.severity} options={SEVERITIES} {...ai.field('severity')} onChange={(event) => set('severity', event.target.value)} />
       </div>
-      <DataTable
-        loading={loading}
-        rows={rows}
-        empty="Belum ada incident"
-        columns={[
-          { key: 'id', title: 'ID', render: (r) => `#${r.id}` },
-          { key: 'incidentDate', title: 'Tanggal' },
-          { key: 'category', title: 'Kategori' },
-          {
-            key: 'severity',
-            title: 'Severity',
-            render: (r) => (
-              <Badge tone={r.severity === 'critical' ? 'error' : r.severity === 'high' ? 'warning' : 'info'}>
-                {r.severity}
-              </Badge>
-            ),
-          },
-          {
-            key: 'description',
-            title: 'Deskripsi',
-            render: (r) =>
-              (r.description || '').slice(0, 60) + ((r.description || '').length > 60 ? '…' : ''),
-          },
-          {
-            key: 'status',
-            title: 'Status',
-            render: (r) => (
-              <Badge tone={r.status === 'resolved' || r.status === 'closed' ? 'success' : 'warning'}>
-                {r.status}
-              </Badge>
-            ),
-          },
-          {
-            key: 'actions',
-            title: 'Aksi',
-            render: (r) =>
-              ['resolved', 'closed'].includes(r.status) ? (
-                <span style={{ color: 'var(--color-text-muted)' }}>—</span>
-              ) : (
-                <Button onClick={() => setResolve(r)}>Resolve</Button>
-              ),
-          },
-        ]}
+      <Textarea label="Deskripsi" required rows={4} value={form.description} error={errors.description} {...ai.field('description')} onChange={(event) => set('description', event.target.value)} />
+    </FormDialog>
+  );
+}
+
+function ResolveDialog({ incident, onClose, onResolved }) {
+  const [status, setStatus] = useState('investigating');
+  const [resolution, setResolution] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (incident) { setStatus('investigating'); setResolution(''); setError(''); }
+  }, [incident]);
+
+  const submit = async (event) => {
+    event.preventDefault();
+    if (!resolution.trim()) { setError('Resolusi wajib diisi.'); return; }
+    setBusy(true);
+    try {
+      await api.patch(`/warehouse/incidents/${incident.id}/resolve`, { status, resolution: resolution.trim() });
+      toast('Insiden diperbarui', 'success');
+      onClose();
+      onResolved();
+    } catch (err) {
+      toast(errorMessage(err, 'Insiden gagal diperbarui'), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <FormDialog
+      open={Boolean(incident)}
+      title={`Selesaikan insiden #${incident?.id || ''}`}
+      submitLabel="Simpan resolusi"
+      busy={busy}
+      onClose={onClose}
+      onSubmit={submit}
+    >
+      <Select label="Status" value={status} options={RESOLVE_STATUSES} onChange={(event) => setStatus(event.target.value)} />
+      <Textarea
+        label="Resolusi"
+        required
+        rows={4}
+        value={resolution}
+        error={error}
+        onChange={(event) => { setResolution(event.target.value); setError(''); }}
       />
-
-      <Modal open={open} onClose={() => setOpen(false)} title="Laporkan Incident">
-        <form onSubmit={create}>
-          <Input label="Entity ID" name="entityId" type="number" required />
-          <Input
-            label="Tanggal"
-            name="incidentDate"
-            type="date"
-            required
-            defaultValue={new Date().toISOString().slice(0, 10)}
-          />
-          <Input label="Kategori" name="category" placeholder="damage/lost/delay" required />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-            <label style={{ fontSize: 13 }}>Severity</label>
-            <select name="severity" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
-              {['low', 'medium', 'high', 'critical'].map((s) => (
-                <option key={s}>{s}</option>
-              ))}
-            </select>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-            <label style={{ fontSize: 13 }}>Deskripsi</label>
-            <textarea
-              name="description"
-              rows={4}
-              required
-              style={{ padding: 10, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
-            />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button variant="secondary" type="button" onClick={() => setOpen(false)}>
-              Batal
-            </Button>
-            <Button type="submit">Laporkan</Button>
-          </div>
-        </form>
-      </Modal>
-
-      <Modal open={!!resolve} onClose={() => setResolve(null)} title={`Resolve Incident #${resolve?.id || ''}`}>
-        {resolve && (
-          <form onSubmit={doResolve}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-              <label style={{ fontSize: 13 }}>Status</label>
-              <select name="status" style={{ padding: 8, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
-                <option value="investigating">Investigating</option>
-                <option value="resolved">Resolved</option>
-                <option value="closed">Closed</option>
-              </select>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-              <label style={{ fontSize: 13 }}>Resolusi</label>
-              <textarea
-                name="resolution"
-                rows={4}
-                required
-                style={{ padding: 10, borderRadius: 8, boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
-              />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <Button variant="secondary" type="button" onClick={() => setResolve(null)}>
-                Batal
-              </Button>
-              <Button type="submit">Simpan</Button>
-            </div>
-          </form>
-        )}
-      </Modal>
-    </>
+    </FormDialog>
   );
 }

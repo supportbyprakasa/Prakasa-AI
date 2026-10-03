@@ -1,0 +1,83 @@
+/* State layer and ripple — the one hover/press system (docs/ui-guideline.md §1.10).
+   .pw-state-layer paints a veil of the text colour: hover 4%, keyboard focus 12%,
+   pressed 10%, with `opacity 75ms linear`. A component may raise its hover veil
+   through --pw-state-layer-hover (filled buttons: the measured 5%). Every
+   interactive surface also gets the pointer ripple (styles/ripple.js, 12%); while
+   a ripple runs (.pw-rippling) the pressed veil is left to the wave, so the two
+   never stack into a double press. */
+.pw-state-layer,
+.pw-button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.pw-state-layer::before,
+.pw-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--pw-dur-state) linear;
+}
+.pw-state-layer:hover:not(:disabled):not([aria-disabled="true"])::before,
+.pw-button:hover:not(:disabled):not([aria-disabled="true"])::before { opacity: var(--pw-state-layer-hover, var(--pw-state-hover)); }
+.pw-state-layer:focus-visible::before,
+.pw-button:focus-visible::before { opacity: var(--pw-state-focus); }
+.pw-state-layer:active:not(.pw-rippling):not(:disabled):not([aria-disabled="true"])::before,
+.pw-button:active:not(.pw-rippling):not(:disabled):not([aria-disabled="true"])::before { opacity: var(--pw-state-pressed); }
+
+/* One focus ring (K5): keyboard focus only. */
+.pw-state-layer:focus-visible,
+.pw-button:focus-visible {
+  outline: 2px solid var(--pw-primary);
+  outline-offset: 2px;
+}
+.pw-state-layer:disabled,
+.pw-state-layer[aria-disabled="true"] { cursor: not-allowed; }
+
+.pw-ripple-host { position: relative; }
+.pw-ripple-box {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.pw-ripple-wave {
+  position: absolute;
+  border-radius: var(--pw-radius-full);
+  background: currentColor;
+  opacity: var(--pw-ripple-opacity);
+  transform: translate(-50%, -50%) scale(0);
+  animation: pw-ripple-grow var(--pw-dur-ripple) var(--pw-ease-standard) forwards;
+  transition: opacity var(--pw-dur-md) linear;
+}
+.pw-ripple-wave.is-leaving { opacity: 0; }
+@keyframes pw-ripple-grow {
+  to { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Shared keyframes — one definition each for every component (§1.5):
+   overlays enter with pw-scale-in (menu, dialog, snackbar) or pw-fade-in
+   (scrims) and leave with pw-fade-out; spinners turn with pw-spin. */
+@keyframes pw-fade-in { from { opacity: 0; } }
+@keyframes pw-fade-out { to { opacity: 0; } }
+@keyframes pw-scale-in { from { opacity: 0; transform: scale(0.8); } }
+@keyframes pw-spin { to { transform: rotate(360deg); } }
+
+/* Text for screen readers only (tooltip descriptions, dense field labels). */
+.pw-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

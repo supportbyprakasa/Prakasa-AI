@@ -1,30 +1,43 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ShieldCheck, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import api from '../../api/client';
+import Banner from '../../components/Banner';
 import Button from '../../components/Button';
+import Checkbox from '../../components/Checkbox';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import { apiErrorMessage } from '../../components/datagrid/gridModel';
+import EmptyState, { LoadingState } from '../../components/EmptyState';
+import FullScreenDialog, { FullScreenSection } from '../../components/FullScreenDialog';
+import Icon from '../../components/Icon';
 import {
   groupPermissions,
   roleDiff,
-  shouldCloseRoleEditorFromBackdrop,
+  roleLevelLabel,
 } from './roleAdminModel';
+import { Mixed } from '../../i18n/NoTranslate';
+import './admin-editors.css';
 
+// Edit a role's permissions: the admin console's full-screen form
+// (docs/ui-guideline.md §3.3), opened from a row of the Roles list. Each
+// permission group is a collapsible block with its count; saving asks for a
+// confirmation that lists what is added and removed.
 export default function RoleEditorPanel({ role, open, onClose, onSaved }) {
-  const closeButtonRef = useRef(null);
   const [detail, setDetail] = useState(null);
   const [permissions, setPermissions] = useState([]);
   const [originalCodes, setOriginalCodes] = useState([]);
   const [selectedCodes, setSelectedCodes] = useState(() => new Set());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [loadError, setLoadError] = useState('');
+  const [saveError, setSaveError] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!open || !role?.id) return undefined;
     let active = true;
     setLoading(true);
-    setError('');
+    setLoadError('');
+    setSaveError('');
 
     Promise.all([
       api.get(`/roles/${role.id}`),
@@ -38,25 +51,15 @@ export default function RoleEditorPanel({ role, open, onClose, onSaved }) {
       setPermissions(nextPermissions);
       setOriginalCodes(codes);
       setSelectedCodes(new Set(codes));
-      window.requestAnimationFrame(() => closeButtonRef.current?.focus());
     }).catch((requestError) => {
       if (!active) return;
-      setError(requestError.response?.data?.error?.message || 'Role tidak dapat dimuat.');
+      setLoadError(apiErrorMessage(requestError, 'Peran tidak dapat dimuat.'));
     }).finally(() => {
       if (active) setLoading(false);
     });
 
     return () => { active = false; };
-  }, [open, role?.id]);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape' && !saving && !confirmOpen) onClose?.();
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [confirmOpen, onClose, open, saving]);
+  }, [open, role?.id, attempt]);
 
   const groups = useMemo(() => groupPermissions(permissions), [permissions]);
   const selectedList = useMemo(() => [...selectedCodes], [selectedCodes]);
@@ -69,7 +72,9 @@ export default function RoleEditorPanel({ role, open, onClose, onSaved }) {
     [permissions],
   );
 
-  if (!open) return null;
+  const close = useCallback(() => {
+    if (!saving) onClose?.();
+  }, [onClose, saving]);
 
   const togglePermission = (code) => {
     setSelectedCodes((current) => {
@@ -90,7 +95,7 @@ export default function RoleEditorPanel({ role, open, onClose, onSaved }) {
 
   const save = async () => {
     setSaving(true);
-    setError('');
+    setSaveError('');
     try {
       const permissionIds = selectedList
         .map((code) => permissionIdByCode.get(code))
@@ -101,117 +106,110 @@ export default function RoleEditorPanel({ role, open, onClose, onSaved }) {
       onClose?.();
     } catch (requestError) {
       setConfirmOpen(false);
-      setError(requestError.response?.data?.error?.message || 'Perubahan role gagal disimpan.');
+      setSaveError(apiErrorMessage(requestError, 'Perubahan peran gagal disimpan.'));
     } finally {
       setSaving(false);
     }
   };
 
+  const name = detail?.name || role?.name || '';
+  // Division name and level are two interface labels: one text node each.
+  const scope = <Mixed parts={[detail?.departmentName || role?.departmentName || 'Global', roleLevelLabel(detail?.roleLevel || role?.roleLevel)]} />;
+  const changed = diff.added.length > 0 || diff.removed.length > 0;
+  const ready = !loading && !loadError;
+
   const diffMessage = (
-    <div className="role-diff-summary">
-      <p>Periksa perubahan untuk <strong>{detail?.name || role.name}</strong>.</p>
+    <div className="admin-confirm-summary">
+      <p>Periksa perubahan untuk <span className="pw-strong">{name}</span>.</p>
       <div>
-        <strong>Ditambahkan ({diff.added.length})</strong>
-        <span>{diff.added.length ? diff.added.join(', ') : 'Tidak ada'}</span>
+        <span className="pw-strong">Ditambahkan ({diff.added.length})</span>
+        <span className="admin-confirm-summary__codes" data-no-translate={diff.added.length ? '' : undefined}>{diff.added.length ? diff.added.join(', ') : 'Tidak ada'}</span>
       </div>
       <div>
-        <strong>Dihapus ({diff.removed.length})</strong>
-        <span>{diff.removed.length ? diff.removed.join(', ') : 'Tidak ada'}</span>
+        <span className="pw-strong">Dihapus ({diff.removed.length})</span>
+        <span className="admin-confirm-summary__codes" data-no-translate={diff.removed.length ? '' : undefined}>{diff.removed.length ? diff.removed.join(', ') : 'Tidak ada'}</span>
       </div>
     </div>
   );
 
   return (
-    <div
-      className="role-editor-backdrop"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (shouldCloseRoleEditorFromBackdrop({
-          confirmOpen,
-          eventTargetIsBackdrop: event.target === event.currentTarget,
-        })) onClose?.();
-      }}
-    >
-      <aside
-        className="role-editor-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Edit ${role.name}`}
-        onMouseDown={(event) => event.stopPropagation()}
+    <>
+      <FullScreenDialog
+        open={open}
+        title={name ? `Ubah akses ${name}` : 'Ubah akses peran'}
+        onClose={close}
+        card={false}
+        actions={ready ? (
+          <>
+            <Button variant="text" type="button" onClick={close} disabled={saving}>Batal</Button>
+            <Button type="button" onClick={requestSave} loading={saving}>Simpan perubahan</Button>
+          </>
+        ) : null}
       >
-        <header className="role-editor-panel__header">
-          <div className="role-editor-panel__identity">
-            <span className="role-editor-panel__icon"><ShieldCheck size={20} /></span>
-            <div>
-              <span>Edit akses role</span>
-              <h2>{detail?.name || role.name}</h2>
-              <p>{detail?.departmentName || role.departmentName || 'Global'} · {detail?.roleLevel || role.roleLevel}</p>
-            </div>
-          </div>
-          <button
-            ref={closeButtonRef}
-            className="role-editor-panel__close"
-            type="button"
-            aria-label="Tutup editor role"
-            onClick={onClose}
-            disabled={saving}
-          >
-            <X size={20} />
-          </button>
-        </header>
+        {loading ? <LoadingState label="Memuat izin akses…" /> : null}
+        {loadError ? (
+          <EmptyState
+            tone="error"
+            title="Peran gagal dimuat"
+            description={loadError}
+            action={<Button variant="text" type="button" onClick={() => setAttempt((value) => value + 1)}>Coba lagi</Button>}
+          />
+        ) : null}
 
-        <div className="role-editor-panel__summary">
-          <strong>{selectedCodes.size}</strong>
-          <span>permission dipilih</span>
-          {(diff.added.length > 0 || diff.removed.length > 0) ? (
-            <small>+{diff.added.length} / −{diff.removed.length} belum disimpan</small>
-          ) : <small>Tidak ada perubahan</small>}
-        </div>
-
-        <div className="role-editor-panel__body">
-          {loading ? <div className="role-editor-state">Memuat permission…</div> : null}
-          {error ? (
-            <div className="role-editor-state role-editor-state--error" role="alert">{error}</div>
-          ) : null}
-          {!loading && !error ? groups.map((group) => (
-            <details className="role-permission-group" key={group.key} open>
-              <summary>
-                <span>{group.label}</span>
-                <span>{group.permissions.filter((permission) => selectedCodes.has(permission.code)).length}/{group.permissions.length}</span>
-                <ChevronDown size={18} aria-hidden="true" />
-              </summary>
-              <div className="role-permission-group__items">
-                {group.permissions.map((permission) => (
-                  <label key={permission.id} className="role-permission-option">
-                    <input
-                      type="checkbox"
-                      checked={selectedCodes.has(permission.code)}
-                      onChange={() => togglePermission(permission.code)}
-                    />
-                    <span>
-                      <strong>{permission.description || permission.code}</strong>
-                      <code>{permission.code}</code>
-                    </span>
-                  </label>
-                ))}
+        {ready ? (
+          <div className="admin-dialog-form">
+            {saveError ? <Banner tone="error">{saveError}</Banner> : null}
+            <FullScreenSection title="Ringkasan">
+              <div className="admin-role-summary">
+                <span className="admin-role-summary__scope">{scope}</span>
+                <span className="admin-role-summary__count">{selectedCodes.size} izin dipilih</span>
+                <span className={`admin-role-summary__diff${changed ? ' is-changed' : ''}`}>
+                  {changed ? `+${diff.added.length} / −${diff.removed.length} belum disimpan` : 'Tidak ada perubahan'}
+                </span>
               </div>
-            </details>
-          )) : null}
-        </div>
+            </FullScreenSection>
 
-        <footer className="role-editor-panel__footer">
-          <Button variant="secondary" type="button" onClick={onClose} disabled={saving}>
-            Batal
-          </Button>
-          <Button type="button" onClick={requestSave} disabled={loading || saving || Boolean(error)}>
-            {saving ? 'Menyimpan…' : 'Simpan perubahan'}
-          </Button>
-        </footer>
-      </aside>
+            <FullScreenSection title="Permission">
+              {groups.length ? (
+                <div className="admin-permission-groups">
+                  {groups.map((group) => (
+                    <details className="admin-permission-group" key={group.key} open>
+                      <summary className="admin-permission-group__summary pw-state-layer">
+                        <span className="admin-permission-group__label" data-no-translate="">{group.label}</span>
+                        <span className="admin-permission-group__count">
+                          {group.permissions.filter((permission) => selectedCodes.has(permission.code)).length}/{group.permissions.length}
+                        </span>
+                        <Icon name="expand_more" className="admin-permission-group__chevron" />
+                      </summary>
+                      <div className="admin-choice-list">
+                        {group.permissions.map((permission) => (
+                          <Checkbox
+                            key={permission.id}
+                            checked={selectedCodes.has(permission.code)}
+                            onChange={() => togglePermission(permission.code)}
+                            label={(
+                              <span className="pw-cell">
+                                <span className="pw-cell__title" data-no-translate={permission.description ? undefined : ''}>{permission.description || permission.code}</span>
+                                <code data-no-translate="" className="pw-cell__meta admin-code">{permission.code}</code>
+                              </span>
+                            )}
+                          />
+                        ))}
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState compact icon="key" title="Belum ada permission." />
+              )}
+            </FullScreenSection>
+          </div>
+        ) : null}
+      </FullScreenDialog>
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Simpan perubahan permission?"
+        title="Simpan perubahan izin akses?"
         message={diffMessage}
         confirmLabel="Simpan perubahan"
         tone="primary"
@@ -219,6 +217,6 @@ export default function RoleEditorPanel({ role, open, onClose, onSaved }) {
         onClose={() => setConfirmOpen(false)}
         onConfirm={save}
       />
-    </div>
+    </>
   );
 }

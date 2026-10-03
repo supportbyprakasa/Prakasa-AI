@@ -1,0 +1,181 @@
+/* Checkbox, Radio and Switch (docs/ui-guideline.md §4.5). The native input lies
+   invisibly over the round touch area (or the whole switch), so keyboard, forms
+   and screen readers get the real control; the box, circle and track are drawn
+   under it. The touch area carries the state layer and, through ripple.js, a
+   ripple from its centre, also when the label text is pressed. */
+.pw-choice {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  min-width: 0;
+  color: var(--pw-text);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+  line-height: 20px;
+  vertical-align: middle;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.pw-choice.is-disabled { color: var(--pw-disabled-text); cursor: not-allowed; }
+.pw-choice__label { min-width: 0; padding-right: 4px; overflow-wrap: anywhere; }
+
+.pw-choice__touch {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--pw-radius-full);
+  color: var(--pw-text-muted);
+}
+/* The state layer's own ring is replaced by one around the box (below). */
+.pw-choice__touch.pw-state-layer:focus-visible { outline: none; }
+.pw-choice__input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.pw-choice__touch:has(> .pw-choice__input:focus-visible)::before { opacity: var(--pw-state-focus); }
+.pw-choice.is-disabled .pw-choice__touch::before { opacity: 0; }
+
+/* Checkbox */
+.pw-checkbox__box {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--pw-text-muted);
+  border-radius: var(--pw-radius-sm);
+  background: transparent;
+  pointer-events: none;
+  transition:
+    border-color var(--pw-dur-sm) var(--pw-ease-standard),
+    background-color var(--pw-dur-sm) var(--pw-ease-standard);
+}
+.pw-checkbox__mark {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: var(--pw-on-primary);
+  stroke-width: 3.12px;
+  stroke-dasharray: 29.78;
+  stroke-dashoffset: 29.78;
+  transition: stroke-dashoffset var(--pw-dur-sm) var(--pw-ease-standard);
+}
+.pw-checkbox__mixed {
+  position: absolute;
+  top: 7px;
+  left: 2px;
+  width: 12px;
+  height: 2px;
+  background: var(--pw-on-primary);
+  transform: scaleX(0);
+  transition: transform var(--pw-dur-sm) var(--pw-ease-standard);
+}
+.pw-choice__input:checked + .pw-checkbox__box,
+.pw-choice__input:indeterminate + .pw-checkbox__box {
+  border-color: var(--pw-accent);
+  background: var(--pw-accent);
+}
+.pw-choice__input:checked:not(:indeterminate) + .pw-checkbox__box > .pw-checkbox__mark { stroke-dashoffset: 0; }
+.pw-choice__input:indeterminate + .pw-checkbox__box > .pw-checkbox__mixed { transform: scaleX(1); }
+.pw-checkbox .pw-choice__touch:has(> .pw-choice__input:is(:checked, :indeterminate)) { color: var(--pw-accent); }
+.pw-choice__input:focus-visible + .pw-checkbox__box { outline: 2px solid var(--pw-primary); outline-offset: 2px; }
+.pw-choice__input:disabled + .pw-checkbox__box { border-color: var(--pw-disabled-text); }
+.pw-choice__input:disabled:is(:checked, :indeterminate) + .pw-checkbox__box { background: var(--pw-disabled-text); border-color: transparent; }
+
+/* Radio: touch area 28, 40 on phones (sementara). */
+.pw-radio .pw-choice__touch { width: 28px; height: 28px; }
+.pw-radio__circle {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--pw-text-muted);
+  border-radius: var(--pw-radius-full);
+  pointer-events: none;
+  transition: border-color var(--pw-dur-sm) var(--pw-ease-standard);
+}
+.pw-radio__circle::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: var(--pw-radius-full);
+  background: var(--pw-tab);
+  transform: scale(0);
+  transition: transform var(--pw-dur-sm) var(--pw-ease-standard);
+}
+.pw-choice__input:checked + .pw-radio__circle { border-color: var(--pw-tab); }
+.pw-choice__input:checked + .pw-radio__circle::after { transform: scale(1); }
+.pw-radio .pw-choice__touch:has(> .pw-choice__input:checked) { color: var(--pw-tab); }
+.pw-choice__input:focus-visible + .pw-radio__circle { outline: 2px solid var(--pw-primary); outline-offset: 2px; }
+.pw-choice__input:disabled + .pw-radio__circle { border-color: var(--pw-disabled-text); }
+.pw-choice__input:disabled + .pw-radio__circle::after { background: var(--pw-disabled-text); }
+@media (max-width: 600px) {
+  .pw-radio .pw-choice__touch { width: 40px; height: 40px; }
+}
+
+/* Switch (sementara): track 34×14, thumb 20 travelling 20px; the round 40px
+   touch area moves with the thumb. */
+.pw-switch { gap: 12px; }
+.pw-switch__control {
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+}
+.pw-switch__track {
+  position: absolute;
+  top: 13px;
+  left: 3px;
+  width: 34px;
+  height: 14px;
+  border-radius: var(--pw-radius-full);
+  /* rgba(0,0,0,.38): black (--pw-text-input) at 38%. */
+  background: color-mix(in srgb, var(--pw-text-input) 38%, transparent);
+  pointer-events: none;
+  transition: background-color var(--pw-dur-xs) var(--pw-ease-standard);
+}
+.pw-switch .pw-choice__touch {
+  position: absolute;
+  top: 0;
+  left: -10px;
+  pointer-events: none;
+  transition: transform var(--pw-dur-xs) var(--pw-ease-standard), color var(--pw-dur-xs) var(--pw-ease-standard);
+}
+.pw-switch__thumb {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--pw-radius-full);
+  background: var(--pw-surface);
+  box-shadow: var(--pw-elev-1);
+  transition: background-color var(--pw-dur-xs) var(--pw-ease-standard);
+}
+.pw-switch__control:hover > .pw-choice__touch::before { opacity: var(--pw-state-hover); }
+.pw-choice__input:focus-visible ~ .pw-choice__touch::before { opacity: var(--pw-state-focus); }
+.pw-choice__input:focus-visible ~ .pw-choice__touch > .pw-switch__thumb { outline: 2px solid var(--pw-primary); outline-offset: 2px; }
+.pw-choice__input:checked ~ .pw-switch__track { background: color-mix(in srgb, var(--pw-accent) 50%, transparent); }
+.pw-choice__input:checked ~ .pw-choice__touch { color: var(--pw-accent); transform: translateX(20px); }
+.pw-choice__input:checked ~ .pw-choice__touch > .pw-switch__thumb { background: var(--pw-accent); }
+.pw-choice__input:disabled ~ .pw-switch__track { background: var(--pw-outline-panel); }
+.pw-choice__input:disabled ~ .pw-choice__touch > .pw-switch__thumb { background: var(--pw-surface-container); box-shadow: var(--pw-elev-1); }
+.pw-choice.is-disabled .pw-switch__control:hover > .pw-choice__touch::before { opacity: 0; }
+
+/* Chosen by Prakasa AI and not reviewed yet (Wave C; the tag is in field.css). */
+.pw-choice.is-ai-filled { padding-right: 4px; border-radius: var(--pw-radius-md); background: var(--pw-selected); }
+.pw-choice.is-ai-filled > .pw-ai-tag { background: var(--pw-surface); }

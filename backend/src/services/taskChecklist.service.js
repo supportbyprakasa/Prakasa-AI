@@ -10,7 +10,7 @@ function validationError(message) {
 }
 
 async function list({ task, user, conn = pool }) {
-  assertTaskAccess({ user, task, action: 'view' });
+  await assertTaskAccess({ user, task, action: 'view' });
   const [rows] = await conn.query(
     `SELECT id, title, is_done AS isDone, position,
             completed_by AS completedBy, completed_at AS completedAt,
@@ -31,7 +31,7 @@ async function list({ task, user, conn = pool }) {
 }
 
 async function create({ task, user, title, position }, conn = pool) {
-  assertTaskAccess({ user, task, action: 'manage' });
+  await assertTaskAccess({ user, task, action: 'manage' });
   const clean = String(title || '').trim();
   if (!clean) throw validationError('title wajib');
   if (clean.length > 500) throw validationError('title maksimal 500 karakter');
@@ -66,7 +66,7 @@ async function create({ task, user, title, position }, conn = pool) {
 }
 
 async function patch({ task, user, itemId, changes }) {
-  assertTaskAccess({ user, task, action: 'manage' });
+  await assertTaskAccess({ user, task, action: 'manage' });
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
@@ -145,7 +145,7 @@ async function toggle({ task, user, itemId, isDone }) {
 }
 
 async function remove({ task, user, itemId }) {
-  assertTaskAccess({ user, task, action: 'manage' });
+  await assertTaskAccess({ user, task, action: 'manage' });
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
@@ -182,7 +182,7 @@ async function remove({ task, user, itemId }) {
 }
 
 async function reorder({ task, user, orderedIds }) {
-  assertTaskAccess({ user, task, action: 'manage' });
+  await assertTaskAccess({ user, task, action: 'manage' });
   const ids = Array.isArray(orderedIds) ? orderedIds.map(Number) : [];
   if (!ids.length || ids.some((id) => !Number.isInteger(id) || id <= 0)) {
     throw validationError('orderedIds wajib array ID positif');

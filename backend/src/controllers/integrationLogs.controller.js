@@ -39,8 +39,9 @@ async function list(req, res, next) {
     if (req.query.operation) { where.push('operation=?'); args.push(req.query.operation); }
     if (req.query.subjectType) { where.push('subject_type=?'); args.push(req.query.subjectType); }
     if (req.query.subjectId) { where.push('subject_id=?'); args.push(req.query.subjectId); }
-    if (req.query.from) { where.push('created_at>=?'); args.push(req.query.from); }
-    if (req.query.to) { where.push('created_at<=?'); args.push(req.query.to); }
+    // From/to are WIB wall-clock values; created_at is read in UTC.
+    if (req.query.from) { where.push('created_at >= ? - INTERVAL 7 HOUR'); args.push(req.query.from); }
+    if (req.query.to) { where.push('created_at <= ? - INTERVAL 7 HOUR'); args.push(req.query.to); }
 
     const [rows] = await pool.query(
       `SELECT id, entity_id AS entityId, user_id AS userId,

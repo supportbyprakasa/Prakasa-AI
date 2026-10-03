@@ -1,112 +1,176 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
-import DataTable from '../../components/DataTable';
-import Button from '../../components/Button';
-import Modal from '../../components/Modal';
-import Input from '../../components/Input';
 import AiAssistantPanel from '../../components/AiAssistantPanel';
+import Button from '../../components/Button';
+import Chip from '../../components/Chip';
+import FormActions from '../../components/FormActions';
+import IconButton from '../../components/IconButton';
+import Input from '../../components/Input';
+import KeyValue from '../../components/KeyValue';
+import Modal from '../../components/Modal';
+import Page from '../../components/Page';
+import StatusBadge from '../../components/StatusBadge';
 import { toast } from '../../components/Toast';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { classifyFileKind } from './documentCenterModel';
+import DrivePreviewModal from './drive/DrivePreviewModal';
+import './document-center.css';
 
+const CATEGORIES = [
+  { key: 'all', label: 'Semua' },
+  { key: 'document', label: 'Dokumen' },
+  { key: 'spreadsheet', label: 'Spreadsheet' },
+  { key: 'presentation', label: 'Slide' },
+];
+const PAGE_SIZE = 20;
+const errorMessage = (error, fallback) => error.response?.data?.error?.message || fallback;
+
+// /documents is a closed route (decision K11): restyled only through the
+// shared components. The list pages on the API (one count, every page
+// reachable); the category chips narrow the rows of the page on screen.
 export default function DocumentCenter() {
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
-  const [meta, setMeta] = useState({ page: 1, total: 0 });
+  const [meta, setMeta] = useState({ page: 1, limit: PAGE_SIZE, total: 0 });
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [q, setQ] = useState('');
+  const [documentType, setDocumentType] = useState('');
+  const [category, setCategory] = useState('all');
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [selected, setSelected] = useState(null);
-  const [filter, setFilter] = useState({ documentType: '', status: '', q: '' });
+  const [previewDoc, setPreviewDoc] = useState(null);
 
-  const load = async (page = 1) => {
+  const load = useCallback(async (page = 1) => {
     setLoading(true);
+    setLoadError('');
     try {
-      const r = await api.get('/documents', {
-        params: { page, limit: 20, ...Object.fromEntries(Object.entries(filter).filter(([, v]) => v)) },
-      });
-      setRows(r.data.data);
-      setMeta(r.data.meta);
-    } finally { setLoading(false); }
-  };
+      const params = { page, limit: PAGE_SIZE, ...(q ? { q } : {}), ...(documentType ? { documentType } : {}) };
+      const response = await api.get('/documents', { params });
+      setRows(response.data.data || []);
+      setMeta({ page, limit: PAGE_SIZE, total: 0, ...(response.data.meta || {}) });
+    } catch (error) {
+      setLoadError(errorMessage(error, 'Periksa koneksi, lalu coba lagi.'));
+    } finally {
+      setLoading(false);
+    }
+  }, [q, documentType]);
 
-  useEffect(() => { load(1); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { load(1); }, [load]);
 
-  const onUpload = async (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
+  const visibleRows = category === 'all' ? rows : rows.filter((row) => classifyFileKind(row.mimeType) === category);
+
+  const onUpload = async (event) => {
+    event.preventDefault();
+    const fd = new FormData(event.target);
+    setUploading(true);
     try {
       await api.post('/documents/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       toast('Dokumen diunggah', 'success');
       setUploadOpen(false);
       load(1);
-    } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal unggah', 'error');
+    } catch (error) {
+      toast(errorMessage(error, 'Dokumen gagal diunggah'), 'error');
+    } finally {
+      setUploading(false);
     }
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Documents</h2>
-        <Button onClick={() => setUploadOpen(true)}>+ Unggah Dokumen</Button>
-      </div>
-
-      <div className="prakasa-filter-row" style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        <Input name="q" placeholder="Cari judul…" value={filter.q}
-          onChange={(e) => setFilter({ ...filter, q: e.target.value })} style={{ margin: 0 }} />
-        <Input name="documentType" placeholder="Tipe (proposal/quotation/…)" value={filter.documentType}
-          onChange={(e) => setFilter({ ...filter, documentType: e.target.value })} style={{ margin: 0 }} />
-        <Button variant="secondary" onClick={() => load(1)}>Filter</Button>
-      </div>
-
-      <DataTable
-        loading={loading}
-        rows={rows}
+    <Page
+      title="Dokumen"
+      actions={<Button icon="upload" onClick={() => setUploadOpen(true)}>Unggah dokumen</Button>}
+    >
+      <DataGrid
+        title="Dokumen"
+        showTitle={false}
         columns={[
-          { key: 'title', title: 'Judul' },
-          { key: 'documentType', title: 'Tipe' },
-          { key: 'status', title: 'Status' },
-          { key: 'createdAt', title: 'Dibuat' },
-          {
-            key: 'actions', title: 'Aksi',
-            render: (r) => (
-              <div style={{ display: 'flex', gap: 6 }}>
-                <Button variant="secondary" onClick={() => setSelected(r)}>Detail</Button>
-                {r.webViewLink && (
-                  <a href={r.webViewLink} target="_blank" rel="noreferrer">
-                    <Button variant="secondary">Buka di Google</Button>
-                  </a>
-                )}
-              </div>
-            ),
-          },
+          { key: 'title', header: 'Judul' },
+          { key: 'documentType', header: 'Tipe', translate: true },
+          { key: 'status', header: 'Status', render: (row) => <StatusBadge status={row.status} /> },
+          { key: 'createdAt', header: 'Dibuat', type: 'datetime' },
         ]}
+        rows={visibleRows}
+        loading={loading}
+        error={loadError}
+        onRetry={() => load(meta.page || 1)}
+        meta={meta}
+        onPageChange={load}
+        search={q}
+        onSearchChange={setQ}
+        searchPlaceholder="Cari judul"
+        filters={(
+          <>
+            {CATEGORIES.map((entry) => (
+              <Chip key={entry.key} selected={category === entry.key} onClick={() => setCategory(entry.key)}>
+                {entry.label}
+              </Chip>
+            ))}
+            <Input
+              dense
+              label="Tipe dokumen"
+              aria-label="Tipe dokumen"
+              placeholder="Tipe dokumen, mis. proposal"
+              fieldClassName="dc-filter"
+              defaultValue={documentType}
+              onKeyDown={(event) => { if (event.key === 'Enter') setDocumentType(event.currentTarget.value.trim()); }}
+              onBlur={(event) => setDocumentType(event.currentTarget.value.trim())}
+            />
+          </>
+        )}
+        empty={category === 'all' ? 'Belum ada dokumen' : 'Tidak ada dokumen jenis ini di halaman ini'}
+        onRowClick={setSelected}
+        rowActions={(row) => (row.webViewLink ? (
+          <>
+            <IconButton label="Pratinjau" icon="visibility" size="sm" onClick={() => setPreviewDoc(row)} />
+            <IconButton label="Buka di Google" icon="open_in_new" size="sm" href={row.webViewLink} target="_blank" rel="noopener noreferrer" />
+          </>
+        ) : null)}
       />
-      <div style={{ marginTop: 12, fontSize: 13, color: 'var(--color-text-muted)' }}>
-        Total: {meta.total}
-      </div>
 
-      <Modal open={uploadOpen} onClose={() => setUploadOpen(false)} title="Unggah Dokumen">
-        <form onSubmit={onUpload}>
-          <Input label="Entity ID" name="entityId" type="number" required />
-          <Input label="Department ID (opsional)" name="departmentId" type="number" />
-          <Input label="Judul" name="title" required />
-          <Input label="Tipe Dokumen" name="documentType" placeholder="proposal / quotation / sop" required />
-          <Input label="File" name="file" type="file" required />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button variant="secondary" type="button" onClick={() => setUploadOpen(false)}>Batal</Button>
-            <Button type="submit">Unggah</Button>
+      <Modal open={uploadOpen} onClose={() => setUploadOpen(false)} title="Unggah dokumen">
+        <form onSubmit={onUpload} className="pw-stack">
+          <div className="pw-form-grid">
+            <Input label="ID entitas" name="entityId" type="number" required hint="Nomor ID entitas pemilik dokumen." />
+            <Input label="ID divisi" name="departmentId" type="number" hint="Opsional. Nomor ID divisi." />
+            <Input label="Judul" name="title" required />
+            <Input label="Tipe dokumen" name="documentType" required hint="Contoh: proposal, quotation, sop." />
           </div>
+          <Input label="File" name="file" type="file" required />
+          <FormActions>
+            <Button variant="text" type="button" onClick={() => setUploadOpen(false)}>Batal</Button>
+            <Button type="submit" loading={uploading}>Unggah dokumen</Button>
+          </FormActions>
         </form>
       </Modal>
 
-      <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.title || ''}>
+      <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.title || ''} dataTitle>
         {selected && (
-          <>
-            <div style={{ fontSize: 14, marginBottom: 12 }}>
-              Tipe: <b>{selected.documentType}</b> · Status: <b>{selected.status}</b>
-            </div>
+          <div className="pw-stack">
+            <KeyValue
+              items={[
+                { label: 'Tipe', translate: true, value: selected.documentType },
+                { label: 'Status', value: <StatusBadge status={selected.status} /> },
+              ]}
+            />
             <AiAssistantPanel documentId={selected.id} />
-          </>
+          </div>
         )}
       </Modal>
-    </div>
+
+      <DrivePreviewModal
+        file={previewDoc ? { name: previewDoc.title, fileId: previewDoc.driveFileId, mimeType: previewDoc.mimeType, webViewLink: previewDoc.webViewLink } : null}
+        onClose={() => setPreviewDoc(null)}
+        actions={(
+          <>
+            <Button variant="text" icon="draw" onClick={() => navigate('/signatures/asset')}>Tanda tangan saya</Button>
+            <Button variant="text" icon="signature" onClick={() => navigate('/signatures')}>Permintaan tanda tangan</Button>
+            <Button variant="text" icon="approval" onClick={() => navigate('/signatures/letterhead')}>Cap surat</Button>
+          </>
+        )}
+      />
+    </Page>
   );
 }

@@ -1,0 +1,52 @@
+/* Integration logs: health figures per service and the log detail sheet. */
+.intlog-health {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+  gap: 24px;
+}
+
+.intlog-health__note {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.intlog-failed { color: var(--pw-error); }
+
+.intlog-code {
+  font-family: var(--pw-font-mono);
+  font-size: var(--pw-font-xs);
+}
+
+.intlog-error {
+  display: -webkit-box;
+  max-width: 320px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.intlog-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.intlog-meta h3 { margin: 0; }
+
+.intlog-meta__code {
+  max-height: 240px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border: 1px solid var(--pw-outline-panel);
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface-container);
+  color: var(--pw-text);
+  font-family: var(--pw-font-mono);
+  font-size: var(--pw-font-xs);
+  line-height: 16px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

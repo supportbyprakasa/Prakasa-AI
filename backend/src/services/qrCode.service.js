@@ -1,13 +1,24 @@
 const QRCode = require('qrcode');
 const integrationLog = require('./integrationLog.service');
 
+// PUBLIC_WEB_URL is the frontend the QR links to. Production must set it (a
+// QR printed with a wrong domain cannot be fixed later); development falls
+// back to the local Vite server.
+function publicWebUrl(env = process.env) {
+  const value = String(env.PUBLIC_WEB_URL || '').trim();
+  if (value) return value;
+  if (env.NODE_ENV === 'production') {
+    const error = new Error('PUBLIC_WEB_URL belum diatur di server; QR verifikasi tidak bisa dibuat.');
+    error.status = 503;
+    error.code = 'PUBLIC_WEB_URL_MISSING';
+    throw error;
+  }
+  return 'http://localhost:5173';
+}
+
 function verificationUrl({ verificationCode, baseUrl }) {
   if (!verificationCode) throw new Error('verificationCode wajib');
-  const root = (
-    baseUrl ||
-    process.env.PUBLIC_WEB_URL ||
-    'https://prakasa-work-os.com'
-  ).replace(/\/$/, '');
+  const root = String(baseUrl || publicWebUrl()).replace(/\/$/, '');
 
   return `${root}/verify/${encodeURIComponent(verificationCode)}`;
 }
@@ -78,6 +89,7 @@ async function generateVerificationQrBuffer({
 }
 
 module.exports = {
+  publicWebUrl,
   verificationUrl,
   generateVerificationQr,
   generateVerificationQrBuffer,

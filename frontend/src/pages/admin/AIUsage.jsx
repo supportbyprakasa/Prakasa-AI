@@ -1,13 +1,58 @@
-import { useEffect, useState } from 'react';
-import { RefreshCw, Info } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import api from '../../api/client';
-import DataTable from '../../components/DataTable';
 import Button from '../../components/Button';
-import Badge from '../../components/Badge';
-import FilterBar from '../../components/FilterBar';
-import Modal from '../../components/Modal';
-import { toast } from '../../components/Toast';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { apiErrorMessage } from '../../components/datagrid/gridModel';
+import KeyValue from '../../components/KeyValue';
+import Page from '../../components/Page';
+import PageHeader from '../../components/PageHeader';
+import SideSheet from '../../components/SideSheet';
+import { formatDateTime, formatNumber } from '../../components/format';
 import { useAuth } from '../../context/AuthContext';
+import FilterChips from './FilterChips';
+import {
+  AI_EVENT_LABELS, AI_MODULE_LABELS, AI_PROVIDER_LABELS, aiEventLabel, aiModuleLabel, aiProviderLabel, aiUserLabel, labelWithCode,
+} from './aiLabels';
+import './AIUsage.css';
+import { NoTranslate, Translate } from '../../i18n/NoTranslate';
+
+const NO_FILTERS = { entityId: '', departmentId: '', module: '', provider: '', from: '', to: '' };
+const optionsOf = (labels) => Object.entries(labels).map(([value, label]) => ({ value, label }));
+
+// A person's name is record data; the "Pengguna #12" fallback is a label.
+function userValue(row) {
+  if (row?.userName) return row.userName;
+  const fallback = aiUserLabel(row);
+  return fallback ? <Translate>{fallback}</Translate> : '';
+}
+
+// labelWithCode for a translated zone: the label is translated, the code never.
+// A code the label map does not know is shown in words: data as well.
+function codeValue(label, code, labels) {
+  if (!code) return null;
+  if (!label || label === code) return <NoTranslate>{String(code)}</NoTranslate>;
+  if (labels && !labels[code]) return <NoTranslate>{`${label} (${code})`}</NoTranslate>;
+  return <>{label}<NoTranslate>{` (${code})`}</NoTranslate></>;
+}
+
+// A code column: the Indonesian label, the code on a quiet second line; the
+// code stays in search and export ("Pusat perintah AI (ai_command_center)").
+function codeColumn(key, header, toLabel, labels) {
+  return {
+    key,
+    header,
+    translate: true,
+    render: (row) => (row[key] ? (
+      <span className="pw-cell">
+        <span className="pw-cell__title" data-no-translate={labels[row[key]] ? undefined : ''}>{toLabel(row[key])}</span>
+        <span data-no-translate="" className="pw-cell__meta">{row[key]}</span>
+      </span>
+    ) : ''),
+    exportValue: (row) => labelWithCode(toLabel(row[key]), row[key]),
+  };
+}
+
+const tokens = (row) => `${formatNumber(row.tokensIn || 0)} / ${formatNumber(row.tokensOut || 0)}`;
 
 export default function AIUsage() {
   const { user } = useAuth();
@@ -16,14 +61,13 @@ export default function AIUsage() {
   const [rows, setRows] = useState([]);
   const [meta, setMeta] = useState({ page: 1, limit: 20, total: 0 });
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    entityId: '', departmentId: '',
-    module: '', provider: '', from: '', to: '',
-  });
+  const [error, setError] = useState('');
+  const [filters, setFilters] = useState(NO_FILTERS);
   const [detail, setDetail] = useState(null);
 
-  const load = async (page = 1) => {
+  const load = useCallback(async (page = 1) => {
     setLoading(true);
+    setError('');
     try {
       const params = { page, limit: 20 };
       Object.entries(filters).forEach(([key, value]) => {
@@ -40,136 +84,106 @@ export default function AIUsage() {
       setRows(r.data.data || []);
       setMeta(r.data.meta || { page, limit: 20, total: r.data.data?.length || 0 });
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal memuat', 'error');
+      setError(apiErrorMessage(e, 'Riwayat penggunaan AI tidak dapat dimuat.'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
-  useEffect(() => { load(1); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { load(1); }, [load]);
+
+  const columns = [
+    { key: 'createdAt', header: 'Waktu', type: 'datetime' },
+    {
+      key: 'userId',
+      header: 'Pengguna',
+      render: userValue,
+      exportValue: (r) => (r.userName ? `${r.userName} (#${r.userId})` : aiUserLabel(r)),
+    },
+    codeColumn('eventType', 'Peristiwa', aiEventLabel, AI_EVENT_LABELS),
+    codeColumn('module', 'Modul', aiModuleLabel, AI_MODULE_LABELS),
+    codeColumn('provider', 'Penyedia', aiProviderLabel, AI_PROVIDER_LABELS),
+    { key: 'model', header: 'Model' },
+    { key: 'tokens', header: 'Token masuk / keluar', render: tokens },
+    { key: 'durationMs', header: 'Durasi', render: (r) => (r.durationMs != null ? `${formatNumber(r.durationMs)} ms` : '') },
+  ];
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <div>
-          <h2 style={{ margin: 0 }}>{isAdmin ? 'AI Usage' : 'AI Usage Saya'}</h2>
-          <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>
-            {isAdmin
-              ? 'Riwayat penggunaan AI. Gunakan filter Entity ID untuk scope admin yang lebih luas.'
-              : 'Riwayat penggunaan AI Anda.'}
-          </div>
-        </div>
-        <Button variant="secondary" onClick={() => load(1)}>
-          <RefreshCw size={14} /> Refresh
-        </Button>
-      </div>
-
-      <FilterBar
-        filters={[
-          ...(isAdmin
-            ? [
-                { name: 'entityId', label: 'Entity ID', type: 'text', placeholder: 'opsional' },
-                { name: 'departmentId', label: 'Department ID', type: 'text', placeholder: 'opsional' },
-              ]
-            : []),
-          { name: 'module', label: 'Module', type: 'text', placeholder: 'ai_command_center' },
-          { name: 'provider', label: 'Provider', type: 'text', placeholder: 'openai / n8n' },
-          { name: 'from', label: 'Dari', type: 'text', placeholder: 'YYYY-MM-DD' },
-          { name: 'to', label: 'Sampai', type: 'text', placeholder: 'YYYY-MM-DD' },
-        ]}
-        values={filters}
-        onChange={setFilters}
-        onReset={() =>
-          setFilters({
-            entityId: '',
-            departmentId: '',
-            module: '',
-            provider: '',
-            from: '',
-            to: '',
-          })
-        }
-      >
-        <Button variant="secondary" onClick={() => load(1)}>Terapkan</Button>
-      </FilterBar>
-
-      <DataTable
-        loading={loading}
-        rows={rows}
-        meta={meta}
-        onPageChange={load}
-        empty="Belum ada riwayat penggunaan"
-        onRowClick={(r) => setDetail(r)}
-        columns={[
-          {
-            key: 'createdAt', title: 'Waktu',
-            render: (r) => new Date(r.createdAt).toLocaleString('id-ID'),
-          },
-          { key: 'userId', title: 'User' },
-          {
-            key: 'eventType', title: 'Event',
-            render: (r) => <Badge tone="info">{r.eventType}</Badge>,
-          },
-          { key: 'module', title: 'Module' },
-          { key: 'provider', title: 'Provider' },
-          { key: 'model', title: 'Model' },
-          {
-            key: 'tokens', title: 'Tokens',
-            render: (r) => `${r.tokensIn || 0} / ${r.tokensOut || 0}`,
-          },
-          {
-            key: 'durationMs', title: 'Durasi',
-            render: (r) => r.durationMs != null ? `${r.durationMs} ms` : '—',
-          },
-        ]}
+    <Page>
+      <PageHeader
+        title="Pemakaian AI"
+        description={isAdmin
+          ? 'Riwayat penggunaan AI. Tambahkan filter entitas untuk melihat cakupan admin yang lebih luas.'
+          : 'Riwayat penggunaan AI Anda.'}
+        actions={<Button variant="secondary" icon="refresh" onClick={() => load(1)}>Muat ulang</Button>}
       />
 
-      <Modal
-        open={!!detail}
-        onClose={() => setDetail(null)}
-        title={`Usage #${detail?.id || ''}`}
-      >
-        {detail && (
-          <div style={{ fontSize: 13, lineHeight: 1.8 }}>
-            <div><b>Event:</b> {detail.eventType}</div>
-            <div><b>Session:</b> {detail.sessionId ?? '—'}</div>
-            <div><b>Message:</b> {detail.messageId ?? '—'}</div>
-            <div><b>Entity:</b> {detail.entityId}</div>
-            <div><b>Department:</b> {detail.departmentId ?? '—'}</div>
-            <div><b>User:</b> {detail.userId ?? '—'}</div>
-            <div><b>Module:</b> {detail.module || '—'}</div>
-            <div><b>Provider:</b> {detail.provider || '—'}</div>
-            <div><b>Model:</b> {detail.model || '—'}</div>
-            <div><b>Tokens in/out:</b> {detail.tokensIn || 0} / {detail.tokensOut || 0}</div>
-            <div><b>Duration:</b> {detail.durationMs || 0} ms</div>
-            <div><b>Waktu:</b> {new Date(detail.createdAt).toLocaleString('id-ID')}</div>
+      <DataGrid
+        title={isAdmin ? 'Semua penggunaan' : 'Penggunaan saya'}
+        exportName="ai-usage"
+        columns={columns}
+        rows={rows}
+        loading={loading}
+        error={error}
+        onRetry={() => load(meta.page || 1)}
+        meta={meta}
+        onPageChange={load}
+        filters={(
+          <FilterChips
+            label="Filter penggunaan AI"
+            values={filters}
+            onChange={setFilters}
+            fields={[
+              ...(isAdmin ? [
+                { key: 'entityId', label: 'ID entitas', type: 'number' },
+                { key: 'departmentId', label: 'ID divisi', type: 'number' },
+              ] : []),
+              { key: 'module', label: 'Modul', type: 'select', options: optionsOf(AI_MODULE_LABELS) },
+              { key: 'provider', label: 'Penyedia', type: 'select', options: optionsOf(AI_PROVIDER_LABELS) },
+              { key: 'from', label: 'Dari tanggal', type: 'date' },
+              { key: 'to', label: 'Sampai tanggal', type: 'date' },
+            ]}
+          />
+        )}
+        empty="Belum ada riwayat penggunaan"
+        onRowClick={(r) => setDetail(r)}
+      />
 
-            {detail.metadata && (
-              <div style={{ marginTop: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                  <Info size={12} />
-                  <b>Metadata</b>
-                </div>
-                <pre style={{
-                  background: '#f8fafc', padding: 10, borderRadius: 8,
-                  fontSize: 11, overflowX: 'auto', maxHeight: 200,
-                  boxShadow: 'inset 0 0 0 1px var(--color-border)',
-                }}>
+      <SideSheet open={!!detail} onClose={() => setDetail(null)} title={`Penggunaan #${detail?.id || ''}`}>
+        {detail ? (
+          <div className="pw-stack">
+            <KeyValue
+              items={[
+                { label: 'Peristiwa', value: codeValue(aiEventLabel(detail.eventType), detail.eventType, AI_EVENT_LABELS), translate: true },
+                { label: 'Waktu', value: detail.createdAt ? formatDateTime(detail.createdAt) : null },
+                { label: 'Sesi', value: detail.sessionId },
+                { label: 'Pesan', value: detail.messageId },
+                { label: 'Entitas', value: detail.entityId },
+                { label: 'Divisi', value: detail.departmentId },
+                { label: 'Pengguna', value: userValue(detail) },
+                { label: 'Modul', value: codeValue(aiModuleLabel(detail.module), detail.module, AI_MODULE_LABELS), translate: true },
+                { label: 'Penyedia', value: codeValue(aiProviderLabel(detail.provider), detail.provider, AI_PROVIDER_LABELS), translate: true },
+                { label: 'Model', value: detail.model },
+                { label: 'Token masuk / keluar', value: tokens(detail) },
+                { label: 'Durasi', value: `${formatNumber(detail.durationMs || 0)} ms` },
+              ]}
+            />
+
+            {detail.metadata ? (
+              <section className="ai-usage__meta">
+                <h3 className="pw-overline">Metadata</h3>
+                <pre className="ai-usage__pre" data-no-translate="">
                   {typeof detail.metadata === 'string'
                     ? detail.metadata
                     : JSON.stringify(detail.metadata, null, 2)}
                 </pre>
-              </div>
-            )}
+              </section>
+            ) : null}
 
-            <div style={{
-              marginTop: 12, fontSize: 11, color: 'var(--color-text-muted)',
-            }}>
-              Isi prompt/percakapan tidak disimpan pada endpoint usage.
-            </div>
+            <p className="pw-text-helper ai-usage__note">Isi prompt dan percakapan tidak disimpan di riwayat penggunaan.</p>
           </div>
-        )}
-      </Modal>
-    </div>
+        ) : null}
+      </SideSheet>
+    </Page>
   );
 }

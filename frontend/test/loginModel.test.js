@@ -45,3 +45,12 @@ test('permissions alone or a role without a matching division are not usable acc
   }), false);
   assert.equal(hasUsableAccess(null), false);
 });
+
+test('a new password: 10+ characters with letters and digits, not the old one, not the email name, typed twice', async () => {
+  const { passwordErrors } = await import('../src/pages/login/loginModel.js');
+  assert.deepEqual(Object.keys(passwordErrors({ currentPassword: '', newPassword: 'pendek', confirm: '' })).sort(), ['currentPassword', 'newPassword']);
+  assert.equal(passwordErrors({ currentPassword: 'x', newPassword: 'hanyahurufsaja', confirm: '' }).newPassword, 'Harus memuat huruf dan angka.');
+  assert.equal(passwordErrors({ currentPassword: 'x', newPassword: 'ani2026pagi', confirm: 'ani2026pagi' }, 'ani@prakasagroup.com').newPassword, 'Tidak boleh memuat nama email Anda.');
+  assert.equal(passwordErrors({ currentPassword: 'x', newPassword: 'KopiPagi2026', confirm: 'beda' }).confirm, 'Tidak sama dengan kata sandi baru.');
+  assert.deepEqual(passwordErrors({ currentPassword: 'x', newPassword: 'KopiPagi2026', confirm: 'KopiPagi2026' }), {});
+});

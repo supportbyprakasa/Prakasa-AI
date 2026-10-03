@@ -1,0 +1,47 @@
+/* InfoTip (docs/ui-guideline.md §4.14): an ⓘ button and its rich tooltip. */
+
+/* 18px icon in a 32px round target, inline beside a label. */
+.pw-info-tip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--pw-text-secondary);
+  cursor: pointer;
+}
+.pw-info-tip[aria-expanded="true"] { color: var(--pw-accent); }
+.pw-info-tip:focus-visible { outline: 2px solid var(--pw-primary); outline-offset: -2px; }
+
+/* The rich tooltip: a white card on the menu elevation, fixed to the viewport
+   so a dialog or a scrolling list never clips it. */
+.pw-info-tip__surface {
+  position: fixed;
+  z-index: var(--pw-z-tooltip);
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: 12px 16px;
+  border-radius: var(--pw-radius-md);
+  background: var(--pw-surface);
+  box-shadow: var(--pw-elev-menu);
+  color: var(--pw-text);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+  line-height: 20px;
+  pointer-events: none;
+}
+.pw-info-tip__surface[data-positioned="false"] { visibility: hidden; }
+.pw-info-tip__title {
+  margin-bottom: 4px;
+  color: var(--pw-text-strong);
+  font-weight: 500;
+}
+.pw-info-tip__body > p { margin: 0; }
+.pw-info-tip__body > p + p { margin-top: 8px; }
+.pw-info-tip__body > ul { margin: 4px 0 0; padding-left: 18px; }

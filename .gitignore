@@ -5,3 +5,9 @@ backend/uploads/*
 !backend/uploads/.gitkeep
 *.log
 .DS_Store
+
+# Real cron settings (created from cron.env.example) hold secrets.
+backend/cron.env
+
+# Local audit screenshots and scratch output.
+artifacts/

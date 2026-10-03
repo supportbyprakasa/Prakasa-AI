@@ -76,8 +76,9 @@ async function listForUser({
     const e = new Error('from harus <= to');
     e.status = 400; e.code = 'VALIDATION_ERROR'; throw e;
   }
-  if (fromStr) { where.push('created_at >= ?'); args.push(fromStr); }
-  if (toStr) { where.push('created_at < ?'); args.push(toStr); }
+  // The dates a person picks are WIB days; created_at is read in UTC.
+  if (fromStr) { where.push('created_at >= ? - INTERVAL 7 HOUR'); args.push(fromStr); }
+  if (toStr) { where.push('created_at < ? - INTERVAL 7 HOUR'); args.push(toStr); }
 
   const whereSql = where.join(' AND ');
 

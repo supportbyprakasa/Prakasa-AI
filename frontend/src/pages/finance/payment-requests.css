@@ -1,0 +1,13 @@
+/* Finance payment request pages: page-specific layout only (tokens from
+   styles/tokens.css). Free text from the request and the document check reads
+   as body text and keeps its line breaks; lists follow the GA history list. */
+.fin-hint { margin: 0; }
+.fin-text { white-space: pre-line; overflow-wrap: anywhere; }
+
+.fin-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+.fin-list__item { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-top: 1px solid var(--pw-divider); font-size: var(--pw-font-body); line-height: 20px; overflow-wrap: anywhere; }
+.fin-list__item:first-child { border-top: 0; }
+.fin-list__item a { color: var(--pw-primary); }
+.fin-list__main { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.fin-notes { margin: 0; padding-left: 24px; display: flex; flex-direction: column; gap: 4px; font-size: var(--pw-font-body); line-height: 20px; overflow-wrap: anywhere; }

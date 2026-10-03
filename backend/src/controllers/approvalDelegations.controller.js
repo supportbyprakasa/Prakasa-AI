@@ -2,6 +2,75 @@ const pool = require('../db/pool');
 const { ok, fail } = require('../utils/response');
 const { log: activityLog } = require('../services/activityLog.service');
 const approvalAudit = require('../services/approvalAudit.service');
+const { spansDivisions } = require('../services/divisionAccess');
+
+/**
+ * Who may manage a delegation away from `fromUserId`:
+ *  - the from-user themself;
+ *  - a cross-division role (Management Office) or Super Admin (entity.cross_access), for anyone;
+ *  - a division Head/Supervisor, for active users of their own division only.
+ * Everyone else is refused with 403.
+ */
+/** True when the user holds a Head or Supervisor role in this entity. */
+async function leadsDivision(conn, user, entityId) {
+  if (user?.departmentId == null) return false;
+  const [lead] = await conn.query(
+    `SELECT 1 AS ok FROM user_roles ur
+       JOIN roles r ON r.id=ur.role_id
+      WHERE ur.user_id=? AND r.entity_id=? AND r.deleted_at IS NULL
+        AND r.role_level IN ('head','supervisor')
+      LIMIT 1`,
+    [user.sub, entityId]
+  );
+  return Boolean(lead[0]);
+}
+
+/**
+ * Which delegations the user may READ — the same circle as assertMayDelegateFor:
+ *  - Management Office (spansDivisions) and Super Admin (entity.cross_access): all of the entity;
+ *  - everyone: the ones they gave or received;
+ *  - a division Head/Supervisor: also those given by members of their own division.
+ * `fromUserAlias` is the users row of the delegator. The caller filters the entity.
+ * The AI tool (approvalRead.delegationsOf) stays narrower on purpose: only the
+ * user's own delegations.
+ */
+async function delegationVisibilitySql(conn, user, entityId, { alias = 'd', fromUserAlias = 'fu' } = {}) {
+  const perms = user?.permissions || [];
+  if (spansDivisions(user) || perms.includes('entity.cross_access')) return { sql: '1=1', args: [] };
+  const uid = Number(user?.sub) || 0;
+  if (await leadsDivision(conn, user, entityId)) {
+    return {
+      sql: `(${alias}.from_user_id = ? OR ${alias}.to_user_id = ? OR ${fromUserAlias}.department_id = ?)`,
+      args: [uid, uid, Number(user.departmentId)],
+    };
+  }
+  return { sql: `(${alias}.from_user_id = ? OR ${alias}.to_user_id = ?)`, args: [uid, uid] };
+}
+
+async function assertMayDelegateFor(conn, req, entityId, fromUserId) {
+  const actor = req.user || {};
+  if (Number(fromUserId) === Number(actor.sub)) return;
+  const perms = actor.permissions || [];
+  if (spansDivisions(actor) || perms.includes('entity.cross_access')) return;
+
+  const refuse = () => {
+    const error = new Error('Anda hanya bisa mengatur delegasi untuk diri sendiri atau anggota divisi Anda');
+    error.status = 403;
+    error.code = 'FORBIDDEN';
+    return error;
+  };
+  if (actor.departmentId == null) throw refuse();
+
+  if (!(await leadsDivision(conn, actor, entityId))) throw refuse();
+
+  const [member] = await conn.query(
+    `SELECT id FROM users
+      WHERE id=? AND entity_id=? AND department_id=? AND deleted_at IS NULL
+      LIMIT 1`,
+    [fromUserId, entityId, actor.departmentId]
+  );
+  if (!member[0]) throw refuse();
+}
 
 async function assertEntityUser(conn, entityId, userId, label) {
   const [rows] = await conn.query(
@@ -128,8 +197,10 @@ async function assertNoCycleOrOverlap(conn, {
 
 async function list(req, res, next) {
   try {
-    const where = ['d.entity_id=?', 'd.deleted_at IS NULL'];
-    const args = [req.entityScope.entityId];
+    const entityId = req.entityScope.entityId;
+    const visible = await delegationVisibilitySql(pool, req.user, entityId);
+    const where = ['d.entity_id=?', 'd.deleted_at IS NULL', visible.sql];
+    const args = [entityId, ...visible.args];
 
     if (req.query.fromUserId) {
       where.push('d.from_user_id=?');
@@ -191,6 +262,7 @@ async function create(req, res, next) {
 
     await assertEntityUser(conn, entityId, fromUserId, 'fromUser');
     await assertEntityUser(conn, entityId, toUserId, 'toUser');
+    await assertMayDelegateFor(conn, req, entityId, fromUserId);
     await assertDocumentType(conn, entityId, appliesToDocumentTypeId);
     await assertNoCycleOrOverlap(conn, {
       entityId,
@@ -284,6 +356,9 @@ async function update(req, res, next) {
       await conn.rollback();
       return fail(res, 'NOT_FOUND', 'Delegasi tidak ditemukan', 404);
     }
+    await assertMayDelegateFor(conn, req, entityId, existing.from_user_id);
+    // The delegate must still be an active user of this entity.
+    await assertEntityUser(conn, entityId, existing.to_user_id, 'toUser');
 
     const has = (key) => Object.prototype.hasOwnProperty.call(req.body, key);
     const next = {
@@ -404,6 +479,7 @@ async function remove(req, res, next) {
       await conn.rollback();
       return fail(res, 'NOT_FOUND', 'Delegasi tidak ditemukan', 404);
     }
+    await assertMayDelegateFor(conn, req, entityId, rows[0].from_user_id);
 
     await conn.query(
       `UPDATE approval_delegations
@@ -434,10 +510,13 @@ async function remove(req, res, next) {
     return ok(res, { id: Number(req.params.id) });
   } catch (error) {
     try { await conn.rollback(); } catch { /* noop */ }
+    if (error.status) {
+      return fail(res, error.code || 'VALIDATION_ERROR', error.message, error.status);
+    }
     next(error);
   } finally {
     conn.release();
   }
 }
 
-module.exports = { list, create, update, remove };
+module.exports = { list, create, update, remove, delegationVisibilitySql };

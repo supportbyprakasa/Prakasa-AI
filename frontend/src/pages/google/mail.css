@@ -1,0 +1,246 @@
+/* Gmail inside Prakasa Workspace (pages/google/Mail.jsx): folder chips, then
+   the list and the reading pane side by side from 1024px; below that one pane
+   at a time. <Page> owns the spacing between header, chips and panes.
+   The page fills the screen under the top bar, less the trail and the main
+   padding (36 + 16 + 48); the panes take whatever the header, a banner and
+   the chips leave, and scroll inside. Phones scroll the page instead. */
+.mail-page {
+  height: calc(100dvh - var(--pw-topbar-height) - 100px);
+  min-height: 640px;
+}
+
+/* ---------------------------------------------------------------- folders */
+
+.mail-folders { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+
+/* ----------------------------------------------------------------- panes */
+
+.mail-shell {
+  display: grid;
+  flex: 1 1 0;
+  grid-template-columns: minmax(280px, 36%) minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.mail-list, .mail-detail {
+  /* Positioned, so absolutely placed helpers inside (a tooltip's hidden
+     description) scroll and clip with the pane instead of the page. */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--pw-outline-panel);
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface);
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------------ list */
+
+.mail-list__toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 12px 0;
+  border-bottom: 1px solid var(--pw-divider);
+}
+.mail-list__search { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.mail-list__search > .pw-search { flex: 1 1 auto; min-width: 0; }
+.mail-list__pager { display: flex; align-items: center; min-width: 0; }
+.mail-list__range {
+  flex: 1 1 auto;
+  padding: 0 8px;
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-xs);
+  text-align: right;
+  white-space: nowrap;
+}
+.mail-list__pager > .pw-tooltip-anchor:first-child { margin-right: auto; }
+.mail-list__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+
+.mail-rows { margin: 0; padding: 0; list-style: none; }
+.mail-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  border-bottom: 1px solid var(--pw-divider);
+  background: var(--pw-surface-container);
+}
+.mail-row.is-unread { background: var(--pw-surface); }
+.mail-row.is-active { background: var(--pw-selected); }
+/* On-tint scope (tokens.css): rows sit on --pw-surface-container / --pw-selected. */
+.mail-row,
+.mail-row.is-active {
+  --pw-text-meta: var(--pw-text-meta-on-tint);
+  --pw-text-muted: var(--pw-text-muted-on-tint);
+  --pw-error: var(--pw-error-on-tint);
+  --pw-warning: var(--pw-warning-on-tint);
+  --pw-info: var(--pw-info-on-tint);
+  --pw-success: var(--pw-success-on-tint);
+}
+
+.mail-row__link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 4px 8px 16px;
+  color: var(--pw-text);
+  text-decoration: none;
+}
+.mail-row__link:focus-visible { outline-offset: -2px; }
+.mail-row__top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.mail-row__from {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--pw-font-body);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mail-row__count { color: var(--pw-text-muted); font-size: var(--pw-font-xs); }
+.mail-row__clip { flex: 0 0 auto; color: var(--pw-text-muted); }
+.mail-row__date { flex: 0 0 auto; color: var(--pw-text-muted); font-size: var(--pw-font-xs); }
+.mail-row__subject, .mail-row__snippet {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--pw-font-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mail-row__snippet { color: var(--pw-text-muted); }
+.mail-row.is-unread .mail-row__from,
+.mail-row.is-unread .mail-row__subject,
+.mail-row.is-unread .mail-row__date { color: var(--pw-text); font-weight: 500; }
+.mail-row > .pw-tooltip-anchor { margin: 8px 8px 0 0; }
+
+/* A starred conversation: the filled star in the status colour Gmail uses. */
+.mail-star.is-on { color: var(--pw-warning); }
+
+/* ---------------------------------------------------------------- detail */
+
+.mail-detail { overflow-y: auto; }
+.mail-detail > .pw-empty-state { margin: auto; }
+.mail-detail__pad { display: flex; flex-direction: column; gap: 8px; padding: 12px; }
+.mail-detail__back { display: none; }
+
+.mail-thread { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 0 16px 24px; }
+.mail-thread__toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--pw-divider);
+  background: var(--pw-surface);
+}
+.mail-thread__subject {
+  margin: 4px 0 0;
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-title);
+  font-weight: 400;
+  line-height: 28px;
+  color: var(--pw-text);
+  overflow-wrap: anywhere;
+}
+.mail-thread__messages { display: flex; flex-direction: column; min-width: 0; }
+.mail-thread__reply { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 8px; }
+
+/* The avatar column; the open message's content lines up with the text
+   after it (summary padding 4 + avatar + gap 12). */
+.mail-message { --mail-avatar-col: 40px; min-width: 0; border-bottom: 1px solid var(--pw-divider); }
+.mail-message:last-child { border-bottom: 0; }
+.mail-message__summary {
+  display: grid;
+  grid-template-columns: var(--mail-avatar-col) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  border-radius: var(--pw-radius-sm);
+  list-style: none;
+  cursor: pointer;
+}
+.mail-message__summary::-webkit-details-marker { display: none; }
+.mail-message__summary:focus-visible { outline-offset: -2px; }
+.mail-message__who { min-width: 0; font-size: var(--pw-font-body); overflow-wrap: anywhere; }
+.mail-message__from { font-weight: 500; }
+.mail-message__email { color: var(--pw-text-muted); }
+.mail-message__preview {
+  display: block;
+  overflow: hidden;
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mail-message__date { color: var(--pw-text-muted); font-size: var(--pw-font-xs); white-space: nowrap; }
+.mail-message__content { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 0 4px 16px calc(4px + var(--mail-avatar-col) + 12px); }
+.mail-message__meta { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.mail-message__headers {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-xs);
+}
+.mail-message__headers > div { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px; }
+.mail-message__headers dd { margin: 0; color: var(--pw-text); overflow-wrap: anywhere; }
+.mail-message__text {
+  font-size: var(--pw-font-body);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.mail-frame {
+  display: block;
+  width: 100%;
+  height: 160px;
+  border: 0;
+  background: var(--pw-surface);
+  color-scheme: light;
+}
+
+.mail-attachments { display: flex; flex-wrap: wrap; gap: 8px; }
+.mail-attachment { max-width: 100%; }
+.mail-attachment__name { min-width: 0; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mail-attachment__size { color: var(--pw-text-muted); font-weight: 400; }
+
+/* ---------------------------------------------- compact: one pane at a time */
+
+@media (max-width: 1023px) {
+  .mail-folders {
+    flex-wrap: nowrap;
+    margin: 0 0 -4px;
+    padding: 0 0 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .mail-folders > * { flex: 0 0 auto; }
+  .mail-shell { grid-template-columns: minmax(0, 1fr); }
+  .mail-page.has-thread .mail-folders,
+  .mail-page.has-thread .mail-list,
+  .mail-page:not(.has-thread) .mail-detail { display: none; }
+  .mail-detail__back { display: inline-flex; }
+}
+
+/* ----------------------------------------------------------------- phone */
+
+@media (max-width: 600px) {
+  .mail-page { height: auto; min-height: 0; }
+  .mail-shell { flex: 0 0 auto; }
+  .mail-list, .mail-detail, .mail-list__body { overflow: visible; }
+  .mail-thread { padding: 0 12px 16px; }
+  .mail-thread__toolbar { top: var(--pw-topbar-height); }
+  .mail-message__summary { grid-template-columns: var(--mail-avatar-col) minmax(0, 1fr); }
+  .mail-message__date { grid-column: 2; }
+  .mail-message__content { padding-left: 0; }
+  .mail-thread__reply > * { flex: 1 1 auto; }
+}

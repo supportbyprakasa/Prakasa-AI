@@ -1,23 +1,14 @@
-import { useMemo } from 'react';
-import { Network } from 'lucide-react';
+import { useEffect, useMemo, useRef } from 'react';
+import EmptyState from '../EmptyState';
+import IconButton from '../IconButton';
+import { barText, isEstimated, pressProps, tickLabel, toneClass } from './ganttModel';
+import './gantt.css';
+import { todayIso } from '../../pages/projects/trackerModel';
 
+// Keep in sync with gantt.css (.gantt__row / .gantt__header heights).
 const ROW_H = 40;
-const HEADER_H = 48;
-const LEFT_W = 260;
 const DAY_PX = { week: 24, month: 6 };
 const TICK_EVERY = { week: 7, month: 30 };
-const BAR_TOP = 8;
-const BAR_H = ROW_H - 16;
-
-const STATUS_FILL = {
-  open: '#94a3b8',
-  in_progress: '#3b82f6',
-  review: '#f59e0b',
-  done: '#16a34a',
-  closed: '#16a34a',
-  completed: '#16a34a',
-  cancelled: '#cbd5e1',
-};
 
 /* ============================================================
    Date math (pure)
@@ -51,74 +42,37 @@ function generateTicks(rangeFrom, rangeTo, everyDays) {
   return out;
 }
 
-function shortDate(iso) {
-  const d = new Date(iso + 'T00:00:00Z');
-  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', timeZone: 'UTC' });
-}
-
 /* ============================================================
    Bar
    ============================================================ */
 
-function Bar({ task, left, width, onClick }) {
-  const fill = STATUS_FILL[task.status] || '#94a3b8';
-  const isEstimated = task.isFallbackStart || task.isFallbackDue;
-  const isCancelled = task.isCancelled;
-
-  const title = [
-    task.title,
-    `${task.startDate} → ${task.dueDate}`,
-    isEstimated ? '(tanggal estimasi)' : null,
-    isCancelled ? 'DIBATALKAN' : null,
-  ].filter(Boolean).join('\n');
+function Bar({ task, left, width, onOpen }) {
+  const text = barText(task);
+  const classes = [
+    'gantt__bar', toneClass(task.status), onOpen ? 'pw-state-layer' : '',
+    isEstimated(task) ? 'gantt__bar--estimated' : '', task.isCancelled ? 'gantt__bar--cancelled' : '',
+  ].filter(Boolean).join(' ');
 
   return (
     <div
-      onClick={(e) => { e.stopPropagation(); onClick(); }}
-      title={title}
-      style={{
-        position: 'absolute',
-        left,
-        top: BAR_TOP,
-        height: BAR_H,
-        width,
-        background: `${fill}33`,
-        boxShadow: `inset 0 0 0 1.5px ${fill}`,
-        borderRadius: 6,
-        cursor: 'pointer',
-        overflow: 'hidden',
-        opacity: isCancelled ? 0.55 : 1,
-        transition: 'opacity 150ms',
-      }}
-      onMouseEnter={(e) => { e.currentTarget.style.opacity = isCancelled ? 0.75 : 0.85; }}
-      onMouseLeave={(e) => { e.currentTarget.style.opacity = isCancelled ? 0.55 : 1; }}
+      {...pressProps(onOpen, text)}
+      data-pw-tooltip={text}
+      className={classes}
+      style={{ left, width }}
     >
       {/* Progress fill */}
-      <div style={{
-        position: 'absolute',
-        top: 0, left: 0, bottom: 0,
-        width: `${Math.max(0, Math.min(100, task.progressPercent || 0))}%`,
-        background: `${fill}66`,
-        transition: 'width 200ms',
-      }} />
+      <div
+        className="gantt__bar-progress"
+        style={{ width: `${Math.max(0, Math.min(100, task.progressPercent || 0))}%` }}
+      />
 
       {/* Label */}
       {width > 60 && (
-        <span style={{
-          position: 'absolute',
-          left: 6, top: 0, bottom: 0,
-          display: 'flex', alignItems: 'center',
-          fontSize: 10, fontWeight: 500,
-          color: '#0f172a',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          maxWidth: 'calc(100% - 12px)',
-          pointerEvents: 'none',
-        }}>
+        <span className="gantt__bar-label" aria-hidden="true" data-no-translate="">
           {task.title}
         </span>
       )}
+      {onOpen ? null : <span className="sr-only">{text}</span>}
     </div>
   );
 }
@@ -127,7 +81,12 @@ function Bar({ task, left, width, onClick }) {
    Chart
    ============================================================ */
 
-export default function GanttChart({ tasks, links, range, zoom, onTaskClick, onGraphClick }) {
+// canOpenTask(id): whether a row leads anywhere. A row that does not is plain
+// text — never a button that does nothing. Defaults to every row.
+export default function GanttChart({
+  tasks, links, range, zoom, onTaskClick, onGraphClick, canOpenTask, sideLabel = 'Tugas',
+}) {
+  const scrollRef = useRef(null);
   const dayPx = DAY_PX[zoom] || DAY_PX.week;
   const totalDays = useMemo(() => daysBetween(range.from, range.to) + 1, [range]);
   const canvasWidth = totalDays * dayPx;
@@ -135,6 +94,7 @@ export default function GanttChart({ tasks, links, range, zoom, onTaskClick, onG
     () => generateTicks(range.from, range.to, TICK_EVERY[zoom] || TICK_EVERY.week),
     [range, zoom]
   );
+  const opener = (id) => (onTaskClick && (!canOpenTask || canOpenTask(id)) ? () => onTaskClick(id) : null);
 
   // Bar geometry per task — clamped to visible range
   const geometry = useMemo(() => {
@@ -161,120 +121,74 @@ export default function GanttChart({ tasks, links, range, zoom, onTaskClick, onG
   }, [tasks, range, totalDays, dayPx]);
 
   // Today marker
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const todayOff = dateToDayOffset(todayIso, range.from);
+  const todayOff = dateToDayOffset(todayIso(), range.from);
   const showToday = todayOff >= 0 && todayOff < totalDays;
+
+  // The canvas opens at range.from, which is usually weeks in the past — so
+  // today and everything still ahead sat off-screen to the right. Bring today
+  // to the first quarter of the visible canvas, keeping a little history in view.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !showToday) return;
+    const side = el.querySelector('.gantt__side')?.offsetWidth || 0;
+    const visible = Math.max(0, el.clientWidth - side);
+    el.scrollLeft = Math.max(0, todayOff * dayPx - visible * 0.25);
+  }, [showToday, todayOff, dayPx, range.from, range.to]);
 
   if (!tasks.length) {
     return (
-      <div style={{
-        padding: 40, textAlign: 'center',
-        color: 'var(--color-text-muted)', fontSize: 13,
-        background: 'var(--color-surface)',
-      }}>
-        Tidak ada task pada rentang tanggal ini.
-      </div>
+      <EmptyState icon="event_busy" title="Tidak ada task pada rentang tanggal ini" compact />
     );
   }
 
   return (
-    <div style={{ position: 'relative', maxHeight: '70vh', overflow: 'auto' }}>
-      <div style={{ display: 'flex', minWidth: 'max-content' }}>
+    <div className="gantt" ref={scrollRef}>
+      <div className="gantt__inner">
         {/* -------- LEFT COLUMN (sticky) -------- */}
-        <div style={{
-          position: 'sticky', left: 0, zIndex: 3,
-          width: LEFT_W, flexShrink: 0,
-          background: 'var(--color-surface)',
-          boxShadow: 'inset -1px 0 0 0 var(--color-border)',
-        }}>
+        <div className="gantt__side">
           {/* Corner header */}
-          <div style={{
-            height: HEADER_H, position: 'sticky', top: 0, zIndex: 4,
-            background: 'var(--color-surface)',
-            boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
-            display: 'flex', alignItems: 'center',
-            padding: '0 12px',
-            fontSize: 12, fontWeight: 600,
-            color: 'var(--color-text-muted)',
-          }}>
-            Task
+          <div className="gantt__corner">
+            {sideLabel}
           </div>
 
-          {tasks.map((t) => (
-            <div
-              key={t.id}
-              onClick={() => onTaskClick(t.id)}
-              style={{
-                height: ROW_H,
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '0 12px',
-                boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
-                cursor: 'pointer', fontSize: 13,
-                background: 'var(--color-surface)',
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'var(--color-surface)'}
-            >
-              <span style={{
-                width: 8, height: 8, borderRadius: 4,
-                background: STATUS_FILL[t.status] || '#94a3b8',
-                flexShrink: 0,
-              }} />
-              <span style={{
-                flex: 1, minWidth: 0,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                color: t.isCancelled ? 'var(--color-text-muted)' : 'var(--color-text)',
-                textDecoration: t.isCancelled ? 'line-through' : 'none',
-              }}>
-                {t.title}
-              </span>
-              {onGraphClick && (
-                <button
-                  type="button"
-                  title="Lihat dependency graph"
-                  aria-label="Lihat dependency graph"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onGraphClick(t.id);
-                  }}
-                  style={{
-                    width: 22, height: 22, padding: 0, flexShrink: 0,
-                    background: 'transparent',
-                    boxShadow: 'inset 0 0 0 1px var(--color-border)',
-                    borderRadius: 4, cursor: 'pointer',
-                    color: 'var(--color-text-muted)',
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  }}
+          {tasks.map((t) => {
+            const open = opener(t.id);
+            return (
+              <div key={t.id} className="gantt__task">
+                <div
+                  {...pressProps(open, `Buka ${t.title}`)}
+                  className={['gantt__task-main', open ? 'pw-state-layer' : ''].filter(Boolean).join(' ')}
                 >
-                  <Network size={12} />
-                </button>
-              )}
-            </div>
-          ))}
+                  <span className={`gantt__dot ${toneClass(t.status)}`} aria-hidden="true" />
+                  <span className={`gantt__task-title${t.isCancelled ? ' gantt__task-title--cancelled' : ''}`} data-no-translate="">
+                    {t.title}
+                  </span>
+                </div>
+                {onGraphClick && (
+                  <IconButton
+                    label="Lihat graf dependensi"
+                    size="sm"
+                    icon="lan"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onGraphClick(t.id);
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* -------- RIGHT CANVAS -------- */}
-        <div style={{ position: 'relative', width: canvasWidth, flexShrink: 0 }}>
+        <div className="gantt__canvas" style={{ width: canvasWidth }}>
           {/* Header with ticks */}
-          <div style={{
-            height: HEADER_H, position: 'sticky', top: 0, zIndex: 2,
-            background: 'var(--color-surface)',
-            boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
-          }}>
-            {ticks.map((tick) => {
+          <div className="gantt__header" aria-hidden="true">
+            {ticks.map((tick, index) => {
               const off = dateToDayOffset(tick, range.from);
               return (
-                <div key={tick} style={{
-                  position: 'absolute',
-                  left: off * dayPx,
-                  top: 0, bottom: 0,
-                  boxShadow: 'inset 1px 0 0 0 var(--color-border)',
-                  padding: '6px 4px',
-                  fontSize: 10,
-                  color: 'var(--color-text-muted)',
-                  whiteSpace: 'nowrap',
-                }}>
-                  {shortDate(tick)}
+                <div key={tick} className="gantt__tick" style={{ left: off * dayPx }}>
+                  {tickLabel(tick, ticks[index - 1])}
                 </div>
               );
             })}
@@ -284,52 +198,28 @@ export default function GanttChart({ tasks, links, range, zoom, onTaskClick, onG
           {ticks.map((tick) => {
             const off = dateToDayOffset(tick, range.from);
             return (
-              <div key={`grid-${tick}`} style={{
-                position: 'absolute',
-                left: off * dayPx,
-                top: HEADER_H,
-                bottom: 0,
-                width: 1,
-                background: 'var(--color-border)',
-                opacity: 0.4,
-                pointerEvents: 'none',
-                zIndex: 0,
-              }} />
+              <div key={`grid-${tick}`} className="gantt__gridline" style={{ left: off * dayPx }} />
             );
           })}
 
           {/* Today marker */}
           {showToday && (
-            <div style={{
-              position: 'absolute',
-              left: todayOff * dayPx,
-              top: HEADER_H,
-              bottom: 0,
-              width: 1.5,
-              background: '#dc2626',
-              opacity: 0.5,
-              pointerEvents: 'none',
-              zIndex: 0,
-            }} />
+            <div className="gantt__today" style={{ left: todayOff * dayPx }} />
           )}
 
           {/* SVG dependency arrows (behind bars) */}
           <svg
-            style={{
-              position: 'absolute',
-              top: HEADER_H, left: 0,
-              width: canvasWidth,
-              height: tasks.length * ROW_H,
-              pointerEvents: 'none',
-              zIndex: 0,
-            }}
+            className="gantt__links"
+            width={canvasWidth}
+            height={tasks.length * ROW_H}
+            aria-hidden="true"
           >
             <defs>
               <marker id="arrow-blocks" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                <polygon points="0 0, 10 3, 0 6" fill="#dc2626" />
+                <polygon points="0 0, 10 3, 0 6" className="gantt__arrow--blocks" />
               </marker>
               <marker id="arrow-related" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                <polygon points="0 0, 10 3, 0 6" fill="#94a3b8" />
+                <polygon points="0 0, 10 3, 0 6" className="gantt__arrow--related" />
               </marker>
             </defs>
 
@@ -352,12 +242,8 @@ export default function GanttChart({ tasks, links, range, zoom, onTaskClick, onG
                 <path
                   key={link.id}
                   d={path}
-                  stroke={isBlocks ? '#dc2626' : '#94a3b8'}
-                  strokeWidth={1.5}
-                  strokeDasharray={isBlocks ? '0' : '4 3'}
-                  fill="none"
+                  className={`gantt__link ${isBlocks ? 'gantt__link--blocks' : 'gantt__link--related'}`}
                   markerEnd={isBlocks ? 'url(#arrow-blocks)' : 'url(#arrow-related)'}
-                  opacity={0.65}
                 />
               );
             })}
@@ -367,18 +253,13 @@ export default function GanttChart({ tasks, links, range, zoom, onTaskClick, onG
           {tasks.map((t) => {
             const geo = geometry.get(t.id);
             return (
-              <div key={t.id} style={{
-                height: ROW_H,
-                position: 'relative',
-                boxShadow: 'inset 0 -1px 0 0 var(--color-border)',
-                zIndex: 1,
-              }}>
+              <div key={t.id} className="gantt__row">
                 {geo && (
                   <Bar
                     task={t}
                     left={geo.leftPx}
                     width={geo.widthPx}
-                    onClick={() => onTaskClick(t.id)}
+                    onOpen={opener(t.id)}
                   />
                 )}
               </div>

@@ -11,7 +11,7 @@ async function create(req, res, next) {
     } = req.body;
 
     const [s] = await pool.query(
-      `SELECT * FROM software_subscriptions WHERE id=? AND deleted_at IS NULL`, [id]
+      `SELECT * FROM software_subscriptions WHERE id=? AND entity_id=? AND deleted_at IS NULL`, [id, req.user.entityId]
     );
     if (!s[0]) return fail(res, 'NOT_FOUND', 'Subscription tidak ditemukan', 404);
 
@@ -27,7 +27,7 @@ async function create(req, res, next) {
 
     if (invoiceId) {
       await pool.query(
-        `UPDATE subscription_invoices SET status='paid' WHERE id=?`, [invoiceId]
+        `UPDATE subscription_invoices SET status='paid' WHERE id=? AND subscription_id=?`, [invoiceId, id]
       );
     }
 

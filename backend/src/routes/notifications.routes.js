@@ -15,6 +15,13 @@ const idParamSchema = z.object({
    ------------------------------------------------------------ */
 
 // List
+// Notifikasi & email (config/notificationPolicy.js): the policy per event and
+// the administrator's email switch (notification_rules, channel 'email').
+const requirePermissionPolicy = require('../middleware/requirePermission');
+const notificationPolicy = require('../services/notificationPolicy.service');
+router.get('/policy', requirePermissionPolicy('notification.manage_rule'), notificationPolicy.listHandler);
+router.put('/policy/:event', requirePermissionPolicy('notification.manage_rule'), notificationPolicy.saveHandler);
+
 router.get('/', ctrl.list);
 
 // Unread count (sidebar badge)

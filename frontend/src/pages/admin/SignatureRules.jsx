@@ -1,237 +1,193 @@
-import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import api from '../../api/client';
-import Badge from '../../components/Badge';
+import Banner from '../../components/Banner';
 import Button from '../../components/Button';
+import Checkbox from '../../components/Checkbox';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import DataTable from '../../components/DataTable';
+import DataGrid from '../../components/datagrid/DataGrid';
+import { apiErrorMessage, fieldErrorsFromApi } from '../../components/datagrid/gridModel';
+import FullScreenDialog, { FullScreenSection } from '../../components/FullScreenDialog';
+import IconButton from '../../components/IconButton';
 import Input from '../../components/Input';
-import Modal from '../../components/Modal';
+import Page from '../../components/Page';
+import PageHeader from '../../components/PageHeader';
+import Select from '../../components/Select';
+import StatusBadge from '../../components/StatusBadge';
 import { RoleSelect, UserSelect } from '../../components/UserRoleSelects';
 import { toast } from '../../components/Toast';
+import { AI_MODULE_LABELS, aiModuleLabel } from './aiLabels';
+import './admin-editors.css';
+import { Translate } from '../../i18n/NoTranslate';
+
+const FORM_ID = 'signature-rule-form';
+
+// The AI module that runs the pre-check, by its Indonesian name; a code the
+// list does not know (set before) stays selectable under its own words.
+function precheckModuleOptions(current) {
+  const codes = Object.keys(AI_MODULE_LABELS);
+  if (current && !codes.includes(current)) codes.push(current);
+  return codes.map((code) => ({ value: code, label: aiModuleLabel(code), data: !AI_MODULE_LABELS[code] }));
+}
 
 export default function SignatureRules() {
   const [rows, setRows] = useState([]);
   const [docTypes, setDocTypes] = useState([]);
   const [roles, setRoles] = useState([]);
   const [users, setUsers] = useState([]);
-  const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [formTarget, setFormTarget] = useState(null);
+  const [formSaving, setFormSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
-      const [rulesRes, docTypesRes, rolesRes, usersRes, formsRes] =
+      const [rulesRes, docTypesRes, rolesRes, usersRes] =
         await Promise.all([
           api.get('/signature-rules'),
           api.get('/document-types', { params: { activeOnly: '1' } }).catch(() => ({ data: { data: [] } })),
           api.get('/roles').catch(() => ({ data: { data: [] } })),
           api.get('/users', { params: { limit: 100 } }).catch(() => ({ data: { data: [] } })),
-          api.get('/forms').catch(() => ({ data: { data: [] } })),
         ]);
 
       setRows(rulesRes.data.data || []);
       setDocTypes(docTypesRes.data.data || []);
       setRoles(rolesRes.data.data || []);
       setUsers(usersRes.data.data || []);
-      setForms(formsRes.data.data || []);
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal memuat signature rules', 'error');
+      setLoadError(apiErrorMessage(error, 'Aturan tanda tangan tidak dapat dimuat.'));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const remove = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
       await api.delete(`/signature-rules/${deleteTarget.id}`);
-      toast('Signature rule dinonaktifkan', 'success');
+      toast('Aturan tanda tangan dinonaktifkan', 'success');
       setDeleteTarget(null);
       await load();
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal menghapus rule', 'error');
+      toast(apiErrorMessage(error, 'Aturan gagal dinonaktifkan.'), 'error');
     } finally {
       setDeleting(false);
     }
   };
 
+  const closeForm = () => { if (!formSaving) setFormTarget(null); };
+  const editingRow = formTarget?.mode === 'edit' ? formTarget.row : null;
+
+  const columns = [
+    { key: 'scope', header: 'Tipe dokumen', translate: true, render: (row) => row.documentTypeName },
+    {
+      key: 'signer',
+      header: 'Penanda tangan',
+      // A person's name is record data; a role name or the "#id" fallback is a label.
+      render: (row) => {
+        if (row.requiredSignerUserName) return row.requiredSignerUserName;
+        const label = row.requiredSignerRoleName
+          || (row.requiredSignerUserId
+            ? `Pengguna #${row.requiredSignerUserId}`
+            : row.requiredSignerRoleId
+              ? `Peran #${row.requiredSignerRoleId}`
+              : '');
+        return label ? <Translate>{label}</Translate> : '';
+      },
+    },
+    { key: 'minApprovalLevel', header: 'Approval minimum', type: 'number' },
+    { key: 'requiresAiPrecheck', header: 'Cek awal AI', translate: true, render: (row) => (row.requiresAiPrecheck ? 'Wajib' : 'Tidak') },
+    { key: 'checksumAlgorithm', header: 'Checksum', render: (row) => <code className="admin-code">{row.checksumAlgorithm || 'sha256'}</code> },
+    { key: 'qrRequired', header: 'QR', translate: true, render: (row) => (row.qrRequired ? 'Wajib' : 'Tidak') },
+    { key: 'allowDelegation', header: 'Delegasi', translate: true, render: (row) => (row.allowDelegation ? 'Ya' : 'Tidak') },
+    { key: 'isActive', header: 'Status', render: (row) => <StatusBadge status={row.isActive ? 'active' : 'inactive'} /> },
+  ];
+
   return (
-    <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 12,
-          gap: 12,
-          flexWrap: 'wrap',
-        }}
-      >
-        <div>
-          <h2 style={{ margin: 0 }}>Signature Rules</h2>
-          <div
-            style={{
-              marginTop: 4,
-              fontSize: 13,
-              color: 'var(--color-text-muted)',
-            }}
-          >
-            Atur signer, approval minimum, AI precheck, checksum, QR, delegation,
-            dan archive folder per document type atau form.
-          </div>
-        </div>
-
-        <Button onClick={() => setFormTarget({ mode: 'create' })}>
-          <Plus size={14} />
-          Rule Baru
-        </Button>
-      </div>
-
-      <DataTable
-        loading={loading}
-        rows={rows}
-        empty="Belum ada signature rule"
-        columns={[
-          {
-            key: 'scope',
-            title: 'Scope',
-            render: (row) =>
-              row.documentTypeName
-                ? `Document: ${row.documentTypeName}`
-                : row.formName
-                  ? `Form: ${row.formName}`
-                  : '—',
-          },
-          {
-            key: 'signer',
-            title: 'Signer',
-            render: (row) =>
-              row.requiredSignerUserName ||
-              row.requiredSignerRoleName ||
-              (row.requiredSignerUserId
-                ? `User #${row.requiredSignerUserId}`
-                : row.requiredSignerRoleId
-                  ? `Role #${row.requiredSignerRoleId}`
-                  : '—'),
-          },
-          { key: 'minApprovalLevel', title: 'Min Approval' },
-          {
-            key: 'requiresAiPrecheck',
-            title: 'AI Precheck',
-            render: (row) => (
-              <Badge tone={row.requiresAiPrecheck ? 'info' : 'default'}>
-                {row.requiresAiPrecheck ? 'Wajib' : 'Tidak'}
-              </Badge>
-            ),
-          },
-          {
-            key: 'checksumAlgorithm',
-            title: 'Checksum',
-            render: (row) => <code>{row.checksumAlgorithm || 'sha256'}</code>,
-          },
-          {
-            key: 'qrRequired',
-            title: 'QR',
-            render: (row) => (
-              <Badge tone={row.qrRequired ? 'success' : 'default'}>
-                {row.qrRequired ? 'Wajib' : 'Tidak'}
-              </Badge>
-            ),
-          },
-          {
-            key: 'allowDelegation',
-            title: 'Delegation',
-            render: (row) => (row.allowDelegation ? 'Ya' : 'Tidak'),
-          },
-          {
-            key: 'isActive',
-            title: 'Status',
-            render: (row) => (
-              <Badge tone={row.isActive ? 'success' : 'default'}>
-                {row.isActive ? 'Aktif' : 'Nonaktif'}
-              </Badge>
-            ),
-          },
-          {
-            key: 'actions',
-            title: 'Aksi',
-            render: (row) => (
-              <div style={{ display: 'flex', gap: 4 }}>
-                <Button
-                  variant="secondary"
-                  onClick={() => setFormTarget({ mode: 'edit', row })}
-                >
-                  <Pencil size={14} />
-                </Button>
-                <Button variant="danger" onClick={() => setDeleteTarget(row)}>
-                  <Trash2 size={14} />
-                </Button>
-              </div>
-            ),
-          },
-        ]}
+    <Page>
+      <PageHeader
+        title="Aturan tanda tangan"
+        description="Atur penanda tangan, approval minimum, cek awal AI, checksum, QR, delegasi, dan folder arsip per tipe dokumen."
+        actions={<Button icon="add" onClick={() => setFormTarget({ mode: 'create' })}>Tambah aturan</Button>}
       />
 
-      <Modal
+      <DataGrid
+        title="Semua aturan"
+        exportName="signature-rules"
+        columns={columns}
+        rows={rows}
+        loading={loading}
+        error={loadError}
+        onRetry={load}
+        empty="Belum ada aturan tanda tangan"
+        onRowClick={(row) => setFormTarget({ mode: 'edit', row })}
+        rowActions={(row) => (
+          <>
+            <IconButton size="sm" icon="edit" label="Ubah" onClick={() => setFormTarget({ mode: 'edit', row })} />
+            <IconButton size="sm" icon="block" label="Nonaktifkan" tone="danger" onClick={() => setDeleteTarget(row)} />
+          </>
+        )}
+      />
+
+      <FullScreenDialog
         open={Boolean(formTarget)}
-        onClose={() => setFormTarget(null)}
-        title={
-          formTarget?.mode === 'edit'
-            ? 'Edit Signature Rule'
-            : 'Signature Rule Baru'
-        }
-        maxWidth={820}
+        onClose={closeForm}
+        title={editingRow ? 'Ubah aturan tanda tangan' : 'Tambah aturan tanda tangan'}
+        card={false}
+        actions={(
+          <>
+            <Button variant="text" type="button" onClick={closeForm} disabled={formSaving}>Batal</Button>
+            <Button type="submit" form={FORM_ID} loading={formSaving}>Simpan aturan</Button>
+          </>
+        )}
       >
-        {formTarget && (
+        {formTarget ? (
           <SignatureRuleForm
-            editing={formTarget.mode === 'edit' ? formTarget.row : null}
+            key={editingRow?.id || 'new'}
+            editing={editingRow}
             docTypes={docTypes}
-            forms={forms}
             roles={roles}
             users={users}
-            onCancel={() => setFormTarget(null)}
+            onSavingChange={setFormSaving}
             onSaved={async () => {
               setFormTarget(null);
               await load();
             }}
           />
-        )}
-      </Modal>
+        ) : null}
+      </FullScreenDialog>
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
-        title="Nonaktifkan signature rule?"
-        message="Rule akan dinonaktifkan dan di-soft-delete. Signature request yang sudah dibuat tetap menyimpan rule snapshot/reference yang sudah digunakan."
-        confirmLabel="Ya, nonaktifkan"
+        title="Nonaktifkan aturan tanda tangan?"
+        message={`Aturan untuk ${deleteTarget?.documentTypeName || 'tipe dokumen ini'} akan dinonaktifkan. Permintaan tanda tangan yang sudah dibuat tetap menyimpan aturan yang dipakai saat itu.`}
+        confirmLabel="Nonaktifkan aturan"
         loading={deleting}
         onConfirm={remove}
-        onClose={() => setDeleteTarget(null)}
+        onClose={() => { if (!deleting) setDeleteTarget(null); }}
       />
-    </div>
+    </Page>
   );
 }
 
 function SignatureRuleForm({
   editing,
   docTypes,
-  forms,
   roles,
   users,
-  onCancel,
+  onSavingChange,
   onSaved,
 }) {
   const [form, setForm] = useState({
     documentTypeId: editing?.documentTypeId || '',
-    appliesToFormId: editing?.appliesToFormId || '',
     minApprovalLevel: editing?.minApprovalLevel ?? 1,
     requiredSignerRoleId: editing?.requiredSignerRoleId || '',
     requiredSignerUserId: editing?.requiredSignerUserId || '',
@@ -246,41 +202,35 @@ function SignatureRuleForm({
     archiveFolderDriveId: editing?.archiveFolderDriveId || '',
     isActive: editing ? Boolean(editing.isActive) : true,
   });
-  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  const set = (key, value) =>
+  const set = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
+    setErrors((current) => ({ ...current, [key]: undefined, signer: key.startsWith('requiredSigner') ? undefined : current.signer }));
+  };
 
-  const save = async () => {
-    if (Boolean(form.documentTypeId) === Boolean(form.appliesToFormId)) {
-      toast('Pilih tepat satu scope: Document Type atau Form', 'error');
-      return;
+  const validate = () => {
+    const next = {};
+    if (!form.documentTypeId) next.documentTypeId = 'Pilih tipe dokumen.';
+    if (Boolean(form.requiredSignerRoleId) === Boolean(form.requiredSignerUserId)) {
+      next.signer = 'Pilih tepat satu penanda tangan: pengguna atau peran.';
     }
+    if (!['sha256', 'sha512'].includes(form.checksumAlgorithm)) next.checksumAlgorithm = 'Algoritma checksum tidak valid.';
+    if (form.requiresAiPrecheck && !form.precheckModule.trim()) next.precheckModule = 'Pilih modul cek awal saat cek awal AI wajib.';
+    return next;
+  };
 
-    if (
-      Boolean(form.requiredSignerRoleId) ===
-      Boolean(form.requiredSignerUserId)
-    ) {
-      toast('Pilih tepat satu signer: User atau Role', 'error');
-      return;
-    }
-
-    if (!['sha256', 'sha512'].includes(form.checksumAlgorithm)) {
-      toast('Checksum algorithm tidak valid', 'error');
-      return;
-    }
-
-    if (form.requiresAiPrecheck && !form.precheckModule.trim()) {
-      toast('Precheck module wajib jika AI precheck aktif', 'error');
+  const save = async (event) => {
+    event.preventDefault();
+    const nextErrors = validate();
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors);
       return;
     }
 
     const payload = {
       documentTypeId: form.documentTypeId
         ? Number(form.documentTypeId)
-        : null,
-      appliesToFormId: form.appliesToFormId
-        ? Number(form.appliesToFormId)
         : null,
       minApprovalLevel: Number(form.minApprovalLevel || 0),
       requiredSignerRoleId: form.requiredSignerRoleId
@@ -301,226 +251,116 @@ function SignatureRuleForm({
       isActive: Boolean(form.isActive),
     };
 
-    setSaving(true);
+    onSavingChange(true);
     try {
       if (editing) {
         await api.patch(`/signature-rules/${editing.id}`, payload);
-        toast('Signature rule diperbarui', 'success');
+        toast('Aturan tanda tangan diperbarui', 'success');
       } else {
         await api.post('/signature-rules', payload);
-        toast('Signature rule dibuat', 'success');
+        toast('Aturan tanda tangan dibuat', 'success');
       }
-      onSaved();
+      onSavingChange(false);
+      await onSaved();
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal menyimpan signature rule', 'error');
-    } finally {
-      setSaving(false);
+      onSavingChange(false);
+      const fieldErrors = fieldErrorsFromApi(error);
+      if (Object.keys(fieldErrors).length) setErrors(fieldErrors);
+      else toast(apiErrorMessage(error, 'Aturan tanda tangan gagal disimpan.'), 'error');
     }
   };
 
   return (
-    <div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-          gap: 12,
-        }}
-      >
-        <Select
-          label="Document Type"
-          value={form.documentTypeId}
-          onChange={(value) => {
-            set('documentTypeId', value);
-            if (value) set('appliesToFormId', '');
-          }}
-          allowEmpty
-          options={docTypes.map((item) => ({
-            value: item.id,
-            label: item.name,
-          }))}
-        />
+    <form id={FORM_ID} className="admin-dialog-form" onSubmit={save} noValidate>
+      <FullScreenSection title="Tipe dokumen dan penanda tangan">
+        <div className="pw-fsdialog__fields">
+          <Select
+            label="Tipe dokumen"
+            required
+            value={form.documentTypeId}
+            error={errors.documentTypeId}
+            onChange={(event) => set('documentTypeId', event.target.value)}
+            placeholder="Pilih tipe dokumen"
+            options={docTypes.map((item) => ({
+              value: item.id,
+              label: item.name,
+            }))}
+          />
+          <Input
+            label="Level approval minimum"
+            type="number"
+            min="0"
+            inputMode="numeric"
+            value={form.minApprovalLevel}
+            error={errors.minApprovalLevel}
+            onChange={(event) => set('minApprovalLevel', event.target.value)}
+          />
+          <UserSelect
+            label="Penanda tangan (pengguna)"
+            value={form.requiredSignerUserId}
+            placeholder="Tidak ada"
+            error={errors.signer || errors.requiredSignerUserId}
+            hint="Isi pengguna atau peran, salah satu saja."
+            onChange={(value) => {
+              set('requiredSignerUserId', value);
+              if (value) set('requiredSignerRoleId', '');
+            }}
+            users={users}
+          />
+          <RoleSelect
+            label="Penanda tangan (peran)"
+            value={form.requiredSignerRoleId}
+            placeholder="Tidak ada"
+            error={errors.signer || errors.requiredSignerRoleId}
+            onChange={(value) => {
+              set('requiredSignerRoleId', value);
+              if (value) set('requiredSignerUserId', '');
+            }}
+            roles={roles}
+          />
+        </div>
+      </FullScreenSection>
 
-        <Select
-          label="Applies To Form"
-          value={form.appliesToFormId}
-          onChange={(value) => {
-            set('appliesToFormId', value);
-            if (value) set('documentTypeId', '');
-          }}
-          allowEmpty
-          options={forms.map((item) => ({
-            value: item.id,
-            label: item.name,
-          }))}
-        />
-
-        <Input
-          label="Min Approval Level"
-          type="number"
-          min="0"
-          value={form.minApprovalLevel}
-          onChange={(event) => set('minApprovalLevel', event.target.value)}
-        />
-
-        <UserSelect
-          label="Required Signer User"
-          value={form.requiredSignerUserId}
-          onChange={(value) => {
-            set('requiredSignerUserId', value);
-            if (value) set('requiredSignerRoleId', '');
-          }}
-          users={users}
-        />
-
-        <RoleSelect
-          label="Required Signer Role"
-          value={form.requiredSignerRoleId}
-          onChange={(value) => {
-            set('requiredSignerRoleId', value);
-            if (value) set('requiredSignerUserId', '');
-          }}
-          roles={roles}
-        />
-
-        <Select
-          label="Checksum Algorithm"
-          value={form.checksumAlgorithm}
-          onChange={(value) => set('checksumAlgorithm', value)}
-          options={[
-            { value: 'sha256', label: 'SHA-256' },
-            { value: 'sha512', label: 'SHA-512' },
-          ]}
-        />
-
-        <Input
-          label="AI Precheck Module"
-          value={form.precheckModule}
-          onChange={(event) => set('precheckModule', event.target.value)}
-          disabled={!form.requiresAiPrecheck}
-        />
-
-        <Input
-          label="Archive Folder Drive ID"
-          value={form.archiveFolderDriveId}
-          onChange={(event) =>
-            set('archiveFolderDriveId', event.target.value)
-          }
-        />
-      </div>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 8,
-          marginTop: 4,
-        }}
-      >
-        <Checkbox
-          label="AI precheck wajib"
-          checked={form.requiresAiPrecheck}
-          onChange={(value) => set('requiresAiPrecheck', value)}
-        />
-        <Checkbox
-          label="Allow delegation"
-          checked={form.allowDelegation}
-          onChange={(value) => set('allowDelegation', value)}
-        />
-        <Checkbox
-          label="Auto generate verification code"
-          checked={form.autoGenerateVerificationCode}
-          onChange={(value) => set('autoGenerateVerificationCode', value)}
-        />
-        <Checkbox
-          label="QR verification wajib"
-          checked={form.qrRequired}
-          onChange={(value) => set('qrRequired', value)}
-        />
-        <Checkbox
-          label="Rule aktif"
-          checked={form.isActive}
-          onChange={(value) => set('isActive', value)}
-        />
-      </div>
-
-      <div
-        style={{
-          marginTop: 12,
-          padding: 10,
-          borderRadius: 8,
-          background: '#f8fafc',
-          color: 'var(--color-text-muted)',
-          fontSize: 12,
-        }}
-      >
-        AI precheck bersifat advisory. Policy signing backend yang berlaku:
-        warning dapat dilanjutkan; failed/skipped membutuhkan override permission
-        dan alasan eksplisit.
-      </div>
-
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 8,
-          marginTop: 16,
-        }}
-      >
-        <Button variant="secondary" onClick={onCancel} disabled={saving}>
-          Batal
-        </Button>
-        <Button onClick={save} disabled={saving}>
-          {saving ? 'Menyimpan…' : 'Simpan'}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function Select({ label, value, onChange, options, allowEmpty = false }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-      <label style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-        {label}
-      </label>
-      <select
-        value={value || ''}
-        onChange={(event) => onChange(event.target.value)}
-        style={{
-          padding: '8px 10px',
-          borderRadius: 8,
-          boxShadow: 'inset 0 0 0 1px var(--color-border)',
-          background: 'var(--color-surface)',
-        }}
-      >
-        {allowEmpty && <option value="">—</option>}
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-function Checkbox({ label, checked, onChange }) {
-  return (
-    <label
-      style={{
-        display: 'flex',
-        gap: 7,
-        alignItems: 'center',
-        fontSize: 13,
-      }}
-    >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-      />
-      {label}
-    </label>
+      <FullScreenSection title="Verifikasi dan arsip">
+        <div className="pw-fsdialog__fields">
+          <Select
+            label="Algoritma checksum"
+            value={form.checksumAlgorithm}
+            error={errors.checksumAlgorithm}
+            onChange={(event) => set('checksumAlgorithm', event.target.value)}
+            options={[
+              { value: 'sha256', label: 'SHA-256' },
+              { value: 'sha512', label: 'SHA-512' },
+            ]}
+          />
+          <Select
+            label="Modul cek awal AI"
+            value={form.precheckModule}
+            error={errors.precheckModule}
+            onChange={(event) => set('precheckModule', event.target.value)}
+            disabled={!form.requiresAiPrecheck}
+            options={precheckModuleOptions(form.precheckModule)}
+          />
+          <Input
+            label="ID folder arsip Drive"
+            mono
+            value={form.archiveFolderDriveId}
+            error={errors.archiveFolderDriveId}
+            onChange={(event) => set('archiveFolderDriveId', event.target.value)}
+          />
+        </div>
+        <div className="admin-choice-list">
+          <Checkbox label="Cek awal AI wajib" checked={form.requiresAiPrecheck} onChange={(event) => set('requiresAiPrecheck', event.target.checked)} />
+          <Checkbox label="Izinkan delegasi" checked={form.allowDelegation} onChange={(event) => set('allowDelegation', event.target.checked)} />
+          <Checkbox label="Buat kode verifikasi otomatis" checked={form.autoGenerateVerificationCode} onChange={(event) => set('autoGenerateVerificationCode', event.target.checked)} />
+          <Checkbox label="Verifikasi QR wajib" checked={form.qrRequired} onChange={(event) => set('qrRequired', event.target.checked)} />
+          <Checkbox label="Rule aktif" checked={form.isActive} onChange={(event) => set('isActive', event.target.checked)} />
+        </div>
+        <Banner tone="info">
+          Cek awal AI bersifat saran. Aturan tanda tangan di server: peringatan boleh dilanjutkan; hasil gagal atau
+          dilewati butuh permission override dan alasan tertulis.
+        </Banner>
+      </FullScreenSection>
+    </form>
   );
 }

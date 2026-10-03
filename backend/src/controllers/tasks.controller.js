@@ -97,7 +97,7 @@ async function listActivity(req, res, next) {
   try {
     const task = await taskAccess.loadTask(Number(req.params.id));
     if (!task) return fail(res, 'NOT_FOUND', 'Task tidak ditemukan', 404);
-    taskAccess.assertTaskAccess({ user: req.user, task, action: 'view' });
+    await taskAccess.assertTaskAccess({ user: req.user, task, action: 'view' });
     const r = await taskActivity.list({
       taskId: task.id,
       page: Math.max(1, parseInt(req.query.page) || 1),

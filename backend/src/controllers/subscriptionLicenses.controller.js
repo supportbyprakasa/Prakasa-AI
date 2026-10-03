@@ -6,16 +6,18 @@ const notif = require('../services/notification.service');
 async function createLicense(req, res, next) {
   try {
     const { id } = req.params; // subscription id
-    const { licenseKey, seatLabel } = req.body;
+    // A licence key is never accepted or stored by the API (wave 2, §4.1, S10):
+    // the route's strict schema refuses it; keys live in the vendor portal.
+    const { seatLabel } = req.body;
     const [s] = await pool.query(
-      `SELECT * FROM software_subscriptions WHERE id=? AND deleted_at IS NULL`, [id]
+      `SELECT * FROM software_subscriptions WHERE id=? AND entity_id=? AND deleted_at IS NULL`, [id, req.user.entityId]
     );
     if (!s[0]) return fail(res, 'NOT_FOUND', 'Subscription tidak ditemukan', 404);
 
     const [r] = await pool.query(
       `INSERT INTO subscription_licenses
-       (subscription_id, license_key, seat_label, status) VALUES (?, ?, ?, 'available')`,
-      [id, licenseKey || null, seatLabel || null]
+       (subscription_id, seat_label, status) VALUES (?, ?, 'available')`,
+      [id, seatLabel || null]
     );
     // Naikkan total seats jika perlu
     await pool.query(
@@ -38,13 +40,18 @@ async function assignLicense(req, res, next) {
 
     await conn.beginTransaction();
     const [l] = await conn.query(
-      `SELECT * FROM subscription_licenses WHERE id=? FOR UPDATE`, [id]
+      `SELECT l.* FROM subscription_licenses l JOIN software_subscriptions s ON s.id = l.subscription_id
+        WHERE l.id=? AND s.entity_id=? FOR UPDATE`, [id, req.user.entityId]
     );
     if (!l[0]) { await conn.rollback(); return fail(res, 'NOT_FOUND', 'License tidak ditemukan', 404); }
     if (l[0].status === 'assigned') {
       await conn.rollback();
       return fail(res, 'CONFLICT', 'License sudah di-assign', 409);
     }
+    const [[holder]] = await conn.query(
+      `SELECT id FROM users WHERE id=? AND entity_id=? AND deleted_at IS NULL LIMIT 1`, [userId, req.user.entityId]
+    );
+    if (!holder) { await conn.rollback(); return fail(res, 'NOT_FOUND', 'Pengguna tidak ditemukan di perusahaan ini', 404); }
 
     await conn.query(
       `UPDATE subscription_licenses
@@ -94,7 +101,8 @@ async function revokeLicense(req, res, next) {
 
     await conn.beginTransaction();
     const [l] = await conn.query(
-      `SELECT * FROM subscription_licenses WHERE id=? FOR UPDATE`, [id]
+      `SELECT l.* FROM subscription_licenses l JOIN software_subscriptions s ON s.id = l.subscription_id
+        WHERE l.id=? AND s.entity_id=? FOR UPDATE`, [id, req.user.entityId]
     );
     if (!l[0]) { await conn.rollback(); return fail(res, 'NOT_FOUND', 'License tidak ditemukan', 404); }
     if (l[0].status !== 'assigned') {
@@ -129,12 +137,13 @@ async function markIdle(req, res, next) {
   try {
     const { id } = req.params;
     const [r] = await pool.query(
-      `UPDATE subscription_licenses SET status='idle'
-        WHERE id=? AND status='assigned'`, [id]
+      `UPDATE subscription_licenses l JOIN software_subscriptions s ON s.id = l.subscription_id
+          SET l.status='idle'
+        WHERE l.id=? AND s.entity_id=? AND l.status='assigned'`, [id, req.user.entityId]
     );
     if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'License tidak ditemukan', 404);
     await log({
-      entityId: null, userId: req.user.sub,
+      entityId: req.user.entityId, userId: req.user.sub,
       action: 'subscription_license.mark_idle', subjectType: 'subscription_license',
       subjectId: Number(id),
     });

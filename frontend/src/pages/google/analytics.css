@@ -1,0 +1,110 @@
+/* Google Analytics page (pages/google/Analytics.jsx + AnalyticsLineChart.jsx).
+   Series: active users = --pw-chart-series (solid), sessions = --pw-warning
+   (dashed), so identity never rests on colour alone. Charts sit on the shared
+   Card variant="chart"; key figures are StatCards. */
+.ga {
+  --ga-activeUsers: var(--pw-chart-series);
+  --ga-sessions: var(--pw-warning);
+}
+
+/* ---- Filters ---- */
+.ga-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+}
+.ga-filters__property { flex: 1 1 280px; max-width: 420px; }
+.ga-filters__range { display: flex; flex-wrap: wrap; gap: 8px; }
+.ga-custom { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 24px; flex-basis: 100%; }
+.ga-custom > .pw-field { flex: 0 1 200px; }
+.ga-custom > .pw-button { margin-top: 8px; }
+.ga-range-note { flex-basis: 100%; margin: 0; color: var(--pw-text); font-size: var(--pw-font-sm); }
+
+/* ---- Key figures ---- */
+.ga-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.ga-kpi__meta { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.ga-kpi__delta { display: inline-flex; align-items: center; gap: 4px; font-weight: 500; }
+.ga-kpi__delta.is-good { color: var(--pw-success); }
+.ga-kpi__delta.is-bad { color: var(--pw-error); }
+
+/* ---- Line chart ---- */
+.ga-chart { position: relative; min-width: 0; padding-bottom: 24px; }
+.ga-chart__svg { display: block; max-width: 100%; overflow: visible; }
+.ga-chart__svg:focus-visible { outline: 2px solid var(--pw-primary); outline-offset: 4px; border-radius: var(--pw-radius-sm); }
+.ga-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0 0 12px; padding: 0; list-style: none; color: var(--pw-text-muted); font-size: var(--pw-font-xs); }
+.ga-legend li { display: inline-flex; align-items: center; gap: 8px; }
+.ga-swatch--activeUsers { color: var(--ga-activeUsers); }
+.ga-swatch--sessions { color: var(--ga-sessions); }
+.ga-legend .ga-swatch { display: inline-block; width: 16px; border-top: 3px solid currentColor; }
+.ga-legend .ga-swatch--sessions { border-top-style: dashed; }
+.ga-grid-line { stroke: var(--pw-chart-grid); stroke-width: 1; }
+.ga-axis-line { stroke: var(--pw-chart-axis); stroke-width: 1; }
+.ga-axis-text { fill: var(--pw-text-meta); font-size: var(--pw-font-xs); font-variant-numeric: tabular-nums; }
+.ga-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.ga-line--activeUsers { stroke: var(--ga-activeUsers); }
+.ga-line--sessions { stroke: var(--ga-sessions); stroke-dasharray: 6 4; }
+.ga-end-label { fill: var(--pw-text-muted); font-size: var(--pw-font-xs); }
+.ga-crosshair { stroke: var(--pw-chart-axis); stroke-width: 1; }
+.ga-dot { stroke: var(--pw-surface); stroke-width: 2; }
+.ga-dot--activeUsers { fill: var(--ga-activeUsers); }
+.ga-dot--sessions { fill: var(--ga-sessions); }
+.ga-tip { fill: var(--pw-tooltip-bg); }
+.ga-tip__swatch { fill: currentColor; }
+.ga-tip__title { fill: var(--pw-tooltip-text); font-size: var(--pw-font-xs); font-weight: 500; }
+.ga-tip__label { fill: var(--pw-tooltip-text); font-size: var(--pw-font-xs); }
+.ga-tip__value { fill: var(--pw-tooltip-text); font-size: var(--pw-font-xs); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* ---- Bar lists ---- */
+.ga-lists { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.ga-bars { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0 0 24px; list-style: none; }
+.ga-bars__item { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ga-bars__head { display: flex; justify-content: space-between; gap: 12px; }
+.ga-bars__label { min-width: 0; overflow: hidden; color: var(--pw-text); text-overflow: ellipsis; white-space: nowrap; }
+.ga-bars__value { flex: none; color: var(--pw-text); font-variant-numeric: tabular-nums; }
+.ga-bars__share { color: var(--pw-text-muted); font-size: var(--pw-font-xs); }
+.ga-bar { display: block; width: 100%; height: 4px; overflow: hidden; background: var(--pw-chart-grid); }
+.ga-bar__fill { fill: var(--pw-chart-series); }
+
+/* ---- Setup checklist ---- */
+.ga-steps { display: flex; flex-direction: column; gap: 16px; margin: 0; padding: 0; list-style: none; }
+.ga-step { display: flex; align-items: flex-start; gap: 12px; }
+.ga-step__number {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--pw-radius-full);
+  background: var(--pw-surface-container);
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-xs);
+  font-weight: 500;
+}
+.ga-step.is-todo .ga-step__number { background: var(--pw-accent); color: var(--pw-on-primary); }
+.ga-step.is-done .ga-step__number { background: var(--pw-selected); color: var(--pw-accent); }
+.ga-step__body { display: flex; flex: 1; flex-direction: column; gap: 8px; min-width: 0; }
+.ga-step__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ga-step__title { color: var(--pw-text); font-weight: 500; }
+.ga-step__body p { margin: 0; color: var(--pw-text-muted); }
+.ga-sa-email { display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; }
+.ga-sa-email code {
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface-container);
+  font-family: var(--pw-font-mono);
+  font-size: var(--pw-font-sm);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1023px) {
+  .ga-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ga-lists { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .ga-kpis { gap: 16px; }
+  .ga-filters__property { flex-basis: 100%; max-width: none; }
+  .ga-custom > .pw-field { flex: 1 1 100%; }
+}

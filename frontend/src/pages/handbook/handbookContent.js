@@ -1,0 +1,2242 @@
+// Panduan Prakasa Workspace — the handbook text, in plain data (no JSX, no
+// HTML). Pages/handbook/handbookModel.js decides who reads what:
+//   chapter = { id, part, title, icon (Material Symbols), scope, audience,
+//               route, who, summary, sections: [{ id, title, audience?, route?, body }] }
+//   scope   = 'general' (every role) | 'division' | 'management' | 'admin'
+//   audience = { permissions: [any of], levels?: [...], roles?: [...] }
+//   body    = blocks: { type: 'p' | 'note' | 'warning', text }
+//                     { type: 'steps' | 'tips' | 'list', title?, items: [] }
+//                     { type: 'table', title?, columns: [], rows: [[]], context? }  (context: i18n meaning of the first cell)
+//                     { type: 'faq', items: [{ q, a }] }
+// Write for non-technical colleagues: short sentences, numbered steps, and
+// the exact names of menus and buttons as the app shows them. Run
+// `node scripts/build-handbook-docs.mjs` after a change to refresh docs/handbook.
+
+import { AI_FORM_TABLES } from './aiForms.generated.js';
+
+const AI_FORM_COLUMNS = ['Formulir', 'Dibuka dari', 'Yang tetap Anda isi sendiri'];
+const SUP = ['supervisor', 'head'];
+const HEAD = ['head'];
+
+const MULAI = 'Mulai';
+const KERJA = 'Kerja harian';
+const DIVISI = 'Modul divisi';
+const PANTAU = 'Pemantauan & manajemen';
+const ADMIN = 'Administrasi sistem';
+const REF = 'Referensi';
+
+const HANDBOOK = [
+  // ================================================================== MULAI
+  {
+    id: 'mulai',
+    part: MULAI,
+    title: 'Mulai memakai Prakasa Workspace',
+    icon: 'rocket_launch',
+    scope: 'general',
+    route: '/',
+    who: 'Semua karyawan yang punya akun.',
+    summary: 'Prakasa Workspace adalah ruang kerja internal Prakasa Foods Nusantara: dokumen, approval, operasional divisi, Google Workspace, dan Prakasa AI dalam satu aplikasi. Bab ini menjelaskan cara masuk, membaca menu, mencari, dan menerima notifikasi.',
+    sections: [
+      {
+        id: 'masuk-google',
+        title: 'Masuk dengan akun Google kantor',
+        body: [
+          { type: 'p', text: 'Cara paling mudah adalah memakai akun Google kantor Anda (alamat email perusahaan).' },
+          {
+            type: 'steps',
+            items: [
+              'Buka alamat Prakasa Workspace di browser (Chrome disarankan).',
+              'Di halaman "Masuk", klik tombol "Masuk dengan Google".',
+              'Pilih akun Google kantor Anda, lalu ikuti langkah dari Google.',
+              'Setelah berhasil, Anda langsung masuk ke halaman "Dashboard".',
+            ],
+          },
+          { type: 'note', text: 'Tombol "Masuk dengan Google" hanya muncul bila fitur ini sudah dinyalakan oleh administrator. Bila tidak ada, pakai email dan kata sandi.' },
+        ],
+      },
+      {
+        id: 'masuk-kata-sandi',
+        title: 'Masuk dengan email dan kata sandi',
+        body: [
+          {
+            type: 'steps',
+            items: [
+              'Di halaman "Masuk", isi "Email" dengan email kantor Anda.',
+              'Isi "Kata sandi". Klik ikon mata ("Tampilkan kata sandi") bila ingin memeriksa ketikan Anda.',
+              'Klik "Masuk".',
+            ],
+          },
+          {
+            type: 'table',
+            title: 'Pesan yang mungkin muncul',
+            columns: ['Pesan', 'Artinya'],
+            rows: [
+              ['Isi email. / Isi kata sandi.', 'Kolom masih kosong.'],
+              ['Gagal masuk. Periksa email dan kata sandi.', 'Email atau kata sandi salah. Coba lagi dengan teliti.'],
+              ['Gagal masuk dengan Google.', 'Akun Google yang dipilih bukan akun kantor, atau belum terdaftar.'],
+            ],
+          },
+          { type: 'p', text: 'Akun belum dibuat atau dinonaktifkan? Hubungi Super Admin atau Administrator Sistem, seperti tertulis di bawah tombol "Masuk".' },
+        ],
+      },
+      {
+        id: 'ganti-kata-sandi',
+        title: 'Mengganti kata sandi sementara (pertama kali masuk)',
+        body: [
+          { type: 'p', text: 'Kata sandi dikelola oleh Super Admin. Bila Super Admin membuatkan atau mereset kata sandi Anda, kata sandi itu bersifat sementara. Saat masuk berikutnya, aplikasi langsung membuka halaman "Ganti kata sandi sementara".' },
+          {
+            type: 'steps',
+            items: [
+              'Isi "Kata sandi saat ini" dengan kata sandi sementara dari Super Admin.',
+              'Isi "Kata sandi baru": minimal 10 karakter, memuat huruf dan angka, berbeda dari kata sandi lama, dan tidak memuat nama email Anda.',
+              'Ketik sekali lagi di "Ulangi kata sandi baru".',
+              'Klik "Simpan kata sandi". Anda lalu masuk seperti biasa.',
+            ],
+          },
+          { type: 'warning', text: 'Jangan pernah memberitahukan kata sandi kepada siapa pun, termasuk tim IT. Jangan menulis kata sandi di tiket, chat, atau Prakasa AI.' },
+          { type: 'note', text: 'Lupa kata sandi atau ingin menggantinya? Tidak ada reset atau ganti kata sandi mandiri di aplikasi. Hubungi Super Admin: ia mereset kata sandi Anda menjadi kata sandi sementara, lalu Anda membuat kata sandi baru saat masuk berikutnya. Bila akun Anda bisa masuk dengan Google, Anda tetap bisa masuk tanpa kata sandi.' },
+        ],
+      },
+      {
+        id: 'akun-saya',
+        title: 'Akun saya: profil, bahasa, beranda, dan sesi',
+        route: '/akun',
+        body: [
+          { type: 'p', text: 'Halaman "Akun saya" berisi hal-hal tentang akun Anda sendiri. Bukanya dari bar atas: klik foto atau inisial Anda di pojok kanan atas, lalu pilih "Akun saya".' },
+          {
+            type: 'table',
+            title: 'Isi halaman "Akun saya"',
+            columns: ['Bagian', 'Isinya'],
+            rows: [
+              ['Profil', 'Nama, email kerja, divisi, peran, dan cara masuk akun Anda. Hanya untuk dibaca: nama, divisi, dan peran diatur Administrator dan disinkronkan dari Google Workspace.'],
+              ['Bahasa', 'Bahasa tampilan: Indonesia atau English. Pilihan disimpan di akun Anda, jadi ikut dipakai saat Anda masuk dari perangkat lain.'],
+              ['Beranda', 'Tombol "Tampilkan ringkasan pagi di beranda" untuk menampilkan atau menyembunyikan kartu "Ringkasan pagi".'],
+              ['Kata sandi', 'Hanya penjelasan: kata sandi dikelola oleh Super Admin. Tidak ada formulir ganti kata sandi di sini.'],
+              ['Sesi', 'Tombol "Keluar dari semua perangkat".'],
+            ],
+          },
+          { type: 'p', text: 'Mengganti bahasa: di bagian "Bahasa", pilih "Indonesia" atau "English". Halaman dimuat ulang dalam bahasa yang dipilih. Tombol "ID | EN" di bar atas melakukan hal yang sama dan juga menyimpan pilihan ke akun Anda.' },
+          { type: 'note', text: 'Kata sandi dikelola oleh Super Admin. Untuk mengganti atau memulihkan kata sandi, hubungi Super Admin; setelah direset, Anda membuat kata sandi baru saat masuk berikutnya. Akun yang masuk dengan Google tidak perlu kata sandi.' },
+          { type: 'p', text: 'Perangkat hilang atau lupa keluar di komputer lain? Di bagian "Sesi", klik "Keluar dari semua perangkat", lalu konfirmasi. Semua sesi akun Anda berakhir, termasuk di perangkat yang sedang dipakai, dan Anda perlu masuk lagi.' },
+          { type: 'note', text: 'Data kepegawaian seperti gaji, rekening, dan nomor identitas tidak ada di Prakasa Workspace. Data itu dikelola di KantorKu.' },
+        ],
+      },
+      {
+        id: 'akses-belum-siap',
+        title: 'Muncul "Akses belum disiapkan"',
+        body: [
+          { type: 'p', text: 'Halaman ini muncul bila akun Anda sudah ada tetapi belum punya divisi dan peran yang aktif.' },
+          {
+            type: 'steps',
+            items: [
+              'Minta Administrator Sistem (atau Super Admin) menetapkan divisi dan peran Anda.',
+              'Setelah dikabari, klik "Periksa lagi".',
+              'Bila ingin keluar dulu, klik "Keluar".',
+            ],
+          },
+        ],
+      },
+      {
+        id: 'beranda',
+        title: 'Dashboard (halaman awal)',
+        route: '/',
+        body: [
+          { type: 'p', text: 'Setelah masuk, Anda melihat "Dashboard": sapaan, tanggal hari ini, dan ringkasan pekerjaan yang menunggu Anda.' },
+          {
+            type: 'table',
+            columns: ['Bagian', 'Isinya'],
+            rows: [
+              ['Pintasan', 'Tombol cepat ke Gmail, Google Chat, Kalender, Docs, My Drive, Prakasa AI, dan Tiket IT (sesuai akses Anda).'],
+              ['Perlu tindakan Anda', 'Hal yang menunggu keputusan atau balasan Anda, diurutkan dari yang paling lama menunggu. Contoh: dokumen menunggu tanda tangan, pembayaran menunggu persetujuan.'],
+              ['Permintaan saya', 'Permintaan yang Anda ajukan dan masih berjalan, misalnya tiket IT atau permintaan GA.'],
+              ['Antrean tim', 'Pekerjaan tim Anda yang belum diambil.'],
+              ['Notifikasi', 'Notifikasi terbaru, dengan tautan "Lihat semua notifikasi".'],
+            ],
+          },
+          { type: 'tips', items: ['Klik "Muat ulang" untuk memperbarui ringkasan.', 'Bila tertulis "Semua beres", tidak ada yang menunggu Anda saat ini.'] },
+        ],
+      },
+      {
+        id: 'ringkasan-pagi',
+        title: 'Ringkasan pagi di beranda',
+        route: '/',
+        body: [
+          { type: 'p', text: 'Kartu "Ringkasan pagi" di bagian atas "Dashboard" merangkum hari Anda dalam satu daftar: yang perlu Anda tindak lebih dulu ada di paling atas. Kartu ini disusun langsung dari data aplikasi, tanpa model AI, dan hanya memuat pekerjaan serta modul yang boleh Anda buka.' },
+          {
+            type: 'table',
+            title: 'Isi kartu "Ringkasan pagi"',
+            columns: ['Bagian', 'Isinya'],
+            rows: [
+              ['Kalimat pembuka', 'Sapaan dan jumlah hal yang perlu Anda tindak hari ini, misalnya persetujuan yang menunggu dan tugas yang lewat tenggat.'],
+              ['Baris', 'Satu hal per baris: jumlahnya, tingkatnya ("Mendesak", "Perlu perhatian", atau "Info"), sudah berapa lama menunggu, dan paling banyak tiga contoh. Klik baris untuk membuka halamannya.'],
+              ['Angka modul', 'Sesuai peran Anda. Contoh: customer dormant untuk Sales, stok minus untuk Warehouse, PO terlambat untuk Procurement, eskalasi dan batch Data Accurate untuk Supervisor dan Head.'],
+            ],
+          },
+          {
+            type: 'steps',
+            title: 'Memakai ringkasan pagi',
+            items: [
+              'Buka "Dashboard". Baca kalimat pembuka, lalu kerjakan dari baris paling atas.',
+              'Klik sebuah baris untuk membuka halamannya.',
+              'Klik ikon "Tanya Prakasa AI tentang ini" di kanan baris bila ingin dibantu. Panel Prakasa AI terbuka dengan pertanyaan yang sudah tertulis; periksa, lalu kirim sendiri.',
+              'Klik "Ciutkan ringkasan pagi" di pojok kartu bila hanya ingin melihat kalimat pembukanya. Pilihan ini diingat di browser Anda.',
+            ],
+          },
+          { type: 'tips', items: ['Ringkasan diperbarui setiap beberapa menit. Klik "Muat ulang" untuk angka terbaru.', 'Tidak ingin melihat kartu ini? Buka "Akun saya", bagian "Beranda", lalu matikan "Tampilkan ringkasan pagi di beranda".', 'Bertanya "Apa yang perlu saya kerjakan hari ini?" ke Prakasa AI memberi daftar yang sama.'] },
+          { type: 'note', text: 'Ringkasan pagi tidak mengirim notifikasi atau email, dan tidak menampilkan nilai rupiah. Cuti, absensi, dan gaji ada di KantorKu, bukan di sini.' },
+        ],
+      },
+      {
+        id: 'menu-samping',
+        title: 'Membaca menu samping',
+        body: [
+          { type: 'p', text: 'Menu di sebelah kiri hanya berisi halaman yang boleh Anda buka. Menu orang lain bisa berbeda karena disesuaikan dengan divisi dan peran masing-masing.' },
+          {
+            type: 'list',
+            items: [
+              'Paling atas: "Dashboard", "Notifikasi", dan "Prakasa AI".',
+              'Di bawahnya: pekerjaan divisi Anda sendiri, supaya paling mudah dijangkau.',
+              'Lalu grup lain: "Kerja harian", "Komunikasi", "Dokumen", modul divisi, "Laporan", dan administrasi (khusus admin).',
+              'Grup dengan beberapa menu bisa dibuka-tutup; aplikasi mengingat pilihan Anda di browser ini.',
+            ],
+          },
+          {
+            type: 'steps',
+            title: 'Di laptop dan ponsel',
+            items: [
+              'Di layar lebar, klik ikon garis tiga ("Buka menu utama") di kiri atas untuk mengecilkan menu menjadi ikon saja.',
+              'Di ponsel atau layar kecil, menu tersembunyi. Ketuk ikon garis tiga untuk membukanya, lalu pilih halaman.',
+            ],
+          },
+          { type: 'note', text: 'Membuka alamat halaman yang bukan untuk peran Anda (misalnya dari tautan yang dikirim orang lain) akan mengembalikan Anda ke Dashboard. Itu normal, bukan error.' },
+        ],
+      },
+      {
+        id: 'pencarian',
+        title: 'Mencari menu dan data',
+        body: [
+          { type: 'p', text: 'Kotak "Cari di Prakasa Workspace" ada di tengah bar atas. Di ponsel, kotak ini menjadi ikon kaca pembesar "Cari".' },
+          {
+            type: 'steps',
+            items: [
+              'Klik kotak pencarian, lalu ketik nama menu atau kata kunci.',
+              'Bagian "Modul" menampilkan menu yang cocok. Klik untuk membukanya.',
+              'Untuk mencari data (dokumen, task, pelanggan, perangkat, dan lainnya), pilih "Cari "…" di semua modul". Halaman "Pencarian" terbuka.',
+              'Di halaman "Pencarian", saring hasil dengan chip jenis data (Dokumen, Task, Pelanggan, dan seterusnya).',
+            ],
+          },
+          { type: 'note', text: 'Pencarian hanya menampilkan data yang boleh Anda buka. Bila tertulis "Sebagian modul gagal dimuat", hasilnya mungkin belum lengkap; coba lagi sebentar lagi.' },
+        ],
+      },
+      {
+        id: 'notifikasi',
+        title: 'Notifikasi dan email',
+        route: '/notifications',
+        audience: { permissions: ['notification.view'] },
+        body: [
+          { type: 'p', text: 'Ikon lonceng "Notifikasi" di bar atas menampilkan titik bila ada yang belum dibaca. Klik untuk melihat 3 notifikasi terakhir, atau "Lihat semua notifikasi" untuk halaman lengkap.' },
+          {
+            type: 'steps',
+            title: 'Di halaman "Notifikasi"',
+            items: [
+              'Pilih chip "Semua", "Belum dibaca", atau "Dibaca".',
+              'Saring dengan "Jenis notifikasi", "Terkait dengan", serta tanggal "Dari" dan "Sampai". Klik "Hapus filter" untuk kembali.',
+              'Klik sebuah notifikasi atau pilih "Buka" di menu titik tiga untuk menuju halamannya.',
+              'Klik "Tandai dibaca" / "Tandai belum dibaca" per notifikasi, atau "Tandai semua dibaca" sekaligus.',
+              'Untuk merapikan daftar, buka "Aksi lainnya" lalu "Bersihkan yang dibaca". Notifikasi yang belum dibaca tidak ikut terhapus.',
+            ],
+          },
+          {
+            type: 'table',
+            title: 'Kapan Anda menerima notifikasi',
+            columns: ['Saluran', 'Kapan', 'Contoh'],
+            rows: [
+              ['Di aplikasi (lonceng)', 'Ada yang menyangkut pekerjaan atau permintaan Anda sendiri.', 'Tugas untuk Anda, status tiket Anda berubah, komentar untuk Anda, tenggat Anda.'],
+              ['Di aplikasi + email', 'Ada yang menunggu keputusan atau tindakan Anda, dan terlambat itu merugikan perusahaan.', 'Approval dan pengingatnya, tanda tangan, data Accurate menunggu persetujuan, tugas onboarding/offboarding, pembayaran dibayar atau ditolak.'],
+              ['Tidak dikirim', 'Perubahan kecil yang sudah terlihat di Project Tracker atau Space Google Chat.', 'Kartu dipindah, checklist, watcher, sprint.'],
+            ],
+          },
+          { type: 'tips', items: ['Email dari aplikasi selalu berjudul diawali "[Prakasa Workspace]" dan berisi tautan ke halamannya.', 'Pengingat harian dikirim paling banyak sekali sehari untuk hal yang sama.'] },
+        ],
+      },
+      {
+        id: 'akun',
+        title: 'Akun, profil, dan keluar',
+        body: [
+          { type: 'p', text: 'Klik foto atau inisial Anda di kanan atas ("Menu akun") untuk melihat nama dan email akun yang sedang dipakai, serta tombol "Keluar".' },
+          {
+            type: 'list',
+            items: [
+              'Nama, email kerja, dan divisi diatur oleh Administrator Sistem di menu Pengguna.',
+              'Jabatan, atasan, telepon kerja, dan lokasi diatur oleh People & Culture di Direktori.',
+              'Absensi, cuti, dan slip gaji tetap di KantorKu. Prakasa Workspace tidak menyimpan data itu.',
+            ],
+          },
+          { type: 'tips', items: ['Selalu klik "Keluar" bila memakai komputer bersama.'] },
+        ],
+      },
+      {
+        id: 'bahasa',
+        title: 'Bahasa / Language',
+        body: [
+          { type: 'p', text: 'Prakasa Workspace bisa ditampilkan dalam bahasa Indonesia atau bahasa Inggris. Tombol "ID | EN" ada di bar atas, di sebelah lonceng notifikasi, dan di pojok kanan atas halaman "Masuk".' },
+          {
+            type: 'steps',
+            items: [
+              'Klik "EN" untuk bahasa Inggris, atau "ID" untuk kembali ke bahasa Indonesia. Di ponsel tombolnya satu: ketuk untuk berganti bahasa.',
+              'Halaman dimuat ulang, lalu semua menu, tombol, dan keterangan tampil dalam bahasa yang dipilih.',
+              'Pilihan bahasa tersimpan di akun Anda dan di browser yang dipakai. Saat Anda masuk di komputer atau browser lain, bahasa akun Anda langsung dipakai.',
+            ],
+          },
+          {
+            type: 'list',
+            title: 'Yang tidak ikut diterjemahkan',
+            items: [
+              'Data dari Accurate: nama pelanggan, barang, pemasok, gudang, dan nomor dokumen.',
+              'Semua yang diketik orang: judul, catatan, alasan, komentar, isi email dan chat.',
+              'Dokumen cetak dan ekspor (surat jalan, invoice, BAST) tetap berbahasa Indonesia.',
+              'Jawaban Prakasa AI mengikuti bahasa pertanyaan Anda.',
+            ],
+          },
+          { type: 'note', text: 'Angka dan rupiah ditulis sama di kedua bahasa, misalnya Rp 1.250.000. Tanggal dan jam mengikuti bahasa yang dipilih.' },
+        ],
+      },
+      {
+        id: 'bantuan-it-cepat',
+        title: 'Tombol "Butuh bantuan IT"',
+        audience: { permissions: ['it_ticket.create'] },
+        body: [
+          { type: 'p', text: 'Ada masalah laptop, akun, software, atau internet? Pakai tombol "Butuh bantuan IT" di bar atas, dari halaman mana pun.' },
+          {
+            type: 'steps',
+            items: [
+              'Klik "Butuh bantuan IT".',
+              'Pilih "Jenis masalah": Perangkat rusak atau bermasalah, Akses, akun, atau software, Internet atau jaringan, atau Minta perangkat baru.',
+              'Isi "Judul singkat" (contoh: Laptop tidak bisa menyala) dan "Ceritakan masalahnya": apa yang terjadi, sejak kapan, apa yang sudah dicoba.',
+              'Pilih "Urgensi" dan, bila terkait, "Perangkat".',
+              'Klik "Kirim ke tim IT". Permintaan menjadi tiket di Tiket IT; klik "Lihat tiket" untuk memantaunya.',
+            ],
+          },
+          { type: 'warning', text: 'Jangan menulis password di formulir ini.' },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== KERJA HARIAN
+  {
+    id: 'kerja-harian',
+    part: KERJA,
+    title: 'Kerja harian',
+    icon: 'work',
+    scope: 'general',
+    who: 'Semua karyawan (setiap bagian muncul sesuai akses Anda).',
+    summary: 'Alat yang dipakai semua divisi setiap hari: Project Tracker, Kalender, Tiket IT, Layanan GA, Direktori, dan Pengajuan pembayaran.',
+    sections: [
+      {
+        id: 'project-tracker',
+        title: 'Project Tracker',
+        route: '/projects',
+        audience: { permissions: ['google.chat.use'] },
+        body: [
+          { type: 'p', text: 'Setiap Space Google Chat bisa punya project sendiri: board, backlog, sprint, dan laporan. Menu "Project Tracker" menampilkan semua project yang Anda ikuti, dengan jumlah issue belum selesai, dikerjakan, selesai, dan terlambat.' },
+          {
+            type: 'steps',
+            title: 'Mengaktifkan project di sebuah Space',
+            items: [
+              'Buka "Google Chat", pilih Space tim Anda, lalu tab "Tugas".',
+              'Isi "Kunci project": 2–10 huruf kapital atau angka, misalnya MKT. Issue akan bernomor MKT-1, MKT-2, dan seterusnya.',
+              'Nyalakan "Kirim update ke space" bila ingin perubahan diumumkan di Space.',
+              'Klik "Aktifkan project tracker".',
+            ],
+          },
+          {
+            type: 'steps',
+            title: 'Membuat dan mengerjakan issue',
+            items: [
+              'Klik "Buat issue".',
+              'Pilih "Tipe" (Task, Bug, Story, Epic, Sub-task), isi "Judul", "Deskripsi", "Prioritas", "Penanggung jawab", "Jatuh tempo", dan bila perlu "Sprint".',
+              'Simpan. Issue muncul di kolom pertama board ("To Do").',
+              'Seret kartu ke "In Progress", "In Review", lalu "Done" sesuai kemajuan.',
+              'Klik kartu untuk membuka detail: menulis komentar ("Kirim komentar"), menambah sub-issue, atau "Salin tautan".',
+            ],
+          },
+          {
+            type: 'table',
+            title: 'Tampilan',
+            columns: ['Tampilan', 'Gunanya'],
+            rows: [
+              ['Papan', 'Kartu per kolom status. Bila tertulis "Melebihi batas WIP", kolom itu terlalu penuh.'],
+              ['Backlog', 'Daftar issue per sprint. Seret issue antar-sprint, "Buat sprint", "Mulai sprint", "Selesaikan sprint".'],
+              ['Daftar', 'Semua issue dalam tabel, bisa dicari dan disaring.'],
+              ['Laporan', 'Per status, per tipe, per anggota, burndown sprint aktif, dan velocity.'],
+            ],
+          },
+          { type: 'note', text: 'Anda mendapat notifikasi bila issue ditugaskan ke Anda, ada komentar di issue Anda, atau issue Anda selesai/dibuka lagi. Perpindahan kartu tidak dikirim sebagai notifikasi karena sudah terlihat di board dan Space.' },
+        ],
+      },
+      {
+        id: 'papan-tugas',
+        title: 'Papan tugas dan task',
+        route: '/tasks',
+        audience: { permissions: ['task.view'] },
+        body: [
+          { type: 'p', text: 'Task juga bisa datang dari Prakasa AI, Google Chat, atau dibuat manual. Task yang ditugaskan ke Anda muncul di notifikasi; klik untuk membuka detailnya.' },
+          {
+            type: 'steps',
+            items: [
+              'Buka task dari notifikasi atau dari papannya.',
+              'Perbarui "Status", "Progres (%)", atau "Jatuh tempo" bila perlu.',
+              'Klik "Tandai selesai" bila pekerjaan beres. Bila ternyata belum, klik "Buka kembali task".',
+            ],
+          },
+          { type: 'table', columns: ['Status', 'Artinya'], rows: [['Terbuka', 'Belum dikerjakan.'], ['Dikerjakan', 'Sedang dikerjakan.'], ['Review', 'Menunggu diperiksa.'], ['Selesai', 'Sudah beres.'], ['Dibatalkan', 'Tidak jadi dikerjakan.']] },
+        ],
+      },
+      {
+        id: 'papan-tugas-kelola',
+        title: 'Mengelola board dan menghapus task',
+        route: '/tasks',
+        audience: { permissions: ['board.manage'], levels: SUP },
+        body: [
+          { type: 'p', text: 'Supervisor dan Head dapat membuat board baru ("Tambah board"), mengatur dependensi task, dan menghapus task ("Hapus task") di divisinya.' },
+          { type: 'warning', text: 'Task yang dihapus tidak bisa dikembalikan. Bila ragu, ubah statusnya menjadi "Dibatalkan".' },
+        ],
+      },
+      {
+        id: 'kalender',
+        title: 'Kalender dan rapat',
+        route: '/calendar',
+        audience: { permissions: ['meeting.view'] },
+        body: [
+          { type: 'p', text: '"Kalender" menampilkan Google Calendar Anda. Pilih tampilan "Hari", "Minggu", "Bulan", atau "Agenda", dan pindah tanggal dengan "Hari ini", "Sebelumnya", "Berikutnya".' },
+          {
+            type: 'steps',
+            title: 'Membuat event atau rapat',
+            items: [
+              'Klik "Buat event".',
+              'Isi "Judul", "Lokasi", dan "Deskripsi".',
+              'Atur "Tanggal mulai", "Jam mulai", "Tanggal selesai", "Jam selesai" (zona waktu WIB), atau centang "Seharian".',
+              'Ketik email tamu di "Tambah tamu" lalu tekan Enter. Centang "Tambahkan Google Meet" untuk rapat online.',
+              'Klik "Simpan event". Tamu menerima undangan dari Google Calendar.',
+            ],
+          },
+          { type: 'tips', items: ['Jawab undangan dengan "Hadir?": Ya, Mungkin, atau Tidak.', 'Klik "Gabung dengan Google Meet" dari detail event untuk masuk rapat.', 'Mengubah event berulang hanya berlaku untuk kejadian yang Anda buka.'] },
+        ],
+      },
+      {
+        id: 'tiket-it',
+        title: 'Tiket IT',
+        route: '/it/tickets',
+        audience: { permissions: ['it_ticket.view'] },
+        body: [
+          { type: 'p', text: 'Semua kebutuhan IT diajukan lewat tiket, supaya tercatat dan bisa dipantau. Cara tercepat: tombol "Butuh bantuan IT" di bar atas. Bisa juga dari menu "Tiket IT".' },
+          {
+            type: 'steps',
+            title: 'Membuat tiket dari menu Tiket IT',
+            items: [
+              'Klik "Buat tiket".',
+              'Pilih "Kategori": Kerusakan perangkat, Permintaan perangkat baru, Akses dan software, atau Jaringan dan konektivitas.',
+              'Pilih "Prioritas", isi "Judul" dan "Deskripsi", dan pilih "Perangkat terkait" bila ada.',
+              'Klik "Ajukan tiket".',
+              'Pantau statusnya di daftar. Balas pertanyaan tim IT di bagian "Percakapan" lewat "Kirim tanggapan".',
+            ],
+          },
+          {
+            type: 'table',
+            columns: ['Status', 'Artinya', 'Yang perlu Anda lakukan'],
+            rows: [
+              ['Terbuka', 'Tiket diterima, belum dikerjakan.', 'Tunggu. Anda masih bisa membatalkannya.'],
+              ['Sedang dikerjakan', 'Tim IT sedang menangani.', 'Tunggu kabar.'],
+              ['Menunggu respons pengaju', 'Tim IT butuh jawaban Anda.', 'Balas di "Percakapan".'],
+              ['Selesai', 'Masalah sudah ditangani.', 'Periksa hasilnya.'],
+              ['Ditutup / Dibatalkan', 'Tiket berakhir.', 'Buat tiket baru bila masalah muncul lagi.'],
+            ],
+          },
+          { type: 'note', text: 'Anda mendapat notifikasi di aplikasi setiap kali status tiket berubah atau ada tanggapan baru.' },
+        ],
+      },
+      {
+        id: 'layanan-ga',
+        title: 'Layanan GA: ATK, perbaikan, dan pinjam ruang',
+        route: '/ga',
+        audience: { permissions: ['ga.request.create'] },
+        body: [
+          { type: 'p', text: '"Layanan GA" dipakai untuk meminta ATK, melaporkan kerusakan fasilitas, dan memesan ruang rapat. Permintaan diproses GA (bagian People & Culture).' },
+          {
+            type: 'steps',
+            title: 'Membuat permintaan',
+            items: [
+              'Klik "Buat permintaan" lalu pilih jenisnya.',
+              'ATK: isi "Lokasi", "Nama barang", "Jumlah", "Satuan" (rim, pcs, box). Klik "Tambah baris" untuk barang lain, lalu "Kirim permintaan".',
+              'Perbaikan fasilitas: isi "Area atau objek" dan "Uraian kerusakan", lampirkan "Foto" bila ada. Centang "Mendesak (target 1 hari)" bila perlu. Klik "Laporkan kerusakan".',
+              'Lainnya: isi "Judul" dan "Uraian", lalu "Ajukan permintaan". Jenis ini disetujui atasan dulu, lalu diproses People & Culture (target 5 hari).',
+              'Pantau di tab "Permintaan saya".',
+            ],
+          },
+          {
+            type: 'steps',
+            title: 'Memesan ruang',
+            items: [
+              'Klik "Buat permintaan" lalu "Pinjam ruang".',
+              'Pilih "Ruang", "Tanggal", "Mulai", "Selesai", dan isi "Keperluan".',
+              'Periksa keterangan jadwal: bila tertulis "Sudah terpakai" atau "bentrok", pilih jam lain.',
+              'Klik "Pesan ruang". Bila ruang kosong, pesanan langsung terkonfirmasi.',
+            ],
+          },
+          { type: 'note', text: 'Pinjam kendaraan dilakukan lewat TrackCar (tombol "Pinjam kendaraan" membuka TrackCar di tab baru), bukan di Prakasa Workspace.' },
+          {
+            type: 'table',
+            title: 'Status permintaan dan pemesanan',
+            columns: ['Status', 'Artinya'],
+            rows: [
+              ['Menunggu approval', 'Menunggu persetujuan atasan (permintaan "Lainnya") atau pengelola ruang.'],
+              ['Baru', 'Masuk antrean GA.'],
+              ['Diproses', 'Sedang dikerjakan GA.'],
+              ['Selesai', 'Permintaan beres.'],
+              ['Terkonfirmasi', 'Ruang sudah dipesan untuk Anda.'],
+              ['Kedaluwarsa', 'Pemesanan tidak disetujui sampai jam mulai.'],
+              ['Ditolak / Dibatalkan', 'Tidak dilanjutkan. Lihat catatannya di detail.'],
+            ],
+          },
+          { type: 'tips', items: ['Pemesanan ruang paling lama 12 jam dan paling jauh 90 hari ke depan.', 'Tidak jadi memakai ruang? Buka pemesanannya lalu klik "Batalkan" supaya ruang bisa dipakai orang lain.'] },
+        ],
+      },
+      {
+        id: 'layanan-ga-setuju',
+        title: 'Menyetujui permintaan GA tim Anda',
+        route: '/ga',
+        audience: { permissions: ['ga.request.create'], levels: SUP },
+        body: [
+          { type: 'p', text: 'Permintaan GA jenis "Lainnya" dari anggota tim menunggu persetujuan atasan langsung atau Head divisi. Anda menerima notifikasi dan email "Permintaan GA menunggu persetujuan Anda".' },
+          { type: 'steps', items: ['Buka notifikasi atau kartu "Layanan GA menunggu persetujuan Anda" di Dashboard.', 'Baca uraiannya.', 'Klik "Setujui" atau "Tolak" (tulis alasannya). Target waktu 5 hari dihitung sejak disetujui.'] },
+        ],
+      },
+      {
+        id: 'direktori',
+        title: 'Direktori karyawan',
+        route: '/people/directory',
+        audience: { permissions: ['people.directory.view'] },
+        body: [
+          { type: 'p', text: '"Direktori" berisi kontak kerja, jabatan, atasan langsung, dan lokasi kerja setiap orang. Pilih tampilan "Daftar" atau "Bagan" (struktur organisasi).' },
+          { type: 'steps', items: ['Ketik di "Cari nama, email kerja, atau jabatan".', 'Saring dengan "Divisi", "Lokasi", atau "Akun".', 'Klik nama untuk membuka "Profil kerja": kontak kerja dan bawahan langsung.'] },
+          { type: 'note', text: 'Direktori hanya berisi data kerja. Data pribadi, absensi, cuti, dan gaji tetap di KantorKu.' },
+        ],
+      },
+      {
+        id: 'pengajuan-pembayaran',
+        title: 'Pengajuan pembayaran dan reimbursement',
+        route: '/finance/payment-requests',
+        audience: { permissions: ['finance.request'] },
+        body: [
+          { type: 'p', text: 'Semua divisi mengajukan pembayaran ke pemasok dan reimbursement karyawan lewat "Pengajuan pembayaran". Pengajuan disetujui atasan, diperiksa kelengkapannya, lalu dibayar Finance.' },
+          {
+            type: 'table',
+            columns: ['Jenis', 'Untuk', 'Lampiran'],
+            rows: [
+              ['Pengajuan pembayaran', 'Membayar pemasok atau pihak lain, termasuk tagihan GA dan langganan IT.', 'Invoice.'],
+              ['Reimbursement', 'Mengganti uang pribadi yang Anda pakai untuk keperluan kantor. Dibayar ke rekening payroll Anda (data di KantorKu).', 'Kuitansi atau nota.'],
+            ],
+          },
+          {
+            type: 'steps',
+            title: 'Membuat pengajuan',
+            items: [
+              'Klik "Buat pengajuan".',
+              'Pilih "Jenis pengajuan".',
+              'Isi "Rincian": "Judul", "Kategori", dan "Keterangan dan referensi".',
+              'Untuk pembayaran pemasok, isi "Penerima": nama, bank, nomor rekening, atas nama. Kosongkan bila dibayar lewat virtual account atau tagihan.',
+              'Isi "Subtotal" dan "Pajak"; "Total" terhitung otomatis. Isi "Tanggal bayar yang diminta" dan, untuk pemasok, "Jatuh tempo".',
+              'Klik "Simpan draf".',
+              'Di halaman detail, klik "Lampirkan" untuk mengunggah invoice/nota (PDF atau foto, paling besar 10 MB; disimpan di Shared Drive).',
+              'Klik "Ajukan". Penyetuju ditentukan otomatis.',
+            ],
+          },
+          {
+            type: 'table',
+            title: 'Status',
+            columns: ['Status', 'Artinya', 'Yang perlu Anda lakukan'],
+            rows: [
+              ['Draf', 'Belum dikirim.', 'Lengkapi lalu klik "Ajukan".'],
+              ['Menunggu persetujuan', 'Menunggu keputusan atasan.', 'Tunggu notifikasi.'],
+              ['Perlu revisi', 'Penyetuju minta perbaikan.', 'Klik "Ubah", perbaiki, lalu ajukan lagi.'],
+              ['Disetujui', 'Sudah disetujui, menunggu dibayar Finance.', 'Tunggu.'],
+              ['Diproses', 'Finance sedang memproses pembayaran.', 'Tunggu.'],
+              ['Dibayar', 'Uang sudah dibayarkan.', 'Selesai. Anda mendapat notifikasi dan email.'],
+              ['Ditolak / Dibatalkan', 'Tidak dibayar.', 'Baca alasannya di "Riwayat".'],
+            ],
+          },
+          { type: 'tips', items: ['Lampirkan dokumen sebelum mengajukan; pemeriksaan dokumen melihat kelengkapan lampiran.', 'Draf yang tidak jadi bisa dihapus lewat "Aksi lainnya" → "Hapus draf".'] },
+        ],
+      },
+      {
+        id: 'pengajuan-setuju',
+        title: 'Menyetujui pengajuan pembayaran',
+        route: '/finance/payment-requests',
+        audience: { permissions: ['finance.request', 'finance.view'], levels: SUP },
+        body: [
+          { type: 'p', text: 'Bila Anda penyetuju, pengajuan anggota tim muncul di Dashboard ("Pembayaran menunggu persetujuan Anda") dan Anda mendapat email.' },
+          {
+            type: 'steps',
+            items: [
+              'Buka pengajuan dari notifikasi. Banner "Menunggu keputusan Anda" tampil di atas.',
+              'Periksa "Rincian", "Penerima dan nilai", dan "Lampiran". Kartu "Pemeriksaan dokumen" menunjukkan apakah lampiran "Lengkap" atau "Belum lengkap".',
+              'Klik "Setujui", "Minta revisi" (pengaju memperbaiki), atau "Tolak". Tulis alasan yang jelas.',
+            ],
+          },
+          { type: 'note', text: 'Pemeriksaan dokumen hanya melihat kelengkapan lampiran. AI boleh memberi catatan, tetapi keputusan tetap di tangan penyetuju.' },
+        ],
+      },
+      {
+        id: 'pengajuan-proses-finance',
+        title: 'Memproses dan membayar pengajuan (Finance)',
+        route: '/finance/payment-requests',
+        audience: { permissions: ['finance.manage', 'finance.process', 'finance.approve'] },
+        body: [
+          { type: 'p', text: 'Tim Finance melihat semua pengajuan dari semua divisi. Pengajuan yang sudah "Disetujui" menunggu dibayar.' },
+          {
+            type: 'steps',
+            items: [
+              'Saring daftar dengan chip status "Disetujui".',
+              'Buka pengajuan, klik "Periksa" di kartu "Pemeriksaan dokumen" bila belum diperiksa.',
+              'Klik "Proses" saat mulai membayar. Pengaju menerima notifikasi "sedang diproses".',
+              'Setelah transfer dicatat di Accurate, klik "Tandai dibayar" dan isi "Nomor bukti di Accurate".',
+            ],
+          },
+          { type: 'warning', text: 'Aplikasi tidak menulis ke Accurate. Catat pembayarannya di Accurate seperti biasa, lalu salin nomor buktinya ke sini.' },
+        ],
+      },
+      {
+        id: 'tugas-onboarding',
+        title: 'Tugas onboarding/offboarding dari People & Culture',
+        body: [
+          { type: 'p', text: 'Saat ada karyawan baru atau karyawan keluar, People & Culture bisa memberi Anda tugas checklist (misalnya menyiapkan meja kerja atau serah terima pekerjaan). Anda menerima notifikasi dan email.' },
+          { type: 'steps', items: ['Klik tautan di notifikasi atau email untuk membuka alurnya.', 'Kerjakan tugas Anda sebelum tenggat.', 'Tandai tugas Anda selesai di checklist.'] },
+          { type: 'note', text: 'Bila terlambat, Anda menerima pengingat "terlambat" lewat notifikasi dan email.' },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== KOMUNIKASI
+  {
+    id: 'komunikasi',
+    part: KERJA,
+    title: 'Komunikasi: Gmail, Google Chat, Groups',
+    icon: 'forum',
+    scope: 'general',
+    audience: { permissions: ['google.mail.use', 'google.chat.use', 'google.groups.view'] },
+    who: 'Semua karyawan dengan akun Google kantor.',
+    summary: 'Gmail, Google Chat, dan Google Groups langsung di dalam Prakasa Workspace. Setiap orang hanya melihat email, chat, dan grupnya sendiri.',
+    sections: [
+      {
+        id: 'gmail',
+        title: 'Gmail',
+        route: '/mail',
+        audience: { permissions: ['google.mail.use'] },
+        body: [
+          { type: 'steps', title: 'Menulis email', items: ['Klik "Tulis email".', 'Isi "Kepada" (klik "Tambah Cc/Bcc" bila perlu), "Subjek", dan "Pesan".', 'Klik "Kirim email", atau "Simpan draf" untuk dilanjutkan nanti.'] },
+          { type: 'list', title: 'Yang bisa dilakukan pada email', items: ['"Balas", "Balas semua", "Teruskan".', '"Arsipkan", "Pindahkan ke sampah", "Tandai belum dibaca", "Beri bintang".', 'Folder: Kotak masuk, Berbintang, Terkirim, Draf, Spam, Sampah.'] },
+          { type: 'warning', text: 'Gambar dari luar disembunyikan demi keamanan. Klik "Tampilkan gambar" hanya bila Anda mengenal pengirimnya.' },
+        ],
+      },
+      {
+        id: 'google-chat',
+        title: 'Google Chat',
+        route: '/chat',
+        audience: { permissions: ['google.chat.use'] },
+        body: [
+          { type: 'steps', items: ['Klik "Chat baru" lalu pilih "Pesan langsung", "Grup chat", atau "Space".', 'Cari orang atau Space di kotak "Cari orang, space, atau aplikasi".', 'Lampirkan file dari "Unggah dari komputer" atau "Google Drive".'] },
+          { type: 'tips', items: ['Setiap Space punya tab "Chat", "File", dan "Tugas" (Project Tracker).', 'Pengelola Space dapat "Kelola anggota" dan "Tambahkan orang".'] },
+        ],
+      },
+      {
+        id: 'groups',
+        title: 'Google Groups',
+        route: '/groups',
+        audience: { permissions: ['google.groups.view'] },
+        body: [
+          { type: 'p', text: 'Tab "Grup saya" berisi grup yang Anda ikuti; "Semua grup" berisi grup perusahaan. Pakai "Kirim email ke grup" atau "Salin email".' },
+          { type: 'note', text: 'Anggota grup hanya bisa dilihat oleh anggota grup itu dan admin.' },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== DOKUMEN
+  {
+    id: 'dokumen',
+    part: KERJA,
+    title: 'Dokumen, template, dan tanda tangan',
+    icon: 'folder_open',
+    scope: 'general',
+    audience: { permissions: ['document.view', 'template.view', 'mydrive.view', 'google.docs.use', 'signature.view', 'letterhead.view'] },
+    who: 'Semua karyawan. Dokumen divisi hanya terlihat oleh anggota divisinya.',
+    summary: 'Semua dokumen kerja disimpan di Google Shared Drive divisi Anda. Dari sini Anda membuat dokumen dari template berkop divisi, membuat BAST, meminta dan memberi tanda tangan, serta membuka My Drive pribadi.',
+    sections: [
+      {
+        id: 'penyimpanan-divisi',
+        title: 'Penyimpanan divisi (Shared Drive)',
+        route: '/division-storage',
+        audience: { permissions: ['document.view'] },
+        body: [
+          { type: 'p', text: '"Penyimpanan divisi" membuka folder Shared Drive divisi Anda. Semua dokumen resmi divisi disimpan di sini, bukan di laptop atau My Drive pribadi.' },
+          {
+            type: 'steps',
+            items: [
+              'Buka menu "Penyimpanan divisi". Bila Anda punya lebih dari satu divisi, pilih "Divisi".',
+              'Klik folder untuk masuk. Klik file untuk membukanya di Google Docs, Sheets, atau Slides.',
+              'Untuk dokumen baru, klik "Buat baru" lalu pilih Dokumen, Spreadsheet, atau Slide.',
+            ],
+          },
+          { type: 'note', text: 'File yang dihapus dipindahkan ke sampah Shared Drive divisi, bukan langsung hilang. Bila tertulis "Belum ada folder divisi", akun Anda belum terhubung ke divisi yang punya Shared Drive; hubungi Administrator Sistem.' },
+        ],
+      },
+      {
+        id: 'template-dokumen',
+        title: 'Membuat dokumen dari template',
+        route: '/doc-templates',
+        audience: { permissions: ['template.view'] },
+        body: [
+          { type: 'p', text: '"Template dokumen" berisi template Google Docs (surat, memo, BAST, dan lainnya) yang otomatis memakai kop & footer divisi Anda. Dokumen yang dibuat langsung tersimpan di Shared Drive divisi dan diberi nomor.' },
+          {
+            type: 'steps',
+            items: [
+              'Buka "Template dokumen", tab "Template". Pakai chip "Divisi saya" untuk menyaring.',
+              'Klik template yang diinginkan.',
+              'Klik "Buat dokumen".',
+              'Isi "Judul dokumen" (boleh dikosongkan; nama file otomatis diakhiri nomor dokumen).',
+              'Lengkapi bagian "Isian". Nomor, tanggal, perusahaan, divisi, dan pembuat terisi otomatis.',
+              'Klik "Buat dokumen", lalu "Buka di Google Docs" untuk memeriksa hasilnya.',
+            ],
+          },
+          { type: 'tips', items: ['Nomor dokumen berbentuk AWALAN-TAHUNBULAN-URUT, misalnya ST-202610-0001.', 'Semua dokumen yang pernah dibuat ada di tab "Dokumen dibuat".', 'Bila muncul "Kop divisi belum diatur", minta Head divisi mengatur kop di tab "Kop & footer".'] },
+        ],
+      },
+      {
+        id: 'template-kelola',
+        title: 'Menambah template dan mengatur kop & footer',
+        route: '/doc-templates',
+        audience: { permissions: ['template.manage'] },
+        body: [
+          {
+            type: 'steps',
+            title: 'Menambah template',
+            items: [
+              'Di tab "Template", klik "Tambah template".',
+              'Isi "Nama template" (misalnya Surat tugas), pilih "Untuk" (divisi), dan "Sumber": "Template kosong" atau "Salin dari Google Docs" (tempel tautannya).',
+              'Isi "Awalan nomor" (2–12 huruf/angka, misalnya ST) dan "Keterangan".',
+              'Klik "Buat template". Lalu klik "Ubah di Google Docs" dan tulis isian sebagai {{nama_isian}}.',
+              'Setelah mengubah di Google Docs, klik "Periksa isian" agar formulirnya ikut berubah.',
+            ],
+          },
+          {
+            type: 'steps',
+            title: 'Mengatur kop & footer divisi',
+            items: [
+              'Buka tab "Kop & footer", lalu pilih divisi.',
+              'Pilih "Tata letak": "Logo kiri", "Tengah", atau "Gambar kop surat".',
+              'Isi "Nama perusahaan", "Warna aksen", "Baris di bawah nama", dan unggah "Logo" (PNG/JPG, maksimal 1 MB).',
+              'Isi "Teks footer" dan pilih "Tampilkan nomor halaman" bila perlu. Periksa "Pratinjau", lalu simpan.',
+            ],
+          },
+          { type: 'warning', text: 'Menyimpan kop dari aplikasi akan menimpa perubahan kop yang dibuat langsung di Google Docs.' },
+          { type: 'note', text: 'Divisi tanpa kop memakai kop seluruh perusahaan. Template yang tidak dipakai lagi cukup dimatikan lewat "Ubah" lalu "Template dipakai".' },
+        ],
+      },
+      {
+        id: 'bast',
+        title: 'BAST (berita acara serah terima)',
+        audience: { permissions: ['template.view', 'device.handover.manage'] },
+        body: [
+          { type: 'p', text: 'BAST perangkat dan nomor perusahaan dibuat dari tempat serah terimanya, supaya data barangnya terisi otomatis dari aplikasi.' },
+          {
+            type: 'table',
+            columns: ['BAST', 'Dibuat dari'],
+            rows: [
+              ['Serah terima / pengembalian perangkat', 'IT → Perangkat → buka perangkat → "Riwayat pemakaian" → "Buat BAST serah terima perangkat" atau "Buat BAST pengembalian perangkat".'],
+              ['Serah terima / pengembalian nomor', 'Infrastruktur IT → tab "Telepon & HP" → "BAST serah terima" atau "BAST pengembalian".'],
+              ['BAST lain', 'Template dokumen → template BAST → "Buat dokumen".'],
+            ],
+          },
+          { type: 'p', text: 'Kondisi barang dipilih dari: Sangat baik, Baik, Cukup, Kurang, atau Rusak. Dokumen BAST tersimpan di Shared Drive divisi.' },
+          { type: 'note', text: 'Bila tertulis "Template BAST belum disiapkan", pengelola template perlu menekan "Siapkan template BAST" sekali.' },
+        ],
+      },
+      {
+        id: 'tanda-tangan',
+        title: 'Permintaan tanda tangan',
+        route: '/signatures',
+        audience: { permissions: ['signature.view'] },
+        body: [
+          { type: 'p', text: 'Dokumen yang perlu ditandatangani dibuka dari pratinjau dokumen atau dari notifikasi "Dokumen menunggu tanda tangan Anda" (juga dikirim lewat email).' },
+          {
+            type: 'steps',
+            items: [
+              'Buka notifikasi atau kartu di Dashboard.',
+              'Baca dokumen dan ringkasannya. Bila ada kartu "Cek awal tanda tangan (AI)", periksa temuannya.',
+              'Klik "Tanda tangani dokumen", lalu "Tanda tangani".',
+              'Aplikasi memberi kode verifikasi. Dokumen bisa diperiksa keasliannya lewat QR verifikasi.',
+            ],
+          },
+          { type: 'table', columns: ['Status', 'Artinya'], rows: [['Menunggu', 'Belum ditandatangani.'], ['Disetujui', 'Approval sudah lengkap.'], ['Ditandatangani', 'Sudah ditandatangani; kode verifikasi berlaku.'], ['Ditolak / Dibatalkan', 'Tidak dilanjutkan.']] },
+          { type: 'note', text: 'Cek awal AI hanya saran. Hasilnya tidak menyetujui atau menolak dokumen; keputusan tetap di tangan penanda tangan.' },
+        ],
+      },
+      {
+        id: 'tanda-tangan-saya',
+        title: 'Tanda tangan saya',
+        route: '/signatures/asset',
+        audience: { permissions: ['signature.manage_asset'] },
+        body: [
+          { type: 'steps', items: ['Buka "Tanda tangan saya" dari alat dokumen.', 'Di "Unggah tanda tangan", pilih "File tanda tangan" (PNG atau JPEG, maksimal 500 KB). Pakai latar putih atau transparan.', 'Klik "Simpan tanda tangan".'] },
+          { type: 'note', text: 'Gambar tanda tangan disimpan terenkripsi dan hanya dipakai saat Anda sendiri menandatangani.' },
+        ],
+      },
+      {
+        id: 'cap-surat',
+        title: 'Cap surat divisi',
+        route: '/signatures/letterhead',
+        audience: { permissions: ['letterhead.view'] },
+        body: [
+          { type: 'p', text: '"Cap surat" adalah cap atau kop surat resmi divisi yang dipakai bersama oleh semua anggota divisi.' },
+          { type: 'p', text: 'Hanya Head divisi yang bisa mengunggah atau mengganti cap surat ("Unggah atau ganti cap surat", PNG/JPEG maksimal 500 KB, lalu "Simpan cap surat").' },
+        ],
+      },
+      {
+        id: 'verifikasi',
+        title: 'Memeriksa keaslian dokumen',
+        audience: { permissions: ['signature.view'] },
+        body: [
+          { type: 'p', text: 'Setiap dokumen bertanda tangan punya kode atau QR verifikasi. Siapa pun yang memindai QR itu melihat halaman verifikasi.' },
+          { type: 'table', columns: ['Hasil', 'Artinya'], rows: [['Tanda tangan valid', 'Dokumen terdaftar dan tanda tangannya masih berlaku.'], ['Tanda tangan sudah tidak berlaku', 'Masa berlaku habis atau dicabut.'], ['Verifikasi tidak ditemukan', 'Kode salah atau dokumen tidak terdaftar. Waspadai dokumen palsu.']] },
+        ],
+      },
+      {
+        id: 'my-drive',
+        title: 'My Drive',
+        route: '/my-drive',
+        audience: { permissions: ['mydrive.view'] },
+        body: [
+          { type: 'p', text: '"My Drive" adalah Google Drive pribadi Anda. Tab "Drive divisi" membuka folder Shared Drive divisi di tempat yang sama.' },
+          { type: 'steps', items: ['Klik "Buat baru" lalu pilih "Folder", "Unggah file", "Dokumen", "Spreadsheet", atau "Slide".', 'Isi nama, lalu klik "Buat folder" atau "Buat file".'] },
+          { type: 'warning', text: 'Dokumen resmi divisi simpan di Shared Drive divisi, bukan di My Drive. File di My Drive ikut hilang aksesnya bila akun Anda dinonaktifkan.' },
+        ],
+      },
+      {
+        id: 'docs',
+        title: 'Docs',
+        route: '/docs',
+        audience: { permissions: ['google.docs.use'] },
+        body: [
+          { type: 'p', text: '"Docs" menampilkan Google Docs Anda. Pilih chip "Terbaru", "Milik saya", atau "Dibagikan ke saya", dan tampilan "Kisi" atau "Daftar".' },
+          { type: 'steps', items: ['Klik "Buat dokumen" untuk dokumen baru.', 'Klik dokumen untuk mengeditnya langsung di Prakasa Workspace, atau pilih "Buka di tab baru".', 'Menu file juga punya "Ganti nama" dan "Hapus ke sampah".'] },
+        ],
+      },
+      {
+        id: 'sheets',
+        title: 'Sheets',
+        route: '/sheets',
+        audience: { permissions: ['google.docs.use'] },
+        body: [{ type: 'p', text: '"Sheets" sama seperti Docs, untuk Google Sheets Anda. Klik "Buat spreadsheet" untuk membuat yang baru.' }],
+      },
+      {
+        id: 'slides',
+        title: 'Slides',
+        route: '/slides',
+        audience: { permissions: ['google.docs.use'] },
+        body: [{ type: 'p', text: '"Slides" sama seperti Docs, untuk Google Slides Anda. Klik "Buat presentasi" untuk membuat yang baru.' }],
+      },
+    ],
+  },
+
+  // ================================================================== PRAKASA AI
+  {
+    id: 'prakasa-ai',
+    part: KERJA,
+    title: 'Prakasa AI',
+    icon: 'auto_awesome',
+    scope: 'general',
+    route: '/ai-command',
+    audience: { permissions: ['ai_command.session.view'] },
+    who: 'Semua karyawan divisi.',
+    summary: 'Asisten AI di dalam aplikasi: bertanya, meringkas, membaca file, dan menyiapkan draft. Prakasa AI hanya bisa membaca data yang boleh Anda buka. AI menyiapkan, Anda yang memutuskan dan menyimpan.',
+    sections: [
+      {
+        id: 'mulai-percakapan',
+        title: 'Memulai percakapan',
+        body: [
+          {
+            type: 'steps',
+            items: [
+              'Buka "Prakasa AI" di menu atas, atau klik ikon bintang di bar atas ("Bantu dengan Prakasa AI di halaman ini").',
+              'Klik "Percakapan baru".',
+              'Ketik permintaan di "Tanyakan atau minta apa saja ke Prakasa AI…", atau pilih saran seperti "Bantu susun draft dokumen".',
+              'Tekan Enter untuk mengirim (Shift+Enter untuk baris baru). Klik "Hentikan jawaban" bila ingin berhenti.',
+              'Klik "Salin jawaban", atau jadikan PDF / DOCX / XLSX; file tersimpan di Shared Drive dan terunduh.',
+            ],
+          },
+          { type: 'tips', items: ['Tulis permintaan dengan jelas: apa yang diminta, untuk siapa, dan formatnya.', 'Nyalakan "Aktifkan riset web" bila AI perlu mencari di internet; sumbernya akan dicantumkan.', 'Klik "Edit pesan" lalu "Kirim ulang" untuk memperbaiki pertanyaan.'] },
+        ],
+      },
+      {
+        id: 'lampirkan-file',
+        title: 'Melampirkan file',
+        body: [
+          { type: 'steps', items: ['Klik "Lampirkan file", atau seret/tempel file ke kotak pesan.', 'Tulis apa yang ingin dilakukan dengan file itu, misalnya "ringkas" atau "cari selisih angka".'] },
+          { type: 'list', items: ['Jenis file: PDF, Word, Excel, PowerPoint, gambar (PNG/JPG/WEBP), TXT, CSV, dan sejenisnya.', 'Maksimal 5 file per pesan, masing-masing paling besar 25 MB.', 'Gambar atau hasil scan dibaca dengan AI vision.'] },
+          { type: 'warning', text: 'Jangan melampirkan data pribadi karyawan (KTP, slip gaji, rekening) atau kata sandi.' },
+        ],
+      },
+      {
+        id: 'visibilitas',
+        title: 'Percakapan pribadi, divisi, atau lintas divisi',
+        body: [
+          { type: 'table', columns: ['Pilihan', 'Siapa yang bisa membaca'], rows: [['Pribadi', 'Hanya Anda. Ini bawaan.'], ['Divisi', 'Semua anggota divisi yang dipilih bisa membaca dan ikut bertanya.'], ['Lintas divisi', 'Dibagikan sesuai akses entitas.']] },
+          { type: 'tips', items: ['Sematkan percakapan penting lewat "Sematkan".', 'Percakapan yang diarsipkan tidak bisa menerima pesan baru, tetapi riwayatnya tetap bisa dibaca.'] },
+        ],
+      },
+      {
+        id: 'ai-menyiapkan',
+        title: 'AI menyiapkan, Anda yang memutuskan',
+        body: [
+          { type: 'p', text: 'Prakasa AI tidak pernah menyimpan, menyetujui, menghapus, atau mengirim apa pun sendiri. Bila AI mengusulkan aksi (misalnya "Buat tugas"), aksi itu muncul sebagai proposal berstatus "Menunggu konfirmasi".' },
+          {
+            type: 'steps',
+            items: [
+              'Baca proposal di percakapan atau di "Kotak aksi".',
+              'Klik "Konfirmasi" bila setuju. Aplikasi bertanya "Jalankan aksi ini?"; klik "Ya, jalankan".',
+              'Klik "Tolak" bila tidak setuju (alasan boleh diisi).',
+            ],
+          },
+          { type: 'note', text: '"Kotak aksi" mengumpulkan semua yang menunggu keputusan Anda: proposal dari AI, approval, dan notifikasi belum dibaca.' },
+        ],
+      },
+      {
+        id: 'apa-yang-bisa-ditanyakan',
+        title: 'Apa yang bisa ditanyakan',
+        body: [
+          { type: 'p', text: 'Prakasa AI bisa membaca data di modul yang boleh Anda buka, lalu menjawab dengan bahasa biasa. Jawabannya mengikuti hak akses Anda: yang tidak boleh Anda lihat di halaman, tidak bisa dibaca AI untuk Anda.' },
+          {
+            type: 'table',
+            columns: ['Modul', 'Contoh pertanyaan'],
+            rows: [
+              ['Beranda dan pekerjaan harian', '"Apa yang perlu saya kerjakan hari ini?" · "Tugas saya mana yang terlambat?" · "Pengajuan saya sudah sampai mana?"'],
+              ['Persetujuan dan tanda tangan', '"Pengajuan apa saja yang menunggu keputusan saya?" · "Dokumen apa yang menunggu tanda tangan saya?"'],
+              ['Dokumen dan template', '"Carikan dokumen kontrak divisi saya" · "Apa saja yang perlu saya isi untuk membuat BAST dari template?"'],
+              ['Sales', '"Customer dormant mana yang perlu saya hubungi minggu ini?" · "Order mana yang belum terkirim penuh?" · "Omzet bulan ini (sebelum PPN) dibanding target dan bulan lalu"'],
+              ['Retail Commerce dan Marketing', '"Pesanan marketplace mana yang belum terkirim atau terlambat?" · "Kampanye apa yang sedang berjalan?"'],
+              ['Finance', '"Pengajuan pembayaran saya sudah sampai mana?" · "Ringkas posisi piutang dan perkiraan DSO"'],
+              ['Warehouse dan Procurement', '"Barang apa yang stoknya menipis atau habis?" · "PO mana yang terlambat datang, dan dari pemasok siapa?"'],
+              ['People & Culture dan GA', '"Tugas onboarding/offboarding saya apa saja dan kapan tenggatnya?" · "Permintaan GA saya sudah sampai mana?" · "Kontrak dan sewa mana yang segera berakhir?"'],
+              ['IT', '"Tiket IT saya sudah sampai mana?" · "Lisensi software mana yang menganggur?"'],
+              ['Manajemen', '"Eskalasi apa yang paling lama terbuka di divisi saya?" · "Target mana yang tertinggal kuartal ini?"'],
+              ['Cara memakai aplikasi', '"Bagaimana cara mengajukan pembayaran?" · "Bagaimana cara membuat tiket IT?"'],
+            ],
+          },
+          {
+            type: 'list',
+            items: [
+              'AI membaca data dan bisa mengisi formulir untuk Anda periksa. Menyetujui, menolak, menandatangani, menyimpan, dan mengirim tetap Anda lakukan sendiri di halamannya; AI menunjukkan halaman yang perlu dibuka.',
+              'Cuti, absensi, dan gaji ada di KantorKu, bukan di Prakasa Workspace. Prakasa AI tidak bisa membacanya dan tidak akan menebak.',
+              'Angka rupiah hanya untuk yang berizin, dan hanya di percakapan pribadi.',
+              'Omzet selalu ditulis sebelum PPN (DPP). Harga beli, nilai PO, dan margin tidak pernah dibaca AI, untuk siapa pun.',
+              'Data dari Accurate dibaca setelah disetujui Supervisor/Head divisinya. Bila datanya masih menunggu persetujuan, AI akan mengatakannya.',
+            ],
+          },
+          { type: 'tips', items: ['Di panel Prakasa AI setiap halaman ada saran pertanyaan yang sesuai dengan peran Anda. Klik salah satunya untuk mulai.', 'Data divisi dan data milik Anda hanya dibaca di percakapan "Pribadi" tanpa riset web.'] },
+        ],
+      },
+      {
+        id: 'ai-mengisi-formulir',
+        title: 'AI mengisi formulir, Anda yang menyimpan',
+        body: [
+          { type: 'p', text: 'Di panel Prakasa AI sebuah halaman, Anda bisa meminta AI membuka formulir dan mengisinya, misalnya "Buatkan tiket IT: laptop saya tidak bisa konek wifi sejak pagi, prioritas tinggi". AI hanya mengisi kolom. Tombol simpan tidak pernah ditekan AI: Anda yang memeriksa, lalu menyimpan atau mengirim.' },
+          {
+            type: 'steps',
+            items: [
+              'Buka halaman modulnya, lalu klik ikon bintang di bar atas untuk membuka panel Prakasa AI.',
+              'Tulis permintaan Anda, atau pilih saran seperti "Buatkan tugas dari catatan ini: …" lalu lengkapi kalimatnya.',
+              'AI membuka formulirnya dan mengisi kolom. Di percakapan terlihat langkahnya, misalnya "Membuka halaman Tiket IT" dan "Mengisi 4 kolom di formulir Tiket IT".',
+              'Periksa kolom yang disorot dan bertanda "diisi AI". Ubah bila perlu; tanda itu hilang begitu Anda mengubah kolomnya.',
+              'Klik "Urungkan isian AI" bila ingin mengembalikan kolom ke isi sebelumnya.',
+              'Bila sudah benar, tekan tombol simpan formulir itu sendiri (misalnya "Ajukan tiket" atau "Simpan draf").',
+            ],
+          },
+          { type: 'p', text: 'Formulir yang bisa diisi AI ada di tabel di bawah, per modul. Anda hanya bisa meminta formulir yang memang boleh Anda buka dan simpan sendiri. Bila tidak yakin, tanyakan di panel: "Formulir apa saja yang bisa kamu isi di halaman ini?".' },
+          // One table per module, generated from the server's form catalog (scripts/build-ai-forms.mjs).
+          ...AI_FORM_TABLES.map((table) => ({ type: 'table', title: table.title, context: 'form', columns: AI_FORM_COLUMNS, rows: table.rows })),
+          {
+            type: 'list',
+            items: [
+              'AI tidak pernah mengisi kata sandi, rekening bank penerima, keputusan persetujuan, atau unggahan file.',
+              'AI juga tidak pernah mengisi atau membaca data pribadi (NIK, KTP, NPWP, BPJS, gaji, tanggal lahir, alamat rumah, telepon pribadi) dan pengenal perangkat atau jaringan (alamat IP, IMEI, MAC address, nomor seri, kunci lisensi, nama dan kata sandi Wi-Fi, alamat portal, nomor pelanggan).',
+              'Harga, diskon, anggaran, angka target, dan jumlah hasil hitung fisik gudang tetap Anda isi sendiri. Di sales order, AI mengisi pelanggan, barang, dan jumlahnya; harga tiap baris Anda yang mengetik.',
+              'Di "Buat dokumen" dari template, AI mengisi judul dan kolom teks template. Kolom template yang bernama data pribadi, rekening bank, pengenal perangkat, atau rupiah hanya Anda yang mengisi.',
+              'Kolom yang sudah Anda ketik tidak ditimpa AI. AI akan mengatakan kolom mana yang tidak ia isi dan alasannya.',
+              'Isian AI tetap melewati pemeriksaan formulir. Kolom wajib yang datanya belum ada akan ditanyakan AI lebih dulu.',
+              'Di daftar baris (misalnya barang ATK), AI hanya menambah baris. Baris yang Anda ketik tidak pernah diubah atau dihapus, dan "Urungkan isian AI" hanya membuang baris dari AI.',
+              'Kolom yang dipilih lewat pencarian (misalnya pelanggan atau barang) hanya diisi AI bila tepat satu yang cocok. Bila ada beberapa, AI bertanya dulu kepada Anda.',
+              'Di ponsel dan tablet, setelah AI mengisi formulir, percakapan menepi supaya formulir terlihat. Tombol "Prakasa AI" di atas formulir membuka percakapan lagi, dan "Lihat formulir" kembali ke formulir.',
+              'Bila ada formulir yang belum disimpan dan AI ingin membuka halaman lain, aplikasi bertanya "Pindah halaman?". Pilih "Tetap di sini" bila tidak ingin kehilangan isian. Membuka formulir lain di halaman yang sama tidak menanyakan ini.',
+              'Bila Anda menanyakan data yang tidak boleh Anda buka, AI mengatakan Anda tidak punya akses dan menyarankan bertanya ke Supervisor atau Head divisi Anda, atau meminta akses ke Super Admin.',
+              'Mengisi formulir hanya bisa dari panel Prakasa AI di halaman, di percakapan pribadi tanpa riset web. Di halaman "Prakasa AI", AI hanya memberi tautan ke halamannya.',
+            ],
+          },
+          { type: 'warning', text: 'Selalu periksa isian AI sebelum menyimpan, terutama angka, tanggal, dan nama penerima. Yang tersimpan adalah tanggung jawab Anda.' },
+        ],
+      },
+      {
+        id: 'formulir-dari-dokumen',
+        title: 'Mengisi formulir dari foto atau dokumen',
+        body: [
+          { type: 'p', text: 'Di panel Prakasa AI sebuah halaman, Anda bisa melampirkan foto, scan, atau PDF (struk, surat jalan, invoice, kartu nama, tangkapan layar keluhan) lalu meminta AI mengisi formulirnya, misalnya "Isi pengajuan reimbursement dari struk ini". AI membaca lampiran, membuka formulir, dan mengisi kolom yang nilainya tertulis jelas. Anda yang memeriksa dan menyimpan.' },
+          {
+            type: 'steps',
+            items: [
+              'Buka halaman modulnya, lalu klik ikon bintang di bar atas untuk membuka panel Prakasa AI.',
+              'Klik "Lampirkan file" di kotak pesan, seret file ke panel, atau tempel gambar. Bisa juga memilih saran seperti "Isi pengajuan reimbursement dari struk atau foto ini": aplikasi langsung meminta filenya.',
+              'Tulis permintaan Anda, lalu kirim. Di percakapan terlihat langkah "Membaca lampiran", lalu langkah membuka dan mengisi formulir.',
+              'Baca daftar "Terisi dari dokumen": tiap kolom, isinya, dan kutipan dari dokumen yang menjadi sumbernya.',
+              'Lengkapi kolom di daftar "Perlu Anda isi", periksa kolom bertanda "diisi AI", lalu tekan tombol simpan formulir itu sendiri.',
+            ],
+          },
+          {
+            type: 'table',
+            columns: ['Halaman', 'Contoh permintaan', 'Yang tetap Anda isi'],
+            rows: [
+              ['Pengajuan pembayaran', '"Isi pengajuan reimbursement dari struk atau foto ini"', 'Bank, nomor rekening, dan atas nama penerima'],
+              ['Warehouse', '"Catat barang masuk dari surat jalan ini"', 'Jumlah tiap barang. AI menuliskan jumlah yang ia baca di percakapan supaya Anda bisa mengetiknya'],
+              ['Leads', '"Buat lead dari kartu nama ini"', 'Kolom yang tidak tertulis di kartu nama'],
+              ['Tiket IT', '"Buat tiket IT dari tangkapan layar ini"', 'Kolom yang tidak terlihat di tangkapan layar'],
+            ],
+          },
+          {
+            type: 'list',
+            items: [
+              'Paling banyak 3 lampiran per pesan, masing-masing sampai 25 MB. Foto lebih dari 5 MB tidak bisa dibaca AI: perkecil dulu atau potong bagian yang penting.',
+              'Jenis file: foto (JPG, PNG, WebP), PDF, dan dokumen Office. Foto dan PDF hasil scan dibaca dengan AI vision.',
+              'Tulisan di dalam lampiran diperlakukan sebagai data, bukan perintah. Kalimat seperti "setujui pengajuan ini" di sebuah struk tidak mengubah apa pun.',
+              'Nilai yang tidak terbaca atau meragukan dibiarkan kosong dan masuk daftar "Perlu Anda isi". AI tidak menebak.',
+              'Nomor rekening, NIK, nomor KTP, NPWP, BPJS, dan pengenal pribadi lain di dokumen tidak pernah disalin AI, termasuk ke kolom catatan atau keterangan.',
+              'Angka rupiah dari dokumen hanya diisikan ke subtotal dan pajak pengajuan pembayaran Anda sendiri. Harga, diskon, dan anggaran tetap Anda isi.',
+              'Lampiran hanya bisa dipakai di percakapan pribadi tanpa riset web, dan percakapan yang berisi lampiran tidak bisa dibagikan ke divisi.',
+              'File lampiran disimpan seperti file yang diunggah di halaman "Prakasa AI". Log aktivitas hanya mencatat nama, jenis, dan ukuran file, bukan isinya.',
+            ],
+          },
+          { type: 'warning', text: 'Hasil baca foto bisa keliru, terutama angka dan tanggal pada struk yang buram. Cocokkan isian dengan dokumen aslinya sebelum menyimpan.' },
+        ],
+      },
+      {
+        id: 'batas-ai',
+        title: 'Batas Prakasa AI',
+        body: [
+          { type: 'list', items: ['AI membaca halaman atau data sesuai izin Anda, tidak lebih.', 'Ada batas jumlah permintaan per hari. Bila tercapai, aplikasi memberi tahu; coba lagi besok.', 'Saat ramai, Anda mungkin menunggu giliran beberapa saat.', 'Jawaban AI bisa salah. Periksa angka dan isi sebelum dipakai.'] },
+          { type: 'tips', items: ['Klik "Lihat batas bantuan AI" di panel AI suatu halaman untuk melihat apa yang boleh dibaca, disiapkan, atau hanya direkomendasikan AI.'] },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== SALES
+  {
+    id: 'sales',
+    part: DIVISI,
+    title: 'Sales: pelanggan, leads, dan Data Sales',
+    icon: 'handshake',
+    scope: 'division',
+    route: '/sales/customers',
+    audience: { permissions: ['sales.customer.view'] },
+    who: 'Sales; juga Retail Commerce dan Marketing (sesuai aksesnya).',
+    summary: 'Memantau pelanggan, leads, pipeline, dan transaksi penjualan. Transaksi dicatat di Accurate, lalu dipantau di sini setelah datanya disetujui Supervisor/Head divisi.',
+    sections: [
+      {
+        id: 'aturan',
+        title: 'Aturan dasar data Sales',
+        body: [
+          {
+            type: 'list',
+            items: [
+              'Sales order, surat jalan, faktur, dan pembayaran dibuat di Accurate. Aplikasi hanya membaca Accurate dan tidak pernah menulis ke sana.',
+              'Data baru dari Accurate baru tampil setelah disetujui Supervisor atau Head divisi (lihat bab Data Accurate).',
+              'Omzet selalu dihitung sebelum PPN (DPP) dan bersih retur.',
+              'Kunjungan lapangan berasal dari SimpliDOTS.',
+            ],
+          },
+          { type: 'note', text: 'Sales Member melihat pelanggan, leads, dan order miliknya sendiri. Bila muncul "Akun Anda belum terhubung ke nama sales", minta Supervisor menghubungkan akun Anda di "Pemetaan sales".' },
+        ],
+      },
+      {
+        id: 'pipeline',
+        title: 'Pipeline sales',
+        route: '/sales/pipeline',
+        audience: { permissions: ['sales.pipeline.view'] },
+        body: [
+          { type: 'p', text: 'Pipeline terisi otomatis dari kunjungan dan sales order; tidak ada kartu yang perlu digeser manual.' },
+          {
+            type: 'table',
+            columns: ['Tahap', 'Artinya'],
+            rows: [
+              ['Prospek dikunjungi', 'Outlet sudah dikunjungi, belum terdaftar sebagai pelanggan.'],
+              ['Terdaftar, belum order', 'Sudah jadi pelanggan, belum pernah order.'],
+              ['Order pertama (NOO)', 'Pelanggan yang pertama kali difakturkan bulan itu.'],
+              ['Aktif', 'Order terakhir kurang dari 30 hari.'],
+              ['Dormant', 'Lama tidak order. Hubungi sebelum jadi Lost.'],
+              ['Lost', 'Tidak order 60 hari atau lebih.'],
+            ],
+          },
+          { type: 'steps', title: 'Perlu tindakan hari ini', items: ['Lihat daftar "Perlu tindakan hari ini" di halaman Pipeline.', 'Klik "Lihat pelanggan" atau "Lihat SO" untuk menindaklanjuti.', 'Bila tertulis "Beres", tidak ada yang perlu ditindaklanjuti.'] },
+          { type: 'p', text: 'Bagian "Target dan pencapaian" menunjukkan target omzet (sebelum PPN) dan target pelanggan baru bulan ini, serta pencapaiannya.' },
+        ],
+      },
+      {
+        id: 'pelanggan',
+        title: 'Pelanggan',
+        route: '/sales/customers',
+        body: [
+          { type: 'p', text: 'Daftar pelanggan dengan status Aktif, Dormant, atau Lost yang dihitung otomatis dari order terakhir.' },
+          { type: 'steps', items: ['Saring dengan chip Semua / Aktif / Dormant / Lost dan filter "Channel".', 'Klik pelanggan untuk membuka detail: tab "Ikhtisar", "Order", "Kunjungan", "Aktivitas".', 'Di "Ikhtisar" ada omzet 12 bulan (bersih retur), piutang, produk teratas, dan umur piutang.'] },
+        ],
+      },
+      {
+        id: 'pelanggan-tambah',
+        title: 'Menambah dan mengubah pelanggan',
+        route: '/sales/customers',
+        audience: { permissions: ['sales.customer.manage'] },
+        body: [
+          {
+            type: 'steps',
+            items: [
+              'Klik "Tambah pelanggan".',
+              'Isi "Informasi pelanggan": Nama pelanggan, Channel, Bentuk usaha, Kode kota, ID pelanggan, PIC sales.',
+              'Isi "Kontak dan alamat": Kontak, Handphone, Email, Alamat pengiriman, Kota.',
+              'Simpan. Untuk mengubah, buka pelanggan lalu klik "Ubah pelanggan".',
+            ],
+          },
+          { type: 'tips', items: ['Samakan ID pelanggan dengan Accurate supaya order dan piutangnya tersambung.'] },
+        ],
+      },
+      {
+        id: 'leads',
+        title: 'Leads dan kunjungan',
+        route: '/sales/leads',
+        body: [
+          { type: 'p', text: 'Leads adalah outlet yang sudah dikunjungi tetapi belum menjadi pelanggan, dari SimpliDOTS dan yang dicatat di sini.' },
+          { type: 'list', title: 'Filter', items: ['Belum order', 'Perlu dikunjungi ulang', 'Sudah jadi pelanggan', 'Tidak berminat'] },
+        ],
+      },
+      {
+        id: 'leads-kelola',
+        title: 'Mencatat lead dan kunjungan',
+        route: '/sales/leads',
+        audience: { permissions: ['sales.customer.manage'] },
+        body: [
+          {
+            type: 'steps',
+            items: [
+              'Klik "Tambah lead". Isi Nama outlet, Area, Alamat, PIC sales, dan (opsional) Latitude/Longitude untuk tombol Maps.',
+              'Setelah berkunjung, buka lead lalu klik "Catat kunjungan": tanggal, jam datang, jam pulang, hasil kunjungan.',
+              'Bila outlet mulai order, klik "Jadikan pelanggan", atau "Hubungkan ke pelanggan" bila pelanggan-nya sudah ada.',
+            ],
+          },
+        ],
+      },
+      {
+        id: 'impor-simplidots',
+        title: 'Impor kunjungan SimpliDOTS dan pemetaan sales',
+        route: '/sales/leads',
+        audience: { permissions: ['sales.master.manage'], levels: SUP },
+        body: [
+          { type: 'steps', title: 'Impor SimpliDOTS', items: ['Di "Leads", klik "Impor SimpliDOTS".', 'Pilih "File export" dari SimpliDOTS (makro di file tidak dijalankan).', 'Klik "Impor kunjungan".'] },
+          { type: 'steps', title: 'Pemetaan sales', items: ['Di "Pelanggan", klik "Pemetaan sales".', 'Hubungkan nama sales di Accurate/SimpliDOTS dengan akun aplikasi tiap anggota tim.', 'Simpan. Anggota tim lalu melihat data miliknya.'] },
+        ],
+      },
+      {
+        id: 'data-sales',
+        title: 'Data Sales: order, surat jalan, faktur, pembayaran',
+        route: '/sales/orders',
+        audience: { permissions: ['sales.order.view'] },
+        body: [
+          { type: 'p', text: '"Data Sales" memantau transaksi dari Accurate. Pilih jenis data di tab: Sales order, Surat jalan, Faktur, Penerimaan, Retur, Umur piutang, Tukar faktur, dan Produk.' },
+          { type: 'steps', items: ['Pilih "Periode" (Bulan ini, Bulan lalu, 3 bulan terakhir, Tahun ini, Semua waktu) dan "Channel".', 'Pakai filter status, misalnya "Belum ada surat jalan", "Belum ditagih", "Belum lunas", "Terlambat bayar".', 'Klik baris untuk melihat detailnya.'] },
+          { type: 'table', title: 'Status pembayaran', columns: ['Label', 'Artinya'], rows: [['Lunas', 'Faktur sudah dibayar penuh.'], ['Belum lunas', 'Masih ada sisa tagihan.'], ['Terlambat n hari', 'Lewat jatuh tempo sekian hari.']] },
+          { type: 'note', text: 'Membuat SO, surat jalan, invoice, dan pembayaran dilakukan di Accurate. Form input di aplikasi dimatikan supaya tidak ada dua versi pembukuan.' },
+        ],
+      },
+      {
+        id: 'umur-piutang',
+        title: 'Umur piutang pelanggan',
+        route: '/sales/orders',
+        audience: { permissions: ['sales.order.view'] },
+        body: [
+          { type: 'p', text: 'Tab "Umur piutang" menunjukkan sisa tagihan per pelanggan (termasuk PPN), dikelompokkan per umur, dari faktur Accurate yang sudah disetujui divisi.' },
+          { type: 'tips', items: ['Klik "Lihat faktur lewat jatuh tempo" untuk daftar yang perlu ditagih.', 'Anda mendapat notifikasi di aplikasi untuk faktur lewat jatuh tempo dan pelanggan yang mulai dormant.'] },
+        ],
+      },
+      {
+        id: 'tukar-faktur',
+        title: 'Mencatat tukar faktur',
+        route: '/sales/orders',
+        audience: { permissions: ['sales.order.manage'] },
+        body: [
+          { type: 'steps', items: ['Buka tab "Tukar faktur", chip "Belum tukar faktur".', 'Pilih faktur, isi "Tanggal tukar faktur", "No. tanda terima", "Janji bayar", dan "Catatan".', 'Klik "Catat tukar faktur".'] },
+          { type: 'note', text: 'Janji bayar tidak boleh sebelum tanggal tukar faktur. Faktur yang 7 hari atau lebih belum ditukar ditandai merah.' },
+        ],
+      },
+      {
+        id: 'target-sales',
+        title: 'Mengatur target Sales',
+        route: '/sales/pipeline',
+        audience: { permissions: ['sales.master.manage'], levels: SUP },
+        body: [
+          { type: 'steps', items: ['Di "Pipeline sales", bagian "Target dan pencapaian", pilih "Bulan".', 'Klik "Atur target".', 'Isi "Target omzet sebelum PPN" dan "Target pelanggan baru". Kosongkan bila tidak ada target.', 'Simpan.'] },
+        ],
+      },
+      {
+        id: 'notifikasi-sales',
+        title: 'Notifikasi untuk tim Sales',
+        body: [
+          { type: 'table', columns: ['Kejadian', 'Saluran'], rows: [['Pelanggan/leads diserahkan ke Anda', 'Di aplikasi'], ['Pengingat pelanggan tidak order (dormant)', 'Di aplikasi'], ['Faktur lewat jatuh tempo', 'Di aplikasi'], ['Data Accurate menunggu persetujuan (Supervisor/Head)', 'Di aplikasi + email']] },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== RETAIL COMMERCE
+  {
+    id: 'retail-commerce',
+    part: DIVISI,
+    title: 'Retail Commerce: kinerja marketplace',
+    icon: 'shopping_bag',
+    scope: 'division',
+    route: '/retail-commerce',
+    audience: { permissions: ['retail.insight.view'] },
+    who: 'Tim Retail Commerce, Supervisor/Head Sales, dan manajemen.',
+    summary: 'Kinerja penjualan marketplace (Shopee, Tokopedia, dan lainnya) dari data Accurate yang sudah disetujui. Omzet dihitung sebelum PPN dan bersih retur.',
+    sections: [
+      {
+        id: 'membaca',
+        title: 'Membaca halaman Retail Commerce',
+        body: [
+          { type: 'table', columns: ['Bagian', 'Isinya'], rows: [['Angka utama', 'Omzet bulan ini dan bulan lalu, pesanan, rata-rata per faktur, retur, piutang marketplace belum cair, SO belum dikirim.'], ['Porsi omzet per platform', 'Sumbangan tiap marketplace.'], ['Perbandingan platform', 'Omzet 12 bulan, faktur, SO, rasio retur, dan piutang per platform.'], ['Grafik capaian bulanan & Tren 12 bulan', 'Perjalanan capaian dari bulan ke bulan.'], ['Produk terlaris', 'Pilih "Bulan" untuk melihat bulan lain.'], ['SO belum dikirim / Faktur belum cair', 'Yang perlu ditindaklanjuti.']] },
+          { type: 'note', text: 'Marketplace ditagih dengan satu faktur rekap per platform setiap bulan. Angka baru muncul setelah Supervisor atau Head Sales/Retail Commerce menyetujui batch data Accurate pertama.' },
+          { type: 'tips', items: ['Klik "Muat ulang" untuk angka terbaru.', 'Pelanggan, leads, dan Data Sales kanal ritel ada di menu Sales.'] },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== MARKETING
+  {
+    id: 'marketing',
+    part: DIVISI,
+    title: 'Marketing: produk, channel, dan kampanye',
+    icon: 'campaign',
+    scope: 'division',
+    route: '/marketing/insights',
+    audience: { permissions: ['marketing.insight.view'] },
+    who: 'Tim Marketing, Supervisor/Head Sales, dan manajemen.',
+    summary: 'Apa yang laku, di channel mana, dan siapa pelanggan baru, dari data Accurate yang sudah disetujui. Juga pencatatan kampanye dan hasilnya.',
+    sections: [
+      {
+        id: 'produk-channel',
+        title: 'Produk & channel',
+        route: '/marketing/insights',
+        body: [
+          { type: 'table', columns: ['Tab', 'Isinya'], rows: [['Channel', 'Omzet 12 bulan per channel, omzet bulan ini, dan "Channel berlomba".'], ['Produk', '20 produk terlaris, yang naik paling tinggi, dan yang turun paling dalam.'], ['Pelanggan & leads', 'Pelanggan baru (NOO) per channel dan leads per area.']] },
+          { type: 'note', text: 'Bila tertulis "Menunggu data Accurate", batch data penjualan belum disetujui divisi Sales.' },
+        ],
+      },
+      {
+        id: 'kampanye',
+        title: 'Kampanye',
+        route: '/marketing/campaigns',
+        body: [
+          { type: 'p', text: 'Hasil kampanye dihitung langsung dari data Accurate: omzet produk target selama kampanye dibanding periode yang sama panjang sebelumnya.' },
+          { type: 'table', columns: ['Status', 'Artinya'], rows: [['Draf', 'Belum berjalan.'], ['Berjalan', 'Sedang berlangsung.'], ['Selesai', 'Sudah berakhir dan hasilnya dicatat.'], ['Dibatalkan', 'Tidak jadi.']] },
+        ],
+      },
+      {
+        id: 'kampanye-kelola',
+        title: 'Membuat dan menutup kampanye',
+        route: '/marketing/campaigns',
+        audience: { permissions: ['marketing.campaign.manage'], levels: SUP },
+        body: [
+          {
+            type: 'steps',
+            items: [
+              'Klik "Tambah kampanye".',
+              'Isi "Nama kampanye", "Tujuan", "Tanggal mulai", "Tanggal selesai", dan "Anggaran (Rp)" bila ada.',
+              'Pilih channel ("Semua channel" atau tertentu) dan "Produk target" (kosong berarti semua produk).',
+              'Simpan, lalu ubah status menjadi "Berjalan" saat kampanye mulai.',
+              'Setelah selesai, klik "Tutup kampanye", pilih "Status akhir", dan isi "Hasil kampanye".',
+            ],
+          },
+          { type: 'note', text: 'Anda mendapat notifikasi "Kampanye berakhir — catat hasilnya". Banner "Perlu ditutup" muncul bila ada kampanye yang lewat tanggal selesai tetapi masih Berjalan.' },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== WAREHOUSE
+  {
+    id: 'warehouse',
+    part: DIVISI,
+    title: 'Warehouse: barang masuk, keluar, dan stok',
+    icon: 'warehouse',
+    scope: 'division',
+    route: '/warehouse',
+    audience: { permissions: ['warehouse.movement.view', 'warehouse.stock.view'] },
+    who: 'Tim Warehouse; Procurement dan Retail Commerce melihat pergerakan; Management Office melihat stok.',
+    summary: 'Mencatat barang masuk dan keluar dengan approval Warehouse Supervisor, melihat stok dari Accurate, mencocokkan catatan gudang dengan Accurate, serta checklist dan insiden gudang.',
+    sections: [
+      {
+        id: 'tab',
+        title: 'Tab di halaman Warehouse',
+        body: [
+          { type: 'table', columns: ['Tab', 'Isinya'], rows: [['Hari ini', 'Ringkasan hari ini.'], ['Jadwal kirim', 'SO yang harus dikirim, apakah stoknya cukup.'], ['Stok', 'Stok dari Accurate per gudang.'], ['Dokumen Accurate', 'Surat jalan, penerimaan, pindah gudang, penyesuaian.'], ['Barang masuk / Barang keluar / Riwayat transaksi', 'Pergerakan yang dicatat tim gudang.'], ['Cocokkan Accurate', 'Pergerakan aplikasi dibandingkan dengan dokumen Accurate.'], ['Approval Supervisor', 'Pergerakan menunggu keputusan (Supervisor).'], ['Checklist / Insiden', 'Checklist harian dan laporan kejadian.']] },
+          { type: 'note', text: 'Anda hanya melihat tab yang sesuai akses Anda. Bila membuka tab lain lewat tautan, aplikasi menampilkan tab yang boleh Anda buka.' },
+        ],
+      },
+      {
+        id: 'catat-pergerakan',
+        title: 'Mencatat barang masuk atau keluar',
+        audience: { permissions: ['warehouse.movement.create'] },
+        body: [
+          {
+            type: 'steps',
+            items: [
+              'Klik "Buat barang masuk" atau "Buat barang keluar".',
+              'Isi "Tanggal transaksi" dan "Nomor referensi" (nomor dokumen Accurate, SJ pemasok, PO, atau SO).',
+              'Barang masuk: isi "Supplier". Barang keluar: isi "Tujuan" (cabang atau nama pelanggan, tanpa alamat).',
+              'Untuk setiap barang, isi "Kode barang Accurate", "Produk", "Jumlah", "Satuan" (seperti di Accurate), dan bila ada "Batch", "Kedaluwarsa", "Lokasi". Klik "Tambah barang" untuk baris berikutnya.',
+              'Tulis "Catatan" untuk Supervisor bila perlu.',
+              'Simpan sebagai draft, lalu klik "Ajukan ke Supervisor".',
+            ],
+          },
+          { type: 'tips', items: ['Kode barang Accurate wajib, supaya pergerakan bisa dicocokkan otomatis.', 'Tanpa nomor referensi, Supervisor harus memasangkannya manual.', 'Bila muncul "Data ini sudah diubah orang lain", klik "Muat versi terbaru" sebelum melanjutkan.'] },
+        ],
+      },
+      {
+        id: 'status-pergerakan',
+        title: 'Status pergerakan barang',
+        body: [
+          { type: 'table', columns: ['Status', 'Artinya'], rows: [['Draft', 'Pembuat perlu melengkapi lalu mengajukan.'], ['Menunggu review', 'Menunggu keputusan Warehouse Supervisor. Data dikunci.'], ['Perlu revisi', 'Supervisor minta perbaikan. Perbaiki lalu ajukan ulang.'], ['Disetujui', 'Sudah disetujui dan tidak dapat diubah.'], ['Ditolak', 'Tidak dapat diubah. Buat pergerakan baru bila perlu.'], ['Dibatalkan', 'Dibatalkan Warehouse Head.']] },
+        ],
+      },
+      {
+        id: 'approval-pergerakan',
+        title: 'Menyetujui pergerakan barang',
+        audience: { permissions: ['warehouse.movement.approve'], levels: SUP },
+        body: [
+          {
+            type: 'steps',
+            items: [
+              'Buka tab "Approval Supervisor", atau notifikasi approval (juga dikirim lewat email).',
+              'Periksa barang, jumlah, dan nomor referensi.',
+              'Klik "Setujui", "Minta revisi" (catatan wajib), atau "Tolak" (catatan wajib).',
+            ],
+          },
+          { type: 'note', text: 'Keputusan tercatat atas nama Anda. Riwayat lengkap ada di kartu "Riwayat audit".' },
+        ],
+      },
+      {
+        id: 'batalkan-pergerakan',
+        title: 'Membatalkan pergerakan yang sudah disetujui',
+        audience: { permissions: ['warehouse.movement.cancel'], levels: HEAD },
+        body: [
+          { type: 'steps', items: ['Buka pergerakan yang berstatus Disetujui.', 'Klik "Batalkan pergerakan".', 'Isi "Alasan pembatalan" lalu konfirmasi.'] },
+        ],
+      },
+      {
+        id: 'stok',
+        title: 'Stok dari Accurate',
+        audience: { permissions: ['warehouse.stock.view'] },
+        body: [
+          { type: 'p', text: 'Tab "Stok" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah disetujui Supervisor atau Head Warehouse.' },
+          { type: 'table', columns: ['Status', 'Artinya'], rows: [['Ada', 'Stok tersedia.'], ['Menipis', 'Di bawah batas minimum.'], ['Habis', 'Stok nol.'], ['Minus', 'Stok di bawah nol; perlu dibereskan di Accurate.']] },
+          { type: 'tips', items: ['Klik barang untuk melihat "Kartu stok" dan "Riwayat stok".', 'Banner "Ada pembaruan stok menunggu persetujuan" berarti tarikan baru belum disetujui.', 'Di "Jadwal kirim", stok dibagi ke SO dengan janji kirim paling awal lebih dulu.'] },
+        ],
+      },
+      {
+        id: 'cocokkan',
+        title: 'Cocokkan Accurate',
+        audience: { permissions: ['warehouse.recon.view'] },
+        body: [
+          { type: 'p', text: 'Tab "Cocokkan Accurate" membandingkan pergerakan di aplikasi dengan dokumen Accurate.' },
+          { type: 'table', columns: ['Status', 'Artinya'], rows: [['Cocok', 'Aplikasi dan Accurate sama.'], ['Selisih jumlah', 'Jumlahnya berbeda.'], ['Belum di Accurate', 'Ada di aplikasi, belum ada dokumen Accurate.'], ['Belum di aplikasi', 'Ada di Accurate, belum dicatat di aplikasi.'], ['Dijelaskan', 'Selisih sudah dijelaskan Supervisor/Head.'], ['Menunggu data Accurate', 'Tarikan berikutnya belum disetujui.']] },
+          { type: 'note', text: 'Accurate hanya dibaca. Selisih diperbaiki di sumbernya: dokumen Accurate atau pergerakan di aplikasi.' },
+        ],
+      },
+      {
+        id: 'jelaskan-selisih',
+        title: 'Menyelesaikan selisih',
+        audience: { permissions: ['warehouse.recon.resolve'], levels: SUP },
+        body: [
+          { type: 'steps', items: ['Buka baris yang berselisih.', 'Bila dokumen Accurate-nya ada, klik "Pasangkan dokumen Accurate" dan pilih dokumennya (saran ±14 hari muncul otomatis).', 'Bila selisih memang wajar, klik "Tandai sudah dijelaskan" dan tulis alasannya (minimal 5 karakter).'] },
+          { type: 'warning', text: 'Penjelasan harus diberikan oleh Supervisor/Head yang tidak mencatat pergerakan itu sendiri.' },
+        ],
+      },
+      {
+        id: 'checklist-insiden',
+        title: 'Checklist harian dan insiden',
+        audience: { permissions: ['warehouse.checklist.manage', 'warehouse.incident.manage'] },
+        body: [
+          { type: 'steps', title: 'Checklist', items: ['Klik "Buat checklist".', 'Isi "Tanggal", "Judul", dan "Item" (satu item per baris).', 'Centang item yang sudah dikerjakan.'] },
+          { type: 'steps', title: 'Insiden', items: ['Klik "Laporkan insiden".', 'Isi "Tanggal", "Kategori" (kerusakan, kehilangan, keterlambatan), "Tingkat" (Rendah, Sedang, Tinggi, Kritis), dan "Deskripsi".', 'Saat beres, pilih "Selesaikan insiden" dan isi "Resolusi".'] },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== PROCUREMENT
+  {
+    id: 'procurement',
+    part: DIVISI,
+    title: 'Procurement: PO, pemasok, dan barang datang',
+    icon: 'assignment_turned_in',
+    scope: 'division',
+    route: '/procurement',
+    audience: { permissions: ['procurement.view'] },
+    who: 'Tim Procurement; Management Office melihat juga (hanya baca).',
+    summary: 'PO, pemasok, dan barang datang dari Accurate, setelah tarikan disetujui Supervisor/Head Procurement. Member melihat jumlah dan tanggal; harga hanya untuk yang berwenang.',
+    sections: [
+      {
+        id: 'hari-ini',
+        title: 'Hari ini, Purchase order, dan Pemasok',
+        body: [
+          { type: 'table', columns: ['Tab', 'Isinya'], rows: [['Hari ini', 'Barang datang hari ini, dijadwalkan datang hari ini & besok, dan yang perlu perhatian.'], ['Purchase order', 'Semua PO dengan status penerimaan barangnya.'], ['Pemasok', 'Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari.']] },
+          { type: 'table', title: 'Status PO', columns: ['Status', 'Artinya'], rows: [['Menunggu barang', 'Belum ada barang diterima.'], ['Sebagian diterima', 'Baru sebagian datang.'], ['Terlambat', 'Lewat tanggal diharapkan datang.'], ['Diterima', 'Semua barang sudah datang.'], ['Ditutup', 'PO ditutup di Accurate.'], ['PO lama', 'PO lama yang tidak dihitung lagi.']] },
+          { type: 'note', text: 'Kontak, alamat, NPWP, dan rekening pemasok tidak diambil dari Accurate; lihat langsung di Accurate.' },
+        ],
+      },
+      {
+        id: 'saran-pesan',
+        title: 'Saran pesan ulang',
+        audience: { permissions: ['procurement.reorder.view'], levels: SUP },
+        body: [
+          { type: 'p', text: 'Tab "Saran pesan ulang" menghitung barang yang perlu dipesan: bila stok ditambah PO berjalan tidak cukup sampai barang baru datang (ditambah stok pengaman).' },
+          { type: 'table', columns: ['Label', 'Artinya'], rows: [['Habis sebelum barang datang', 'Paling mendesak.'], ['Pesan sekarang', 'Perlu dipesan sekarang.'], ['Habis, perlu dicek', 'Stok habis; periksa apakah masih dibeli rutin.']] },
+          { type: 'tips', items: ['Klik barang untuk melihat keluar per hari, PO berjalan, waktu datang, dan stok pengaman.', 'Jumlah saran dibulatkan ke atas per satuan beli. Keputusan memesan tetap di tangan Anda, di Accurate.'] },
+        ],
+      },
+      {
+        id: 'harga-beli',
+        title: 'Harga beli',
+        audience: { permissions: ['procurement.price.view'], levels: SUP },
+        body: [
+          { type: 'p', text: 'Tab "Harga beli" menampilkan harga terakhir per barang, harga sebelumnya, dan perubahannya (chip Naik, Turun, Hanya 1 harga). Nilai PO dan harga satuan juga tampil di detail PO.' },
+          { type: 'warning', text: 'Harga beli rahasia. Jangan meneruskannya ke pihak yang tidak berwenang.' },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== FINANCE
+  {
+    id: 'finance',
+    part: DIVISI,
+    title: 'Finance: piutang dan utang',
+    icon: 'account_balance_wallet',
+    scope: 'division',
+    route: '/finance/receivables',
+    audience: { permissions: ['finance.receivable.view'] },
+    who: 'Tim Finance dan Management Office.',
+    summary: 'Piutang pelanggan dan utang ke pemasok dari faktur dan pembayaran Accurate yang sudah disetujui Supervisor/Head Finance. Pengajuan pembayaran dibahas di bab Kerja harian.',
+    sections: [
+      {
+        id: 'piutang',
+        title: 'Piutang',
+        route: '/finance/receivables',
+        body: [
+          { type: 'p', text: '"Piutang" berisi tagihan pelanggan seluruh divisi: total piutang, lewat jatuh tempo, terlambat lebih dari 90 hari, jatuh tempo 14 hari, tertagih bulan ini, dan perkiraan DSO.' },
+          { type: 'steps', items: ['Lihat kartu "Umur piutang"; saring per channel dengan chip.', 'Buka tab "Pelanggan terlambat" untuk daftar penagihan.', 'Buka tab "Jatuh tempo 14 hari" untuk mengingatkan pelanggan lebih awal.'] },
+        ],
+      },
+      {
+        id: 'utang',
+        title: 'Utang',
+        route: '/finance/payables',
+        audience: { permissions: ['finance.payable.view'] },
+        body: [
+          { type: 'p', text: '"Utang" berisi utang ke pemasok: total utang, lewat jatuh tempo, jatuh tempo 14 hari, dan dibayar bulan ini.' },
+          { type: 'list', items: ['Tab "Jatuh tempo 14 hari": rencana pembayaran.', 'Tab "Lewat jatuh tempo": prioritas.', 'Tab "Per pemasok": total per pemasok.'] },
+          { type: 'note', text: 'Bila tertulis "Data utang belum tersedia", tarikan data Accurate Finance pertama belum disetujui Supervisor/Head Finance.' },
+        ],
+      },
+      {
+        id: 'umur',
+        title: 'Cara membaca umur piutang dan utang',
+        body: [
+          { type: 'table', columns: ['Kelompok', 'Artinya'], rows: [['Belum jatuh tempo', 'Masih dalam termin.'], ['1–30 hari', 'Terlambat sampai sebulan.'], ['31–60 hari', 'Terlambat 1–2 bulan.'], ['61–90 hari', 'Terlambat 2–3 bulan.'], ['Lebih dari 90 hari', 'Perlu tindakan khusus.']] },
+          { type: 'note', text: 'Faktur uang muka dan faktur mata uang asing yang belum lunas tidak dihitung. Setiap kelompok menunjukkan jumlah faktur dan persentasenya.' },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== PEOPLE & CULTURE
+  {
+    id: 'people-culture',
+    part: DIVISI,
+    title: 'People & Culture: onboarding, offboarding, dan GA',
+    icon: 'diversity_3',
+    scope: 'division',
+    route: '/hrga/onboarding',
+    audience: { permissions: ['hrga.view'] },
+    who: 'Tim People & Culture (termasuk GA).',
+    summary: 'Mengelola karyawan masuk dan keluar dengan checklist IT, GA, atasan, dan People & Culture; memproses Layanan GA; dan menjalankan operasional kantor. Absensi, cuti, dan payroll tetap di KantorKu.',
+    sections: [
+      {
+        id: 'kantorku',
+        title: 'Yang tetap di KantorKu',
+        body: [
+          { type: 'warning', text: 'Absensi, cuti, penggajian, dan data pribadi karyawan (KTP, NPWP, BPJS, rekening) tetap di KantorKu. Jangan mengunggah kontrak, KTP, offer letter, atau surat resign ke Prakasa Workspace.' },
+          { type: 'p', text: 'Di aplikasi hanya ada "Referensi KantorKu": ID karyawan KantorKu dan tautan referensinya.' },
+        ],
+      },
+      {
+        id: 'onboarding',
+        title: 'Onboarding karyawan baru',
+        route: '/hrga/onboarding',
+        body: [
+          {
+            type: 'steps',
+            items: [
+              'Buka "Onboarding", klik "Buat onboarding".',
+              'Isi "Karyawan": "Sudah ada di direktori?", "Nama lengkap", "Divisi", "Jabatan", "Atasan langsung", "Lokasi kerja".',
+              'Isi "Jadwal" ("Tanggal mulai") dan "Kebutuhan": "Email kerja rencana", "Perangkat" (Laptop/PC/Tidak), "Nomor perusahaan" (HP/Telepon IP/Tidak), "Lisensi".',
+              'Pilih "PIC People & Culture", lalu simpan sebagai draf.',
+              'Klik "Ajukan". Atasan menyetujui, lalu checklist dibuat otomatis.',
+              'Pantau "Progres" dan "Lewat tenggat" di daftar.',
+            ],
+          },
+          { type: 'note', text: 'Checklist dibuat saat pengajuan disetujui. Tenggat dihitung dari tanggal mulai, paling awal hari disetujui.' },
+        ],
+      },
+      {
+        id: 'offboarding',
+        title: 'Offboarding karyawan keluar',
+        route: '/hrga/offboarding',
+        body: [
+          {
+            type: 'steps',
+            items: [
+              'Buka "Offboarding", klik "Buat offboarding".',
+              'Pilih "Karyawan", isi "Hari terakhir" dan "Alasan" (Resign, Kontrak selesai, Lainnya).',
+              'Simpan, lalu klik "Ajukan".',
+              'Setelah disetujui, kartu "Kepemilikan" menunjukkan perangkat, lisensi, dan nomor yang dipegang. Klik "Tambah kepemilikan ke checklist" bila ada yang belum masuk.',
+              'Pastikan semua tugas pengembalian dan penonaktifan akses selesai sebelum hari terakhir.',
+            ],
+          },
+          { type: 'note', text: 'Bila hari terakhir tiba dan akses/aset belum beres, People & Culture menerima notifikasi dan email.' },
+        ],
+      },
+      {
+        id: 'checklist-alur',
+        title: 'Mengerjakan checklist alur karyawan',
+        body: [
+          { type: 'p', text: 'Setiap tugas checklist dimiliki satu tim: IT, GA, Atasan, atau People & Culture.' },
+          { type: 'list', items: ['Tugas perangkat: "Serahkan perangkat" / "Terima kembali".', 'Tugas lisensi: "Berikan lisensi" / "Cabut lisensi".', 'Tugas nomor: "Serahkan nomor" / "Terima kembali nomor".', 'Tugas lain: "Tandai selesai", "Lewati", "Tugaskan ke", atau "Buat tiket IT".'] },
+          { type: 'note', text: 'Akun Google dibuat atau dinonaktifkan di konsol admin Google; di aplikasi tugasnya cukup ditandai selesai.' },
+        ],
+      },
+      {
+        id: 'kelola-alur',
+        title: 'Menyetujui dan mengelola alur karyawan',
+        audience: { permissions: ['hrga.manage', 'hrga.approve'], levels: SUP },
+        body: [
+          { type: 'list', items: ['"Setujui", "Tolak", atau "Minta revisi" pengajuan.', '"Ubah" alur siapa pun, menugaskan ulang tugas, atau "Batalkan workflow" (tugas yang belum selesai berhenti; data tidak dihapus).', 'Pengaju bisa "Tarik pengajuan" untuk kembali ke draf.'] },
+        ],
+      },
+      {
+        id: 'template-checklist',
+        title: 'Template checklist',
+        route: '/hrga/checklist-templates',
+        audience: { permissions: ['hrga.checklist_template.manage'], levels: HEAD },
+        body: [
+          { type: 'p', text: 'Daftar tugas onboarding dan offboarding per divisi. Tanpa template aktif, checklist memakai daftar bawaan.' },
+          { type: 'steps', items: ['Buka "Template checklist" lalu buat template baru.', 'Isi "Nama", "Jenis", dan "Divisi" (kosong = semua divisi; template divisi dipakai lebih dulu).', 'Tambahkan item: "Judul", "Kategori", "Tim", "Hari relatif" (−30 sampai 30 dari tanggal mulai/hari terakhir), dan "Hanya bila".', 'Atur "PIC IT" dan "PIC GA" di kartu "Penanggung jawab".'] },
+        ],
+      },
+      {
+        id: 'proses-ga',
+        title: 'Memproses Layanan GA',
+        route: '/ga',
+        audience: { permissions: ['ga.request.process'] },
+        body: [
+          { type: 'steps', items: ['Buka "Layanan GA", tab "Semua permintaan".', 'Buka permintaan, klik "Tugaskan ke…" bila perlu.', 'Klik "Proses" saat mulai dikerjakan, lalu "Selesaikan". Lampirkan foto/PDF bukti bila ada.', 'Untuk ruang: "Serahkan kunci" saat dipakai dan "Terima kembali" setelahnya.'] },
+          { type: 'tips', items: ['Tab "Jadwal" menunjukkan pemakaian ruang.', 'Perbaikan mendesak bertarget 1 hari; permintaan "Lainnya" 5 hari sejak disetujui.'] },
+        ],
+      },
+      {
+        id: 'sumber-daya-ga',
+        title: 'Mengatur ruang (Sumber daya)',
+        route: '/ga',
+        audience: { permissions: ['ga.resource.manage'], levels: SUP },
+        body: [{ type: 'p', text: 'Di tab "Sumber daya", klik "Tambah ruang" untuk menambah ruang per lokasi, atau ubah ruang yang ada. Lokasi baru ditambahkan dulu di IT → Perangkat → tab "Lokasi".' }],
+      },
+      {
+        id: 'operasional-ga',
+        title: 'Operasional GA',
+        route: '/ga/operations',
+        audience: { permissions: ['ga.ops.view'] },
+        body: [
+          { type: 'table', columns: ['Tab', 'Isinya', 'Status'], rows: [['Perawatan berkala', 'AC, APAR, genset, lift, pengendalian hama, dan lainnya.', 'Sesuai jadwal, Segera, Lewat jadwal'], ['Kontrak & sewa', 'Sewa gedung, kebersihan, keamanan, dan lainnya.', 'Aktif, Segera berakhir, Lewat masa kontrak, Selesai'], ['Tagihan utilitas', 'Listrik, air, gas.', 'Belum dibayar, Segera jatuh tempo, Lewat jatuh tempo, Dibayar']] },
+          { type: 'steps', title: 'Mencatat perawatan', items: ['Buka tab "Perawatan berkala", pilih jadwal.', 'Klik "Catat perawatan", pilih hasil "Baik" atau "Perlu tindak lanjut".'] },
+          { type: 'note', text: 'Pembayaran tagihan tetap diajukan lewat Pengajuan pembayaran ke Finance. Di sini GA hanya mencatat tagihan dan tanggal lunasnya.' },
+        ],
+      },
+      {
+        id: 'operasional-kelola',
+        title: 'Mengatur jadwal, kontrak, dan tagihan',
+        route: '/ga/operations',
+        audience: { permissions: ['ga.ops.manage'], levels: SUP },
+        body: [
+          { type: 'list', items: ['"Tambah jadwal perawatan": isi interval (misalnya 90 hari untuk servis AC tiap 3 bulan).', '"Tambah kontrak": isi "Pengingat sebelum berakhir (hari)", bawaan 60.', '"Catat tagihan": jenis, nilai, dan jatuh tempo.'] },
+          { type: 'note', text: 'Kontrak yang segera berakhir dan tagihan lewat jatuh tempo dikirim lewat notifikasi dan email.' },
+        ],
+      },
+      {
+        id: 'kelola-direktori',
+        title: 'Mengelola Direktori',
+        route: '/people/directory',
+        audience: { permissions: ['people.directory.manage'], levels: SUP },
+        body: [
+          { type: 'list', items: ['"Tambah orang" untuk karyawan tanpa akun.', '"Impor dari laporan" untuk memperbarui banyak data sekaligus (periksa pratinjaunya dulu).', 'Chip status Aktif / Resign / Dikecualikan.'] },
+          { type: 'note', text: 'Nama, email kerja, dan divisi orang yang punya akun diubah oleh Administrator Sistem di menu Pengguna.' },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== IT
+  {
+    id: 'it-aset',
+    part: DIVISI,
+    title: 'IT: perangkat, langganan, dan infrastruktur',
+    icon: 'devices',
+    scope: 'division',
+    route: '/it/dashboard',
+    audience: { permissions: ['it.dashboard.view'] },
+    who: 'Tim IT (bagian People & Culture).',
+    summary: 'Aset perangkat dan pemakainya, langganan software dan lisensinya, jaringan, CCTV, backup, nomor telepon perusahaan, serta pemrosesan Tiket IT.',
+    sections: [
+      {
+        id: 'dashboard-it',
+        title: 'Dashboard IT',
+        route: '/it/dashboard',
+        body: [
+          { type: 'p', text: 'Ringkasan karyawan di direktori, total perangkat, perangkat bermasalah, perangkat tanpa nomor aset, perangkat di tangan karyawan resign, langganan software, dan perpanjangan dalam 30 hari.' },
+          { type: 'tips', items: ['Klik "Buat laporan aset AI" untuk ringkasan aset dari Prakasa AI; periksa isinya sebelum dibagikan.'] },
+        ],
+      },
+      {
+        id: 'perangkat',
+        title: 'Perangkat',
+        route: '/it/devices',
+        audience: { permissions: ['device.view'] },
+        body: [
+          { type: 'table', columns: ['Status', 'Artinya'], rows: [['Aktif', 'Dipakai seseorang.'], ['Cadangan', 'Siap dipakai.'], ['Perawatan / Perbaikan', 'Sedang dirawat atau diperbaiki di vendor.'], ['Rusak / Tidak aktif / Hilang', 'Butuh alasan saat mengubah status.'], ['Dibuang', 'Final, tidak bisa diubah lagi.']] },
+          { type: 'tips', items: ['Pakai chip "Bermasalah", "Tanpa nomor aset", "Di tangan karyawan resign", atau "Garansi ≤ 60 hari".', 'Lokasi baru ditambahkan di tab "Lokasi".'] },
+        ],
+      },
+      {
+        id: 'serah-terima',
+        title: 'Menambah, menyerahkan, dan merawat perangkat',
+        route: '/it/devices',
+        audience: { permissions: ['device.manage', 'device.assign'], levels: SUP },
+        body: [
+          { type: 'steps', items: ['Klik "Tambah perangkat" atau "Impor dari laporan".', 'Buka perangkat, klik "Serahkan perangkat" dan pilih pemegangnya. Buat BAST dari "Riwayat pemakaian".', 'Saat dikembalikan, klik "Kembalikan perangkat" dan buat BAST pengembalian.', 'Catat "Catat perawatan" atau "Catat perbaikan di vendor" bila ada.'] },
+          { type: 'note', text: 'Perangkat yang belum dikembalikan tepat waktu memicu notifikasi dan email.' },
+        ],
+      },
+      {
+        id: 'langganan',
+        title: 'Langganan software',
+        route: '/it/subscriptions',
+        audience: { permissions: ['subscription.view'] },
+        body: [
+          { type: 'p', text: 'Daftar langganan: produk, paket, jumlah seat, harga per seat, siklus tagihan, dan tanggal perpanjangan.' },
+          { type: 'list', items: ['"Tambah langganan" dan "Unggah invoice" (Supervisor/Head).', '"Tambah lisensi", "Tetapkan pengguna", "Cabut lisensi", dan "Catat pembayaran" (Head).'] },
+          { type: 'note', text: 'Perpanjangan yang perlu diputuskan dan pembayaran yang belum dilakukan dikirim lewat notifikasi dan email. Pembayarannya diajukan lewat Pengajuan pembayaran.' },
+        ],
+      },
+      {
+        id: 'infrastruktur',
+        title: 'Infrastruktur IT dan nomor perusahaan',
+        route: '/it/infrastructure',
+        audience: { permissions: ['it.infra.view'] },
+        body: [
+          { type: 'p', text: 'Tab: Jaringan, ISP, CCTV, Backup, Google Workspace, Telepon & HP, dan Vendor.' },
+          { type: 'list', items: ['CCTV: Online, Sebagian offline, Offline. Backup: Berhasil, Gagal, Belum diperiksa.', 'Google Workspace: catat review dari konsol admin Google tiap 3 bulan ("Catat review").', 'Telepon & HP: nomor milik perusahaan, pemegangnya ("Ganti pemegang"), dan BAST serah terima/pengembalian.'] },
+          { type: 'warning', text: 'Hanya nomor milik perusahaan yang dicatat. Jangan mencatat nomor pribadi, PIN, PUK, atau nomor SIM.' },
+        ],
+      },
+      {
+        id: 'proses-tiket',
+        title: 'Memproses Tiket IT',
+        route: '/it/tickets',
+        audience: { permissions: ['it_ticket.manage'], levels: SUP },
+        body: [
+          { type: 'p', text: 'Tim IT melihat semua tiket dari seluruh divisi. Salinan tiket baru juga masuk ke email support.' },
+          { type: 'steps', items: ['Buka tiket berstatus "Terbuka", klik "Mulai kerjakan".', 'Butuh info dari pengaju? Tulis di "Percakapan" lalu klik "Tunggu respons pengaju".', 'Setelah beres, klik "Tandai selesai". "Tutup tiket" bila tidak perlu dibuka lagi.'] },
+          { type: 'warning', text: 'Tiket yang ditutup tidak bisa dibuka lagi.' },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== DATA ACCURATE
+  {
+    id: 'data-accurate',
+    part: PANTAU,
+    title: 'Data Accurate: memeriksa dan menyetujui',
+    icon: 'fact_check',
+    scope: 'division',
+    route: '/data-accurate',
+    audience: { permissions: ['accurate.batch.view', 'sales.master.manage'] },
+    who: 'Supervisor dan Head Sales, Retail Commerce, Warehouse, Procurement, dan Finance; Head Management Office memantau.',
+    summary: 'Data dari Accurate ditarik otomatis setiap beberapa menit, tetapi baru dipakai di aplikasi setelah Supervisor atau Head divisinya menyetujui batch-nya. Aplikasi hanya membaca Accurate; tidak ada data Accurate yang diubah atau dihapus.',
+    sections: [
+      {
+        id: 'cara-kerja',
+        title: 'Cara kerja batch Accurate',
+        body: [
+          {
+            type: 'steps',
+            items: [
+              'Aplikasi menarik data dari Accurate (hanya membaca) dan menyusunnya menjadi satu batch per divisi.',
+              'Batch berstatus "Menunggu persetujuan". Angka di aplikasi belum berubah.',
+              'Supervisor atau Head divisi memeriksa dan memutuskan.',
+              'Bila disetujui, data diterapkan dan angka di modul divisi ikut berubah.',
+            ],
+          },
+          { type: 'table', columns: ['Status batch', 'Artinya'], rows: [['Menunggu persetujuan', 'Belum dipakai di aplikasi.'], ['Disetujui & diterapkan', 'Sudah dipakai.'], ['Ditolak', 'Tidak dipakai. Perbaiki di Accurate; tarikan berikutnya membuat batch baru.'], ['Ditarik kembali', 'Dibatalkan sebelum diputuskan.']] },
+          { type: 'table', title: 'Jenis perubahan dalam batch', columns: ['Label', 'Artinya'], rows: [['Baru', 'Data baru di Accurate.'], ['Berubah', 'Data yang berubah sejak tarikan lalu.'], ['Tidak ada lagi', 'Sudah tidak ada di Accurate. Hanya ditandai; tidak ada data yang dihapus.']] },
+        ],
+      },
+      {
+        id: 'menyetujui',
+        title: 'Menyetujui atau menolak batch',
+        audience: { permissions: ['accurate.batch.view'], levels: SUP, roles: ['sales', 'retail_commerce', 'warehouse', 'procurement', 'finance'] },
+        body: [
+          {
+            type: 'steps',
+            items: [
+              'Buka notifikasi "Data Accurate menunggu persetujuan" (juga dikirim lewat email), atau menu modul divisi Anda → "Data Accurate".',
+              'Di tab "Batch", klik "Periksa & putuskan".',
+              'Periksa ringkasan dan perubahan: Baru, Berubah, Tidak ada lagi. Untuk Sales, lihat juga "DPP SO baru/berubah".',
+              'Klik "Setujui & terapkan" bila datanya benar, lalu konfirmasi "Setujui data Accurate?".',
+              'Bila salah, klik "Tolak", isi "Alasan penolakan", lalu "Tolak batch". Perbaiki datanya di Accurate.',
+            ],
+          },
+          { type: 'warning', text: 'Jangan menyetujui batch yang belum Anda periksa. Setelah disetujui, angka di dashboard, piutang, stok, dan laporan ikut berubah.' },
+          { type: 'note', text: 'Batch yang lama tidak diputuskan dikirim sebagai pengingat lalu eskalasi lewat email. Tombol Setujui juga ada langsung di notifikasinya.' },
+        ],
+      },
+      {
+        id: 'periksa-dengan-ai',
+        title: 'Periksa dengan AI sebelum menyetujui',
+        audience: { permissions: ['accurate.batch.view'], levels: SUP, roles: ['sales', 'retail_commerce', 'warehouse', 'procurement', 'finance'] },
+        body: [
+          { type: 'p', text: 'Di halaman sebuah batch ada kartu "Pemeriksaan sebelum memutuskan". Tombol "Periksa dengan AI" menjalankan pemeriksaan otomatis atas isi batch, lalu Prakasa AI menuliskan catatan singkat. Ini catatan untuk Anda: keputusan menyetujui atau menolak tetap Anda ambil sendiri.' },
+          {
+            type: 'steps',
+            items: [
+              'Buka batch yang menunggu keputusan Anda ("Data Accurate" → "Periksa & putuskan").',
+              'Di kartu "Pemeriksaan sebelum memutuskan", klik "Periksa dengan AI".',
+              'Baca "Temuan pemeriksaan otomatis". Tiap temuan memuat tingkat, jumlah dokumen, penjelasan mengapa itu penting, dan beberapa nomor dokumen contoh.',
+              'Klik nomor dokumen contoh untuk menampilkannya di daftar "Isi batch".',
+              'Baca "Catatan AI — bukan keputusan": isi batch, yang perlu dicermati, dan pertanyaan untuk tim.',
+              'Tanyakan hal yang janggal ke admin Accurate atau tim terkait, lalu putuskan sendiri dengan "Setujui & terapkan" atau "Tolak".',
+            ],
+          },
+          {
+            type: 'table',
+            title: 'Yang diperiksa otomatis',
+            columns: ['Temuan', 'Artinya'],
+            rows: [
+              ['Nilai dokumen yang sudah ada berubah besar', 'Nilai dokumen berubah 20% atau lebih, atau Rp 10 juta atau lebih, dibanding data yang sudah disetujui.'],
+              ['Data yang tidak ada lagi di Accurate', 'Dokumen atau data yang pernah disetujui, tetapi sekarang sudah tidak ada di Accurate.'],
+              ['Nomor dokumen yang sama muncul dua kali', 'Satu nomor dipakai dua dokumen berbeda.'],
+              ['Perubahan pada dokumen bulan sebelumnya', 'Dokumen bertanggal bulan lalu diubah atau hilang; angka bulan itu ikut berubah.'],
+              ['Perubahan pada dokumen lama', 'Dokumen bertanggal lebih dari 30 hari sebelum tarikan diubah atau hilang.'],
+              ['Dokumen bertanggal setelah hari tarikan', 'Tanggal dokumen lebih maju dari hari data ditarik.'],
+              ['Dokumen untuk customer yang belum ada di master aplikasi', 'Kode customer pada dokumen belum ada di master customer aplikasi.'],
+              ['Channel kosong', 'Dokumen atau customer tanpa channel.'],
+              ['Faktur tanpa sales order', 'Faktur yang tidak merujuk sales order.'],
+              ['Barang tanpa konversi satuan', 'Faktur memuat barang yang belum punya konversi satuan.'],
+            ],
+          },
+          { type: 'warning', text: 'Prakasa AI tidak pernah menyetujui atau menolak batch, dan tidak memberi rekomendasi keputusan. AI bisa keliru: periksa dokumennya sendiri sebelum memutuskan.' },
+          { type: 'tips', items: ['Hasil pemeriksaan terakhir tersimpan di batch, lengkap dengan siapa yang menjalankannya dan kapan. "Periksa ulang dengan AI" menggantinya.', 'Nilai rupiah pada temuan hanya tampil bagi yang berhak melihat angka uang divisinya. Nilai purchase order tidak pernah ditampilkan.', 'Pemeriksaan dibatasi 6 kali per jam untuk tiap orang.', 'Bila Prakasa AI sedang tidak tersedia atau batas harian tercapai, temuan pemeriksaan otomatis tetap tampil.'] },
+          { type: 'note', text: 'Pemeriksaan hanya membaca isi batch yang sudah tersimpan di aplikasi dan membandingkannya dengan data yang sudah disetujui. Accurate tidak dihubungi dan tidak ada data yang diubah.' },
+        ],
+      },
+      {
+        id: 'perlu-dibereskan',
+        title: 'Perlu dibereskan di Accurate',
+        body: [
+          { type: 'p', text: 'Tab "Perlu dibereskan di Accurate" berisi data Accurate yang tidak lengkap atau tidak wajar (misalnya stok minus). Perbaikannya dilakukan di Accurate oleh pemilik datanya; tarikan berikutnya membawa data yang sudah benar.' },
+        ],
+      },
+      {
+        id: 'tarik-sekarang',
+        title: 'Tarik sekarang',
+        audience: { permissions: ['sales.master.manage', 'warehouse.accurate.sync', 'procurement.accurate.sync'], levels: SUP },
+        body: [
+          { type: 'p', text: 'Tarikan berjalan otomatis. Bila butuh data terbaru segera, klik "Tarik sekarang" di panel "Sinkron otomatis dengan Accurate" (atau tab "Data Accurate" di modul divisi). Tarikan pertama bisa beberapa menit.' },
+          { type: 'note', text: 'Tarikan dilewati bila tarikan lain masih berjalan atau batch sebelumnya masih menunggu keputusan.' },
+        ],
+      },
+      {
+        id: 'pengawasan',
+        title: 'Pengawasan Management Office',
+        audience: { roles: ['management_office'] },
+        body: [{ type: 'p', text: 'Head Management Office melihat batch semua divisi untuk pengawasan. Keputusan menyetujui atau menolak tetap di tangan Supervisor/Head divisi masing-masing.' }],
+      },
+    ],
+  },
+
+  // ================================================================== DASHBOARD DIVISI
+  {
+    id: 'dashboard-divisi',
+    part: PANTAU,
+    title: 'Dashboard divisi dan grafik capaian bulanan',
+    icon: 'insights',
+    scope: 'management',
+    route: '/division-dashboard',
+    audience: { permissions: ['division_dashboard.view', 'management_dashboard.view'] },
+    who: 'Supervisor dan Head setiap divisi; Management Office memilih divisi mana pun.',
+    summary: 'Angka utama divisi, perjalanan 12 bulan dalam grafik capaian bulanan, tren dengan garis target, dan pekerjaan yang lewat tenggat.',
+    sections: [
+      {
+        id: 'membaca',
+        title: 'Membaca dashboard divisi',
+        body: [
+          { type: 'steps', items: ['Buka "Dashboard divisi". Management Office memilih divisi di "Divisi".', 'Lihat angka utama di bagian atas.', 'Klik "Muat ulang" untuk data terbaru.'] },
+          { type: 'note', text: 'Angka yang berasal dari Accurate hanya mencakup batch yang sudah disetujui.' },
+        ],
+      },
+      {
+        id: 'motion-chart',
+        title: 'Grafik capaian bulanan',
+        body: [
+          { type: 'p', text: 'Grafik capaian bulanan menggambarkan perjalanan capaian divisi bulan demi bulan. Tekan tombol putar atau geser penanda bulan untuk melihat perubahannya.' },
+          { type: 'note', text: 'Bila tertulis "Grafik capaian bulanan menunggu data", modul divisi belum mencatat pekerjaan minimal 3 bulan.' },
+        ],
+      },
+      {
+        id: 'tren-target',
+        title: 'Tren 12 bulan dan target',
+        body: [{ type: 'p', text: 'Setiap grafik tren menampilkan realisasi per bulan dan garis target bulanan. Target ditetapkan manajemen di "Target & realisasi".' }],
+      },
+      {
+        id: 'lewat-tenggat',
+        title: 'Lewat tenggat',
+        body: [{ type: 'p', text: 'Bagian "Lewat tenggat" menghitung pekerjaan divisi yang menunggu tindak lanjut. Klik "Buka Pusat eskalasi" untuk menanganinya (Head dan manajemen).' }],
+      },
+    ],
+  },
+
+  // ================================================================== MANAJEMEN
+  {
+    id: 'manajemen',
+    part: PANTAU,
+    title: 'Manajemen: dashboard, eskalasi, target, peta program',
+    icon: 'monitoring',
+    scope: 'management',
+    route: '/management',
+    audience: { permissions: ['management_dashboard.view', 'management_dashboard.division'] },
+    who: 'Management Office untuk seluruh perusahaan; Head divisi untuk divisinya sendiri.',
+    summary: 'Alat pemantauan lintas modul. Head divisi melihat divisinya sendiri; Management Office melihat semua divisi.',
+    sections: [
+      {
+        id: 'dashboard-manajemen',
+        title: 'Dashboard manajemen',
+        route: '/management',
+        body: [
+          { type: 'p', text: 'Ringkasan KPI dan "Eskalasi teratas". Status KPI: "Perlu ditindaklanjuti", "Belum ada data", atau "Gagal dimuat" (coba "Muat ulang").' },
+          { type: 'note', text: 'Bila tertulis "Akun Anda belum terhubung ke divisi", minta Administrator Sistem menghubungkan akun Anda.' },
+        ],
+      },
+      {
+        id: 'eskalasi',
+        title: 'Pusat eskalasi',
+        route: '/escalations',
+        body: [
+          { type: 'p', text: 'Satu antrean untuk semua pekerjaan dari setiap modul yang sudah lewat tenggat. Pilih tampilan "Antrean" atau "Per modul".' },
+          { type: 'steps', items: ['Klik baris eskalasi.', 'Di "Tindak lanjut eskalasi", pilih "Penanggung jawab tindak lanjut" (boleh diri sendiri) dan tulis "Catatan".', 'Perbarui statusnya: "Belum ditangani", "Sedang ditangani", "Selesai".'] },
+        ],
+      },
+      {
+        id: 'target',
+        title: 'Target & realisasi',
+        route: '/targets',
+        body: [
+          { type: 'p', text: 'Target per divisi dan per metrik untuk satu periode ("Bulan" atau "Kuartal"), berdampingan dengan realisasinya yang dihitung otomatis.' },
+          { type: 'table', columns: ['Status', 'Artinya'], rows: [['Tercapai', 'Target terpenuhi.'], ['Sesuai jalur', 'Laju cukup untuk mencapai target.'], ['Perlu perhatian', 'Laju agak tertinggal.'], ['Tertinggal', 'Jauh di bawah laju target.'], ['Belum ada data', 'Belum bisa dihitung, bukan nol.'], ['Belum ada target', 'Target belum ditetapkan.']] },
+          { type: 'note', text: 'Head divisi bisa melihat target dan realisasinya, tetapi tidak mengubahnya; target ditetapkan manajemen.' },
+        ],
+      },
+      {
+        id: 'target-atur',
+        title: 'Menetapkan target',
+        route: '/targets',
+        audience: { permissions: ['management_dashboard.view'] },
+        body: [{ type: 'steps', items: ['Buka "Target & realisasi", pilih periode.', 'Di "Matriks target", klik ikon pensil pada sel divisi × metrik.', 'Isi target lalu simpan. "Hapus target" untuk mengosongkannya.'] }],
+      },
+      {
+        id: 'peta-program',
+        title: 'Peta program',
+        route: '/roadmap',
+        body: [{ type: 'p', text: 'Semua project Project Tracker dari setiap divisi dalam satu linimasa. Pilih "Linimasa" atau "Daftar"; klik "Buka project tracker" untuk detailnya. Perhatikan jadwal yang tumpang tindih dan yang lewat tenggat.' }],
+      },
+      {
+        id: 'alur-margin',
+        title: 'Alur & margin',
+        route: '/management/flow',
+        audience: { permissions: ['management_dashboard.view'] },
+        body: [
+          { type: 'p', text: 'Khusus manajemen. Tab "Alur penjualan" (pesanan sampai lunas), "Alur pembelian" (PO sampai barang datang), "Perkiraan margin (harga PO)", dan "Lambat laku". Pilih periode: Bulan ini, Bulan lalu, 3 bulan terakhir, Tahun ini.' },
+          { type: 'note', text: 'Margin adalah perkiraan dari harga PO, bukan laporan laba rugi resmi.' },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== LAPORAN
+  {
+    id: 'laporan',
+    part: PANTAU,
+    title: 'Laporan: Google Analytics dan log aktivitas',
+    icon: 'bar_chart',
+    scope: 'management',
+    audience: { permissions: ['analytics.view', 'activity_log.view'] },
+    who: 'Management Office dan Marketing (Analytics); Head Management Office dan Super Admin (log aktivitas).',
+    summary: 'Laporan pengunjung situs perusahaan dan jejak audit aktivitas di aplikasi.',
+    sections: [
+      {
+        id: 'analytics',
+        title: 'Google Analytics',
+        route: '/analytics',
+        audience: { permissions: ['analytics.view'] },
+        body: [{ type: 'p', text: 'Pilih "Properti" dan rentang waktu (7 hari, 28 hari, 90 hari, Kustom). Kartu: pengguna aktif & sesi per hari, sumber trafik, perangkat, negara, dan halaman teratas.' }],
+      },
+      {
+        id: 'log-aktivitas',
+        title: 'Log aktivitas',
+        route: '/activity-logs',
+        audience: { permissions: ['activity_log.view'] },
+        body: [
+          { type: 'p', text: 'Jejak audit aktivitas pengguna dan sistem (50 kejadian terbaru), termasuk perubahan akses yang dilakukan administrator.' },
+          { type: 'warning', text: 'Log memuat nilai data. Jangan membagikannya ke luar.' },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== ADMIN
+  {
+    id: 'admin-pengguna',
+    part: ADMIN,
+    title: 'Pengguna & akses',
+    icon: 'manage_accounts',
+    scope: 'admin',
+    audience: { permissions: ['user.manage', 'role.manage', 'permission.manage', 'department.manage', 'entity.manage'] },
+    who: 'Administrator Sistem dan Super Admin.',
+    summary: 'Membuat akun, menempatkannya di entitas, divisi, dan peran yang tepat, serta mengatur peran dan izin. Administrator Sistem mengatur sistem tanpa bisa melihat data divisi mana pun.',
+    sections: [
+      {
+        id: 'batas-admin',
+        title: 'Batas peran Administrator Sistem',
+        body: [
+          { type: 'table', columns: ['Peran', 'Lihat data divisi', 'Kelola sistem'], rows: [['Super Admin', 'Ya, semua', 'Ya, termasuk akun Super Admin'], ['Administrator Sistem', 'Tidak', 'Ya, kecuali akun dan peran Super Admin']] },
+          { type: 'list', items: ['Tidak bisa mengubah peran dan divisi akun sendiri.', 'Tidak bisa mengubah, mereset, atau menghapus akun Super Admin.', 'Izin dua peran global hanya bisa diubah Super Admin.', 'Tidak bisa mengatur atau mereset kata sandi: kata sandi dikelola oleh Super Admin saja.', 'Akun yang dibuat Administrator Sistem masuk dengan akun Google kantor (tanpa kata sandi).', 'Semua perubahan tercatat di log aktivitas yang dibaca Super Admin.'] },
+          { type: 'warning', text: 'Menggabungkan Administrator Sistem dengan peran divisi membuat pengguna itu bisa melihat data divisi tersebut. Aplikasi menampilkan peringatan bila ini terjadi.' },
+        ],
+      },
+      {
+        id: 'pengguna',
+        title: 'Menambah pengguna',
+        route: '/admin/users',
+        audience: { permissions: ['user.manage'] },
+        body: [
+          {
+            type: 'steps',
+            items: [
+              'Buka "Pengguna", klik "Tambah pengguna".',
+              'Isi "Nama lengkap" dan "Email" kantor, pilih "Entitas" dan "Divisi".',
+              'Pilih "Peran" (muncul setelah divisi dipilih): Member, Supervisor, atau Head divisi itu.',
+              'Pilih "Status awal" Aktif.',
+              'Khusus Super Admin: bila pengguna perlu masuk dengan kata sandi, isi "Kata sandi sementara (opsional)" (minimal 10 karakter). Kosongkan bila pengguna masuk dengan akun Google kantor.',
+              'Simpan. Bila kata sandi sementara diisi, sampaikan lewat jalur aman; pengguna wajib menggantinya saat pertama masuk.',
+            ],
+          },
+          { type: 'note', text: 'Kata sandi dikelola oleh Super Admin saja. Administrator Sistem tidak melihat kolom kata sandi: akun yang ia buat masuk dengan akun Google kantor. Bila pengguna itu memerlukan kata sandi, minta Super Admin mengaturnya lewat "Atur ulang kata sandi".' },
+          { type: 'tips', items: ['Klik ikon ⓘ di samping peran untuk membaca isi peran itu.', 'Akun Super Admin / Administrator Sistem tidak perlu divisi.'] },
+        ],
+      },
+      {
+        id: 'reset-sandi',
+        title: 'Mereset kata sandi atau menonaktifkan akun',
+        route: '/admin/users',
+        audience: { permissions: ['user.manage'] },
+        body: [
+          { type: 'p', text: 'Mereset kata sandi hanya bisa dilakukan Super Admin. Tombol "Atur ulang kata sandi" tidak tampil untuk Administrator Sistem. Menonaktifkan akun bisa dilakukan Administrator Sistem maupun Super Admin.' },
+          { type: 'steps', title: 'Mereset kata sandi (Super Admin)', items: ['Buka "Pengguna" dan cari akunnya.', 'Klik "Atur ulang kata sandi" di baris akun itu, lalu isi kata sandi sementara (minimal 10 karakter).', 'Sampaikan kata sandi sementara lewat jalur aman. Semua sesi lama akun itu berakhir, dan pengguna wajib membuat kata sandi baru saat masuk berikutnya.'] },
+          { type: 'steps', title: 'Menonaktifkan akun', items: ['Buka "Pengguna" dan cari akunnya.', 'Klik tombol nonaktifkan di baris akun itu, atau buka akunnya dan ubah "Status" menjadi "Nonaktif".'] },
+          { type: 'note', text: 'Untuk karyawan keluar, penonaktifan akun mengikuti checklist offboarding dari People & Culture.' },
+        ],
+      },
+      {
+        id: 'sinkronisasi',
+        title: 'Sinkronisasi Workspace',
+        route: '/admin/workspace-sync',
+        audience: { permissions: ['user.manage'] },
+        body: [
+          { type: 'p', text: 'Mengambil daftar anggota terbaru dari Google Workspace. Tidak ada akun yang dibuat otomatis.' },
+          { type: 'steps', items: ['Buka "Sinkronisasi Workspace" dan ambil daftar terbaru.', 'Di "Kandidat menunggu tinjauan", pilih divisi dan peran tiap orang, atau "Lewati kandidat".', 'Klik "Sinkronkan akses".'] },
+          { type: 'note', text: 'Akun yang diterapkan oleh Administrator Sistem masuk dengan akun Google kantor, tanpa kata sandi. Hanya Super Admin yang mendapat kata sandi sementara untuk disampaikan ke pengguna.' },
+        ],
+      },
+      {
+        id: 'peran',
+        title: 'Peran',
+        route: '/admin/roles',
+        audience: { permissions: ['role.manage'] },
+        body: [
+          { type: 'p', text: 'Setiap divisi punya tiga peran standar: Member, Supervisor, dan Head. Peran "Custom" bisa dibuat untuk kebutuhan khusus.' },
+          { type: 'table', columns: ['Level', 'Isinya'], rows: [['Member', 'Mengerjakan tugas harian dan mengajukan permintaan di divisinya.'], ['Supervisor', 'Seperti Member, ditambah menyetujui pekerjaan divisi (misalnya batch Accurate atau pergerakan barang) dan Dashboard divisi.'], ['Head', 'Seperti Supervisor, ditambah dashboard manajemen, eskalasi, dan target yang dibatasi ke divisinya, serta cap surat dan template.']] },
+          { type: 'tips', items: ['"Ubah akses" untuk mengubah izin peran; "Kembalikan ke default" untuk kembali ke izin standar.'] },
+        ],
+      },
+      {
+        id: 'izin',
+        title: 'Izin akses',
+        route: '/admin/permissions',
+        audience: { permissions: ['permission.manage'] },
+        body: [{ type: 'p', text: 'Daftar hak akses yang bisa diberikan ke peran. Pemberiannya diatur di halaman "Peran".' }],
+      },
+      {
+        id: 'divisi',
+        title: 'Divisi',
+        route: '/admin/departments',
+        audience: { permissions: ['department.manage'] },
+        body: [{ type: 'p', text: 'Divisi di setiap entitas: Finance, Procurement, Sales, People & Culture, Management Office, Retail Commerce, Warehouse, dan Marketing. Klik "Tambah divisi" atau "Impor".' }],
+      },
+      {
+        id: 'entitas',
+        title: 'Entitas',
+        route: '/admin/entities',
+        audience: { permissions: ['entity.manage'] },
+        body: [{ type: 'p', text: 'Badan usaha yang memakai Prakasa Workspace. Klik "Tambah entitas" untuk badan usaha baru.' }],
+      },
+    ],
+  },
+  {
+    id: 'admin-aturan',
+    part: ADMIN,
+    title: 'Aturan approval & dokumen',
+    icon: 'rule',
+    scope: 'admin',
+    audience: { permissions: ['approval_matrix.view', 'signature_rule.view', 'signature_precheck.view', 'document_type.manage', 'folder_rule.manage'] },
+    who: 'Administrator Sistem dan Super Admin.',
+    summary: 'Siapa menyetujui apa, siapa menandatangani dokumen jenis apa, dan di folder Shared Drive mana dokumen disimpan.',
+    sections: [
+      {
+        id: 'matriks',
+        title: 'Matriks approval',
+        route: '/admin/approval-matrix',
+        audience: { permissions: ['approval_matrix.view'] },
+        body: [
+          { type: 'p', text: 'Alur approval per entitas, divisi, jenis permintaan, tipe dokumen, dan nominal: berurutan atau paralel, dengan pengingat dan eskalasi.' },
+          { type: 'steps', items: ['Buat matrix: isi "Nama matrix", "Jenis alur", "Jenis permintaan", "Tipe dokumen", nominal minimum/maksimum, dan "Prioritas" (angka kecil didahulukan).', 'Tambahkan langkah: "Urutan", "Approver", "Grup paralel", "Penanda tangan", dan "Pengingat / eskalasi".', 'Nyalakan "Matrix aktif".'] },
+          { type: 'warning', text: 'Perubahan matriks langsung berlaku untuk pengajuan baru. Uji dengan nominal kecil dulu.' },
+        ],
+      },
+      {
+        id: 'aturan-ttd',
+        title: 'Aturan tanda tangan',
+        route: '/admin/signature-rules',
+        audience: { permissions: ['signature_rule.view'] },
+        body: [{ type: 'p', text: 'Per tipe dokumen: penanda tangan (pengguna atau peran, salah satu), level approval minimum, cek awal AI wajib, verifikasi QR wajib, izinkan delegasi, algoritma checksum (SHA-256 / SHA-512), dan ID folder arsip Drive.' }],
+      },
+      {
+        id: 'cek-awal',
+        title: 'Cek awal tanda tangan',
+        route: '/admin/signature-precheck',
+        audience: { permissions: ['signature_precheck.view'] },
+        body: [{ type: 'p', text: 'Log cek awal AI (Lolos, Peringatan, Gagal, Dilewati). Hasilnya bersifat saran dan tidak menggantikan keputusan approval.' }],
+      },
+      {
+        id: 'jenis-dokumen',
+        title: 'Jenis dokumen',
+        route: '/admin/document-types',
+        audience: { permissions: ['document_type.manage'] },
+        body: [{ type: 'p', text: 'Jenis dokumen, folder bawaannya, dan apakah dokumen itu butuh tanda tangan atau cek awal AI.' }],
+      },
+      {
+        id: 'aturan-folder',
+        title: 'Aturan folder',
+        route: '/admin/folder-rules',
+        audience: { permissions: ['folder_rule.manage'] },
+        body: [{ type: 'p', text: 'Folder Shared Drive tujuan untuk setiap tipe dokumen, per entitas dan divisi. Pastikan setiap divisi punya folder Shared Drive sendiri.' }],
+      },
+    ],
+  },
+  {
+    id: 'admin-sistem',
+    part: ADMIN,
+    title: 'Sistem & integrasi',
+    icon: 'settings',
+    scope: 'admin',
+    audience: { permissions: ['integration.accurate.manage', 'ai.provider.manage', 'ai_command.usage.view', 'integration_log.view', 'notification.manage_rule'] },
+    who: 'Administrator Sistem dan Super Admin.',
+    summary: 'Koneksi Accurate, mesin Prakasa AI, log integrasi, dan aturan notifikasi & email.',
+    sections: [
+      {
+        id: 'accurate',
+        title: 'Integrasi Accurate',
+        route: '/admin/accurate',
+        audience: { permissions: ['integration.accurate.manage'] },
+        body: [
+          { type: 'p', text: 'Menyambungkan Accurate Online: "ID klien", "Rahasia klien", dan "URL callback OAuth", lalu "Simpan kredensial". Kartu "Status koneksi" menunjukkan Tersambung atau Belum tersambung.' },
+          { type: 'warning', text: 'Hanya baca: aplikasi tidak pernah menulis ke Accurate. Administrator Sistem melihat status koneksi saja, bukan datanya. Menulis ke Accurate adalah tahap masa depan yang harus disetujui owner.' },
+        ],
+      },
+      {
+        id: 'penyedia-ai',
+        title: 'Pengaturan penyedia AI',
+        route: '/admin/ai-provider-settings',
+        audience: { permissions: ['ai.provider.manage'] },
+        body: [
+          { type: 'p', text: 'Mesin AI yang dipakai Prakasa AI: akun Claude Team, mesin default dan per divisi, serta kunci API penyedia lain. Semua peran otomatis punya akses AI; pengaturan ini hanya menentukan mesinnya.' },
+          { type: 'warning', text: 'Bila Prakasa AI terputus, semua pengguna terdampak dan admin menerima email. Sambungkan ulang secepatnya.' },
+        ],
+      },
+      {
+        id: 'pemakaian-ai',
+        title: 'Pemakaian AI',
+        route: '/admin/ai-usage',
+        audience: { permissions: ['ai_command.usage.view'] },
+        body: [{ type: 'p', text: 'Ringkasan pemakaian Prakasa AI. Isi prompt dan percakapan tidak disimpan di riwayat penggunaan.' }],
+      },
+      {
+        id: 'log-integrasi',
+        title: 'Log integrasi',
+        route: '/admin/integration-logs',
+        audience: { permissions: ['integration_log.view'] },
+        body: [{ type: 'p', text: 'Panggilan ke layanan luar (Google, Accurate, AI). Tab "Kesehatan 24 jam" untuk gambaran cepat dan "Log detail" per panggilan untuk mencari penyebab error.' }],
+      },
+      {
+        id: 'notifikasi-email',
+        title: 'Notifikasi & email',
+        route: '/admin/notification-policy',
+        audience: { permissions: ['notification.manage_rule'] },
+        body: [
+          { type: 'p', text: 'Daftar setiap jenis notifikasi dengan kolom "Di aplikasi" dan "Email". Admin bisa menyalakan atau mematikan email per notifikasi; pilihan admin mengalahkan aturan bawaan. Klik "Kembalikan bawaan" untuk kembali.' },
+          { type: 'tips', items: ['Email hanya untuk yang menunggu keputusan atau tindakan dan terlambat itu merugikan. Terlalu banyak email membuat email penting terlewat.'] },
+        ],
+      },
+    ],
+  },
+
+  // ================================================================== REFERENSI
+  {
+    id: 'glosarium',
+    part: REF,
+    title: 'Glosarium',
+    icon: 'dictionary',
+    scope: 'general',
+    who: 'Semua karyawan.',
+    summary: 'Istilah yang sering muncul di Prakasa Workspace.',
+    sections: [
+      {
+        id: 'istilah',
+        title: 'Daftar istilah',
+        body: [
+          {
+            type: 'table',
+            columns: ['Istilah', 'Arti'],
+            rows: [
+              ['Accurate', 'Sistem akuntansi perusahaan. Sumber resmi transaksi; aplikasi hanya membacanya.'],
+              ['Batch', 'Satu paket data tarikan dari Accurate yang menunggu persetujuan divisi.'],
+              ['DPP', 'Dasar pengenaan pajak: nilai sebelum PPN. Omzet di aplikasi selalu DPP.'],
+              ['SO / SJ', 'Sales order dan surat jalan.'],
+              ['PO', 'Purchase order (pesanan pembelian ke pemasok).'],
+              ['NOO', 'New open outlet: pelanggan yang pertama kali difakturkan bulan itu.'],
+              ['Dormant / Lost', 'Pelanggan yang lama tidak order / tidak order 60 hari atau lebih.'],
+              ['Tukar faktur', 'Penyerahan faktur ke pelanggan untuk ditagih, dengan tanda terima.'],
+              ['Shared Drive divisi', 'Folder Google Drive milik divisi, tempat semua dokumen resmi divisi.'],
+              ['Kop & footer', 'Kepala dan kaki surat divisi yang dipakai template dokumen.'],
+              ['BAST', 'Berita acara serah terima, misalnya perangkat atau nomor perusahaan.'],
+              ['Approval', 'Persetujuan atasan atau penyetuju menurut matriks approval.'],
+              ['Eskalasi', 'Pekerjaan lewat tenggat yang dinaikkan untuk ditindaklanjuti.'],
+              ['Member / Supervisor / Head', 'Tiga level peran di setiap divisi.'],
+              ['Administrator Sistem', 'Pengelola konfigurasi aplikasi tanpa akses ke data divisi.'],
+              ['KantorKu', 'Aplikasi HR untuk absensi, cuti, dan payroll. Tidak terhubung dengan Prakasa Workspace.'],
+              ['SimpliDOTS', 'Aplikasi kunjungan lapangan Sales.'],
+              ['TrackCar', 'Aplikasi peminjaman kendaraan kantor.'],
+              ['Space', 'Ruang diskusi tim di Google Chat; bisa punya Project Tracker sendiri.'],
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'bantuan',
+    part: REF,
+    title: 'Kalau ada masalah',
+    icon: 'help',
+    scope: 'general',
+    who: 'Semua karyawan.',
+    summary: 'Siapa yang dihubungi, dan jawaban untuk pertanyaan yang sering muncul.',
+    sections: [
+      {
+        id: 'siapa',
+        title: 'Siapa yang dihubungi',
+        body: [
+          {
+            type: 'table',
+            columns: ['Masalah', 'Hubungi'],
+            rows: [
+              ['Laptop, internet, software, akun Google', 'Tim IT lewat "Butuh bantuan IT" atau Tiket IT.'],
+              ['Lupa kata sandi atau ingin menggantinya', 'Super Admin. Kata sandi dikelola oleh Super Admin; tidak ada reset mandiri.'],
+              ['Tidak bisa masuk karena akun atau akses belum disiapkan', 'Administrator Sistem.'],
+              ['Menu yang dibutuhkan tidak ada', 'Atasan Anda, lalu Administrator Sistem untuk mengatur peran.'],
+              ['Angka dari Accurate tidak muncul atau salah', 'Supervisor/Head divisi Anda (persetujuan batch) atau pemilik data di Accurate.'],
+              ['ATK, fasilitas rusak, ruang rapat', 'GA lewat Layanan GA.'],
+              ['Absensi, cuti, slip gaji', 'People & Culture, lewat KantorKu.'],
+              ['Pembayaran atau reimbursement', 'Finance, lewat Pengajuan pembayaran.'],
+            ],
+          },
+        ],
+      },
+      {
+        id: 'faq',
+        title: 'Pertanyaan yang sering muncul',
+        body: [
+          {
+            type: 'faq',
+            items: [
+              { q: 'Kenapa menu saya berbeda dengan rekan kerja?', a: 'Menu dan panduan ini disesuaikan dengan divisi dan peran masing-masing. Anda hanya melihat yang boleh Anda buka.' },
+              { q: 'Saya membuka tautan dari rekan, tapi kembali ke Dashboard.', a: 'Halaman itu bukan untuk peran Anda. Minta atasan bila Anda memang perlu aksesnya.' },
+              { q: 'Kenapa angka penjualan, stok, atau piutang belum berubah?', a: 'Data Accurate baru dipakai setelah batch-nya disetujui Supervisor/Head divisi. Tanyakan apakah ada batch yang masih menunggu persetujuan.' },
+              { q: 'Bisakah saya membuat sales order atau mengubah data Accurate dari aplikasi?', a: 'Tidak. Transaksi dibuat di Accurate. Prakasa Workspace hanya membaca dan memantau.' },
+              { q: 'Di mana saya mengajukan cuti atau melihat absensi?', a: 'Di KantorKu. Prakasa Workspace sengaja tidak mengurus absensi, cuti, dan payroll.' },
+              { q: 'Apakah Prakasa AI bisa menyetujui atau mengirim sesuatu atas nama saya?', a: 'Tidak. AI hanya menyiapkan draft atau usulan. Anda yang menekan Konfirmasi atau Simpan.' },
+              { q: 'Saya tidak menerima email notifikasi.', a: 'Email hanya dikirim untuk hal yang menunggu keputusan atau tindakan Anda. Yang lain cukup di lonceng Notifikasi. Periksa juga folder Spam.' },
+              { q: 'Di mana menyimpan dokumen kerja?', a: 'Di Shared Drive divisi (menu Penyimpanan divisi atau Template dokumen), bukan di laptop atau My Drive pribadi.' },
+              { q: 'Bagaimana mencetak panduan ini?', a: 'Klik "Cetak / simpan PDF" di atas halaman Panduan. Yang tercetak hanya bab untuk peran Anda.' },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
+
+export default HANDBOOK;

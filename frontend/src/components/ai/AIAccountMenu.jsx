@@ -1,84 +1,64 @@
-import { useEffect, useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutGrid, LogOut, Settings2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import Avatar from '../Avatar';
+import Menu from '../Menu';
 
-function initialsOf(user) {
-  return (user?.name || user?.email || 'P')
-    .split(/\s+/)
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-}
-
+// The signed-in account at the foot of the AI sidebar; opens the shared Menu
+// (docs/ui-guideline.md §4.14) above itself, with the account in its header.
 export default function AIAccountMenu({ compact = false }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const rootRef = useRef(null);
+  const anchorRef = useRef(null);
+  const menuId = useId();
   const canManageProvider = (user?.permissions || []).includes('ai.provider.manage');
 
-  useEffect(() => {
-    if (!open) return undefined;
-    const onPointerDown = (event) => {
-      if (!rootRef.current?.contains(event.target)) setOpen(false);
-    };
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open]);
-
-  const go = (path) => {
-    setOpen(false);
-    navigate(path);
-  };
+  const items = [
+    { key: 'workspace', icon: 'grid_view', label: 'Kembali ke Workspace', onClick: () => navigate('/') },
+    ...(canManageProvider
+      ? [{ key: 'settings', icon: 'settings', label: 'Pengaturan AI', onClick: () => navigate('/admin/ai-provider-settings') }]
+      : []),
+    { key: 'logout', icon: 'logout', label: 'Keluar', onClick: logout },
+  ];
 
   return (
-    <div className={`ai-account${compact ? ' is-compact' : ''}`} ref={rootRef}>
-      {open && (
-        <div className="ai-menu is-account" role="menu" aria-label="Menu akun">
-          <div className="ai-account-identity">
-            <strong>{user?.name}</strong>
-            <small>{user?.email}</small>
-          </div>
-          <button type="button" role="menuitem" className="ai-menu-item ai-ripple" onClick={() => go('/')}>
-            <LayoutGrid size={17} /><span className="ai-menu-item-text"><strong>Kembali ke Workspace</strong></span>
-          </button>
-          {canManageProvider && (
-            <button type="button" role="menuitem" className="ai-menu-item ai-ripple" onClick={() => go('/admin/ai-provider-settings')}>
-              <Settings2 size={17} /><span className="ai-menu-item-text"><strong>Pengaturan AI</strong></span>
-            </button>
-          )}
-          <button type="button" role="menuitem" className="ai-menu-item ai-ripple" onClick={logout}>
-            <LogOut size={17} /><span className="ai-menu-item-text"><strong>Keluar</strong></span>
-          </button>
-        </div>
-      )}
+    <div className={`ai-account${compact ? ' is-compact' : ''}`}>
       <button
+        ref={anchorRef}
         type="button"
-        className="ai-account-button ai-ripple"
+        className="ai-account-button pw-state-layer"
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
         aria-label="Menu akun"
         onClick={() => setOpen((current) => !current)}
       >
-        <span className="ai-avatar">
-          {user?.avatarUrl ? <img src={user.avatarUrl} alt="" /> : initialsOf(user)}
-        </span>
+        <Avatar name={user?.name || user?.email || 'P'} src={user?.avatarUrl} size="md" />
         {!compact && (
           <span className="ai-account-text">
-            <strong>{user?.name || user?.email}</strong>
-            <small>{user?.email}</small>
+            <span data-no-translate="" className="ai-account-name">{user?.name || user?.email}</span>
+            <span data-no-translate="" className="ai-account-email">{user?.email}</span>
           </span>
         )}
       </button>
+      <Menu
+        id={menuId}
+        open={open}
+        anchorRef={anchorRef}
+        onClose={() => setOpen(false)}
+        label="Menu akun"
+        align="start"
+        placement="top"
+        className="ai-account-menu"
+        header={(
+          <>
+            <span data-no-translate="" className="ai-account-name">{user?.name}</span>
+            <span data-no-translate="" className="ai-account-email">{user?.email}</span>
+          </>
+        )}
+        items={items}
+      />
     </div>
   );
 }

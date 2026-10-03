@@ -1,17 +1,26 @@
 import { useState } from 'react';
 import api from '../../api/client';
-import Card from '../../components/Card';
 import Button from '../../components/Button';
+import Card from '../../components/Card';
+import Field from '../../components/Field';
+import FormActions from '../../components/FormActions';
+import Page from '../../components/Page';
 import { toast } from '../../components/Toast';
+import { imageFileError } from './signatureModel';
+import './signatures.css';
 
 export default function SignatureAsset() {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [fileError, setFileError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const onFile = (e) => {
     const f = e.target.files[0];
     if (!f) return;
-    if (f.size > 500 * 1024) return toast('Maksimum ukuran file 500KB', 'error');
+    const problem = imageFileError(f);
+    setFileError(problem);
+    if (problem) return;
     setFile(f);
     const reader = new FileReader();
     reader.onload = () => setPreview(reader.result);
@@ -20,45 +29,39 @@ export default function SignatureAsset() {
 
   const save = async () => {
     if (!file) return;
-    const buffer = await file.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    setSaving(true);
     try {
+      const buffer = await file.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
       await api.post('/signatures/asset', { imageBase64: base64 });
       toast('Tanda tangan tersimpan (terenkripsi AES-256-GCM)', 'success');
     } catch (err) {
-      toast(err.response?.data?.error?.message || 'Gagal menyimpan tanda tangan', 'error');
+      toast(err.response?.data?.error?.message || 'Tanda tangan gagal disimpan', 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <div>
-      <h2>Tanda Tangan Saya</h2>
-      <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-        Gambar tanda tangan akan disimpan <b>terenkripsi (AES-256-GCM)</b>. Tidak ada endpoint yang mengembalikan file mentah ke user manapun.
-      </p>
-
-      <Card title="Upload Tanda Tangan">
-        <input type="file" accept="image/png,image/jpeg" onChange={onFile} />
-        {preview && (
-          <div
-            style={{
-              marginTop: 12,
-              padding: 12,
-              background: '#fff',
-              boxShadow: 'inset 0 0 0 1px var(--color-border)',
-              borderRadius: 8,
-              display: 'inline-block',
-            }}
-          >
-            <img src={preview} alt="preview" style={{ maxHeight: 80 }} />
-          </div>
-        )}
-        <div style={{ marginTop: 12 }}>
-          <Button onClick={save} disabled={!file}>
-            Simpan Tanda Tangan
-          </Button>
+    <Page
+      title="Tanda tangan saya"
+      description="Gambar tanda tangan disimpan terenkripsi (AES-256-GCM). Tidak ada endpoint yang mengembalikan file mentahnya ke pengguna mana pun."
+    >
+      <Card title="Unggah tanda tangan" variant="panel">
+        <div className="pw-stack">
+          <Field label="File tanda tangan" htmlFor="signature-file" hint="PNG atau JPEG, maksimum 500 KB." error={fileError}>
+            <input id="signature-file" type="file" accept="image/png,image/jpeg" className="sig-file" onChange={onFile} />
+          </Field>
+          {preview && (
+            <div className="sig-preview sig-preview--sm">
+              <img src={preview} alt="Pratinjau tanda tangan" />
+            </div>
+          )}
+          <FormActions>
+            <Button icon="save" onClick={save} disabled={!file} loading={saving}>Simpan tanda tangan</Button>
+          </FormActions>
         </div>
       </Card>
-    </div>
+    </Page>
   );
 }

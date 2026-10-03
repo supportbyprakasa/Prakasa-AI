@@ -1,22 +1,27 @@
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, Link2, FileText, CheckSquare, Calendar, CheckCircle2, ClipboardList, BookOpen, Layers } from 'lucide-react';
 import api from '../../api/client';
 import Button from '../Button';
 import Badge from '../Badge';
+import EmptyState, { LoadingState } from '../EmptyState';
+import FormActions from '../FormActions';
+import Icon from '../Icon';
+import IconButton from '../IconButton';
 import Input from '../Input';
 import Modal from '../Modal';
+import Select from '../Select';
 import ConfirmDialog from '../ConfirmDialog';
 import { toast } from '../Toast';
 import { useAuth } from '../../context/AuthContext';
+import './ai-components.css';
 
 const TYPE_META = {
-  document: { label: 'Dokumen', icon: FileText },
-  task: { label: 'Task', icon: CheckSquare },
-  meeting: { label: 'Meeting', icon: Calendar },
-  approval_request: { label: 'Approval', icon: CheckCircle2 },
-  form_submission: { label: 'Form Submission', icon: ClipboardList },
-  decision_log: { label: 'Decision', icon: Layers },
-  kb_document: { label: 'Knowledge Base', icon: BookOpen },
+  document: { label: 'Dokumen', icon: 'description' },
+  task: { label: 'Tugas', icon: 'check_box' },
+  meeting: { label: 'Rapat', icon: 'calendar_today' },
+  approval_request: { label: 'Approval', icon: 'check_circle' },
+  form_submission: { label: 'Isian formulir', icon: 'assignment' },
+  decision_log: { label: 'Keputusan', icon: 'layers' },
+  kb_document: { label: 'Basis pengetahuan', icon: 'menu_book' },
 };
 
 export default function AIContextPanel({ sessionId, session, refreshKey }) {
@@ -38,7 +43,7 @@ export default function AIContextPanel({ sessionId, session, refreshKey }) {
       const r = await api.get(`/ai-command/sessions/${sessionId}/contexts`);
       setRows(r.data.data || []);
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal memuat context', 'error');
+      toast(e.response?.data?.error?.message || 'Gagal memuat konteks', 'error');
     } finally {
       setLoading(false);
     }
@@ -52,7 +57,7 @@ export default function AIContextPanel({ sessionId, session, refreshKey }) {
       // IMPORTANT: contextId in URL is the AI context-link ID (row.id),
       // NOT the underlying source record's id.
       await api.delete(`/ai-command/sessions/${sessionId}/contexts/${deleteTarget.id}`);
-      toast('Context dihapus', 'success');
+      toast('Konteks dilepas', 'success');
       setDeleteTarget(null);
       load();
     } catch (e) {
@@ -63,58 +68,48 @@ export default function AIContextPanel({ sessionId, session, refreshKey }) {
   return (
     <div className="ai-context-panel">
       <div className="ai-support-section-header">
-        <div style={{ fontSize: 13, fontWeight: 600 }}>Konteks Internal</div>
+        <h3 className="ai-support-section-title">Konteks internal</h3>
         {canEdit && !archived && (
-          <Button variant="secondary" onClick={() => setAddOpen(true)}>
-            <Plus size={12} /> Context
+          <Button variant="secondary" icon="add" onClick={() => setAddOpen(true)}>
+            Tambah konteks
           </Button>
         )}
       </div>
 
       <div className="ai-support-section-body">
         <div className="ai-support-helper">
-          AI hanya menerima context record yang berhasil diverifikasi backend.
+          AI hanya menerima konteks dari record yang berhasil diverifikasi server.
         </div>
 
-        {loading && (
-          <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Memuat…</div>
-        )}
+        {loading && <LoadingState compact />}
 
         {!loading && !rows.length && (
-          <div className="ai-support-empty">
-            Belum ada context terhubung.
-          </div>
+          <EmptyState compact icon="link" description="Belum ada konteks terhubung." />
         )}
 
         {!loading && rows.map((c) => {
-          const meta = TYPE_META[c.contextType] || { label: c.contextType, icon: Link2 };
-          const Icon = meta.icon;
+          const meta = TYPE_META[c.contextType] || { label: c.contextType, icon: 'link' };
           return (
             <div key={c.id} className="ai-support-card">
-              <Icon size={14} style={{ marginTop: 2, flexShrink: 0 }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  fontWeight: 500,
-                  overflow: 'hidden', textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}>
+              <Icon name={meta.icon} size="sm" className="ai-context-icon" />
+              <div className="pw-grow">
+                <div className="ai-context-title" data-no-translate={c.title ? '' : undefined}>
                   {c.title || `${meta.label} #${c.contextId}`}
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
-                  <Badge tone="default">{c.contextType}</Badge> · id {c.contextId}
+                <div className="ai-context-meta">
+                  <Badge tone="default">{meta.label}</Badge> · id {c.contextId}
                   {c.relation && <> · {c.relation}</>}
                 </div>
               </div>
               {canEdit && !archived && (
-                <button
-                  type="button"
+                <IconButton
+                  size="sm"
+                  tone="danger"
+                  label="Lepas dari konteks"
+                  icon="delete"
                   onClick={() => setDeleteTarget(c)}
-                  title="Hapus"
                   aria-label={`Lepas ${c.title || meta.label} dari konteks`}
-                  className="ai-support-delete ai-ripple"
-                >
-                  <Trash2 size={13} />
-                </button>
+                />
               )}
             </div>
           );
@@ -131,9 +126,9 @@ export default function AIContextPanel({ sessionId, session, refreshKey }) {
 
       <ConfirmDialog
         open={!!deleteTarget}
-        title="Hapus context?"
-        message="Link context ini akan dilepas dari percakapan. Data sumber tidak terhapus."
-        confirmLabel="Ya, lepas"
+        title="Lepas konteks ini?"
+        message="Tautan konteks ini akan dilepas dari percakapan. Data sumber tidak terhapus."
+        confirmLabel="Lepas konteks"
         tone="danger"
         onConfirm={doDelete}
         onClose={() => setDeleteTarget(null)}
@@ -153,14 +148,18 @@ function AddContextModal({ sessionId, onClose, onAdded }) {
     relation: 'reference',
   });
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const change = (key, value) => {
+    setForm({ ...form, [key]: value });
+    setErrors((current) => ({ ...current, [key]: '' }));
+  };
 
   const submit = async () => {
-    if (!form.contextId || isNaN(Number(form.contextId))) {
-      toast('ID record tidak valid', 'error');
-      return;
-    }
-    if (!/^[a-zA-Z0-9:_-]+$/.test(form.relation || 'reference')) {
-      toast('Relation hanya boleh berisi huruf, angka, :, _, atau -', 'error');
+    const next = {};
+    if (!form.contextId || isNaN(Number(form.contextId))) next.contextId = 'ID record tidak valid.';
+    if (!/^[a-zA-Z0-9:_-]+$/.test(form.relation || 'reference')) next.relation = 'Relasi hanya boleh berisi huruf, angka, :, _, atau -.';
+    if (next.contextId || next.relation) {
+      setErrors(next);
       return;
     }
     setSaving(true);
@@ -170,56 +169,48 @@ function AddContextModal({ sessionId, onClose, onAdded }) {
         contextId: Number(form.contextId),
         relation: form.relation || 'reference',
       });
-      toast('Context ditambahkan', 'success');
+      toast('Konteks ditambahkan', 'success');
       onAdded();
     } catch (e) {
-      toast(e.response?.data?.error?.message || 'Gagal menambahkan context', 'error');
+      toast(e.response?.data?.error?.message || 'Gagal menambahkan konteks', 'error');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Modal open={true} onClose={onClose} title="Tambah Context" maxWidth={480}>
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ fontSize: 13, display: 'block', marginBottom: 4 }}>Tipe</label>
-        <select
+    <Modal open={true} onClose={onClose} title="Tambah konteks" size="sm">
+      <div className="pw-stack">
+        <Select
+          label="Tipe"
           value={form.contextType}
           onChange={(e) => setForm({ ...form, contextType: e.target.value })}
-          style={{
-            width: '100%', padding: 8, borderRadius: 8,
-            boxShadow: 'inset 0 0 0 1px var(--color-border)',
-          }}
-        >
-          {Object.keys(TYPE_META).map((t) => (
-            <option key={t} value={t}>{TYPE_META[t].label}</option>
-          ))}
-        </select>
-      </div>
+          options={Object.keys(TYPE_META).map((t) => ({ value: t, label: TYPE_META[t].label }))}
+        />
 
-      <Input
-        label="ID Record"
-        type="number"
-        value={form.contextId}
-        onChange={(e) => setForm({ ...form, contextId: e.target.value })}
-        placeholder="Nomor ID record sumber"
-      />
-      <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: -6, marginBottom: 12 }}>
-        Backend memvalidasi bahwa record ini ada di entity Anda. Bukan teks bebas.
-      </div>
+        <Input
+          label="ID Record"
+          required
+          type="number"
+          value={form.contextId}
+          error={errors.contextId}
+          onChange={(e) => change('contextId', e.target.value)}
+          placeholder="Contoh: 128"
+          hint="Server memeriksa bahwa record ini ada di entitas Anda. Bukan teks bebas."
+        />
 
-      <Input
-        label="Relation (opsional)"
-        value={form.relation}
-        onChange={(e) => setForm({ ...form, relation: e.target.value })}
-        placeholder="reference"
-      />
+        <Input
+          label="Relasi (opsional)"
+          value={form.relation}
+          error={errors.relation}
+          onChange={(e) => change('relation', e.target.value)}
+          placeholder="reference"
+        />
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-        <Button variant="secondary" onClick={onClose}>Batal</Button>
-        <Button onClick={submit} disabled={saving}>
-          {saving ? 'Menambahkan…' : 'Tambahkan'}
-        </Button>
+        <FormActions>
+          <Button variant="text" onClick={onClose}>Batal</Button>
+          <Button onClick={submit} loading={saving}>Tambah konteks</Button>
+        </FormActions>
       </div>
     </Modal>
   );

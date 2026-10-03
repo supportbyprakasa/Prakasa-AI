@@ -1,0 +1,90 @@
+/* SideSheet (docs/ui-guideline.md §4.14): right-hand sheet 400px wide, full
+   screen on phones, --pw-elev-dialog, a --pw-scrim scrim. Enters like the
+   admin console's overlay drawer (transform --pw-dur-md, decelerate) and
+   leaves accelerating in --pw-dur-sm. */
+.pw-sheet-layer {
+  position: fixed;
+  /* Beside the docked Prakasa AI panel, like the dialogs (dialog.css --pw-ai-dock). */
+  inset: 0 var(--pw-ai-dock, 0px) 0 0;
+  z-index: var(--pw-z-sheet);
+  display: flex;
+  justify-content: flex-end;
+}
+.pw-sheet-layer--modeless { pointer-events: none; }
+.pw-sheet-layer[data-state="closing"] { pointer-events: none; }
+
+.pw-sheet-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--pw-scrim);
+  animation: pw-fade-in var(--pw-dur-md) var(--pw-ease-decelerate);
+}
+.pw-sheet-layer[data-state="closing"] .pw-sheet-scrim {
+  animation: pw-fade-out var(--pw-dur-sm) linear forwards;
+}
+
+.pw-sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 400px;
+  max-width: 100%;
+  height: 100%;
+  background: var(--pw-surface);
+  box-shadow: var(--pw-elev-dialog);
+  color: var(--pw-text);
+  pointer-events: auto;
+  animation: pw-sheet-enter var(--pw-dur-md) var(--pw-ease-decelerate);
+}
+.pw-sheet:focus { outline: none; }
+.pw-sheet-layer[data-state="closing"] .pw-sheet {
+  animation: pw-sheet-exit var(--pw-dur-sm) var(--pw-ease-accelerate) forwards;
+}
+
+.pw-sheet__header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  height: 64px;
+  padding: 0 8px 0 24px;
+}
+.pw-sheet__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--pw-text-title);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-title);
+  font-weight: 400;
+  line-height: 28px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pw-sheet__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 24px 24px;
+  overflow-wrap: break-word;
+}
+.pw-sheet__footer {
+  flex: 0 0 auto;
+  padding: 16px 24px;
+  box-shadow: inset 0 1px 0 var(--pw-divider);
+}
+.pw-sheet__footer > .pw-form-actions { margin: 0; }
+
+/* size="lg": a drill-down holding several tables (sementara, 640 like a md dialog). */
+.pw-sheet--lg { width: 640px; }
+
+@media (max-width: 600px) {
+  .pw-sheet, .pw-sheet--lg { width: 100%; }
+  .pw-sheet__header { padding-left: 16px; }
+  .pw-sheet__body { padding: 4px 16px 16px; }
+  .pw-sheet__footer { padding: 16px; }
+}
+
+@keyframes pw-sheet-enter { from { transform: translateX(100%); } }
+@keyframes pw-sheet-exit { to { transform: translateX(100%); } }

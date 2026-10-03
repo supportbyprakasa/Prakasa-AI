@@ -2,19 +2,7 @@ const pool = require('../db/pool');
 const { ok, fail } = require('../utils/response');
 const { log: activityLog } = require('../services/activityLog.service');
 
-async function validateReferences(entityId, { defaultWorkflowId, defaultApprovalMatrixId }) {
-  if (defaultWorkflowId !== undefined && defaultWorkflowId !== null) {
-    const [rows] = await pool.query(
-      `SELECT id FROM workflow_definitions
-        WHERE id=? AND entity_id=? AND deleted_at IS NULL`,
-      [defaultWorkflowId, entityId]
-    );
-    if (!rows[0]) {
-      const error = new Error('Default workflow tidak valid untuk entity ini');
-      error.status = 400; error.code = 'VALIDATION_ERROR'; throw error;
-    }
-  }
-
+async function validateReferences(entityId, { defaultApprovalMatrixId }) {
   if (defaultApprovalMatrixId !== undefined && defaultApprovalMatrixId !== null) {
     const [rows] = await pool.query(
       `SELECT id FROM approval_matrix WHERE id=? AND entity_id=?`,
@@ -36,15 +24,12 @@ async function list(req, res, next) {
 
     const [rows] = await pool.query(
       `SELECT dt.id, dt.entity_id AS entityId, dt.code, dt.name, dt.category,
-              dt.default_workflow_id AS defaultWorkflowId,
-              wd.name AS defaultWorkflowName,
               dt.default_approval_matrix_id AS defaultApprovalMatrixId,
               dt.default_folder_id AS defaultFolderId,
               dt.requires_signature AS requiresSignature,
               dt.requires_ai_precheck AS requiresAiPrecheck,
               dt.is_active AS isActive, dt.created_at AS createdAt
          FROM document_types dt
-         LEFT JOIN workflow_definitions wd ON wd.id = dt.default_workflow_id
         WHERE ${where.join(' AND ')}
         ORDER BY dt.code ASC`,
       args
@@ -57,7 +42,6 @@ async function detail(req, res, next) {
   try {
     const [rows] = await pool.query(
       `SELECT id, entity_id AS entityId, code, name, category,
-              default_workflow_id AS defaultWorkflowId,
               default_approval_matrix_id AS defaultApprovalMatrixId,
               default_folder_id AS defaultFolderId,
               requires_signature AS requiresSignature,
@@ -76,23 +60,23 @@ async function detail(req, res, next) {
 async function create(req, res, next) {
   try {
     const {
-      code, name, category, defaultWorkflowId, defaultApprovalMatrixId,
+      code, name, category, defaultApprovalMatrixId,
       defaultFolderId, requiresSignature = false, requiresAiPrecheck = false,
       isActive = true,
     } = req.body;
     const entityId = req.entityScope.entityId;
 
-    await validateReferences(entityId, { defaultWorkflowId, defaultApprovalMatrixId });
+    await validateReferences(entityId, { defaultApprovalMatrixId });
 
     const [result] = await pool.query(
       `INSERT INTO document_types
-       (entity_id, code, name, category, default_workflow_id,
+       (entity_id, code, name, category,
         default_approval_matrix_id, default_folder_id,
         requires_signature, requires_ai_precheck, is_active, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         entityId, code, name, category ?? null,
-        defaultWorkflowId ?? null, defaultApprovalMatrixId ?? null,
+        defaultApprovalMatrixId ?? null,
         defaultFolderId ?? null,
         requiresSignature ? 1 : 0, requiresAiPrecheck ? 1 : 0,
         isActive ? 1 : 0, req.user.sub,
@@ -132,7 +116,6 @@ async function update(req, res, next) {
     const map = {
       name: 'name',
       category: 'category',
-      defaultWorkflowId: 'default_workflow_id',
       defaultApprovalMatrixId: 'default_approval_matrix_id',
       defaultFolderId: 'default_folder_id',
       requiresSignature: 'requires_signature',

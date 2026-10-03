@@ -1,19 +1,23 @@
-import { AlertTriangle, PlayCircle, ShieldCheck, SkipForward, XCircle } from 'lucide-react';
 import Badge from './Badge';
 import Button from './Button';
 import Card from './Card';
+import EmptyState from './EmptyState';
+import Icon from './Icon';
+import PriorityBadge from './PriorityBadge';
+import { formatDateTime } from './format';
+import { statusTone } from './statusTone';
+import { aiProviderLabel } from '../pages/admin/aiLabels';
+import './primitives.css';
 
+// Tones come from statusTone() / priorityTone() only (docs/ui-guideline.md
+// §4.12): passed success, warning warning, failed error, skipped default; a
+// finding's severity is shown like a priority (high = warning).
+// Icons are Material Symbols names (docs/ui-guideline.md §1.11).
 const STATUS = {
-  passed: { tone: 'success', label: 'Passed', icon: ShieldCheck },
-  warning: { tone: 'warning', label: 'Warning', icon: AlertTriangle },
-  failed: { tone: 'error', label: 'Failed', icon: XCircle },
-  skipped: { tone: 'default', label: 'Skipped', icon: SkipForward },
-};
-
-const SEVERITY = {
-  low: 'default',
-  medium: 'warning',
-  high: 'error',
+  passed: { label: 'Lolos', icon: 'verified_user' },
+  warning: { label: 'Peringatan', icon: 'warning' },
+  failed: { label: 'Gagal', icon: 'cancel' },
+  skipped: { label: 'Dilewati', icon: 'skip_next' },
 };
 
 export default function SignaturePrecheckPanel({
@@ -22,156 +26,92 @@ export default function SignaturePrecheckPanel({
   running = false,
   canRun = false,
 }) {
-  const meta = precheck ? (STATUS[precheck.status] || STATUS.skipped) : null;
-  const StatusIcon = meta?.icon;
+  const statusKey = precheck && STATUS[precheck.status] ? precheck.status : 'skipped';
+  const meta = precheck ? STATUS[statusKey] : null;
 
   return (
     <Card
-      title="AI Signature Precheck"
+      title="Cek awal tanda tangan (AI)"
       actions={
         onRun && canRun ? (
-          <Button variant="secondary" onClick={onRun} disabled={running}>
-            <PlayCircle size={14} />
-            {running ? 'Memproses…' : 'Run Precheck'}
+          <Button variant="secondary" icon="play_circle" onClick={onRun} loading={running}>
+            Jalankan precheck
           </Button>
         ) : null
       }
     >
-      <div
-        style={{
-          fontSize: 12,
-          color: 'var(--color-text-muted)',
-          marginBottom: 12,
-          lineHeight: 1.5,
-        }}
-      >
-        AI precheck bersifat <b>advisory / read-only</b>. Hasil ini bukan keputusan
-        approval dan tidak dapat menyetujui atau menolak dokumen.
-      </div>
-
-      {!precheck ? (
-        <div
-          style={{
-            padding: 20,
-            textAlign: 'center',
-            color: 'var(--color-text-muted)',
-            fontSize: 13,
-            boxShadow: 'inset 0 0 0 1px var(--color-border)',
-            borderRadius: 8,
-          }}
-        >
-          Belum ada precheck untuk dokumen ini.
+      <div className="pw-precheck">
+        <div className="pw-precheck__note">
+          AI precheck bersifat <b>advisory / read-only</b>. Hasil ini bukan keputusan
+          approval dan tidak dapat menyetujui atau menolak dokumen.
         </div>
-      ) : (
-        <>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              marginBottom: 12,
-              flexWrap: 'wrap',
-            }}
-          >
-            <Badge tone={meta.tone}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <StatusIcon size={12} />
+
+        {!precheck ? (
+          <EmptyState compact icon="verified_user" title="Belum ada precheck untuk dokumen ini." />
+        ) : (
+          <>
+            <div className="pw-precheck__meta">
+              <Badge tone={statusTone(statusKey)}>
+                <Icon name={meta.icon} size="sm" />
                 {meta.label}
-              </span>
-            </Badge>
+              </Badge>
 
-            {precheck.provider && (
-              <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                {precheck.provider}
-                {precheck.model ? ` · ${precheck.model}` : ''}
-              </span>
-            )}
+              {precheck.provider && (
+                <span className="pw-precheck__meta-text">
+                  {aiProviderLabel(precheck.provider)}
+                  {precheck.model ? <>{' · '}<span data-no-translate="">{precheck.model}</span></> : null}
+                </span>
+              )}
 
-            {precheck.durationMs != null && (
-              <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                {precheck.durationMs} ms
-              </span>
-            )}
+              {precheck.durationMs != null && (
+                <span className="pw-precheck__meta-text">
+                  {precheck.durationMs} ms
+                </span>
+              )}
 
-            {precheck.createdAt && (
-              <span
-                style={{
-                  fontSize: 12,
-                  color: 'var(--color-text-muted)',
-                  marginLeft: 'auto',
-                }}
-              >
-                {new Date(precheck.createdAt).toLocaleString('id-ID')}
-              </span>
-            )}
-          </div>
-
-          {precheck.summary && (
-            <div
-              style={{
-                fontSize: 13,
-                whiteSpace: 'pre-wrap',
-                marginBottom: 12,
-                background: '#f8fafc',
-                padding: 10,
-                borderRadius: 8,
-                boxShadow: 'inset 0 0 0 1px var(--color-border)',
-              }}
-            >
-              {precheck.summary}
+              {precheck.createdAt && (
+                <span className="pw-precheck__meta-text pw-precheck__meta-text--end">
+                  {formatDateTime(precheck.createdAt)}
+                </span>
+              )}
             </div>
-          )}
 
-          {Array.isArray(precheck.findings) && precheck.findings.length > 0 && (
-            <div>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: 'var(--color-text-muted)',
-                  marginBottom: 6,
-                }}
-              >
-                Temuan ({precheck.findings.length})
+            {precheck.summary && (
+              <div className="pw-precheck__summary" data-no-translate="">
+                {precheck.summary}
               </div>
+            )}
 
-              {precheck.findings.map((finding, index) => (
-                <div
-                  key={`${finding.ref || 'finding'}-${index}`}
-                  style={{
-                    display: 'flex',
-                    gap: 8,
-                    alignItems: 'flex-start',
-                    padding: 8,
-                    marginBottom: 4,
-                    background: 'var(--color-surface)',
-                    boxShadow: 'inset 0 0 0 1px var(--color-border)',
-                    borderRadius: 8,
-                    fontSize: 13,
-                  }}
-                >
-                  <Badge tone={SEVERITY[finding.severity] || 'default'}>
-                    {finding.severity || 'info'}
-                  </Badge>
-                  <div style={{ flex: 1 }}>
-                    <div>{finding.message}</div>
-                    {finding.ref && (
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: 'var(--color-text-muted)',
-                          marginTop: 2,
-                        }}
-                      >
-                        Referensi: {finding.ref}
-                      </div>
-                    )}
-                  </div>
+            {Array.isArray(precheck.findings) && precheck.findings.length > 0 && (
+              <div className="pw-precheck__findings">
+                <div className="pw-precheck__heading">
+                  Temuan ({precheck.findings.length})
                 </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
+
+                {precheck.findings.map((finding, index) => {
+                  return (
+                    <div
+                      key={`${finding.ref || 'finding'}-${index}`}
+                      className="pw-precheck__finding"
+                    >
+                      <PriorityBadge priority={finding.severity || 'low'} label={finding.severity ? undefined : 'Info'} />
+                      <div className="pw-precheck__finding-body">
+                        {/* Written by the AI about the document: never translated. */}
+                        <div data-no-translate="">{finding.message}</div>
+                        {finding.ref && (
+                          <div className="pw-precheck__ref">
+                            Referensi: <span data-no-translate="">{finding.ref}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </Card>
   );
 }

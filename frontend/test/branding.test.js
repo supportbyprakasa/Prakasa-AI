@@ -6,7 +6,7 @@ const visibleBrandFiles = [
   'index.html',
   'src/pages/Login.jsx',
   'src/components/Navbar.jsx',
-  'src/pages/DivisionHub.jsx',
+  'src/pages/Dashboard.jsx',
   'src/components/ai/AIAccountMenu.jsx',
   'src/pages/ai/AICommandCenter.jsx',
   '../backend/src/app.js',

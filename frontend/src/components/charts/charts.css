@@ -1,0 +1,69 @@
+/* Dashboard charts: TrendChart and MotionChart. Motion stops for
+   prefers-reduced-motion (tokens.css also shortens every transition). */
+
+/* ---- Trend */
+.pw-trend { position: relative; width: 100%; min-width: 0; }
+.pw-trend__plot { position: relative; outline: none; touch-action: pan-y; }
+.pw-trend__plot:focus-visible { outline: 2px solid var(--pw-primary); outline-offset: 2px; border-radius: var(--pw-radius-sm); }
+.pw-trend svg { display: block; overflow: visible; }
+.pw-trend__grid { stroke: var(--pw-divider); stroke-width: 1; }
+.pw-trend__tick, .pw-trend__month { fill: var(--pw-text-meta); font-family: var(--pw-font-roboto); font-size: var(--pw-font-xs); }
+.pw-trend__month.is-active { fill: var(--pw-text); font-weight: 500; }
+.pw-trend__area { opacity: 0; }
+.pw-trend__line { fill: none; stroke: var(--pw-accent); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.pw-trend__target { fill: none; stroke: var(--pw-success); stroke-width: 1.5; stroke-dasharray: 5 4; opacity: 0; }
+.pw-trend__dot { fill: var(--pw-surface); stroke: var(--pw-accent); stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; transition: r var(--pw-dur-state) var(--pw-ease-standard); }
+/* The running month: dashed, lighter — not a complete month yet. */
+.pw-trend__partial { fill: none; stroke: var(--pw-accent); stroke-width: 2; stroke-dasharray: 4 4; stroke-linecap: round; opacity: 0; }
+.pw-trend__dot.is-partial { stroke-dasharray: 2 2; }
+.is-seen .pw-trend__partial { animation: pw-trend-fade var(--pw-dur-chart-fade) var(--pw-ease-decelerate) var(--pw-dur-chart-draw) forwards; }
+.is-seen .pw-trend__dot.is-partial { animation-name: pw-trend-pop-partial; }
+@keyframes pw-trend-pop-partial { from { opacity: 0; transform: scale(0); } to { opacity: 0.55; transform: scale(1); } }
+.pw-trend__guide { stroke: var(--pw-text-meta); stroke-width: 1; stroke-dasharray: 3 3; }
+.is-seen .pw-trend__line { animation: pw-trend-draw var(--pw-dur-chart-draw) var(--pw-ease-chart) forwards; }
+.is-seen .pw-trend__area { animation: pw-trend-fade var(--pw-dur-chart) var(--pw-ease-decelerate) var(--pw-dur-chart-fade) forwards; }
+.is-seen .pw-trend__target { animation: pw-trend-fade var(--pw-dur-chart-fade) var(--pw-ease-decelerate) var(--pw-dur-chart-draw) forwards; }
+.is-seen .pw-trend__dot { animation: pw-trend-pop var(--pw-dur-chart-pop) var(--pw-ease-chart) forwards; animation-delay: var(--delay, 0ms); }
+@keyframes pw-trend-draw { to { stroke-dashoffset: 0; } }
+@keyframes pw-trend-fade { to { opacity: 1; } }
+@keyframes pw-trend-pop { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+.pw-trend__tip {
+  position: absolute; z-index: 1; display: flex; flex-direction: column; gap: 2px; width: max-content; max-width: 100%; padding: 6px 10px;
+  box-sizing: border-box; border-radius: var(--pw-radius-md); background: var(--pw-tooltip-bg); color: var(--pw-tooltip-text);
+  font-family: var(--pw-font-roboto); font-size: var(--pw-font-xs); line-height: 16px; overflow-wrap: anywhere; pointer-events: none;
+}
+.pw-trend__tip-value { font-size: var(--pw-font-body); font-weight: 500; line-height: 20px; }
+
+/* ---- Motion chart */
+.pw-motion { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pw-motion__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+.pw-motion__month { min-width: 96px; color: var(--pw-text); font-family: var(--pw-font-sans); font-size: var(--pw-font-title); line-height: 28px; font-variant-numeric: tabular-nums; }
+.pw-motion__slider { flex: 1 1 200px; min-width: 0; accent-color: var(--pw-accent); }
+.pw-motion__race { position: relative; }
+.pw-motion__row {
+  position: absolute; top: 0; left: 0; right: 0; display: grid; grid-template-columns: minmax(96px, 28%) 1fr minmax(88px, auto);
+  align-items: center; gap: 12px; height: 40px; transition: transform var(--pw-dur-chart) var(--pw-ease-chart);
+}
+.pw-motion__label { overflow: hidden; color: var(--pw-text); font-size: var(--pw-font-sm); line-height: 18px; text-overflow: ellipsis; white-space: nowrap; }
+.pw-motion__track { position: relative; height: 18px; border-radius: var(--pw-radius-full); background: var(--pw-surface-container); }
+.pw-motion__fill {
+  position: absolute; top: 0; bottom: 0; left: 0; border-radius: inherit; background: var(--pw-accent);
+  transition: width var(--pw-dur-chart) var(--pw-ease-chart), background-color var(--pw-dur-icon) var(--pw-ease-standard);
+}
+.pw-motion__fill.is-target { background: var(--pw-success); }
+.pw-motion__mark { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--pw-text-meta); opacity: 0.5; }
+.pw-motion__value { color: var(--pw-text-meta); font-size: var(--pw-font-xs); line-height: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+.pw-motion__legend { margin: 0; color: var(--pw-text-meta); font-size: var(--pw-font-xs); line-height: 16px; }
+
+@media (max-width: 600px) {
+  /* Narrow: the value stays (compact), only the score after it is dropped. */
+  .pw-motion__row { grid-template-columns: minmax(72px, 30%) 1fr minmax(48px, auto); gap: 8px; }
+  .pw-motion__score { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-seen .pw-trend__line, .is-seen .pw-trend__area, .is-seen .pw-trend__target, .is-seen .pw-trend__dot { animation: none; opacity: 1; stroke-dashoffset: 0; }
+  .is-seen .pw-trend__partial { animation: none; opacity: 1; }
+  .is-seen .pw-trend__dot.is-partial { opacity: 0.55; }
+  .pw-motion__row, .pw-motion__fill { transition: none; }
+}

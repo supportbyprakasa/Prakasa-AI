@@ -1,0 +1,49 @@
+/* Banner (docs/ui-guideline.md §4.13; referensi §3 "Banner info"): white,
+   1px --pw-outline-banner, radius 4, at least 50px, padding 0 16px, a 24px
+   icon in the tone colour, Roboto 14 --pw-text, no coloured background.
+   [role] raises the specificity over the retired tinted .pw-banner rules in
+   styles/patterns.css. */
+.pw-banner[role] {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 50px;
+  padding: 0 16px;
+  border: 1px solid var(--pw-outline-banner);
+  border-radius: var(--pw-radius-md);
+  background: var(--pw-surface);
+  color: var(--pw-text);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-body);
+  line-height: 20px;
+}
+.pw-banner[role] .pw-banner__icon { flex: 0 0 auto; margin: 0; color: var(--pw-info); }
+.pw-banner[role].pw-banner--success .pw-banner__icon { color: var(--pw-success); }
+.pw-banner[role].pw-banner--warning .pw-banner__icon { color: var(--pw-warning); }
+.pw-banner[role].pw-banner--error .pw-banner__icon { color: var(--pw-error); }
+.pw-banner[role].pw-banner--neutral .pw-banner__icon { color: var(--pw-text-muted); }
+.pw-banner[role] .pw-banner__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  /* 14 + 20 + 14 + 2px border = the measured 50px banner. */
+  padding: 14px 0;
+  overflow-wrap: anywhere;
+}
+.pw-banner[role] .pw-banner__title { color: var(--pw-text); font-weight: 500; }
+.pw-banner[role] .pw-banner__action { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; }
+
+@media (max-width: 600px) {
+  .pw-banner[role] { flex-wrap: wrap; column-gap: 16px; row-gap: 0; }
+  .pw-banner[role] .pw-banner__body { flex-basis: calc(100% - 40px); }
+  .pw-banner[role] .pw-banner__action { justify-content: flex-end; width: 100%; padding-bottom: 8px; }
+}
+
+/* The "Prakasa AI mengisi N kolom" notice (ai/usePrakasaAIForm.jsx) sits in
+   forms of any width, a 400px side sheet included: its actions drop under the
+   text when they do not fit beside it. */
+.pw-ai-notice .pw-banner[role] { flex-wrap: wrap; column-gap: 16px; row-gap: 0; }
+.pw-ai-notice .pw-banner[role] .pw-banner__body { flex: 1 1 200px; }
+.pw-ai-notice .pw-banner[role] .pw-banner__action { margin-left: auto; padding: 4px 0; }

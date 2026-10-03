@@ -1,0 +1,32 @@
+/* StatCard (docs/ui-guideline.md §4.11; referensi §4 "Angka statistik"). */
+.pw-stat-card { display: flex; flex-direction: column; gap: 4px; }
+.pw-stat-card__label {
+  color: var(--pw-text-header);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-xs);
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0.3px;
+}
+.pw-stat-card__value {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--pw-text-stat);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-stat);
+  font-weight: 400;
+  line-height: 40px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.pw-stat-card.is-empty .pw-stat-card__value { color: var(--pw-text-muted); }
+.pw-stat-card__note {
+  color: var(--pw-text-muted);
+  font-family: var(--pw-font-roboto);
+  font-size: var(--pw-font-xs);
+  line-height: 16px;
+  overflow-wrap: anywhere;
+}
+.pw-stat-card.is-alert .pw-stat-card__note { color: var(--pw-error); }
+.pw-stat-card__action { display: flex; padding-top: 4px; }

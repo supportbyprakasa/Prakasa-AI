@@ -1,36 +1,35 @@
-import {
-  ArrowLeft,
-  PenTool,
-  QrCode,
-} from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import api from '../../api/client';
-import Badge from '../../components/Badge';
+import Banner from '../../components/Banner';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
+import Checkbox from '../../components/Checkbox';
+import EmptyState, { LoadingState } from '../../components/EmptyState';
+import FormActions from '../../components/FormActions';
 import Input from '../../components/Input';
+import KeyValue from '../../components/KeyValue';
+import { Translate } from '../../i18n/NoTranslate';
 import Modal from '../../components/Modal';
+import Page from '../../components/Page';
 import SignaturePrecheckPanel from '../../components/SignaturePrecheckPanel';
-import { SkeletonCard } from '../../components/Skeleton';
+import StatusBadge from '../../components/StatusBadge';
 import { toast } from '../../components/Toast';
+import { formatDateTime } from '../../components/format';
+import { statusLabel } from '../../components/statusTone';
 import { useAuth } from '../../context/AuthContext';
+import { SIGNATURE_LEVEL_LABELS, assignedSignerLabel, signedByLabel } from './signatureModel';
+import './signatures.css';
 
-const STATUS_TONE = {
-  signed: 'success',
-  pending: 'warning',
-  approved: 'info',
-  rejected: 'error',
-  cancelled: 'default',
-};
+const errorMessage = (error, fallback) => error.response?.data?.error?.message || fallback;
 
 export default function SignatureDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [precheckRunning, setPrecheckRunning] = useState(false);
   const [signOpen, setSignOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
@@ -43,31 +42,29 @@ export default function SignatureDetail() {
   const canSign = permissions.includes('signature.sign');
   const canGenerateQr = permissions.includes('signature_qr.generate');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const response = await api.get(`/signatures/${id}`);
       setRequest(response.data.data);
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Signature request tidak ditemukan', 'error');
-      navigate('/signatures');
+      setLoadError(errorMessage(error, 'Permintaan tanda tangan tidak ditemukan atau gagal dimuat.'));
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    load();
   }, [id]);
+
+  useEffect(() => { load(); }, [load]);
 
   const runPrecheck = async () => {
     setPrecheckRunning(true);
     try {
       await api.post(`/signatures/${id}/precheck`);
-      toast('Signature precheck selesai', 'success');
+      toast('Pemeriksaan AI selesai', 'success');
       await load();
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Precheck gagal', 'error');
+      toast(errorMessage(error, 'Pemeriksaan AI gagal'), 'error');
     } finally {
       setPrecheckRunning(false);
     }
@@ -85,193 +82,103 @@ export default function SignatureDetail() {
       setQrOpen(true);
       await load();
     } catch (error) {
-      toast(error.response?.data?.error?.message || 'Gagal membuat QR', 'error');
+      toast(errorMessage(error, 'QR verifikasi gagal dibuat'), 'error');
     } finally {
       setQrLoading(false);
     }
   };
 
-  if (loading) return <SkeletonCard lines={9} />;
-  if (!request) return null;
+  if (loading && !request) return <Page><LoadingState label="Memuat permintaan tanda tangan…" /></Page>;
+  if (loadError || !request) {
+    return (
+      <Page>
+        <EmptyState
+          tone="error"
+          title="Permintaan tanda tangan tidak dapat dimuat"
+          description={loadError || undefined}
+          action={<Button variant="secondary" onClick={load}>Coba lagi</Button>}
+        />
+      </Page>
+    );
+  }
 
   const latestPrecheck = request.prechecks?.[0] || null;
+  const verification = request.verification;
 
   return (
-    <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          gap: 12,
-          flexWrap: 'wrap',
-          alignItems: 'center',
-        }}
-      >
-        <Button variant="secondary" onClick={() => navigate('/signatures')}>
-          <ArrowLeft size={14} />
-          Signatures
-        </Button>
-
-        <div style={{ display: 'flex', gap: 8 }}>
+    <Page
+      eyebrow="Permintaan tanda tangan"
+      title={`Tanda tangan #${request.id}`}
+      description={(
+        <span className="pw-row">
+          <StatusBadge status={request.status} />
+          <span data-no-translate="">{request.documentTitle}</span>
+        </span>
+      )}
+      actions={(
+        <>
           {canGenerateQr && request.status === 'signed' && (
-            <Button
-              variant="secondary"
-              onClick={generateQr}
-              disabled={qrLoading}
-            >
-              <QrCode size={14} />
-              {qrLoading ? 'Memproses…' : 'QR Verifikasi'}
+            <Button variant="secondary" icon="qr_code" onClick={generateQr} loading={qrLoading}>
+              Buat QR verifikasi
             </Button>
           )}
-
           {canSign && request.status === 'pending' && (
-            <Button onClick={() => setSignOpen(true)}>
-              <PenTool size={14} />
-              Tanda Tangan
+            <Button icon="draw" onClick={() => setSignOpen(true)}>
+              Tanda tangani dokumen
             </Button>
           )}
+        </>
+      )}
+    >
+      <div className="pw-cols-sidebar">
+        <div className="pw-stack">
+          <SignaturePrecheckPanel
+            precheck={latestPrecheck}
+            onRun={runPrecheck}
+            running={precheckRunning}
+            canRun={canRunPrecheck && request.status === 'pending'}
+          />
+
+          <Card title="Verifikasi">
+            {verification ? (
+              <div className="pw-stack">
+                <KeyValue items={[
+                  { label: 'Kode', value: <code data-no-translate="" className="sig-code">{verification.verificationCode}</code> },
+                  { label: 'Hash', value: <code className="sig-code sig-code--hash">{verification.documentHash}</code> },
+                  { label: 'Algoritma', value: verification.hashAlgorithm },
+                  { label: 'Ditandatangani pada', value: formatDateTime(verification.signedAt) },
+                  { label: 'Berlaku sampai', translate: true, value: verification.validUntil ? formatDateTime(verification.validUntil) : 'Tidak dibatasi' },
+                ]}
+                />
+                {verification.verificationUrl && (
+                  <a className="pw-link sig-link" href={verification.verificationUrl} target="_blank" rel="noreferrer">Buka halaman verifikasi</a>
+                )}
+              </div>
+            ) : <EmptyState compact icon="qr_code" title="Belum ada data verifikasi" />}
+          </Card>
         </div>
-      </div>
 
-      <div
-        style={{
-          marginTop: 16,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 12,
-        }}
-      >
-        <div>
-          <h2 style={{ margin: 0 }}>Signature #{request.id}</h2>
-          <div
-            style={{
-              color: 'var(--color-text-muted)',
-              fontSize: 13,
-              marginTop: 4,
-            }}
-          >
-            {request.documentTitle}
-          </div>
-        </div>
-        <Badge tone={STATUS_TONE[request.status] || 'default'}>
-          {request.status}
-        </Badge>
-      </div>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: 12,
-          marginTop: 16,
-        }}
-      >
-        <Card title="Signature Request">
-          <Definition label="Document ID" value={request.documentId} />
-          <Definition
-            label="Approval Request"
-            value={request.approvalRequestId ? `#${request.approvalRequestId}` : '—'}
-          />
-          <Definition label="Signature Type" value={request.signatureType || '—'} />
-          <Definition
-            label="Signer Ditunjuk"
-            value={
-              request.assignedSignerUserName ||
-              request.assignedSignerRoleName ||
-              (request.assignedSignerUserId
-                ? `User #${request.assignedSignerUserId}`
-                : request.assignedSignerRoleId
-                  ? `Role #${request.assignedSignerRoleId}`
-                  : '—')
-            }
-          />
-          <Definition
-            label="Ditandatangani Oleh"
-            value={
-              request.signedByName ||
-              (request.signedBy ? `User #${request.signedBy}` : '—')
-            }
-          />
-          <Definition
-            label="Signed At"
-            value={
-              request.signedAt
-                ? new Date(request.signedAt).toLocaleString('id-ID')
-                : '—'
-            }
-          />
-        </Card>
-
-        <Card title="Verifikasi">
-          {request.verification ? (
-            <>
-              <Definition
-                label="Kode"
-                value={<code>{request.verification.verificationCode}</code>}
-              />
-              <Definition
-                label="Hash"
-                value={
-                  <code style={{ wordBreak: 'break-all', fontSize: 11 }}>
-                    {request.verification.documentHash}
-                  </code>
-                }
-              />
-              <Definition
-                label="Algoritma"
-                value={request.verification.hashAlgorithm || '—'}
-              />
-              <Definition
-                label="Signed At"
-                value={
-                  request.verification.signedAt
-                    ? new Date(request.verification.signedAt).toLocaleString('id-ID')
-                    : '—'
-                }
-              />
-              <Definition
-                label="Valid Until"
-                value={
-                  request.verification.validUntil
-                    ? new Date(request.verification.validUntil).toLocaleString('id-ID')
-                    : 'Tidak dibatasi'
-                }
-              />
-              {request.verification.verificationUrl && (
-                <div style={{ marginTop: 8, fontSize: 13 }}>
-                  <a
-                    href={request.verification.verificationUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Buka halaman verifikasi
-                  </a>
-                </div>
-              )}
-            </>
-          ) : (
-            <div style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>
-              Belum ada metadata verifikasi.
-            </div>
-          )}
-        </Card>
-      </div>
-
-      <div style={{ marginTop: 12 }}>
-        <SignaturePrecheckPanel
-          precheck={latestPrecheck}
-          onRun={runPrecheck}
-          running={precheckRunning}
-          canRun={canRunPrecheck && request.status === 'pending'}
-        />
+        <aside className="pw-stack">
+          <Card title="Ringkasan">
+            <KeyValue items={[
+              { label: 'Status', value: <StatusBadge status={request.status} /> },
+              { label: 'ID dokumen', value: request.documentId },
+              { label: 'Permintaan approval', value: request.approvalRequestId ? `#${request.approvalRequestId}` : null },
+              { label: 'Level tanda tangan', value: SIGNATURE_LEVEL_LABELS[request.signatureType] || request.signatureType },
+              { label: 'Penanda tangan ditunjuk', value: request.assignedSignerUserName || (request.assignedSignerRoleName || request.assignedSignerUserId || request.assignedSignerRoleId ? <Translate>{assignedSignerLabel(request)}</Translate> : null) },
+              { label: 'Ditandatangani oleh', value: request.signedByName || (request.signedBy ? <Translate>{signedByLabel(request)}</Translate> : null) },
+              { label: 'Waktu tanda tangan', value: request.signedAt ? formatDateTime(request.signedAt) : null },
+            ]}
+            />
+          </Card>
+        </aside>
       </div>
 
       <Modal
         open={signOpen}
         onClose={() => setSignOpen(false)}
-        title="Tanda Tangan Dokumen"
-        maxWidth={700}
+        title="Tanda tangani dokumen"
+        size="md"
       >
         <SignForm
           signatureRequestId={request.id}
@@ -291,48 +198,23 @@ export default function SignatureDetail() {
           setQrOpen(false);
           setQrData(null);
         }}
-        title="QR Verifikasi"
-        maxWidth={560}
+        title="QR verifikasi"
+        size="sm"
       >
         {qrData && (
-          <div style={{ textAlign: 'center' }}>
-            <img
-              src={qrData.qrDataUrl}
-              alt="QR verification"
-              style={{
-                width: 240,
-                height: 240,
-                boxShadow: 'inset 0 0 0 1px var(--color-border)',
-                borderRadius: 8,
-              }}
-            />
-            <div style={{ marginTop: 10, fontSize: 13 }}>
-              <b>Kode:</b> <code>{qrData.verificationCode}</code>
+          <div className="sig-qr">
+            <img src={qrData.qrDataUrl} alt={`QR verifikasi ${qrData.verificationCode || ''}`.trim()} />
+            <div className="sig-qr__code">
+              Kode: <code data-no-translate="" className="sig-code">{qrData.verificationCode}</code>
             </div>
-            <div
-              style={{
-                marginTop: 4,
-                wordBreak: 'break-all',
-                fontSize: 12,
-                color: 'var(--color-text-muted)',
-              }}
-            >
-              {qrData.verificationUrl}
-            </div>
-            <div
-              style={{
-                marginTop: 10,
-                fontSize: 11,
-                color: 'var(--color-text-muted)',
-              }}
-            >
-              QR image hanya ditampilkan sementara dan tidak disimpan sebagai
-              base64 di database.
-            </div>
+            <div className="sig-qr__url" data-no-translate="">{qrData.verificationUrl}</div>
+            <p className="sig-note">
+              Gambar QR hanya ditampilkan sekarang dan tidak disimpan di database.
+            </p>
           </div>
         )}
       </Modal>
-    </div>
+    </Page>
   );
 }
 
@@ -355,11 +237,13 @@ function SignForm({
   );
   const [overridePrecheck, setOverridePrecheck] = useState(false);
   const [overrideReason, setOverrideReason] = useState('');
+  const [reasonError, setReasonError] = useState('');
   const [signing, setSigning] = useState(false);
 
-  const sign = async () => {
+  const sign = async (event) => {
+    event?.preventDefault();
     if (serverBlocked && canOverride && overridePrecheck && !overrideReason.trim()) {
-      toast('Alasan override wajib diisi', 'error');
+      setReasonError('Alasan override wajib diisi.');
       return;
     }
 
@@ -384,120 +268,73 @@ function SignForm({
         setServerBlocked(true);
         setBlockDetails(apiError.details || null);
         setOverridePrecheck(false);
-        toast(apiError.message || 'AI precheck memblokir proses signing', 'error');
+        toast(apiError.message || 'Pemeriksaan AI memblokir penandatanganan', 'error');
       } else {
-        toast(apiError?.message || 'Gagal menandatangani dokumen', 'error');
+        toast(apiError?.message || 'Dokumen gagal ditandatangani', 'error');
       }
     } finally {
       setSigning(false);
     }
   };
 
+  const findings = Array.isArray(blockDetails?.findings) ? blockDetails.findings : [];
+
+  // Signing is deliberate: Enter in "Alasan override" does nothing, only the
+  // "Tanda tangani" button signs (as before the redesign).
   return (
-    <div>
-      <div style={{ fontSize: 13, lineHeight: 1.6 }}>
-        Signing tetap divalidasi backend terhadap approval final, assignment
-        signer, delegation aktif, signature rule, dan versi dokumen saat ini.
-      </div>
+    <form className="pw-stack" onSubmit={(event) => event.preventDefault()} noValidate>
+      <p className="sig-sign-intro">
+        Penandatanganan tetap diperiksa server terhadap approval final, penanda tangan yang ditunjuk,
+        delegasi aktif, aturan tanda tangan, dan versi dokumen saat ini.
+      </p>
 
       {serverBlocked && (
-        <div
-          style={{
-            marginTop: 12,
-            boxShadow: 'inset 0 0 0 1px #fecaca',
-            background: '#fef2f2',
-            borderRadius: 8,
-            padding: 12,
-            fontSize: 13,
-          }}
-        >
-          <b>AI precheck: {blockDetails?.status || 'blocked'}</b>
-          {Array.isArray(blockDetails?.findings) &&
-            blockDetails.findings.length > 0 && (
-              <ul style={{ marginBottom: 0 }}>
-                {blockDetails.findings.map((finding, index) => (
-                  <li key={index}>{finding.message}</li>
-                ))}
-              </ul>
-            )}
-
-          {!canOverride && (
-            <div style={{ marginTop: 8 }}>
-              Anda tidak memiliki permission untuk override precheck.
-            </div>
+        <Banner tone="error" title={`Pemeriksaan AI: ${statusLabel(blockDetails?.status || 'blocked')}`}>
+          {findings.length > 0 && (
+            <ul className="sig-findings">
+              {findings.map((finding, index) => (
+                <li key={index} data-no-translate="">{finding.message}</li>
+              ))}
+            </ul>
           )}
-        </div>
+          {!canOverride && (
+            <span className="sig-findings__note">Anda tidak punya izin untuk mengabaikan hasil pemeriksaan ini.</span>
+          )}
+        </Banner>
       )}
 
       {serverBlocked && canOverride && (
-        <div style={{ marginTop: 14 }}>
-          <label
-            style={{
-              display: 'flex',
-              gap: 7,
-              alignItems: 'center',
-              fontSize: 13,
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={overridePrecheck}
-              onChange={(event) => setOverridePrecheck(event.target.checked)}
-            />
-            Override AI precheck
-          </label>
-
-          {overridePrecheck && (
-            <div style={{ marginTop: 10 }}>
-              <Input
-                label="Alasan Override *"
-                value={overrideReason}
-                onChange={(event) => setOverrideReason(event.target.value)}
-                placeholder="Jelaskan alasan bisnis/operasional secara eksplisit"
-              />
-            </div>
-          )}
-        </div>
+        <Checkbox
+          label="Abaikan hasil pemeriksaan AI (override)"
+          checked={overridePrecheck}
+          onChange={(event) => { setOverridePrecheck(event.target.checked); setReasonError(''); }}
+        />
       )}
 
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 8,
-          marginTop: 18,
-        }}
-      >
-        <Button variant="secondary" onClick={onCancel} disabled={signing}>
+      {serverBlocked && canOverride && overridePrecheck && (
+        <Input
+          label="Alasan override"
+          required
+          value={overrideReason}
+          error={reasonError}
+          onChange={(event) => { setOverrideReason(event.target.value); setReasonError(''); }}
+          hint="Jelaskan alasan bisnis atau operasionalnya secara jelas."
+        />
+      )}
+
+      <FormActions>
+        <Button variant="text" type="button" onClick={onCancel} disabled={signing}>
           Batal
         </Button>
         <Button
+          type="button"
           onClick={sign}
-          disabled={
-            signing ||
-            (serverBlocked && (!canOverride || !overridePrecheck))
-          }
+          loading={signing}
+          disabled={serverBlocked && (!canOverride || !overridePrecheck)}
         >
-          {signing ? 'Menandatangani…' : 'Konfirmasi & Tanda Tangan'}
+          Tanda tangani
         </Button>
-      </div>
-    </div>
-  );
-}
-
-function Definition({ label, value }) {
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: '145px 1fr',
-        gap: 8,
-        marginBottom: 8,
-        fontSize: 13,
-      }}
-    >
-      <b>{label}</b>
-      <div>{value}</div>
-    </div>
+      </FormActions>
+    </form>
   );
 }

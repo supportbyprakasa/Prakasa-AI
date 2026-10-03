@@ -1,0 +1,240 @@
+/* Project Tracker (Jira-like per Chat space) and its management portfolio —
+   page layout only. The board look lives in components/tasks/kanban.css,
+   the issue sheet in SideSheet, bars in ProgressBar, tiles in StatCard. */
+
+.tracker { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.tracker--embedded { height: 100%; min-height: 0; padding: 12px 16px; overflow-y: auto; }
+.tracker-body { min-width: 0; }
+
+/* Top bar: title (embedded) · view switch · live · actions */
+.tracker-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.tracker-bar__title { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: var(--pw-font-md); }
+.tracker-bar__name { max-width: 280px; overflow: hidden; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.tracker-enable { display: flex; flex-direction: column; align-items: stretch; gap: 12px; width: min(360px, 100%); text-align: left; }
+
+/* Filter bar: one search, then dense pickers. */
+.tracker-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; min-width: 0; }
+.tracker-filters__search { flex: 1 1 280px; min-width: 0; max-width: 480px; }
+.tracker-filters__field { flex: 0 1 180px; min-width: 0; }
+
+/* Issue type glyph, avatar, key, story points */
+.tracker-type { display: inline-flex; flex-shrink: 0; align-items: center; gap: 8px; color: var(--pw-text-muted); font-size: var(--pw-font-sm); }
+.tracker-type__icon { flex-shrink: 0; }
+.tracker-type--task .tracker-type__icon { color: var(--pw-info); }
+.tracker-type--bug .tracker-type__icon { color: var(--pw-error); }
+.tracker-type--story .tracker-type__icon { color: var(--pw-success); }
+.tracker-type--epic .tracker-type__icon { color: var(--pw-warning); }
+.tracker-type--subtask .tracker-type__icon { color: var(--pw-text-muted); }
+
+.tracker-avatar {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: var(--pw-radius-full);
+  background: var(--pw-selected);
+  color: var(--pw-accent);
+  font-size: var(--pw-font-xs);
+  font-weight: 500;
+}
+.tracker-avatar--sm { width: 24px; height: 24px; }
+.tracker-avatar--md { width: 32px; height: 32px; }
+.tracker-avatar--empty { background: var(--pw-hover-row); color: var(--pw-text-muted); }
+
+.tracker-key { color: var(--pw-text-muted); font-size: var(--pw-font-xs); font-weight: 500; white-space: nowrap; }
+.tracker-points { color: var(--pw-text-muted); font-size: var(--pw-font-xs); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tracker-overdue-num { color: var(--pw-error); }
+.tracker-due { gap: 8px; }
+.tracker-labels { gap: 8px; }
+
+/* Realtime state: a static dot and one word. */
+.tracker-live { display: inline-flex; align-items: center; gap: 8px; color: var(--pw-text-muted); font-size: var(--pw-font-xs); white-space: nowrap; }
+.tracker-live__dot { width: 8px; height: 8px; border-radius: var(--pw-radius-full); background: var(--pw-text-muted); }
+.tracker-live--live .tracker-live__dot { background: var(--pw-success); }
+.tracker-live--connecting .tracker-live__dot,
+.tracker-live--reconnecting .tracker-live__dot { background: var(--pw-warning); }
+
+/* Board: sprint line above the shared kanban */
+.tracker-board-wrap { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tracker-board__sprint { margin: 0; }
+
+/* Backlog: one white panel per sprint, rows like table rows */
+.tracker-backlog { display: flex; flex-direction: column; gap: 16px; }
+.tracker-backlog > .pw-row p { margin: 0; }
+.tracker-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 24px;
+  border: 1px solid var(--pw-outline-panel);
+  border-radius: var(--pw-radius-sm);
+  background: var(--pw-surface);
+  box-shadow: inset 0 0 0 2px transparent;
+}
+.tracker-section--active { border-color: var(--pw-accent); }
+.tracker-section.is-drop-target { box-shadow: inset 0 0 0 2px var(--pw-accent); }
+.tracker-section__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.tracker-section__title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; min-width: 0; }
+.tracker-section__actions { display: flex; align-items: center; gap: 8px; }
+.tracker-section__goal { margin: 0; color: var(--pw-text-secondary); font-size: var(--pw-font-body); }
+.tracker-rows { display: flex; flex-direction: column; margin: 0 -24px; padding: 0; list-style: none; }
+.tracker-rows__empty {
+  margin: 0 24px;
+  padding: 12px 8px;
+  border: 1px dashed var(--pw-outline-strong);
+  border-radius: var(--pw-radius-sm);
+  color: var(--pw-text-muted);
+  font-size: var(--pw-font-sm);
+  text-align: center;
+}
+.tracker-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 8px 0 24px;
+  border-top: 1px solid var(--pw-divider);
+  cursor: grab;
+}
+.tracker-row__key { min-width: 64px; }
+.tracker-row__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--pw-text);
+  font-size: var(--pw-font-body);
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tracker-row__title:hover { text-decoration: underline; }
+.tracker-row__meta { display: flex; flex-shrink: 0; align-items: center; gap: 12px; }
+
+/* Reports */
+.tracker-reports { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.tracker-reports__wide { grid-column: 1 / -1; }
+.tracker-share { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.tracker-share__row { display: grid; grid-template-columns: minmax(96px, 1fr) minmax(80px, 2fr) auto; align-items: center; gap: 12px; font-size: var(--pw-font-sm); }
+.tracker-share__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tracker-share__value { color: var(--pw-text-muted); font-size: var(--pw-font-xs); white-space: nowrap; }
+
+/* Chart legends and SVG charts: series colours from the chart and status tokens,
+   every value also printed as text (colour is a second cue). */
+.tracker-legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 8px 0 0; padding: 0; color: var(--pw-text-muted); font-size: var(--pw-font-xs); list-style: none; }
+.tracker-legend li { display: inline-flex; align-items: center; gap: 8px; }
+.tracker-swatch { display: inline-block; width: 16px; height: 0; border-top: 2px solid var(--pw-chart-series); }
+.tracker-swatch--ideal { border-top: 2px dashed var(--pw-chart-axis); }
+.tracker-swatch--info, .tracker-swatch--success, .tracker-swatch--todo, .tracker-swatch--in-progress,
+.tracker-swatch--done, .tracker-swatch--created, .tracker-swatch--completed, .tracker-swatch--overdue {
+  width: 12px; height: 8px; border: 0; border-radius: var(--pw-radius-xs); background: var(--pw-chart-series);
+}
+.tracker-swatch--success, .tracker-swatch--done, .tracker-swatch--completed { background: var(--pw-success); }
+.tracker-swatch--todo { background: var(--pw-chart-axis); }
+.tracker-swatch--overdue { background: var(--pw-error); }
+
+.tracker-chart { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+/* Chart cards (Card variant="chart") have no bottom padding: the chart keeps its own. */
+.tracker-chart-card .tracker-chart { padding-bottom: 16px; }
+.tracker-chart .tracker-legend { margin: 0; }
+.tracker-chart__readout { min-height: 20px; margin: 0; color: var(--pw-text-muted); font-size: var(--pw-font-sm); }
+.tracker-chart__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.tracker-chart__svg { display: block; max-width: 100%; height: auto; overflow: visible; border-radius: var(--pw-radius-xs); }
+.tracker-chart__svg:focus-visible, .tracker-chart__bar-hit:focus-visible { outline: 2px solid var(--pw-primary); outline-offset: 2px; }
+.tracker-chart__grid { stroke: var(--pw-chart-grid); stroke-width: 1; }
+.tracker-chart__axis { stroke: var(--pw-chart-axis); stroke-width: 1; }
+.tracker-chart__tick { fill: var(--pw-text-muted); font-size: var(--pw-font-xs); }
+.tracker-chart__actual { fill: none; stroke: var(--pw-chart-series); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.tracker-chart__ideal { fill: none; stroke: var(--pw-chart-axis); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.tracker-chart__cross { stroke: var(--pw-chart-axis); stroke-width: 1; }
+.tracker-chart__dot { fill: var(--pw-chart-series); stroke: var(--pw-surface); stroke-width: 2; }
+.tracker-chart__bar { fill: var(--pw-chart-series); transition: opacity var(--pw-dur-xs) var(--pw-ease-standard); }
+.tracker-chart__bar.is-active { opacity: 0.8; }
+.tracker-chart__hit { fill: transparent; }
+.tracker-chart__bar-hit { outline: none; }
+.tracker-chart__bar--todo { fill: var(--pw-chart-axis); }
+.tracker-chart__bar--in-progress, .tracker-chart__bar--created { fill: var(--pw-chart-series); }
+.tracker-chart__bar--done, .tracker-chart__bar--completed { fill: var(--pw-success); }
+.tracker-chart__line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.tracker-chart__line--created { stroke: var(--pw-chart-series); }
+.tracker-chart__line--completed { stroke: var(--pw-success); }
+.tracker-chart__area { stroke: none; }
+.tracker-chart__area--created { fill: color-mix(in srgb, var(--pw-chart-series) 14%, transparent); }
+.tracker-chart__area--completed { fill: color-mix(in srgb, var(--pw-success) 14%, transparent); }
+.tracker-chart__dot--created { fill: var(--pw-chart-series); }
+.tracker-chart__dot--completed { fill: var(--pw-success); }
+
+/* Donut: dash-offset arcs on one circle */
+.tracker-donut__body { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.tracker-donut__svg { flex: 0 0 auto; overflow: visible; }
+.tracker-donut__track { fill: none; stroke: var(--pw-chart-grid); }
+.tracker-donut__arc { fill: none; transition: opacity var(--pw-dur-xs) var(--pw-ease-standard); }
+.tracker-donut__arc.is-active { opacity: 0.8; }
+.tracker-donut__arc--todo { stroke: var(--pw-chart-axis); }
+.tracker-donut__arc--in-progress { stroke: var(--pw-chart-series); }
+.tracker-donut__arc--done { stroke: var(--pw-success); }
+.tracker-donut__total { fill: var(--pw-text-stat); font-family: var(--pw-font-sans); font-size: var(--pw-font-title); font-weight: 400; }
+.tracker-donut__caption { fill: var(--pw-text-muted); font-size: var(--pw-font-xs); }
+.tracker-donut__legend { display: flex; flex: 1 1 180px; flex-direction: column; gap: 8px; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.tracker-donut__legend li { display: flex; align-items: center; gap: 8px; font-size: var(--pw-font-sm); }
+.tracker-donut__legend-label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tracker-donut__legend-value { color: var(--pw-text-muted); font-size: var(--pw-font-xs); white-space: nowrap; }
+.tracker-donut__note { margin: 0; }
+
+/* Issue sheet (inside the shared SideSheet) */
+.tracker-sheet__heading { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.tracker-sheet__body { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.tracker-sheet__tools { display: flex; align-items: center; gap: 4px; margin-right: -8px; }
+.tracker-sheet__title textarea.pw-field__input,
+textarea.pw-field__input.tracker-sheet__title { min-height: 0; font-size: var(--pw-font-lg); resize: none; field-sizing: content; }
+.tracker-sheet__section { display: flex; flex-direction: column; gap: 8px; padding-top: 16px; border-top: 1px solid var(--pw-divider); }
+.tracker-sheet__section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.tracker-sheet__list { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.tracker-sheet__child { display: flex; align-items: center; gap: 8px; min-height: 40px; }
+.tracker-sheet__child-link { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tracker-sheet__comment { display: flex; flex-direction: column; gap: 4px; }
+.tracker-comment { display: flex; align-items: flex-start; gap: 12px; }
+.tracker-comment__author { color: var(--pw-text); font-weight: 500; }
+.tracker-comment__body { margin: 4px 0 0; font-size: var(--pw-font-body); white-space: pre-wrap; overflow-wrap: anywhere; }
+.tracker-dialog__text { margin: 0; font-size: var(--pw-font-body); }
+
+/* Management portfolio */
+.tracker-portfolio { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.tracker-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px; }
+.pw-cols-2.tracker-cards { gap: 24px; }
+.tracker-progress-cell { display: inline-flex; align-items: center; gap: 8px; width: 100%; min-width: 120px; }
+.tracker-progress-cell__bar { flex: 1 1 auto; }
+.tracker-progress-cell__value { color: var(--pw-text-muted); font-size: var(--pw-font-xs); white-space: nowrap; }
+.tracker-sprint-cell { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+.tracker-recent { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.tracker-recent li { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; border-bottom: 1px solid var(--pw-divider); }
+.tracker-recent li:last-child { border-bottom: 0; }
+.tracker-recent__main { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.tracker-recent__title { min-width: 0; overflow: hidden; font-size: var(--pw-font-body); text-overflow: ellipsis; white-space: nowrap; }
+.tracker-recent__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; color: var(--pw-text-meta); font-size: var(--pw-font-xs); }
+
+@media (max-width: 1023px) {
+  .tracker-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .tracker--embedded { padding: 8px 12px; }
+  .tracker-bar__name { max-width: 160px; }
+  .tracker-views { order: 5; width: 100%; }
+  .tracker-filters__search { flex-basis: 100%; max-width: none; }
+  .tracker-filters__field { flex: 1 1 calc(50% - 8px); }
+  .tracker-filters > .pw-button { flex-basis: 100%; }
+  .tracker-row { flex-wrap: wrap; row-gap: 4px; padding: 8px 4px 8px 16px; }
+  .tracker-row__title { flex: 1 1 0; }
+  .tracker-row__meta { order: 5; width: 100%; padding-left: 32px; }
+  .tracker-row__priority { display: none; }
+  .tracker-rows { margin: 0 -16px; }
+  .tracker-rows__empty { margin: 0 16px; }
+  .tracker-section { padding: 12px 16px; }
+  .tracker-section__actions { width: 100%; }
+  .tracker-section__actions .pw-button { flex: 1 1 auto; }
+  .tracker-reports { grid-template-columns: minmax(0, 1fr); }
+  .tracker-share__row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 4px; }
+  .tracker-share__bar { grid-column: 1 / -1; grid-row: 2; }
+  .tracker-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .tracker-progress-cell, .tracker-sprint-cell { width: 100%; min-width: 0; }
+  .tracker-sprint-cell { align-items: stretch; }
+}

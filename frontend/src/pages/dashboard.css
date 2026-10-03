@@ -1,0 +1,89 @@
+/* Home (docs/ui-guideline.md §3.4): generation-B cards — tinted, radius 12,
+   no shadow — 24px apart. Card, CountBadge, Button and EmptyState bring their
+   own look; this file only lays out the page. */
+
+/* The docked menu already lists every module on desktop. */
+@media (min-width: 1024px) {
+  .dash-quick { display: none; }
+}
+
+.pw-cols-sidebar.dash-body { gap: 24px; }
+.dash-main { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.dash-section { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.dash-section__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 24px; }
+
+.dash-card { display: flex; flex-direction: column; min-width: 0; }
+.dash-card__title { display: inline-flex; align-items: center; gap: 12px; min-width: 0; }
+.dash-card__icon { flex: none; color: var(--pw-text-secondary); }
+.dash-card__more { display: flex; margin: 8px 0 0 -12px; }
+
+/* Items waiting: one link row each, the state layer as hover. */
+.dash-list { display: flex; flex-direction: column; margin: 0 -12px; padding: 0; list-style: none; }
+.dash-list__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 12px;
+  border-radius: var(--pw-radius-md);
+  color: inherit;
+  text-decoration: none;
+}
+.dash-list__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-list li.is-read .dash-list__title { color: var(--pw-text-muted); }
+.dash-notif .dash-list__title { font-weight: 500; }
+.dash-notif li.is-read .dash-list__title { font-weight: 400; }
+.dash-notif__dot { display: flex; flex: 0 0 8px; align-items: center; justify-content: center; height: 20px; }
+
+@media (max-width: 600px) {
+  .dash-section__hint { display: none; }
+}
+
+/* The count stays beside a title that wraps, on every width. */
+.dash-card > .pw-card__header { flex-wrap: nowrap; align-items: flex-start; }
+.dash-card > .pw-card__header .pw-card__actions { padding-top: 4px; }
+
+/* "Ringkasan pagi": the day in one prioritised list, above the cards. */
+.dash-brief__headline { margin: 0; color: var(--pw-text-primary); font-size: var(--pw-font-md); line-height: 24px; }
+.dash-brief.is-quiet .dash-brief__headline { color: var(--pw-text-secondary); }
+.dash-brief__list { display: flex; flex-direction: column; margin: 8px -12px 0; padding: 0; list-style: none; }
+.dash-brief__item { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.dash-brief__row {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 8px 12px;
+  border-radius: var(--pw-radius-md);
+  color: inherit;
+  text-decoration: none;
+}
+.dash-brief__count {
+  flex: 0 0 40px;
+  color: var(--pw-text-primary);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-lg);
+  font-weight: 500;
+  line-height: 24px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.dash-brief__count.is-error { color: var(--pw-error); }
+.dash-brief__count.is-warning { color: var(--pw-warning); }
+.dash-brief__count.is-info { color: var(--pw-info); }
+.dash-brief__label { white-space: normal; }
+.dash-brief__meta { display: flex; flex-wrap: wrap; gap: 0 8px; min-width: 0; }
+.dash-brief__meta > * + *::before { content: '·'; margin-right: 8px; color: var(--pw-text-muted); }
+.dash-brief__example { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-brief__note { margin: 8px 0 0; }
+.dash-brief__skeleton { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 8px; }
+
+@media (max-width: 600px) {
+  .dash-brief__count { flex-basis: 32px; }
+  /* On a phone the tone, the wait and each example take a line of their own. */
+  .dash-brief__meta { flex-direction: column; gap: 0; }
+  .dash-brief__meta > * + *::before { content: none; }
+}

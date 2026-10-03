@@ -4,9 +4,9 @@ const { log } = require('../services/activityLog.service');
 
 async function list(req, res, next) {
   try {
-    const where = ['s.deleted_at IS NULL'];
-    const args = [];
-    if (req.query.entityId) { where.push('s.entity_id = ?'); args.push(req.query.entityId); }
+    // Always the signed-in user's company; never from the request.
+    const where = ['s.entity_id = ?', 's.deleted_at IS NULL'];
+    const args = [req.user.entityId];
     if (req.query.status) { where.push('s.status = ?'); args.push(req.query.status); }
     if (req.query.vendorId) { where.push('s.vendor_id = ?'); args.push(req.query.vendorId); }
 
@@ -45,12 +45,12 @@ async function detail(req, res, next) {
          FROM software_subscriptions s
          LEFT JOIN software_vendors v ON v.id = s.vendor_id
          LEFT JOIN users u ON u.id = s.pic_user_id
-        WHERE s.id=? AND s.deleted_at IS NULL`, [id]
+        WHERE s.id=? AND s.entity_id=? AND s.deleted_at IS NULL`, [id, req.user.entityId]
     );
     if (!rows[0]) return fail(res, 'NOT_FOUND', 'Subscription tidak ditemukan', 404);
 
     const [licenses] = await pool.query(
-      `SELECT l.id, l.license_key AS licenseKey, l.seat_label AS seatLabel,
+      `SELECT l.id, (l.license_key IS NOT NULL AND TRIM(l.license_key) <> '') AS hasLicenseKey, l.seat_label AS seatLabel,
               l.assigned_to AS assignedTo, u.name AS assignedToName,
               l.status, l.assigned_at AS assignedAt, l.last_used_at AS lastUsedAt
          FROM subscription_licenses l
@@ -76,15 +76,18 @@ async function detail(req, res, next) {
          FROM subscription_payments WHERE subscription_id=? ORDER BY id DESC`, [id]
     );
 
-    return ok(res, { ...rows[0], licenses, invoices, renewals, payments });
+    // The licence key itself never leaves the API — only whether one was stored (S10).
+    const licenseRows = licenses.map((l) => ({ ...l, hasLicenseKey: Number(l.hasLicenseKey) === 1 }));
+    return ok(res, { ...rows[0], licenses: licenseRows, invoices, renewals, payments });
   } catch (e) { next(e); }
 }
 
 async function create(req, res, next) {
   const conn = await pool.getConnection();
   try {
+    const entityId = req.user.entityId;
     const {
-      entityId, departmentId, vendorId, productName, planName,
+      departmentId, vendorId, productName, planName,
       licenseType = 'per_user', billingCycle = 'monthly',
       totalSeats = 1, unitPrice, currency = 'IDR',
       startDate, renewalDate, autoRenew = 0, picUserId,
@@ -149,15 +152,15 @@ async function update(req, res, next) {
          pic_user_id=COALESCE(?,pic_user_id),
          jurnal_reference_id=COALESCE(?,jurnal_reference_id),
          notes=COALESCE(?,notes)
-       WHERE id=? AND deleted_at IS NULL`,
+       WHERE id=? AND entity_id=? AND deleted_at IS NULL`,
       [productName || null, planName || null, licenseType || null, billingCycle || null,
        totalSeats ?? null, unitPrice ?? null, currency || null, startDate || null,
        renewalDate || null, autoRenew ?? null, status || null, picUserId ?? null,
-       jurnalReferenceId || null, notes || null, id]
+       jurnalReferenceId || null, notes || null, id, req.user.entityId]
     );
     if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'Subscription tidak ditemukan', 404);
     await log({
-      entityId: null, userId: req.user.sub,
+      entityId: req.user.entityId, userId: req.user.sub,
       action: 'subscription.update', subjectType: 'software_subscription', subjectId: Number(id),
     });
     return ok(res, { id: Number(id) });
@@ -168,11 +171,11 @@ async function remove(req, res, next) {
   try {
     const { id } = req.params;
     const [r] = await pool.query(
-      `UPDATE software_subscriptions SET deleted_at=NOW() WHERE id=? AND deleted_at IS NULL`, [id]
+      `UPDATE software_subscriptions SET deleted_at=NOW() WHERE id=? AND entity_id=? AND deleted_at IS NULL`, [id, req.user.entityId]
     );
     if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'Subscription tidak ditemukan', 404);
     await log({
-      entityId: null, userId: req.user.sub,
+      entityId: req.user.entityId, userId: req.user.sub,
       action: 'subscription.delete', subjectType: 'software_subscription', subjectId: Number(id),
     });
     return ok(res, { id: Number(id) });
@@ -182,15 +185,14 @@ async function remove(req, res, next) {
 async function renewalsDue(req, res, next) {
   try {
     const days = Math.min(365, parseInt(req.query.days) || 30);
-    const where = ['s.deleted_at IS NULL', `s.status IN ('active','expiring')`];
-    const args = [];
-    if (req.query.entityId) { where.push('s.entity_id = ?'); args.push(req.query.entityId); }
+    const where = ['s.entity_id = ?', 's.deleted_at IS NULL', `s.status IN ('active','expiring')`];
+    const args = [req.user.entityId];
 
     const [rows] = await pool.query(
       `SELECT s.id, s.entity_id AS entityId, s.product_name AS productName,
               s.plan_name AS planName, s.total_seats AS totalSeats,
               s.renewal_date AS renewalDate,
-              DATEDIFF(s.renewal_date, CURDATE()) AS daysLeft,
+              DATEDIFF(s.renewal_date, DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR)) AS daysLeft,
               s.status, s.auto_renew AS autoRenew,
               s.pic_user_id AS picUserId, u.name AS picName,
               (SELECT COUNT(*) FROM subscription_licenses l
@@ -198,7 +200,7 @@ async function renewalsDue(req, res, next) {
          FROM software_subscriptions s
          LEFT JOIN users u ON u.id = s.pic_user_id
         WHERE ${where.join(' AND ')}
-          AND s.renewal_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY)
+          AND s.renewal_date <= DATE_ADD(DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR), INTERVAL ? DAY)
         ORDER BY s.renewal_date ASC`, [...args, days]
     );
     return ok(res, rows);

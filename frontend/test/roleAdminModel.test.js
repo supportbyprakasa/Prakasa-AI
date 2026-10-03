@@ -6,6 +6,9 @@ import {
   roleHierarchyRows,
   rolesForDepartment,
   shouldCloseRoleEditorFromBackdrop,
+  userEditFormFromDetail,
+  userEditPayload,
+  userFormForScope,
 } from '../src/pages/admin/roleAdminModel.js';
 
 test('permissions are grouped by tool prefix with stable labels and ordering', () => {
@@ -83,4 +86,64 @@ test('nested confirmation interaction never closes the role editor backdrop', ()
     confirmOpen: false,
     eventTargetIsBackdrop: true,
   }), true);
+});
+
+test('user detail becomes an editable form with stable string select values', () => {
+  assert.deepEqual(userEditFormFromDetail({
+    id: 17,
+    name: 'Nadia Putri',
+    email: 'nadia@prakasagroup.com',
+    entityId: 1,
+    departmentId: 11,
+    status: 'active',
+    roles: [{ id: 3, name: 'Warehouse Member' }, { id: 4, name: 'Warehouse Supervisor' }],
+  }), {
+    name: 'Nadia Putri',
+    email: 'nadia@prakasagroup.com',
+    entityId: '1',
+    departmentId: '11',
+    status: 'active',
+    roleIds: ['3', '4'],
+  });
+});
+
+test('changing user scope removes roles that do not belong to the new division', () => {
+  const roles = [
+    { id: 1, entityId: 1, departmentId: null, roleKey: 'system.super_admin' },
+    { id: 3, entityId: 1, departmentId: 11, roleKey: 'warehouse.member' },
+    { id: 4, entityId: 1, departmentId: 12, roleKey: 'finance.member' },
+  ];
+  const current = {
+    name: 'Nadia Putri',
+    email: 'nadia@prakasagroup.com',
+    entityId: '1',
+    departmentId: '11',
+    status: 'active',
+    roleIds: ['1', '3'],
+  };
+
+  assert.deepEqual(userFormForScope(current, roles, 1, 12), {
+    ...current,
+    entityId: '1',
+    departmentId: '12',
+    roleIds: ['1'],
+  });
+});
+
+test('user edit payload converts select values to the API contract', () => {
+  assert.deepEqual(userEditPayload({
+    name: '  Nadia Putri  ',
+    email: ' NADIA@PRAKASAGROUP.COM ',
+    entityId: '1',
+    departmentId: '',
+    status: 'inactive',
+    roleIds: ['1', '7'],
+  }), {
+    name: 'Nadia Putri',
+    email: 'nadia@prakasagroup.com',
+    entityId: 1,
+    departmentId: null,
+    status: 'inactive',
+    roleIds: [1, 7],
+  });
 });

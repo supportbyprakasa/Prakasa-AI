@@ -3,6 +3,7 @@ const { ok, fail } = require('../utils/response');
 const { log } = require('../services/activityLog.service');
 const drive = require('../services/googleDrive.service');
 const { resolveFolder } = require('./folderMappingRules.controller');
+const { todayWib } = require('../utils/wibTime');
 
 async function list(req, res, next) {
   try {
@@ -134,7 +135,7 @@ async function useTemplate(req, res, next) {
 
     const copy = await drive.copyFile({
       fileId: tpl.drive_template_file_id,
-      name: `${title || tpl.name} - ${new Date().toISOString().slice(0, 10)}`,
+      name: `${title || tpl.name} - ${todayWib()}`,
       parentId: folderId || undefined,
     });
 

@@ -1,0 +1,46 @@
+/* Segmented button (docs/ui-guideline.md §4.7): 40px, padding 0 12, Google Sans
+   14/20 500, 1px --pw-outline-control (sementara); the ends are rounded 20px,
+   the selected segment is --pw-secondary-container with an 18px check. */
+.pw-segmented {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  vertical-align: middle;
+}
+.pw-segmented__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 0 1 auto;
+  box-sizing: border-box;
+  min-width: 48px;
+  height: var(--pw-control-height);
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid var(--pw-outline-control);
+  border-radius: 0;
+  background: transparent;
+  color: var(--pw-text);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-body);
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--pw-dur-xs) var(--pw-ease-standard), color var(--pw-dur-xs) var(--pw-ease-standard);
+}
+.pw-segmented__button + .pw-segmented__button { margin-left: -1px; }
+.pw-segmented__button:first-child { border-radius: var(--pw-radius-segment-start); }
+.pw-segmented__button:last-child { border-radius: var(--pw-radius-segment-end); }
+.pw-segmented__button:only-child { border-radius: var(--pw-radius-full); }
+.pw-segmented__button:focus-visible { z-index: 1; }
+.pw-segmented__button.is-selected { background: var(--pw-secondary-container); color: var(--pw-on-secondary-container); }
+.pw-segmented__button:disabled { border-color: var(--pw-outline-panel); color: var(--pw-disabled-text); cursor: not-allowed; }
+.pw-segmented__button.is-selected:disabled { background: var(--pw-disabled-bg); }
+.pw-segmented__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* Chosen by Prakasa AI and not reviewed yet (Wave C; the tag is in field.css). */
+.pw-segmented-ai { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-width: 0; flex-wrap: wrap; }
+.pw-segmented.is-ai-filled .pw-segmented__button.is-selected { box-shadow: inset 0 -2px 0 var(--pw-info); }

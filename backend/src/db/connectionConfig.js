@@ -63,6 +63,12 @@ function buildSslConfig(env) {
   };
 }
 
+// Every session runs in UTC, the same as the driver's `timezone: 'Z'`, so a
+// time written by NOW() reads back as the right instant whatever the server's
+// own zone is (a Mac in WIB, a VPS in UTC). Calendar days are WIB and are
+// spelled out in SQL (utils/wibTime.js).
+const SESSION_TIME_ZONE_SQL = "SET time_zone = '+00:00'";
+
 function buildDbConnectionConfig(env = process.env) {
   const config = {
     host: env.DB_HOST,
@@ -81,6 +87,7 @@ function buildDbConnectionConfig(env = process.env) {
 }
 
 module.exports = {
+  SESSION_TIME_ZONE_SQL,
   DEFAULT_DB_PORT,
   SSL_MODES,
   parsePort,

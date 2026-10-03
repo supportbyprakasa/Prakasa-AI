@@ -1,0 +1,27 @@
+/* IT assets (devices, locations, the report import, the dashboard's bar
+   lists) — layout specifics only. Fields, buttons, grids, dialogs and status
+   text come from the shared components. */
+
+/* Import dialog. */
+.it-import__lead { margin: 0; color: var(--pw-text-muted); font-size: var(--pw-font-body); line-height: 20px; }
+.it-import__file { color: var(--pw-text); font-size: var(--pw-font-body); line-height: 20px; overflow-wrap: anywhere; }
+.it-import__notes { display: flex; flex-direction: column; gap: 2px; min-width: 200px; white-space: normal; }
+.it-import__issue { color: var(--pw-text-muted); font-size: var(--pw-font-xs); line-height: 18px; overflow-wrap: anywhere; }
+.it-import__diff { color: var(--pw-text-meta); font-size: var(--pw-font-xs); line-height: 18px; }
+
+/* A holder's name and the "Pemegang sudah resign" mark under it. */
+.it-holder { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+/* Status dialog: the device it changes. */
+.it-status__device { margin: 0; color: var(--pw-text-muted); font-size: var(--pw-font-body); line-height: 20px; }
+
+/* Dashboard bar lists (per status / type / location): a label, the count,
+   and the shared ProgressBar under it. */
+.it-bars { display: flex; flex-direction: column; margin: 0; padding: 0 0 24px; list-style: none; }
+.it-bars__item { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; }
+.it-bars__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: var(--pw-font-body); line-height: 20px; }
+.it-bars__label { min-width: 0; color: var(--pw-text); overflow-wrap: anywhere; }
+.it-bars__label a { color: var(--pw-primary); text-decoration: none; }
+.it-bars__label a:hover { text-decoration: underline; }
+.it-bars__value { flex: 0 0 auto; color: var(--pw-text-muted); font-variant-numeric: tabular-nums; }
+.it-dashboard__grid { gap: 24px; }

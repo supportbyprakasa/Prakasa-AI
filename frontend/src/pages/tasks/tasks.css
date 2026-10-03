@@ -1,0 +1,38 @@
+/* Task board list, board workspace and task detail — layout only; the kanban
+   look is components/tasks/kanban.css, fields/buttons/badges are shared. */
+
+/* Filter row above the kanban: board picker, search, dense pickers. */
+.task-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; min-width: 0; }
+.task-filters__board { flex: 0 1 220px; min-width: 0; }
+.task-filters__search { flex: 1 1 260px; min-width: 0; max-width: 420px; }
+.task-filters__field { flex: 0 1 180px; min-width: 0; }
+
+/* Create board: one row per column (name, WIP limit, remove). */
+.task-col-list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.task-col-row { display: grid; grid-template-columns: minmax(0, 1fr) 160px auto; align-items: start; gap: 8px 16px; }
+.task-col-row > .pw-icon-button,
+.task-col-row > .pw-tooltip-anchor { margin-top: 8px; }
+
+/* Space panel */
+.task-chat-log { display: flex; flex-direction: column; max-height: 360px; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.task-chat-msg { display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-top: 1px solid var(--pw-divider); }
+.task-chat-msg:first-child { border-top: 0; }
+.task-chat-msg__sender { color: var(--pw-text); font-weight: 500; }
+.task-chat-msg__text { margin: 0; font-size: var(--pw-font-body); white-space: pre-wrap; overflow-wrap: anywhere; }
+.task-chat-form { display: flex; align-items: flex-start; gap: 8px; }
+.task-chat-form > .pw-button { margin-top: 12px; }
+
+/* Task detail */
+.pw-cols-sidebar.task-detail { gap: 24px; }
+.task-comments { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.task-comment { display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-top: 1px solid var(--pw-divider); }
+.task-comment:first-child { border-top: 0; padding-top: 0; }
+.task-comment__body { margin: 0; font-size: var(--pw-font-body); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+@media (max-width: 600px) {
+  .task-filters__board, .task-filters__search { flex-basis: 100%; max-width: none; }
+  .task-filters__field { flex: 1 1 calc(50% - 8px); }
+  .task-col-row { grid-template-columns: minmax(0, 1fr) 96px auto; }
+  .task-chat-form { flex-direction: column; align-items: stretch; }
+  .task-chat-form > .pw-button { margin-top: 0; }
+}

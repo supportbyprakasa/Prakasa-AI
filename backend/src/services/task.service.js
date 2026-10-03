@@ -323,12 +323,15 @@ async function createTask({ input, user, trustedSource = null, conn = null }) {
 
     let sourceType = 'manual';
     let sourceId = null;
+    let sourceExternalRef = null;
     if (trustedSource != null) {
-      if (!TRUSTED_SOURCE_TYPES.has(trustedSource.type) || trustedSource.id == null) {
+      const hasExternalRef = typeof trustedSource.externalRef === 'string' && trustedSource.externalRef.length > 0;
+      if (!TRUSTED_SOURCE_TYPES.has(trustedSource.type) || (trustedSource.id == null && !hasExternalRef)) {
         throw validationError('trustedSource tidak valid');
       }
       sourceType = trustedSource.type;
-      sourceId = trustedSource.id;
+      sourceId = trustedSource.id ?? null;
+      sourceExternalRef = hasExternalRef ? trustedSource.externalRef : null;
     }
 
     if (refs.columnId && !FINAL_STATUSES.has(status)) {
@@ -345,8 +348,8 @@ async function createTask({ input, user, trustedSource = null, conn = null }) {
         assignee_id, reporter_id,
         start_date, due_date, progress_percent,
         completed_at, completed_by,
-        source_type, source_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        source_type, source_id, source_external_ref)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         entityId,
         departmentId,
@@ -365,6 +368,7 @@ async function createTask({ input, user, trustedSource = null, conn = null }) {
         completedBy,
         sourceType,
         sourceId,
+        sourceExternalRef,
       ]
     );
 
@@ -430,7 +434,7 @@ async function updateTask({ taskId, patch, user }) {
       error.code = 'NOT_FOUND';
       throw error;
     }
-    taskAccess.assertTaskAccess({ user, task, action: 'manage' });
+    await taskAccess.assertTaskAccess({ user, task, action: 'manage' });
 
     normalizedPatch = { ...patch };
     const entityId = task.entity_id;
@@ -768,7 +772,7 @@ async function deleteTask({ taskId, user }) {
       error.code = 'NOT_FOUND';
       throw error;
     }
-    taskAccess.assertTaskAccess({ user, task, action: 'manage' });
+    await taskAccess.assertTaskAccess({ user, task, action: 'manage' });
 
     await taskActivity.record({
       taskId,
@@ -808,7 +812,7 @@ async function deleteTask({ taskId, user }) {
 async function getTaskDetail({ taskId, user }) {
   const task = await taskAccess.loadTask(taskId);
   if (!task) { const e = new Error('Task tidak ditemukan'); e.status = 404; e.code = 'NOT_FOUND'; throw e; }
-  taskAccess.assertTaskAccess({ user, task, action: 'view' });
+  await taskAccess.assertTaskAccess({ user, task, action: 'view' });
 
   const [meta] = await pool.query(
     `SELECT t.id, t.entity_id AS entityId, t.department_id AS departmentId,
@@ -820,7 +824,7 @@ async function getTaskDetail({ taskId, user }) {
             t.progress_percent AS progressPercent,
             t.completed_at AS completedAt,
             t.completed_by AS completedBy, uc.name AS completedByName,
-            t.source_type AS sourceType, t.source_id AS sourceId,
+            t.source_type AS sourceType, t.source_id AS sourceId, t.source_external_ref AS sourceExternalRef,
             t.position,
             t.created_at AS createdAt, t.updated_at AS updatedAt
        FROM tasks t
@@ -909,6 +913,87 @@ async function listTasksByBoard({ boardId, user, filters = {} }) {
 }
 
 
+/* ============================================================
+   Read-only list across boards (Prakasa AI, tools/work.js)
+   ============================================================ */
+
+// The caller's tasks across every board, by the same rule as the pages
+// (entity + taskAccess.taskDivisionSql). `mine` narrows to tasks the caller is
+// assigned to or reported. Project Tracker issues (a board with project_key)
+// are left out: their access is membership of the Chat space, checked by
+// tracker.service, not the division rule.
+const TODAY_WIB = 'DATE(UTC_TIMESTAMP() + INTERVAL 7 HOUR)';
+const FINAL_LIST = [...FINAL_STATUSES].map((s) => `'${s}'`).join(',');
+const DONE_LIST = [...DONE_STATUSES].map((s) => `'${s}'`).join(',');
+const TASK_STATE_SQL = Object.freeze({
+  open: `t.status NOT IN (${FINAL_LIST})`,
+  overdue: `t.status NOT IN (${FINAL_LIST}) AND t.due_date IS NOT NULL AND t.due_date < ${TODAY_WIB}`,
+  due_soon: `t.status NOT IN (${FINAL_LIST}) AND t.due_date IS NOT NULL AND t.due_date >= ${TODAY_WIB} AND t.due_date <= ${TODAY_WIB} + INTERVAL 7 DAY`,
+  done: `t.status IN (${DONE_LIST})`,
+  // Due on today's WIB date (a part of due_soon): the morning briefing's "jatuh tempo hari ini".
+  due_today: `t.status NOT IN (${FINAL_LIST}) AND t.due_date IS NOT NULL AND t.due_date = ${TODAY_WIB}`,
+});
+
+async function listTasksForUser({ user, filters = {} }) {
+  const entityId = taskAccess.resolveTargetEntity({ user });
+  const uid = Number(user.sub) || 0;
+  const visible = taskAccess.taskDivisionSql(user, 't');
+  const where = [
+    't.deleted_at IS NULL', 't.entity_id = ?', visible.sql,
+    'NOT EXISTS (SELECT 1 FROM boards bp WHERE bp.id = t.board_id AND bp.project_key IS NOT NULL)',
+  ];
+  const args = [entityId, ...visible.args];
+  if (filters.mine) { where.push('(t.assignee_id = ? OR t.reporter_id = ?)'); args.push(uid, uid); }
+  if (filters.boardId) { where.push('t.board_id = ?'); args.push(Number(filters.boardId)); }
+  if (filters.q) { where.push('t.title LIKE ?'); args.push(`%${String(filters.q).replace(/[\\%_]/g, (ch) => `\\${ch}`)}%`); }
+  const limit = Math.min(100, Math.max(1, Number(filters.limit) || 25));
+
+  const [[counts]] = await pool.query(
+    `SELECT COALESCE(SUM(${TASK_STATE_SQL.open}), 0) AS open,
+            COALESCE(SUM(${TASK_STATE_SQL.overdue}), 0) AS overdue,
+            COALESCE(SUM(${TASK_STATE_SQL.due_soon}), 0) AS dueSoon,
+            COALESCE(SUM(${TASK_STATE_SQL.due_today}), 0) AS dueToday,
+            COALESCE(SUM(${TASK_STATE_SQL.done}), 0) AS done
+       FROM tasks t
+      WHERE ${where.join(' AND ')}`,
+    args
+  );
+
+  const state = TASK_STATE_SQL[filters.state] || null;
+  const listWhere = state ? [...where, state] : where;
+  const [[{ total }]] = await pool.query(
+    `SELECT COUNT(*) AS total FROM tasks t WHERE ${listWhere.join(' AND ')}`, args
+  );
+  const [rows] = await pool.query(
+    `SELECT t.id, t.title, t.status, t.priority,
+            t.assignee_id AS assigneeId, ua.name AS assigneeName,
+            t.reporter_id AS reporterId, ur.name AS reporterName,
+            t.start_date AS startDate, t.due_date AS dueDate,
+            t.progress_percent AS progressPercent, t.completed_at AS completedAt,
+            t.board_id AS boardId, b.name AS boardName, c.name AS columnName,
+            t.department_id AS departmentId, d.name AS departmentName,
+            CASE WHEN ${TASK_STATE_SQL.overdue} THEN DATEDIFF(${TODAY_WIB}, t.due_date) ELSE 0 END AS daysLate
+       FROM tasks t
+       LEFT JOIN boards b ON b.id = t.board_id AND b.deleted_at IS NULL
+       LEFT JOIN board_columns c ON c.id = t.column_id
+       LEFT JOIN users ua ON ua.id = t.assignee_id
+       LEFT JOIN users ur ON ur.id = t.reporter_id
+       LEFT JOIN departments d ON d.id = t.department_id
+      WHERE ${listWhere.join(' AND ')}
+      ORDER BY (t.due_date IS NULL) ASC, t.due_date ASC, t.id DESC
+      LIMIT ?`,
+    [...args, limit]
+  );
+  return {
+    counts: {
+      open: Number(counts.open), overdue: Number(counts.overdue), dueSoon: Number(counts.dueSoon), done: Number(counts.done),
+      dueToday: Number(counts.dueToday) || 0,
+    },
+    total: Number(total),
+    rows,
+  };
+}
+
 async function addComment({ taskId, user, body }) {
   const task = await taskAccess.loadTask(taskId);
   if (!task) {
@@ -917,7 +1002,7 @@ async function addComment({ taskId, user, body }) {
     error.code = 'NOT_FOUND';
     throw error;
   }
-  taskAccess.assertTaskAccess({ user, task, action: 'view' });
+  await taskAccess.assertTaskAccess({ user, task, action: 'view' });
 
   const clean = String(body || '').trim();
   if (!clean) throw validationError('body wajib');
@@ -981,6 +1066,7 @@ module.exports = {
   deleteTask,
   getTaskDetail,
   listTasksByBoard,
+  listTasksForUser,
   addComment,
   enforceWipLimit,
   buildDynamicUpdate,

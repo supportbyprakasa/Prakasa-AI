@@ -10,7 +10,6 @@ const body = z.object({
   code: z.string().min(1).max(80).regex(/^[a-z0-9-_]+$/),
   name: z.string().min(1).max(190),
   category: z.string().max(80).nullable().optional(),
-  defaultWorkflowId: z.number().int().positive().nullable().optional(),
   defaultApprovalMatrixId: z.number().int().positive().nullable().optional(),
   defaultFolderId: z.string().max(190).nullable().optional(),
   requiresSignature: z.boolean().optional(),

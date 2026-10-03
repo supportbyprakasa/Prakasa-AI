@@ -1,0 +1,98 @@
+/* TabBar (docs/ui-guideline.md §4.8): 48px tabs, padding 0 16, Google Sans
+   14/20 500 .25px; active --pw-tab, others --pw-text-muted; a 3px indicator as
+   wide as the label, radius 3 3 0 0, over a 1px --pw-divider line (sementara). */
+/* The frame carries the divider line (and a page's className); the tablist
+   inside scrolls. */
+.pw-tabs-frame {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  box-shadow: inset 0 -1px 0 0 var(--pw-divider);
+}
+.pw-tabs {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.pw-tabs::-webkit-scrollbar { display: none; }
+/* Scroll cue (Material scrollable tabs): the cut edge fades out over 48px
+   and a chevron button floats over that end; a chevron with nowhere to go is
+   hidden. The fade is an alpha mask, so it takes no colour. The chevrons are
+   positioned over the row, not beside it, so showing one never narrows the
+   row (a narrower row would change the edges again — a render loop). */
+.pw-tabs-frame.can-scroll-start > .pw-tabs {
+  mask-image: linear-gradient(to right, transparent, var(--pw-surface) 48px);
+}
+.pw-tabs-frame.can-scroll-end > .pw-tabs {
+  mask-image: linear-gradient(to left, transparent, var(--pw-surface) 48px);
+}
+.pw-tabs-frame.can-scroll-start.can-scroll-end > .pw-tabs {
+  mask-image: linear-gradient(to right, transparent, var(--pw-surface) 48px, var(--pw-surface) calc(100% - 48px), transparent);
+}
+.pw-tabs__scroll {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  color: var(--pw-text-muted);
+}
+.pw-tabs__scroll--start { left: 0; }
+.pw-tabs__scroll--end { right: 0; }
+.pw-tabs__scroll .pw-icon-button:disabled { visibility: hidden; }
+.pw-tab {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  box-sizing: border-box;
+  height: var(--pw-tab-height);
+  min-height: var(--pw-tab-height);
+  margin: 0;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--pw-text-muted);
+  font-family: var(--pw-font-sans);
+  font-size: var(--pw-font-body);
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0.25px;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--pw-dur-xs) var(--pw-ease-standard);
+}
+.pw-tab__content {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+}
+.pw-tab__content::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: var(--pw-radius-tab-indicator);
+  background: var(--pw-tab);
+  transform: scaleX(0);
+  transition: transform var(--pw-dur-sm) var(--pw-ease-standard);
+}
+.pw-tab[aria-selected="true"] { color: var(--pw-tab); box-shadow: none; }
+.pw-tab[aria-selected="true"] > .pw-tab__content::after { transform: scaleX(1); }
+.pw-tab[aria-disabled="true"] { color: var(--pw-disabled-text); cursor: not-allowed; }
+.pw-tab[aria-disabled="true"] .pw-count-badge { background: var(--pw-disabled-bg); color: var(--pw-disabled-text); }
+/* The tab row scrolls, which would clip a ring outside the tab: draw it inside. */
+.pw-tab.pw-state-layer:focus-visible { outline-offset: -2px; }

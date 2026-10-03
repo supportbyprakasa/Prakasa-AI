@@ -1,6 +1,19 @@
 const pool = require('../db/pool');
 const { ok, fail } = require('../utils/response');
 const { log } = require('../services/activityLog.service');
+const lifecycle = require('../services/deviceLifecycle.service');
+
+async function inTransaction(fn) {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    await fn(conn);
+    await conn.commit();
+  } catch (e) {
+    try { await conn.rollback(); } catch { /* noop */ }
+    throw e;
+  } finally { conn.release(); }
+}
 
 async function createMaintenance(req, res, next) {
   try {
@@ -9,7 +22,7 @@ async function createMaintenance(req, res, next) {
       maintenanceDate, maintenanceType, description, performedBy,
       cost, nextMaintenanceDate, documentId,
     } = req.body;
-    const [d] = await pool.query(`SELECT entity_id AS entityId FROM devices WHERE id=?`, [id]);
+    const [d] = await pool.query(`SELECT entity_id AS entityId FROM devices WHERE id=? AND entity_id=? AND deleted_at IS NULL`, [id, req.user.entityId]);
     if (!d[0]) return fail(res, 'NOT_FOUND', 'Device tidak ditemukan', 404);
 
     const [r] = await pool.query(
@@ -36,7 +49,7 @@ async function createRepair(req, res, next) {
       reportedDate, issueDescription, severity, vendorName,
       sentDate, documentId,
     } = req.body;
-    const [d] = await pool.query(`SELECT entity_id AS entityId FROM devices WHERE id=?`, [id]);
+    const [d] = await pool.query(`SELECT entity_id AS entityId FROM devices WHERE id=? AND entity_id=? AND deleted_at IS NULL`, [id, req.user.entityId]);
     if (!d[0]) return fail(res, 'NOT_FOUND', 'Device tidak ditemukan', 404);
 
     const [r] = await pool.query(
@@ -47,7 +60,14 @@ async function createRepair(req, res, next) {
       [d[0].entityId, id, reportedDate, req.user.sub, issueDescription,
        severity || 'medium', vendorName || null, sentDate || null, documentId || null]
     );
-    await pool.query(`UPDATE devices SET status='repair' WHERE id=?`, [id]);
+    // Filing a repair sends the device to the vendor (Perbaikan); if it was
+    // Aktif, the holder's assignment closes (rule 14: one status code path).
+    await inTransaction(async (conn) => {
+      const [[dev]] = await conn.query(
+        'SELECT id, status FROM devices WHERE id=? AND entity_id=? AND deleted_at IS NULL FOR UPDATE', [id, req.user.entityId]
+      );
+      await lifecycle.moveStatus(conn, req.user.entityId, dev, 'repair', { notes: 'Dikirim perbaikan' });
+    });
 
     await log({
       entityId: d[0].entityId, userId: req.user.sub,
@@ -67,17 +87,23 @@ async function updateRepair(req, res, next) {
               returned_date=COALESCE(?, returned_date),
               cost=COALESCE(?, cost),
               resolution=COALESCE(?, resolution)
-        WHERE id=?`,
-      [status || null, returnedDate || null, cost ?? null, resolution || null, id]
+        WHERE id=? AND entity_id=?`,
+      [status || null, returnedDate || null, cost ?? null, resolution || null, id, req.user.entityId]
     );
     if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'Repair log tidak ditemukan', 404);
     if (status === 'completed' || status === 'unrepairable') {
-      const [rl] = await pool.query(`SELECT device_id AS deviceId FROM device_repair_logs WHERE id=?`, [id]);
       const newStatus = status === 'completed' ? 'available' : 'retired';
-      await pool.query(`UPDATE devices SET status=? WHERE id=?`, [newStatus, rl[0].deviceId]);
+      await inTransaction(async (conn) => {
+        const [[dev]] = await conn.query(
+          `SELECT d.id, d.status FROM devices d
+             JOIN device_repair_logs rl ON rl.device_id = d.id AND rl.entity_id = d.entity_id
+            WHERE rl.id=? AND d.entity_id=? AND d.deleted_at IS NULL FOR UPDATE`, [id, req.user.entityId]
+        );
+        await lifecycle.moveStatus(conn, req.user.entityId, dev, newStatus);
+      });
     }
     await log({
-      entityId: null, userId: req.user.sub,
+      entityId: req.user.entityId, userId: req.user.sub,
       action: 'device.repair.update', subjectType: 'device_repair_log', subjectId: Number(id),
       metadata: { status },
     });
@@ -89,7 +115,7 @@ async function createWarranty(req, res, next) {
   try {
     const { id } = req.params;
     const { warrantyType, startDate, endDate, provider, claimNumber, notes } = req.body;
-    const [d] = await pool.query(`SELECT entity_id AS entityId FROM devices WHERE id=?`, [id]);
+    const [d] = await pool.query(`SELECT entity_id AS entityId FROM devices WHERE id=? AND entity_id=? AND deleted_at IS NULL`, [id, req.user.entityId]);
     if (!d[0]) return fail(res, 'NOT_FOUND', 'Device tidak ditemukan', 404);
 
     const [r] = await pool.query(
@@ -101,7 +127,7 @@ async function createWarranty(req, res, next) {
     // update cache di tabel devices
     await pool.query(
       `UPDATE devices SET warranty_start=?, warranty_end=?, warranty_type=?
-        WHERE id=?`, [startDate, endDate, warrantyType, id]
+        WHERE id=? AND entity_id=?`, [startDate, endDate, warrantyType, id, req.user.entityId]
     );
     await log({
       entityId: d[0].entityId, userId: req.user.sub,

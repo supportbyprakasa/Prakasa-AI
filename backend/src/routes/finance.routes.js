@@ -6,95 +6,98 @@ const validate = require('../middleware/validate');
 const upload = require('../middleware/upload');
 const ctrl = require('../controllers/finance.controller');
 
+// Finance — pengajuan pembayaran & reimbursement (services/financeRequests.service.js).
+// Bodies are strict: the entity, the division, the requester and the status are
+// never taken from the client. The route permission is the outer gate; the
+// service decides per request (own / division / Finance).
+
+const REQUEST = 'finance.request';
+const VIEW = ['finance.view', REQUEST];
+
+const typed = (message) => ({ required_error: message, invalid_type_error: message });
+const text = (max, label) => z.string(typed(`${label} harus berupa teks`)).trim().max(max, `${label} paling panjang ${max} karakter`);
+const optionalText = (max, label) => text(max, label).nullable().optional();
+const money = (label) => z.number(typed(`Isi ${label.toLowerCase()} dengan angka`))
+  .nonnegative(`${label} tidak boleh minus`)
+  .max(9999999999999, `${label} terlalu besar`);
+const day = (label) => z.string(typed(`${label} harus berupa tanggal`))
+  .regex(/^\d{4}-\d{2}-\d{2}$/, `${label} harus berformat YYYY-MM-DD`);
+const UNKNOWN = 'Ada isian yang tidak dikenal';
+
+const fields = {
+  title: text(255, 'Judul').min(1, 'Isi judul pengajuan'),
+  description: optionalText(5000, 'Keterangan'),
+  category: optionalText(80, 'Kategori'),
+  payeeName: optionalText(190, 'Nama penerima'),
+  payeeType: z.enum(['vendor', 'employee', 'other'], typed('Jenis penerima tidak dikenal')).optional(),
+  // Vendor bank details only; a reimbursement refuses them (service, 400).
+  payeeBank: optionalText(120, 'Nama bank'),
+  payeeAccountNumber: optionalText(80, 'Nomor rekening'),
+  payeeAccountName: optionalText(190, 'Nama pemilik rekening'),
+  amount: money('Subtotal'),
+  taxAmount: money('Pajak').optional(),
+  totalAmount: money('Total').optional(),
+  requestDate: day('Tanggal pengajuan').optional(),
+  requestedPaymentDate: day('Tanggal bayar yang diminta').nullable().optional(),
+  dueDate: day('Jatuh tempo').nullable().optional(),
+  notes: optionalText(5000, 'Catatan'),
+};
+
 const createBody = z.object({
-  entityId: z.number().int().positive(),
-  departmentId: z.number().int().positive().nullable().optional(),
-  workflowType: z.enum(['payment_request', 'reimbursement']),
-  title: z.string().min(1).max(255),
-  description: z.string().nullable().optional(),
-  category: z.string().max(80).nullable().optional(),
-  payeeName: z.string().max(190).nullable().optional(),
-  payeeType: z.enum(['vendor', 'employee', 'other']).optional(),
-  payeeBank: z.string().max(120).nullable().optional(),
-  payeeAccountNumber: z.string().max(80).nullable().optional(),
-  payeeAccountName: z.string().max(190).nullable().optional(),
-  amount: z.number().nonnegative(),
-  taxAmount: z.number().nonnegative().optional(),
-  totalAmount: z.number().nonnegative(),
-  currency: z.string().max(8).optional(),
-  requestDate: z.string(),
-  requestedPaymentDate: z.string().nullable().optional(),
-  dueDate: z.string().nullable().optional(),
-  financePicUserId: z.number().int().positive().nullable().optional(),
-  notes: z.string().nullable().optional(),
-});
+  workflowType: z.enum(['payment_request', 'reimbursement'], typed('Pilih jenis pengajuan')),
+  ...fields,
+}).strict(UNKNOWN);
+
+const updateBody = z.object(fields).partial().strict(UNKNOWN);
 
 const attachBody = z.object({
-  attachmentType: z.enum(['invoice', 'receipt', 'quotation', 'po', 'bank_proof', 'tax_doc', 'other']).optional(),
+  attachmentType: z.enum(['invoice', 'receipt', 'quotation', 'po', 'bank_proof', 'tax_doc', 'other'], typed('Jenis lampiran tidak dikenal')).optional(),
   documentId: z.coerce.number().int().positive().optional(),
-  name: z.string().max(255).optional(),
-});
+  name: optionalText(255, 'Nama lampiran'),
+}).strict(UNKNOWN);
 
 const applyResultBody = z.object({
-  status: z.enum(['approved', 'rejected', 'revision_requested']),
-  note: z.string().max(500).nullable().optional(),
-});
+  // Kept for older callers; the status always comes from the decided approval.
+  status: z.enum(['approved', 'rejected', 'revision_requested']).optional(),
+  note: optionalText(500, 'Catatan'),
+}).strict(UNKNOWN);
 
 const processingBody = z.object({
-  status: z.enum(['processing', 'paid', 'cancelled']),
-  jurnalReferenceId: z.string().max(190).nullable().optional(),
-  jurnalReferenceUrl: z.string().url().max(500).nullable().optional(),
-  notes: z.string().nullable().optional(),
-});
+  status: z.enum(['processing', 'paid', 'cancelled'], typed('Status tidak dikenal')),
+  // "Nomor bukti di Accurate" — text only; the app never writes to Accurate.
+  accurateReference: optionalText(190, 'Nomor bukti di Accurate'),
+  note: optionalText(500, 'Catatan'),
+}).strict(UNKNOWN);
 
-const linkJurnalBody = z.object({
-  jurnalReferenceId: z.string().max(190).nullable().optional(),
-  jurnalReferenceUrl: z.string().url().max(500).nullable().optional(),
-});
+const cancelBody = z.object({
+  reason: text(255, 'Alasan').min(1, 'Tulis alasan pembatalan'),
+}).strict(UNKNOWN);
 
 router.use(requireAuth);
 
-// list & detail
-router.get('/payment-requests', requirePermission('finance.view'), ctrl.list);
-router.get('/payment-requests/:id', requirePermission('finance.view'), ctrl.detail);
+router.get('/payment-requests', requirePermission(VIEW), ctrl.list);
+router.get('/payment-requests/:id', requirePermission(VIEW), ctrl.detail);
 
-// create & update (draft)
-router.post('/payment-requests', requirePermission('finance.request'), validate(createBody), ctrl.create);
-router.patch('/payment-requests/:id', requirePermission('finance.manage'), validate(createBody.partial()), ctrl.update);
-router.delete('/payment-requests/:id', requirePermission('finance.manage'), ctrl.remove);
+router.post('/payment-requests', requirePermission(REQUEST), validate(createBody), ctrl.create);
+router.patch('/payment-requests/:id', requirePermission([REQUEST, 'finance.manage']), validate(updateBody), ctrl.update);
+router.delete('/payment-requests/:id', requirePermission([REQUEST, 'finance.manage']), ctrl.remove);
 
-// attachments
 router.post('/payment-requests/:id/attachments',
-  requirePermission('finance.manage'),
+  requirePermission([REQUEST, 'finance.manage', 'finance.process']),
   upload.single('file'),
   validate(attachBody),
   ctrl.uploadAttachment);
 
-// document check (AI)
-router.post('/payment-requests/:id/document-check',
-  requirePermission('finance.document_check'),
-  ctrl.runDocumentCheck);
+// Completeness check (rules + AI advice; the AI never approves).
+router.post('/payment-requests/:id/document-check', requirePermission([REQUEST, 'finance.document_check']), ctrl.runDocumentCheck);
 
-// submit ke approval
-router.post('/payment-requests/:id/submit-approval',
-  requirePermission('finance.request'),
-  ctrl.submitForApproval);
+router.post('/payment-requests/:id/submit-approval', requirePermission([REQUEST, 'finance.manage']), ctrl.submitForApproval);
 
-// terapkan hasil approval (manual oleh Finance)
-router.post('/payment-requests/:id/apply-approval',
-  requirePermission('finance.approve'),
-  validate(applyResultBody),
-  ctrl.applyApprovalResult);
+// Fallback: copy a decision made before the approval hook existed.
+router.post('/payment-requests/:id/apply-approval', requirePermission('finance.approve'), validate(applyResultBody), ctrl.applyApprovalResult);
 
-// processing / paid / cancelled + link Jurnal.id
-router.patch('/payment-requests/:id/processing',
-  requirePermission('finance.process'),
-  validate(processingBody),
-  ctrl.updateProcessing);
-
-router.patch('/payment-requests/:id/jurnal-reference',
-  requirePermission('finance.process'),
-  validate(linkJurnalBody),
-  ctrl.linkJurnal);
+router.patch('/payment-requests/:id/processing', requirePermission('finance.process'), validate(processingBody), ctrl.updateProcessing);
+router.post('/payment-requests/:id/cancel', requirePermission([REQUEST, 'finance.process']), validate(cancelBody), ctrl.cancel);
 
 module.exports = router;
+module.exports.schemas = { createBody, updateBody, attachBody, applyResultBody, processingBody, cancelBody };

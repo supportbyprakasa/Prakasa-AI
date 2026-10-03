@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react';
-import { AlertCircle, Download, ExternalLink, FileText, FolderOpen, Link2, Loader2 } from 'lucide-react';
 import api from '../../api/client';
+import Button from '../Button';
+import EmptyState, { LoadingState } from '../EmptyState';
+import Icon from '../Icon';
+import IconButton from '../IconButton';
+import KeyValue from '../KeyValue';
+import Spinner from '../Spinner';
+import StatusBadge from '../StatusBadge';
 import { toast } from '../Toast';
 import { getGooglePreviewUrl } from '../../pages/ai/aiCommandCenterModel';
+import './ai-components.css';
+import { dateLocale } from '../../i18n/language.js';
 
 export default function AIDocumentWorkspace({ sessionId, refreshKey, onAttachContext }) {
   const [documents, setDocuments] = useState([]);
@@ -103,50 +111,57 @@ export default function AIDocumentWorkspace({ sessionId, refreshKey, onAttachCon
 
   if (!sessionId) {
     return (
-      <div className="ai-document-empty">
-        <FolderOpen size={32} strokeWidth={1.6} />
-        <strong>Workspace dokumen</strong>
-        <span>Pilih percakapan untuk melihat dokumen yang menjadi konteks AI.</span>
+      <div className="ai-document-state">
+        <EmptyState
+          icon="folder_open"
+          title="Workspace dokumen"
+          description="Pilih percakapan untuk melihat dokumen yang menjadi konteks AI."
+        />
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="ai-document-loading" role="status">
-        <Loader2 className="ai-spin" size={18} />
-        Memuat dokumen…
+      <div className="ai-document-state">
+        <LoadingState label="Memuat dokumen…" />
       </div>
     );
   }
 
   if (!documents.length) {
     return (
-      <div className="ai-document-empty">
-        <FileText size={32} strokeWidth={1.6} />
-        <strong>Belum ada dokumen</strong>
-        <span>Lampirkan dokumen sebagai konteks agar AI dapat menggunakannya dalam percakapan ini.</span>
-        <button type="button" className="ai-tonal-button ai-ripple" onClick={onAttachContext}>
-          <Link2 size={16} /> Lampirkan dokumen
-        </button>
+      <div className="ai-document-state">
+        <EmptyState
+          icon="description"
+          title="Belum ada dokumen"
+          description="Lampirkan dokumen sebagai konteks agar AI dapat menggunakannya dalam percakapan ini."
+          action={(
+            <Button variant="secondary" icon="link" onClick={onAttachContext}>
+              Lampirkan dokumen
+            </Button>
+          )}
+        />
       </div>
     );
   }
 
   return (
     <div className="ai-document-workspace">
-      <div className="ai-document-list" aria-label="Dokumen terhubung">
+      <div className="ai-document-list" role="listbox" aria-label="Dokumen terhubung">
         {documents.map((document) => (
           <button
             key={document.id}
             type="button"
-            className={`ai-document-list-item ai-ripple${document.id === selectedId ? ' is-active' : ''}`}
+            role="option"
+            aria-selected={document.id === selectedId}
+            className={`ai-document-list-item pw-state-layer${document.id === selectedId ? ' is-active' : ''}`}
             onClick={() => setSelectedId(document.id)}
           >
-            <span className="ai-document-icon"><FileText size={17} /></span>
-            <span>
-              <strong>{document.title || `Dokumen #${document.contextId}`}</strong>
-              <small>Dokumen #{document.contextId}</small>
+            <span className="ai-document-icon"><Icon name="description" /></span>
+            <span className="ai-document-text">
+              <span className="ai-document-name" data-no-translate={document.title ? '' : undefined}>{document.title || `Dokumen #${document.contextId}`}</span>
+              <span className="ai-document-meta">Dokumen #{document.contextId}</span>
             </span>
           </button>
         ))}
@@ -156,46 +171,38 @@ export default function AIDocumentWorkspace({ sessionId, refreshKey, onAttachCon
         <div className="ai-document-preview">
           <div className="ai-document-preview-toolbar">
             <div>
-              <span className="ai-eyebrow">Dokumen terhubung</span>
-              <h2>{selectedDocument.title || `Dokumen #${selectedDocument.contextId}`}</h2>
+              <span className="ai-overline">Dokumen terhubung</span>
+              <h2 data-no-translate={selectedDocument.title ? '' : undefined}>{selectedDocument.title || `Dokumen #${selectedDocument.contextId}`}</h2>
               {documentDetail?.extractionStatus && (
-                <span className={`ai-document-read-status is-${documentDetail.extractionStatus}`}>
-                  {getExtractionLabel(documentDetail.extractionStatus)}
-                </span>
+                <StatusBadge
+                  status={EXTRACTION_TONE_KEY[documentDetail.extractionStatus] || 'processing'}
+                  label={getExtractionLabel(documentDetail.extractionStatus)}
+                />
               )}
             </div>
             <div className="ai-document-preview-actions">
-              <button
-                type="button"
-                className="ai-icon-button ai-ripple"
+              <IconButton
+                label="Unduh dokumen"
+                icon={downloadingId === selectedDocument.id ? <Spinner label={null} /> : 'download'}
                 onClick={downloadDocument}
                 disabled={downloadingId === selectedDocument.id}
-                aria-label="Unduh dokumen"
-                title="Unduh dokumen"
-              >
-                {downloadingId === selectedDocument.id
-                  ? <Loader2 className="ai-spin" size={17} />
-                  : <Download size={17} />}
-              </button>
+              />
               {documentDetail?.webViewLink && (
-                <a
-                  className="ai-icon-button ai-ripple"
+                // A link, not an action: keeps open-in-new-tab semantics.
+                <IconButton
                   href={documentDetail.webViewLink}
                   target="_blank"
                   rel="noreferrer"
+                  label="Buka di Google Workspace"
                   aria-label="Buka dokumen di Google Workspace"
-                  title="Buka di Google Workspace"
-                >
-                  <ExternalLink size={17} />
-                </a>
+                  icon="open_in_new"
+                />
               )}
             </div>
           </div>
 
           {detailLoading && (
-            <div className="ai-document-inline-status" role="status">
-              <Loader2 className="ai-spin" size={17} /> Menyiapkan preview…
-            </div>
+            <LoadingState compact label="Menyiapkan preview…" />
           )}
 
           {!detailLoading && previewUrl && (
@@ -209,23 +216,25 @@ export default function AIDocumentWorkspace({ sessionId, refreshKey, onAttachCon
           )}
 
           {!detailLoading && !previewUrl && (
-            <div className="ai-document-fallback">
-              <div className="ai-document-preview-icon">
-                {detailUnavailable ? <AlertCircle size={27} /> : <FileText size={28} />}
-              </div>
-              <p>
-                {detailUnavailable
+            <div className="ai-document-fallback pw-stack">
+              <EmptyState
+                compact
+                tone={detailUnavailable ? 'error' : 'default'}
+                icon={detailUnavailable ? 'error' : 'description'}
+                description={detailUnavailable
                   ? 'Detail dokumen tidak dapat dibuka dengan akses Anda saat ini.'
                   : 'Preview langsung belum tersedia untuk format dokumen ini.'}
-              </p>
-              <dl className="ai-document-metadata">
-                <div><dt>ID dokumen</dt><dd>{selectedDocument.contextId}</dd></div>
-                <div><dt>Relasi</dt><dd>{selectedDocument.relation || 'reference'}</dd></div>
-                <div><dt>Ditambahkan</dt><dd>{formatDate(selectedDocument.createdAt)}</dd></div>
-              </dl>
-              <button type="button" className="ai-text-button ai-ripple" onClick={onAttachContext}>
-                Kelola konteks
-              </button>
+              />
+              <KeyValue
+                items={[
+                  { label: 'ID dokumen', value: selectedDocument.contextId },
+                  { label: 'Relasi', value: selectedDocument.relation || 'reference' },
+                  { label: 'Ditambahkan', value: formatDate(selectedDocument.createdAt) },
+                ]}
+              />
+              <div>
+                <Button variant="text" onClick={onAttachContext}>Kelola konteks</Button>
+              </div>
             </div>
           )}
         </div>
@@ -238,8 +247,16 @@ function formatDate(value) {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  return date.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
 }
+
+// Extraction states mapped to their statusTone() equivalent (§3.4).
+const EXTRACTION_TONE_KEY = {
+  ready: 'completed',
+  no_text: 'needs_review',
+  unsupported: 'needs_review',
+  failed: 'failed',
+};
 
 function getExtractionLabel(status) {
   if (status === 'ready') return 'Siap dibaca AI';

@@ -24,9 +24,20 @@ cd backend
 npm ci
 cp .env.example .env            # bila belum ada; isi DB_* ke database lokal
 npm run migrate                 # wajib: termasuk migrasi baru 143_subscription_payment_request_key.sql
-npm run setup:local             # membuat/memperbarui Super Admin lokal
+
+# Super Admin lokal (hanya database lokal; ditolak bila NODE_ENV=production)
+BOOTSTRAP_ALLOW=yes \
+BOOTSTRAP_ADMIN_EMAIL=superadmin@prakasagroup.com \
+BOOTSTRAP_ADMIN_PASSWORD='Uji-Lokal-2026!x' \
+BOOTSTRAP_ADMIN_NAME='Super Admin Lokal' \
+npm run bootstrap:admin
+
 npm run dev
 ```
+
+Masuk dengan `superadmin@prakasagroup.com` / `Uji-Lokal-2026!x`. Kata sandi ini hanya untuk database lokal; jangan dipakai di produksi. Bila akun sudah ada, perintah di atas tidak mengubah kata sandinya.
+
+Sebelum revisi ini, Super Admin hasil bootstrap pada database baru berakhir di layar "Akses belum disiapkan" (perannya tidak diberi kunci `system.super_admin`). Sudah diperbaiki; menjalankan ulang perintah di atas juga memperbaiki akun lama.
 
 Untuk email selama mencoba: biarkan kredensial Google kosong di `.env` lokal, dan isi `EMAIL_TEST_REDIRECT=support@prakasagroup.com` dengan `EMAIL_TEST_ALLOWLIST` kosong. Tanpa kredensial Google tidak ada email yang terkirim.
 

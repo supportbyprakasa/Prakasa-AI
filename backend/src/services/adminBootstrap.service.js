@@ -68,25 +68,49 @@ async function bootstrapFirstAdmin(input) {
       throw makeError(`entity id=${entityId} tidak ditemukan`);
     }
 
+    // The app recognises Super Admin by role_key 'system.super_admin' (a
+    // global role, tied to no division). On a fresh database migration 032
+    // found no such role to tag, so the role made here must carry the key
+    // itself, or the new admin lands on "Akses belum disiapkan".
     let [[role]] = await conn.query(
       `SELECT id FROM roles
-        WHERE entity_id = ?
-          AND LOWER(name) IN ('super admin','superadmin','administrator','admin')
-          AND deleted_at IS NULL
-        ORDER BY CASE LOWER(name)
-          WHEN 'super admin' THEN 1
-          WHEN 'superadmin' THEN 2
-          WHEN 'administrator' THEN 3
-          ELSE 4
-        END
+        WHERE entity_id = ? AND role_key = 'system.super_admin' AND deleted_at IS NULL
         LIMIT 1`,
       [entityId]
     );
 
     if (!role) {
+      [[role]] = await conn.query(
+        `SELECT id FROM roles
+          WHERE entity_id = ?
+            AND LOWER(name) IN ('super admin','superadmin','administrator','admin')
+            AND role_key IS NULL
+            AND deleted_at IS NULL
+          ORDER BY CASE LOWER(name)
+            WHEN 'super admin' THEN 1
+            WHEN 'superadmin' THEN 2
+            WHEN 'administrator' THEN 3
+            ELSE 4
+          END
+          LIMIT 1`,
+        [entityId]
+      );
+      if (role) {
+        await conn.query(
+          `UPDATE roles
+              SET role_key = 'system.super_admin', department_id = NULL,
+                  role_level = 'admin', is_system_template = 1
+            WHERE id = ?`,
+          [role.id]
+        );
+      }
+    }
+
+    if (!role) {
       const [roleInsert] = await conn.query(
-        'INSERT INTO roles (entity_id, name) VALUES (?, ?)',
-        [entityId, 'Super Admin']
+        `INSERT INTO roles (entity_id, department_id, name, role_key, role_level, is_system_template)
+         VALUES (?, NULL, 'Super Admin', 'system.super_admin', 'admin', 1)`,
+        [entityId]
       );
       role = { id: roleInsert.insertId };
     }

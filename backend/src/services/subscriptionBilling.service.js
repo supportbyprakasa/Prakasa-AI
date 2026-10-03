@@ -80,9 +80,13 @@ function validateInvoiceAmounts({ amount, taxAmount = 0, totalAmount }) {
   return { amount: fromCents(sub), taxAmount: fromCents(tax), totalAmount: fromCents(total) };
 }
 
+// A locking read: inside a transaction a plain SELECT reads the snapshot taken
+// at the transaction's first read (REPEATABLE READ), which misses payments
+// committed while this one waited for the invoice lock. FOR UPDATE reads the
+// latest committed rows (and holds them until commit).
 async function paidCentsOf(conn, invoiceId) {
   const [[row]] = await conn.query(
-    "SELECT COALESCE(SUM(amount), 0) AS paid FROM subscription_payments WHERE invoice_id = ? AND status = 'processed'",
+    "SELECT COALESCE(SUM(amount), 0) AS paid FROM subscription_payments WHERE invoice_id = ? AND status = 'processed' FOR UPDATE",
     [invoiceId],
   );
   return Math.round(Number(row?.paid || 0) * 100);

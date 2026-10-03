@@ -118,9 +118,38 @@ Dihitung dengan `permissionsForStandardRole` dan helper yang sama dengan halaman
 
 - **Backend tanpa DB** (`node --test test/*.test.js`): 1519 test, 1424 lulus, 1 gagal, 27 dibatalkan, 67 dilewati. Kegagalan dan pembatalan sama persis dengan baseline `2947c9d` (`morningBriefing` ECONNREFUSED; `aiClientTools` dan `morningBriefing` dibatalkan).
 - **Backend dengan MySQL 8 lokal terisolasi** (database `prakasa_test`, 128 migrasi termasuk `143`): 20 file berbasis DB, 202 test, 189 lulus, 12 gagal. Ke-12 kegagalan identik di `2947c9d` pada database yang sama (database uji kosong tanpa seed/fixture). `claudeTeamStream.test.js` macet/gagal dengan DB, juga di baseline.
-- **Frontend**: 823 test lulus; `vite build` berhasil; katalog i18n lengkap (ID/EN).
+- **Frontend**: 824 test lulus; `vite build` berhasil; katalog i18n lengkap (ID/EN). Commit laporan rekonsiliasi (`f79bb28`) sempat membuat test katalog gagal (teks laporan belum punya EN); diperbaiki di commit walkthrough.
 - **Email**: tidak ada kredensial Google di lingkungan uji, jadi **0 email terkirim**; notifikasi diuji dengan mock. Pengiriman email tidak terverifikasi.
-- **Walkthrough UI di browser**: tidak dilakukan; perilaku UI diverifikasi lewat model/test komponen dan build.
+- **Walkthrough UI di browser** (3 Okt 2026, Chromium + Playwright, backend dan frontend lokal, MySQL 8 sandbox, data sintetis, tanpa kredensial Google): lihat bagian 5a.
+
+### 5a. Walkthrough di layar
+
+Akun uji: PC Member, PC Supervisor, PC Head, Sales Member (entitas 1) dan PC Head entitas 2; satu akun nonaktif; langganan "Figma (uji)" berisi 4 seat (1 dipakai, 1 idle, 2 tersedia) dan satu invoice lama `paid` dengan pembayaran 0.
+
+| ID | Langkah | Hasil |
+|---|---|---|
+| F02 | Daftar dan detail per peran; `/it/subscriptions?baru=1` | Member: tanpa tombol, form tidak terbuka. Supervisor: Tambah/Ubah langganan saja. Head: semua tombol. Sesuai |
+| F26 | Catat invoice 900 + 0 ≠ 1000 | Ditolak: "Total harus sama dengan subtotal + pajak." |
+| F26 | Catat invoice tanpa PDF | "Menunggu file PDF", tombol verifikasi tidak ada, tombol unggah ada |
+| F26 | Unggah PDF tanpa Google Drive (sandbox) | Pesan jelas "Google Shared Drive belum dikonfigurasi…", status tidak berubah. Unggah sukses tidak terverifikasi di sandbox (diuji dengan mock) |
+| F26 | Invoice `uploaded` → Tandai terverifikasi | Dialog konfirmasi → `verified` |
+| F25 | Bayar 1100 pada invoice 1000 | Ditolak: melebihi sisa tagihan |
+| F25 | Bayar 100, lalu 900 | "Dibayar sebagian · sisa Rp 900", lalu "Lunas (tercatat)" |
+| F25 | Invoice lama `paid` dengan pembayaran 0 | **Temuan, diperbaiki**: sebelumnya tampil "Lunas · sudah menutup total". Kini "Lunas, perlu dicek · kurang Rp 1.000" (status pembayaran `paid_short`) |
+| F27 | Seat idle | Hanya "Catat pencabutan"; tidak bisa ditetapkan langsung |
+| F06 | Catat pencabutan | Wajib centang "Akses sudah dicabut di portal vendor" (tanpa centang ditolak dengan pesan, pola yang sama dengan HRGA); setelah dicatat seat tersedia, 0 penetapan aktif |
+| F05 | Cari pengguna untuk penetapan | Akun nonaktif dan akun entitas lain tidak muncul; akun aktif muncul; setelah dicatat 1 penetapan aktif |
+| F03 | Ubah tanggal perpanjangan > 30 hari | Baris yang sama diperbarui, status kembali Aktif, tidak ada baris baru |
+| F24 | Head entitas 1 membuka tiket entitas 2 | "Tidak ditemukan"; Head entitas 2 dapat membukanya |
+| F19 | Halaman masuk | Teks kontak Administrator Sistem / Super Admin sesuai |
+| F17 | Akun saya | Kartu "Tanda tangan" berisi alat sesuai izin |
+| F16 | Pusat eskalasi kosong | "Tidak ada eskalasi pada filter ini", kolom "Kondisi sumber" |
+| F10 | Pipeline sebagai Sales Member | Keterangan "data Anda saja" |
+| F01 | Data Sales | Filter "Belum difakturkan"; tanpa batch Accurate di sandbox tabel kosong |
+| F22 | `/verify/<kode>` dengan backend hidup / mati | Hidup: "tidak ditemukan". Mati: "Belum dapat memverifikasi" + "Coba lagi" |
+| — | `npm run report:subscriptions` pada data sandbox | Menemukan tepat 2 temuan dari data lama yang ditanam (invoice lunas tanpa pelunasan, pembayaran 0); data baru dari layar bersih |
+
+Tidak diuji di layar karena butuh data Accurate yang disetujui: F07–F09, F11, F20 (tercakup test unit/DB). F23 (geser issue di Tracker) tercakup test, tidak diulang di layar.
 
 ## 6. Risiko tersisa dan tindak lanjut
 
@@ -128,4 +157,5 @@ Dihitung dengan `permissionsForStandardRole` dan helper yang sama dengan halaman
 2. **Data lama**: seat dengan >1 assignment aktif, invoice `uploaded` tanpa `document_id`, dan invoice `paid` dari pembayaran parsial/nol sebelum revisi **tidak diubah**. Perlu rencana rekonsiliasi terpisah (laporan dulu, tanpa menghapus histori).
 3. Persetujuan perpanjangan langganan dan pembuatan permintaan tanda tangan dari UI belum ada; keduanya dinyatakan di layar dan panduan.
 4. Perubahan perilaku: anggota Space tanpa `it_ticket.manage` kini tidak bisa memindahkan issue tiket IT; pencabutan lisensi butuh centang portal vendor.
-5. Tidak ada jaminan 100% bebas bug. Cakupan yang didefinisikan di atas terverifikasi pada versi `a74fed2` kecuali butir yang ditandai belum diverifikasi.
+5. Tidak ada jaminan 100% bebas bug. Cakupan yang didefinisikan di atas terverifikasi pada versi `a74fed2` kecuali butir yang ditandai belum diverifikasi; walkthrough 5a pada versi commit walkthrough.
+6. **Preview Vercel**: frontend preview meneruskan `/api` ke API produksi (kecuali `API_UPSTREAM_ORIGIN` diisi), jadi preview memakai data produksi tanpa perubahan backend revisi. Login Google di preview butuh `VITE_ENABLE_GOOGLE_LOGIN`/`VITE_GOOGLE_CLIENT_ID` untuk lingkungan Preview dan origin preview di Google Cloud. Gambar rusak di preview tidak dapat direproduksi dari build lokal (semua gambar termuat); perlu dicek di Vercel.

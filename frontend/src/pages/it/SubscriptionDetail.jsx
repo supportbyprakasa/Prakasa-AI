@@ -323,7 +323,7 @@ export default function SubscriptionDetail() {
             ) : <EmptyState compact icon="key" title="Belum ada lisensi" />}
           </Card>
 
-          <Card title="Invoice">
+          <Card title="Invoice" actions={can.invoice ? <Button variant="secondary" icon="add" to={`/it/subscriptions?form=invoice&langganan=${sub.id}`}>Catat invoice</Button> : null}>
             {sub.invoices?.length ? (
               <ul className="it-lines">
                 {sub.invoices.map((inv) => {

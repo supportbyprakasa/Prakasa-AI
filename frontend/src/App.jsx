@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { lazy, Suspense } from 'react';
 import lazyPage from './components/lazyPage';
@@ -119,6 +119,13 @@ function RequireAuth({ children, path }) {
   return children;
 }
 
+// Accurate batches have one page, /data-accurate/:id (audit 3 Oct 2026); the
+// old Data Sales address still lands there.
+function BatchRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/data-accurate/${id}`} replace />;
+}
+
 export default function App() {
   // Full-page routes outside the Layout (verify, AI, print) suspend here;
   // pages inside the Layout suspend in its own <Suspense> around <Outlet />.
@@ -171,7 +178,7 @@ export default function App() {
           <Route path="sales/orders/new" element={<SalesOrderForm />} />
           <Route path="sales/orders/:id/edit" element={<SalesOrderForm />} />
           <Route path="sales/orders/:id" element={<SalesOrderDetail />} />
-          <Route path="sales/orders/accurate/:id" element={<SalesAccurateBatch />} />
+          <Route path="sales/orders/accurate/:id" element={<BatchRedirect />} />
           <Route path="data-accurate" element={<DataAccurate />} />
           <Route path="data-accurate/:id" element={<SalesAccurateBatch />} />
           <Route path="warehouse" element={<WarehouseDashboard />} />

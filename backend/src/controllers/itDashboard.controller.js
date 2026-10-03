@@ -118,7 +118,7 @@ async function summary(req, res, next) {
     );
 
     const [pendingInvoices] = await pool.query(
-      `SELECT i.id, i.invoice_number AS invoiceNumber, s.product_name AS productName,
+      `SELECT i.id, i.subscription_id AS subscriptionId, i.invoice_number AS invoiceNumber, s.product_name AS productName,
               i.status, i.invoice_date AS invoiceDate
          FROM subscription_invoices i
          JOIN software_subscriptions s ON s.id = i.subscription_id

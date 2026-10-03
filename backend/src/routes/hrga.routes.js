@@ -103,15 +103,12 @@ router.patch('/workflows/:id', requirePermission('hrga.request'), validate(updat
 router.delete('/workflows/:id', requirePermission('hrga.request'), ctrl.remove);
 
 router.post('/workflows/:id/submit', requirePermission('hrga.request'), ctrl.submitForApproval);
-router.post('/workflows/:id/submit-approval', requirePermission('hrga.request'), ctrl.submitForApproval);
 router.post('/workflows/:id/withdraw', validate(z.object({ note: z.string().trim().min(1).max(500) }).strict()), ctrl.withdraw);
 router.post('/workflows/:id/cancel', requirePermission('hrga.manage'),
   validate(z.object({ reason: z.string().trim().min(1).max(255) }).strict()), ctrl.cancel);
-router.post('/workflows/:id/apply-approval', ctrl.applyApprovalResult);
 router.post('/workflows/:id/holdings-sync', requirePermission('hrga.manage'), ctrl.holdingsSync);
 
 // Checklist tasks: the responsible user or hrga.manage (rule in the service).
-router.patch('/workflows/:id/tasks/:taskId/link', ctrl.linkTask);
 router.patch('/workflows/:id/tasks/:taskId/assign', requirePermission('hrga.manage'),
   validate(z.object({ responsibleUserId: ID.nullable() }).strict()), ctrl.assignTask);
 router.get('/workflows/:id/tasks/:taskId/options', ctrl.taskOptions);

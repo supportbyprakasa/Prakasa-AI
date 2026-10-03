@@ -35,6 +35,7 @@ test('an empty page explains itself before the first approved batch', () => {
   assert.equal(procurementNotice({ ready: true }), null);
   assert.match(procurementNotice({ ready: false, pending: { batchId: 12 } }).title, /menunggu persetujuan/);
   assert.match(procurementNotice({ ready: false }).title, /belum ada/);
+  assert.match(procurementNotice({ ready: false, enabled: false }).title, /belum dinyalakan/, 'a switched-off pull is not "waiting for approval"');
 });
 
 test('the approver reads the pull\'s own checks', () => {

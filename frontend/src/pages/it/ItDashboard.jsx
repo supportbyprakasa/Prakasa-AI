@@ -187,6 +187,7 @@ export default function ItDashboard() {
         <DataGrid
           title="Perpanjangan langganan dalam 30 hari"
           searchable={false}
+          onRowClick={(row) => navigate(`/it/subscriptions/${row.id}`)}
           rows={data.renewalsDue || []}
           empty="Tidak ada langganan yang diperpanjang dalam 30 hari"
           columns={[
@@ -200,6 +201,7 @@ export default function ItDashboard() {
         <DataGrid
           title="Invoice menunggu"
           searchable={false}
+          onRowClick={(row) => navigate(`/it/subscriptions/${row.subscriptionId}`)}
           rows={data.pendingInvoices || []}
           empty="Tidak ada invoice yang menunggu"
           columns={[

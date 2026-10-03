@@ -202,8 +202,8 @@ export default function AIInbox({ onOpenSession, onChanged, onOpenSidebar }) {
                     </span>
                   </div>
                   <div className="ai-inbox-card-actions">
-                    <Button variant="secondary" onClick={() => navigate('/approvals')}>
-                      Buka di Approval
+                    <Button variant="secondary" onClick={() => navigate('/')}>
+                      Buka di Beranda
                     </Button>
                   </div>
                 </article>

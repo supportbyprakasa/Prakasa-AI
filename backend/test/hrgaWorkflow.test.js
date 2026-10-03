@@ -79,15 +79,6 @@ test('routes: strict bodies refuse an entity, a personal phone, a free-text reas
   assert.doesNotMatch(src, /id_document|offer_letter|resignation_letter/);
 });
 
-test('apply-approval and the free-form task link are gone (410)', () => {
-  const r1 = res();
-  hrgaCtrl.applyApprovalResult({}, r1);
-  assert.equal(r1.statusCode, 410);
-  assert.equal(r1.body.error.code, 'APPROVAL_VIA_ENGINE');
-  const r2 = res();
-  hrgaCtrl.linkTask({}, r2);
-  assert.equal(r2.statusCode, 410);
-});
 
 test('migration 108: additive, hrga.manage revoked only from the People & Culture Member system roles', () => {
   const sql = fs.readFileSync(path.join(__dirname, '../migrations/108_hrga_wave2.sql'), 'utf8');

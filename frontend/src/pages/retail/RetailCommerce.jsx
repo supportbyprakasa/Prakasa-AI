@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import api from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
+import { allowedLink } from '../../components/navigation';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import DashboardSection from '../../components/DashboardSection';
@@ -115,6 +117,8 @@ const RECEIVABLE_COLUMNS = [
 // waiting to ship, per platform, from the approved Accurate mirror. Read-only:
 // the numbers are recorded in Accurate. Needs retail.insight.view.
 export default function RetailCommerce() {
+  const { user } = useAuth();
+  const batchesLink = allowedLink('/data-accurate', user?.permissions || []);
   const [overview, setOverview] = useState(null);
   const [shipments, setShipments] = useState(null);
   const [receivables, setReceivables] = useState(null);
@@ -172,7 +176,12 @@ export default function RetailCommerce() {
     const why = emptyReason(overview.reason);
     return (
       <Page title="Retail Commerce" description={description} actions={actions}>
-        <EmptyState icon="storefront" title={why.title} description={why.description} />
+        <EmptyState
+          icon="storefront"
+          title={why.title}
+          description={why.description}
+          action={batchesLink && overview.reason !== 'app_mode' ? <Button variant="secondary" to={batchesLink} icon="arrow_forward">Buka Data Accurate</Button> : null}
+        />
       </Page>
     );
   }

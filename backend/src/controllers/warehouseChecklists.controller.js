@@ -49,13 +49,15 @@ async function complete(req, res, next) {
   try {
     const { id } = req.params;
     const { items } = req.body;
+    // Only the warehouse division's own checklist, and only once.
+    const departmentId = await warehouseDepartmentId(req.user.entityId);
     const [r] = await pool.query(
       `UPDATE warehouse_checklists
           SET items=?, completed=1, completed_by=?, completed_at=NOW()
-        WHERE id=? AND entity_id=?`,
-      [JSON.stringify(items || []), req.user.sub, id, req.user.entityId]
+        WHERE id=? AND entity_id=? AND (department_id=? OR ? IS NULL) AND completed=0`,
+      [JSON.stringify(items || []), req.user.sub, id, req.user.entityId, departmentId, departmentId]
     );
-    if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'Checklist tidak ditemukan', 404);
+    if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'Checklist tidak ditemukan atau sudah selesai', 404);
     await log({
       entityId: req.user.entityId, userId: req.user.sub,
       action: 'warehouse_checklist.complete', subjectType: 'warehouse_checklist',

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { buildNavSections, divisions, hasRouteAccess, moduleGroupsFor, pageTrail, visibleSections } from '../src/components/navigation.js';
+import { buildNavSections, divisions, hasRouteAccess, pageTrail, visibleSections } from '../src/components/navigation.js';
 
 const require = createRequire(import.meta.url);
 const { STANDARD_ROLES } = require('../../backend/src/config/standardOrganization.js');
@@ -82,29 +82,8 @@ test('Insight & Manajemen lists each oversight tool exactly once, with no hub pa
   const paths = insightItems.map((item) => item.to);
   assert.equal(new Set(paths).size, paths.length, 'no tool listed twice');
   assert.equal(paths.includes('/management-office'), false);
-  const groups = moduleGroupsFor('insight', insightItems);
-  assert.equal(groups.some((group) => group.title === 'Modul divisi'), false);
-  assert.deepEqual(groups.flatMap((group) => group.items.map((item) => item.to)).sort(), [...paths].sort());
 });
 
-test('moduleGroupsFor splits a busy division into its named sub-groups', () => {
-  const groups = moduleGroupsFor('google', itemsFor('warehouse.member', 'google'));
-  assert.deepEqual(groups.map((group) => group.title), ['Komunikasi', 'Project', 'Dokumen', 'Organisasi']);
-});
-
-test('moduleGroupsFor drops a sub-group left empty for this role', () => {
-  // A sub-group only shows when this role can reach at least one of its paths.
-  const memberItems = itemsFor('people_culture.member', 'people');
-  assert.deepEqual(moduleGroupsFor('people', memberItems).map((group) => group.title), ['Onboarding & offboarding', 'GA', 'IT']);
-  // Without Operasional GA the GA sub-group is gone.
-  const withoutGa = memberItems.filter((item) => item.to !== '/ga/operations');
-  assert.deepEqual(moduleGroupsFor('people', withoutGa).map((group) => group.title), ['Onboarding & offboarding', 'IT']);
-});
-
-test('moduleGroupsFor defaults an ungrouped division to a single untitled group', () => {
-  const items = itemsFor('warehouse.member', 'warehouse');
-  assert.deepEqual(moduleGroupsFor('warehouse', items), [{ title: null, items }]);
-});
 
 test('a feature hidden from the menu also refuses direct URL access', () => {
   const memberPermissions = role('warehouse.member').permissions;

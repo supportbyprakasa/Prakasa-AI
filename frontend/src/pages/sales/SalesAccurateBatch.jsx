@@ -101,7 +101,7 @@ const BATCH_FILTERS = [{ value: '', label: 'Semua' }, ...Object.entries(BATCH_ST
 // division: only that division's batches (e.g. inside the Warehouse module).
 // A row opens its batch (a Data Accurate list, not a Sales one).
 export function AccurateBatchList({
-  detailBase = '/sales/orders/accurate', canPull = true, division = '', syncEndpoint, note,
+  detailBase = '/data-accurate', canPull = true, division = '', syncEndpoint, note,
 }) {
   const navigate = useNavigate();
   const [filter, setFilter] = useState('');

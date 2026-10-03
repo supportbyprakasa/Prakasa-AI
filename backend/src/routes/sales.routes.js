@@ -49,7 +49,8 @@ router.get('/funnel', requirePermission(['sales.pipeline.view', 'sales.customer.
 router.get('/scope', requirePermission('sales.customer.view'), dataCtrl.scope);
 router.get('/actions', requirePermission('sales.customer.view'), dataCtrl.actions);
 router.get('/actions/count', requirePermission('sales.customer.view'), salesCache, dataCtrl.actionCount);
-router.get('/targets', requirePermission('sales.customer.view'), dataCtrl.targets);
+// Targets carry revenue per salesperson: order.view, like Data Sales (migration 130).
+router.get('/targets', requirePermission('sales.order.view'), dataCtrl.targets);
 router.put('/targets',
   requirePermission('sales.master.manage'),
   validate(z.object({

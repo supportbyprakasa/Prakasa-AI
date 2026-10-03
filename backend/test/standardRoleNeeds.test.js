@@ -94,3 +94,11 @@ test('migration 035 applies every removal and addition to existing databases', (
   assert.match(sql, /is_system_template = 1/);
   assert.equal(/system\.super_admin'\s*\)/.test(sql) && /DELETE[^;]*system\.super_admin/.test(sql), false, 'Super Admin is never trimmed');
 });
+
+test('migration 144 deletes every permission code no code checks any more', () => {
+  const sql = fs.readFileSync(path.join(__dirname, '../migrations/144_remove_dead_permissions.sql'), 'utf8');
+  for (const code of ['form.submit', 'kb.query', 'workflow_instance.view', 'timeline.view', 'brief.view', 'dashboard_layout.manage', 'workspace.operations.view']) {
+    assert.match(sql, new RegExp(code.replace(/\./g, '\\.')), code);
+  }
+  assert.doesNotMatch(sql, /DELETE[^;]*system\.super_admin/, 'Super Admin is never trimmed');
+});

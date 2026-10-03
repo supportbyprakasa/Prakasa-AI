@@ -48,7 +48,7 @@ const TABS = [
   { k: 'checklist', l: 'Checklist', permission: 'warehouse.checklist.view' },
   { k: 'incidents', l: 'Insiden', permission: 'warehouse.incident.view' },
   // Warehouse batches are decided by the Warehouse Supervisor or Head.
-  { k: 'accurate', l: 'Data Accurate', permission: 'warehouse.accurate.sync' },
+  { k: 'accurate', l: 'Data Accurate', permission: ['accurate.batch.view', 'warehouse.accurate.sync'] },
 ];
 
 const errorMessage = (error, fallback) => error.response?.data?.error?.message || fallback;
@@ -57,7 +57,7 @@ export default function WarehouseDashboard() {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const permissions = user?.permissions || [];
-  const can = (code) => permissions.includes(code);
+  const can = (code) => (Array.isArray(code) ? code.some((c) => permissions.includes(c)) : permissions.includes(code));
   const tabs = TABS.filter((entry) => can(entry.permission));
   const requested = searchParams.get('tab');
   const tab = tabs.some((entry) => entry.k === requested) ? requested : tabs[0]?.k;
@@ -100,7 +100,7 @@ export default function WarehouseDashboard() {
         {!tab && <EmptyState title="Belum ada akses" description="Anda belum memiliki akses ke menu Warehouse." />}
         {['inbound', 'outbound', 'approval', 'history'].includes(tab) && <MovementList key={tab} mode={tab} />}
         {tab === 'checklist' && (
-          <ChecklistTab createOpen={creating === 'checklist'} onCreateClose={() => setCreating('')} />
+          <ChecklistTab createOpen={creating === 'checklist'} onCreateClose={() => setCreating('')} canManage={can('warehouse.checklist.manage')} />
         )}
         {tab === 'incidents' && (
           <IncidentsTab
@@ -118,7 +118,7 @@ export default function WarehouseDashboard() {
           <AccurateBatchList
             detailBase="/data-accurate"
             division="warehouse"
-            canPull
+            canPull={can('warehouse.accurate.sync')}
             syncEndpoint="/warehouse/accurate/sync"
             note="Stok dari Accurate baru dipakai di aplikasi setelah disetujui Supervisor atau Head Warehouse. Hanya jumlah barang — tanpa harga atau biaya."
           />
@@ -196,8 +196,24 @@ const CHECKLIST_COLUMNS = [
   },
 ];
 
-function ChecklistTab({ createOpen, onCreateClose }) {
+function ChecklistTab({ createOpen, onCreateClose, canManage }) {
   const list = useWarehouseList('/warehouse/checklists', 'Checklist belum bisa dimuat.');
+  const [completing, setCompleting] = useState(null);
+  // Finishing a checklist ticks every item: the register records who did it
+  // and when, which is what clears the "checklist terlewat" escalation.
+  const complete = async (row) => {
+    setCompleting(row.id);
+    try {
+      const items = (Array.isArray(row.items) ? row.items : []).map((item) => ({ ...item, checked: true }));
+      await api.patch(`/warehouse/checklists/${row.id}/complete`, { items });
+      toast('Checklist ditandai selesai', 'success');
+      list.reload();
+    } catch (err) {
+      toast(errorMessage(err, 'Checklist gagal ditandai selesai'), 'error');
+    } finally {
+      setCompleting(null);
+    }
+  };
   return (
     <>
       <DataGrid
@@ -211,6 +227,9 @@ function ChecklistTab({ createOpen, onCreateClose }) {
         onRetry={list.reload}
         searchPlaceholder="Cari judul checklist"
         empty="Belum ada checklist"
+        rowActions={canManage ? (row) => (row.completed ? null : (
+          <IconButton size="sm" icon="task_alt" label="Tandai selesai" disabled={completing === row.id} onClick={() => complete(row)} />
+        )) : undefined}
       />
       <ChecklistDialog open={createOpen} onClose={onCreateClose} onCreated={list.reload} />
     </>
@@ -430,12 +449,14 @@ function IncidentDialog({ open, onClose, onCreated }) {
 }
 
 function ResolveDialog({ incident, onClose, onResolved }) {
-  const [status, setStatus] = useState('investigating');
+  // "Selesaikan insiden" means resolve: the dialog starts on Selesai, so
+  // saving without touching the status closes the incident.
+  const [status, setStatus] = useState('resolved');
   const [resolution, setResolution] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   useEffect(() => {
-    if (incident) { setStatus('investigating'); setResolution(''); setError(''); }
+    if (incident) { setStatus('resolved'); setResolution(''); setError(''); }
   }, [incident]);
 
   const submit = async (event) => {

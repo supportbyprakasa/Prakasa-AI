@@ -395,52 +395,6 @@ export function visibleSections(division, sections) {
   return items.length ? [{ title: division.title, items }] : [];
 }
 
-// Sub-groups per division, so a division with many modules reads as a few
-// clear clusters on the home page instead of one long list. Divisions left
-// out default to a single, untitled group — they don't have enough items to
-// need splitting. Kept as tuples (not object literals) for the same reason
-// as EXTRA_ROUTE_PERMISSIONS above — this isn't a real NAV/sidebar entry.
-// Titles are sentence case (docs/ui-guideline.md §1.2: no all-caps text).
-const MODULE_GROUPS = {
-  google: [
-    ['Komunikasi', '/mail', '/chat', '/calendar'],
-    ['Project', '/projects'],
-    ['Dokumen', '/docs', '/sheets', '/slides'],
-    ['Organisasi', '/groups'],
-  ],
-  kerja: [
-    ['Dokumen', '/division-storage', '/my-drive', '/doc-templates'],
-    ['Dukungan', '/it/tickets', '/finance/payment-requests'],
-    ['Organisasi', '/people/directory'],
-  ],
-  people: [
-    ['Onboarding & offboarding', '/hrga/onboarding', '/hrga/offboarding', '/hrga/checklist-templates'],
-    ['GA', '/ga/operations'],
-    ['IT', '/it/dashboard', '/it/devices', '/it/subscriptions', '/it/infrastructure'],
-  ],
-  insight: [
-    ['Ringkasan', '/management', '/division-dashboard', '/escalations', '/roadmap', '/targets', '/management/flow', '/analytics'],
-    ['Audit', '/activity-logs'],
-  ],
-  admin: [
-    ['Identitas & akses', '/admin/users', '/admin/workspace-sync', '/admin/entities', '/admin/departments', '/admin/roles', '/admin/permissions'],
-    ['Aturan approval & signature', '/admin/approval-matrix', '/admin/signature-rules', '/admin/signature-precheck'],
-    ['Dokumen', '/admin/document-types', '/admin/folder-rules'],
-    ['Sistem', '/admin/integration-logs', '/admin/notification-policy', '/admin/ai-usage', '/admin/ai-provider-settings', '/admin/accurate'],
-  ],
-};
-
-// Splits a division's visible items into its named sub-groups, dropping any
-// group left empty for this role. A division with no defined sub-groups (or
-// too few items to need them) comes back as one untitled group.
-export function moduleGroupsFor(slug, items) {
-  const groups = MODULE_GROUPS[slug];
-  if (!groups) return [{ title: null, items }];
-  return groups
-    .map(([title, ...paths]) => ({ title, items: paths.map((path) => items.find((item) => item.to === path)).filter(Boolean) }))
-    .filter((group) => group.items.length);
-}
-
 // Last crumb below a module: a form to create or edit, or a record's detail.
 function subPageLabel(pathname) {
   if (/\/new$/.test(pathname)) return 'Baru';

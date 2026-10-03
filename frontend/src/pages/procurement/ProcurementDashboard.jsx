@@ -24,14 +24,15 @@ const TABS = [
   { k: 'orders', l: 'Purchase order', permission: 'procurement.view' },
   { k: 'vendors', l: 'Pemasok', permission: 'procurement.view' },
   { k: 'prices', l: 'Harga beli', permission: 'procurement.price.view' },
-  { k: 'accurate', l: 'Data Accurate', permission: 'procurement.accurate.sync' },
+  { k: 'accurate', l: 'Data Accurate', permission: ['accurate.batch.view', 'procurement.accurate.sync'] },
 ];
 
 export default function ProcurementDashboard() {
   const { user } = useAuth();
   const permissions = user?.permissions || [];
   const [searchParams, setSearchParams] = useSearchParams();
-  const tabs = TABS.filter((t) => permissions.includes(t.permission));
+  const can = (code) => (Array.isArray(code) ? code.some((c) => permissions.includes(c)) : permissions.includes(code));
+  const tabs = TABS.filter((t) => can(t.permission));
   const requested = searchParams.get('tab');
   const tab = tabs.some((t) => t.k === requested) ? requested : tabs[0]?.k;
   const denied = requested && !tabs.some((t) => t.k === requested) ? TABS.find((t) => t.k === requested) : null;
@@ -68,7 +69,7 @@ export default function ProcurementDashboard() {
           <AccurateBatchList
             detailBase="/data-accurate"
             division="procurement"
-            canPull
+            canPull={can('procurement.accurate.sync')}
             syncEndpoint="/procurement/accurate/sync"
             note="Data PO dan pemasok dari Accurate baru dipakai di aplikasi setelah disetujui Head Procurement (pengganti: Head Management Office). Kontak, NPWP, KTP, dan rekening pemasok tidak pernah diambil."
           />

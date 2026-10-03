@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import api from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/Button';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import EmptyState, { LoadingState } from '../../components/EmptyState';
@@ -49,6 +50,9 @@ const fileMeta = (file) => {
 };
 
 function MyDriveBrowser() {
+  const { user } = useAuth();
+  // Creating, uploading and deleting need mydrive.manage (the API's check).
+  const canManage = (user?.permissions || []).includes('mydrive.manage');
   const [path, setPath] = useState([ROOT]);
   const [files, setFiles] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -193,7 +197,7 @@ function MyDriveBrowser() {
             icon={fileKindIcon(file)}
             thumbnail={isFolder(file) ? null : file.thumbnailLink}
             onOpen={() => (isFolder(file) ? openFolder(file) : setOpenDoc(file))}
-            onDelete={() => setDeleteTarget(file)}
+            onDelete={canManage ? () => setDeleteTarget(file) : undefined}
           />
         ))}
       </FileGrid>
@@ -223,7 +227,7 @@ function MyDriveBrowser() {
           </ol>
         </nav>
         <input ref={fileInputRef} type="file" hidden tabIndex={-1} aria-label="Pilih file untuk diunggah ke My Drive" onChange={onUpload} />
-        <NewMenu items={newItems} loading={uploading} />
+        {canManage ? <NewMenu items={newItems} loading={uploading} /> : null}
       </div>
 
       {content}
@@ -270,10 +274,14 @@ function MyDriveBrowser() {
 }
 
 export default function MyDrive() {
+  const { user } = useAuth();
+  // The division's Shared Drive tab needs document.view (the API's check):
+  // without it the tab only showed an error.
+  const tabs = TABS.filter((t) => t.k !== 'shared' || (user?.permissions || []).includes('document.view'));
   const [tab, setTab] = useState('mydrive');
   return (
     <Page title="My Drive" description="Drive pribadi Anda di Google dan folder Shared Drive divisi Anda, dalam satu tempat.">
-      <TabBar tabs={TABS} value={tab} onChange={setTab} label="Pilih drive" idPrefix="mydrive-tab" panelId="mydrive-panel" />
+      {tabs.length > 1 ? <TabBar tabs={tabs} value={tab} onChange={setTab} label="Pilih drive" idPrefix="mydrive-tab" panelId="mydrive-panel" /> : null}
       <div id="mydrive-panel" role="tabpanel" aria-labelledby={`mydrive-tab-${tab}`}>
         {tab === 'mydrive' ? <MyDriveBrowser /> : <DivisionStorage embedded />}
       </div>

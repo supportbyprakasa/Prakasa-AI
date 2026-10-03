@@ -46,7 +46,10 @@ export default function PaymentRequests() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const canRequest = (user?.permissions || []).includes('finance.request');
+  // Approvers get a chip for what waits on them: /approvals is retired.
+  const canDecide = (user?.permissions || []).includes('approval.decide');
   const [params, setParams] = useSearchParams();
+  const awaiting = canDecide && params.get('awaiting') === '1';
   const status = REQUEST_STATUSES.includes(params.get('status')) ? params.get('status') : '';
   const type = WORKFLOW_TYPES.some((w) => w.value === params.get('type')) ? params.get('type') : '';
   const q = params.get('q') || '';
@@ -74,6 +77,7 @@ export default function PaymentRequests() {
       if (type) query.workflowType = type;
       if (status) query.status = status;
       if (q) query.q = q;
+      if (awaiting) query.awaiting = '1';
       const r = await api.get('/finance/payment-requests', { params: query });
       if (id !== request.current) return;
       const rows = r.data.data || [];
@@ -82,7 +86,7 @@ export default function PaymentRequests() {
       if (id !== request.current) return;
       setState((s) => ({ ...s, loading: false, error: apiMessage(err) }));
     }
-  }, [type, status, q, page]);
+  }, [type, status, q, page, awaiting]);
   useEffect(() => { load(); }, [load]);
 
   const filtered = Boolean(q || type || status);
@@ -106,9 +110,10 @@ export default function PaymentRequests() {
         searchPlaceholder="Cari nomor, judul, penerima, atau kategori"
         filters={(
           <>
-            <Chip selected={!status} onClick={() => setParam({ status: '' })}>Semua</Chip>
+            <Chip selected={!status && !awaiting} onClick={() => setParam({ status: '', awaiting: '' })}>Semua</Chip>
+            {canDecide ? <Chip selected={awaiting} onClick={() => setParam({ awaiting: awaiting ? '' : '1', status: '' })}>Menunggu keputusan saya</Chip> : null}
             {REQUEST_STATUSES.map((s) => (
-              <Chip key={s} selected={status === s} onClick={() => setParam({ status: status === s ? '' : s })}>{statusLabel(s)}</Chip>
+              <Chip key={s} selected={status === s} onClick={() => setParam({ status: status === s ? '' : s, awaiting: '' })}>{statusLabel(s)}</Chip>
             ))}
             <FilterMenuChip label="Jenis" icon="category" value={type} options={TYPE_OPTIONS} onChange={(value) => setParam({ type: value })} />
           </>

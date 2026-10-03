@@ -56,15 +56,6 @@ const itTicket = inTx((tx, req) => svc.itTicket(tx, req.user, req.params.id, req
 const holdingsSync = inTx((tx, req) => svc.holdingsSync(tx, req.user, req.params.id));
 const linkKantorku = inTx((tx, req) => svc.setKantorku(tx, req.user, req.params.id, req.body));
 
-// Decisions happen in the approval engine only (audit 0.2, S1), and the old
-// free-form task link accepted ids of another entity (S5): both are gone.
-function applyApprovalResult(req, res) {
-  return fail(res, 'APPROVAL_VIA_ENGINE', 'Keputusan dilakukan di menu Approval', 410);
-}
-function linkTask(req, res) {
-  return fail(res, 'GONE', 'Gunakan tombol aksi pada tugas (serahkan perangkat, terima kembali, lisensi, nomor)', 410);
-}
-
 /** Attachments: Shared Drive only (rule 1.0); hand-over notes or other, never KantorKu documents. */
 async function uploadAttachment(req, res, next) {
   try {
@@ -106,8 +97,8 @@ const putPic = inTx((tx, req) => svc.putPicSettings(tx, req.user, req.body));
 
 module.exports = {
   list, detail, checklistPreview, lookups, holdings, taskOptions,
-  create, update, remove, submitForApproval, withdraw, cancel, applyApprovalResult,
-  updateTask, assignTask, linkTask, deviceHandover, deviceReturn, licenseAssign, licenseRevoke,
+  create, update, remove, submitForApproval, withdraw, cancel,
+  updateTask, assignTask, deviceHandover, deviceReturn, licenseAssign, licenseRevoke,
   phoneLine, phoneLineReturn, itTicket, holdingsSync, linkKantorku, uploadAttachment,
   listChecklistTemplates, createChecklistTemplate, updateChecklistTemplate, getPic, putPic,
 };

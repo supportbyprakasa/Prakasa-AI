@@ -19,9 +19,10 @@ Isi panduan mengikuti peran: setiap orang hanya membaca bab untuk menu yang bisa
 11. [Finance: piutang dan utang](#finance)
 12. [People & Culture: onboarding, offboarding, dan GA](#people-culture)
 13. [IT: perangkat, langganan, dan infrastruktur](#it-aset)
-14. [Laporan: Google Analytics dan log aktivitas](#laporan)
-15. [Glosarium](#glosarium)
-16. [Kalau ada masalah](#bantuan)
+14. [Data Accurate: memeriksa dan menyetujui](#data-accurate)
+15. [Laporan: Google Analytics dan log aktivitas](#laporan)
+16. [Glosarium](#glosarium)
+17. [Kalau ada masalah](#bantuan)
 
 <a id="mulai"></a>
 
@@ -1168,7 +1169,7 @@ Kinerja penjualan marketplace (Shopee, Tokopedia, dan lainnya) dari data Accurat
 
 <a id="retail-commerce-membaca"></a>
 
-### Membaca halaman Retail Commerce
+### Membaca halaman Kinerja marketplace
 
 | Bagian | Isinya |
 | --- | --- |
@@ -1185,6 +1186,12 @@ Kinerja penjualan marketplace (Shopee, Tokopedia, dan lainnya) dari data Accurat
 >
 > - Klik "Muat ulang" untuk angka terbaru.
 > - Pelanggan, leads, dan Data Sales kanal ritel ada di menu Sales.
+
+<a id="retail-commerce-pesanan-piutang"></a>
+
+### Pesanan & piutang
+
+Halaman "Pesanan & piutang" memuat dua daftar: tab "SO belum dikirim" (SO marketplace yang belum terkirim penuh, dari yang tertua) dan tab "Faktur belum cair" (faktur rekap marketplace yang belum dibayar, dari jatuh tempo terlama). Keduanya dari data Accurate yang sudah disetujui dan bisa diekspor.
 
 <a id="marketing"></a>
 
@@ -1239,22 +1246,21 @@ Mencatat barang masuk dan keluar dengan approval Warehouse Supervisor, melihat s
 
 **Menu:** `/warehouse`
 
-<a id="warehouse-tab"></a>
+<a id="warehouse-halaman"></a>
 
-### Tab di halaman Warehouse
+### Halaman di menu Warehouse
 
-| Tab | Isinya |
+| Halaman | Isinya |
 | --- | --- |
-| Hari ini | Ringkasan hari ini. |
+| Hari ini | Ringkasan hari ini: barang datang, SO yang harus dikirim, dan yang perlu perhatian. |
+| Pergerakan barang | Tab Barang masuk, Barang keluar, Approval Supervisor, dan Riwayat transaksi: pergerakan yang dicatat tim gudang. |
+| Stok | Tab Stok (per gudang dari Accurate), Dokumen Accurate (surat jalan, penerimaan, pindah gudang, penyesuaian), dan Cocokkan Accurate. |
 | Jadwal kirim | SO yang harus dikirim, apakah stoknya cukup. |
-| Stok | Stok dari Accurate per gudang. |
-| Dokumen Accurate | Surat jalan, penerimaan, pindah gudang, penyesuaian. |
-| Barang masuk / Barang keluar / Riwayat transaksi | Pergerakan yang dicatat tim gudang. |
-| Cocokkan Accurate | Pergerakan aplikasi dibandingkan dengan dokumen Accurate. |
-| Approval Supervisor | Pergerakan menunggu keputusan (Supervisor). |
-| Checklist / Insiden | Checklist harian dan laporan kejadian. |
+| Checklist & insiden | Checklist harian dan laporan kejadian. |
 
-> **Catatan:** Anda hanya melihat tab yang sesuai akses Anda. Bila membuka tab lain lewat tautan, aplikasi menampilkan tab yang boleh Anda buka.
+> **Catatan:** Batch stok dan dokumen gudang dari Accurate, beserta tombol "Tarik sekarang", ada di "Data Accurate" (grup Manajemen).
+
+> **Catatan:** Anda hanya melihat halaman dan tab yang sesuai akses Anda. Tautan lama ke tab di halaman Warehouse (misalnya dari notifikasi) otomatis membuka halaman barunya.
 
 <a id="warehouse-catat-pergerakan"></a>
 
@@ -1290,7 +1296,7 @@ Mencatat barang masuk dan keluar dengan approval Warehouse Supervisor, melihat s
 
 ### Stok dari Accurate
 
-Tab "Stok" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah disetujui Supervisor atau Head Warehouse.
+Halaman "Stok" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah disetujui Supervisor atau Head Warehouse. Tab "Dokumen Accurate" di halaman yang sama memuat surat jalan, penerimaan, pindah gudang, dan penyesuaian.
 
 | Status | Artinya |
 | --- | --- |
@@ -1309,7 +1315,7 @@ Tab "Stok" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah d
 
 ### Cocokkan Accurate
 
-Tab "Cocokkan Accurate" membandingkan pergerakan di aplikasi dengan dokumen Accurate.
+Tab "Cocokkan Accurate" di halaman "Stok" membandingkan pergerakan di aplikasi dengan dokumen Accurate.
 
 | Status | Artinya |
 | --- | --- |
@@ -1321,6 +1327,12 @@ Tab "Cocokkan Accurate" membandingkan pergerakan di aplikasi dengan dokumen Accu
 | Menunggu data Accurate | Tarikan berikutnya belum disetujui. |
 
 > **Catatan:** Accurate hanya dibaca. Selisih diperbaiki di sumbernya: dokumen Accurate atau pergerakan di aplikasi.
+
+<a id="warehouse-jadwal-kirim"></a>
+
+### Jadwal kirim
+
+Halaman "Jadwal kirim" menampilkan SO dari Accurate yang harus dikirim hari ini atau sudah lewat, dan apakah stoknya cukup. Saring dengan chip status dan cari nomor SO.
 
 <a id="warehouse-checklist-insiden"></a>
 
@@ -1352,13 +1364,18 @@ PO, pemasok, dan barang datang dari Accurate, setelah tarikan disetujui Supervis
 
 <a id="procurement-hari-ini"></a>
 
-### Hari ini, Purchase order, dan Pemasok
+### Halaman di menu Procurement
 
-| Tab | Isinya |
+| Halaman | Isinya |
 | --- | --- |
 | Hari ini | Barang datang hari ini, dijadwalkan datang hari ini & besok, dan yang perlu perhatian. |
 | Purchase order | Semua PO dengan status penerimaan barangnya. |
-| Pemasok | Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari. |
+| Pemasok | Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari; tab "Harga beli" untuk yang berwenang. |
+| Saran pesan ulang | Barang yang perlu dipesan (Supervisor/Head). |
+
+> **Catatan:** Batch PO dan pemasok dari Accurate, beserta tombol "Tarik sekarang", ada di "Data Accurate" (grup Manajemen).
+
+> **Catatan:** Tautan lama ke tab di halaman Procurement (misalnya dari eskalasi) otomatis membuka halaman barunya.
 
 **Status PO**
 
@@ -1372,6 +1389,18 @@ PO, pemasok, dan barang datang dari Accurate, setelah tarikan disetujui Supervis
 | PO lama | PO lama yang tidak dihitung lagi. |
 
 > **Catatan:** Kontak, alamat, NPWP, dan rekening pemasok tidak diambil dari Accurate; lihat langsung di Accurate.
+
+<a id="procurement-purchase-order"></a>
+
+### Purchase order
+
+Halaman "Purchase order" memuat semua PO dengan status penerimaan barangnya. Saring dengan chip status; klik baris untuk rincian baris barang dan penerimaannya.
+
+<a id="procurement-pemasok"></a>
+
+### Pemasok
+
+Halaman "Pemasok" menampilkan kinerja tiap pemasok. Klik baris untuk PO terakhirnya; dari sini pemasok baru atau perubahan pemasok bisa diajukan ke Accurate (lihat bab Data Accurate).
 
 <a id="finance"></a>
 
@@ -1583,6 +1612,74 @@ Tab: Jaringan, ISP, CCTV, Backup, Google Workspace, Telepon & HP, dan Vendor.
 - Telepon & HP: nomor milik perusahaan, pemegangnya ("Ganti pemegang"), dan BAST serah terima/pengembalian.
 
 > **Perhatian:** Hanya nomor milik perusahaan yang dicatat. Jangan mencatat nomor pribadi, PIN, PUK, atau nomor SIM.
+
+<a id="data-accurate"></a>
+
+## Data Accurate: memeriksa dan menyetujui
+
+*Bagian: Pemantauan & manajemen*
+
+Data dari Accurate ditarik otomatis setiap beberapa menit, tetapi baru dipakai di aplikasi setelah Supervisor atau Head divisinya menyetujui batch-nya. Aplikasi hanya membaca Accurate; tidak ada data Accurate yang diubah atau dihapus.
+
+**Siapa yang memakai:** Supervisor dan Head Sales, Retail Commerce, Warehouse, Procurement, dan Finance; Head Management Office memantau.
+
+**Hanya untuk divisi:** Procurement, Sales, Retail Commerce
+
+**Menu:** `/data-accurate`
+
+<a id="data-accurate-cara-kerja"></a>
+
+### Cara kerja batch Accurate
+
+1. Aplikasi menarik data dari Accurate (hanya membaca) dan menyusunnya menjadi satu batch per divisi.
+2. Batch berstatus "Menunggu persetujuan". Angka di aplikasi belum berubah.
+3. Supervisor atau Head divisi memeriksa dan memutuskan.
+4. Bila disetujui, data diterapkan dan angka di modul divisi ikut berubah.
+
+| Status batch | Artinya |
+| --- | --- |
+| Menunggu persetujuan | Belum dipakai di aplikasi. |
+| Disetujui & diterapkan | Sudah dipakai. |
+| Ditolak | Tidak dipakai. Perbaiki di Accurate; tarikan berikutnya membuat batch baru. |
+| Ditarik kembali | Dibatalkan sebelum diputuskan. |
+
+**Jenis perubahan dalam batch**
+
+| Label | Artinya |
+| --- | --- |
+| Baru | Data baru di Accurate. |
+| Berubah | Data yang berubah sejak tarikan lalu. |
+| Tidak ada lagi | Sudah tidak ada di Accurate. Hanya ditandai; tidak ada data yang dihapus. |
+
+<a id="data-accurate-perlu-dibereskan"></a>
+
+### Perlu dibereskan di Accurate
+
+Tab "Perlu dibereskan di Accurate" berisi data Accurate yang tidak lengkap atau tidak wajar (misalnya stok minus). Perbaikannya dilakukan di Accurate oleh pemilik datanya; tarikan berikutnya membawa data yang sudah benar.
+
+<a id="data-accurate-pengajuan-ke-accurate"></a>
+
+### Pengajuan ke Accurate: pelanggan dan pemasok dari aplikasi
+
+Accurate tetap sumber kebenaran. Pelanggan atau pemasok yang dibuat atau diperbaiki di aplikasi tidak langsung masuk ke Accurate: ia menjadi "Pengajuan ke Accurate" yang diputuskan Supervisor atau Head divisi, lalu menunggu di antrean kirim. Tujuannya satu: data di aplikasi dan di Accurate sama, tanpa dobel dan tanpa selisih.
+
+1. Buka pelanggan di "Pelanggan" → menu titik tiga → "Ajukan ke Accurate", atau tab "Selisih pelanggan" di "Data Accurate" → ikon kirim pada baris yang belum ada di Accurate. Pemasok: tab "Pemasok" di Procurement → "Ajukan pemasok baru" atau "Ajukan perubahan ke Accurate" di detail pemasok.
+2. Periksa kolom yang akan dikirim (nama wajib; ID boleh kosong bila Accurate yang memberi nomor), lalu klik "Ajukan".
+3. Supervisor atau Head divisi membuka notifikasinya atau "Data Accurate" → "Pengajuan ke Accurate", lalu "Setujui" atau "Tolak" dengan alasan. Pengaju tidak bisa memutuskan pengajuannya sendiri.
+4. Setelah disetujui, pengajuan berstatus "Disetujui, antre kirim". Ia terkirim saat saluran kirim ke Accurate dinyalakan pemilik, dan berstatus "Terkonfirmasi di Accurate" setelah tarikan berikutnya menampilkannya.
+
+| Status pengajuan | Artinya |
+| --- | --- |
+| Menunggu persetujuan | Belum diputuskan; belum ada yang dikirim. |
+| Disetujui, antre kirim | Disetujui; menunggu saluran kirim ke Accurate. |
+| Terkirim ke Accurate | Sudah dikirim; menunggu tarikan berikutnya sebagai bukti. |
+| Terkonfirmasi di Accurate | Accurate menampilkan data yang sama. Selesai. |
+| Ditolak / Dibatalkan | Tidak ada yang dikirim. Ajukan ulang bila perlu. |
+| Gagal dikirim | Accurate menolak; alasannya tertulis di pengajuan. |
+
+> **Perhatian:** Satu data hanya boleh punya satu pengajuan yang belum selesai, dan ID yang sudah ada di Accurate tidak bisa diajukan sebagai data baru. Dengan begitu Accurate tidak pernah menerima data dobel dari aplikasi.
+
+> **Catatan:** Pengajuan bisa dibatalkan oleh pengaju atau Supervisor/Head selama belum terkirim. Tab "Selisih pelanggan" membandingkan pelanggan di aplikasi dengan data Accurate yang disetujui, per ID pelanggan; selisih diselesaikan dengan pengajuan, bukan dengan mengubah aplikasi.
 
 <a id="laporan"></a>
 

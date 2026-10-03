@@ -1,6 +1,6 @@
 {
  "note": "Dibuat oleh frontend/scripts/build-handbook-json.mjs dari frontend/src/pages/handbook/handbookContent.js. Jangan diubah dengan tangan.",
- "sourceHash": "126660eaf171dfe1195721275e54ea211d3c7e119963b3533090e5cfeba09090",
+ "sourceHash": "451929ebce69019d468302aec26bc196148b8ed1e9c40f3c1acb050123f64393",
  "routeAccess": {
   "/": {
    "open": true
@@ -117,7 +117,9 @@
    "anyOf": [
     "accurate.batch.view",
     "accurate.write.request",
-    "sales.master.manage"
+    "procurement.accurate.sync",
+    "sales.master.manage",
+    "warehouse.accurate.sync"
    ]
   },
   "/division-dashboard": {
@@ -264,12 +266,32 @@
     "procurement.view"
    ]
   },
+  "/procurement/orders": {
+   "anyOf": [
+    "procurement.view"
+   ]
+  },
+  "/procurement/reorder": {
+   "anyOf": [
+    "procurement.reorder.view"
+   ]
+  },
+  "/procurement/vendors": {
+   "anyOf": [
+    "procurement.view"
+   ]
+  },
   "/projects": {
    "anyOf": [
     "google.chat.use"
    ]
   },
   "/retail-commerce": {
+   "anyOf": [
+    "retail.insight.view"
+   ]
+  },
+  "/retail-commerce/pending": {
    "anyOf": [
     "retail.insight.view"
    ]
@@ -339,6 +361,28 @@
   "/warehouse": {
    "anyOf": [
     "warehouse.movement.view",
+    "warehouse.stock.view"
+   ]
+  },
+  "/warehouse/movements": {
+   "anyOf": [
+    "warehouse.movement.view"
+   ]
+  },
+  "/warehouse/operations": {
+   "anyOf": [
+    "warehouse.checklist.view",
+    "warehouse.incident.view"
+   ]
+  },
+  "/warehouse/shipping": {
+   "anyOf": [
+    "warehouse.stock.view"
+   ]
+  },
+  "/warehouse/stock": {
+   "anyOf": [
+    "warehouse.recon.view",
     "warehouse.stock.view"
    ]
   }
@@ -3359,9 +3403,9 @@
    "sections": [
     {
      "id": "membaca",
-     "title": "Membaca halaman Retail Commerce",
+     "title": "Membaca halaman Kinerja marketplace",
      "audience": null,
-     "route": null,
+     "route": "/retail-commerce",
      "body": [
       {
        "type": "table",
@@ -3406,6 +3450,18 @@
         "Klik \"Muat ulang\" untuk angka terbaru.",
         "Pelanggan, leads, dan Data Sales kanal ritel ada di menu Sales."
        ]
+      }
+     ]
+    },
+    {
+     "id": "pesanan-piutang",
+     "title": "Pesanan & piutang",
+     "audience": null,
+     "route": "/retail-commerce/pending",
+     "body": [
+      {
+       "type": "p",
+       "text": "Halaman \"Pesanan & piutang\" memuat dua daftar: tab \"SO belum dikirim\" (SO marketplace yang belum terkirim penuh, dari yang tertua) dan tab \"Faktur belum cair\" (faktur rekap marketplace yang belum dibayar, dari jatuh tempo terlama). Keduanya dari data Accurate yang sudah disetujui dan bisa diekspor."
       }
      ]
     }
@@ -3543,55 +3599,47 @@
    "summary": "Mencatat barang masuk dan keluar dengan approval Warehouse Supervisor, melihat stok dari Accurate, mencocokkan catatan gudang dengan Accurate, serta checklist dan insiden gudang.",
    "sections": [
     {
-     "id": "tab",
-     "title": "Tab di halaman Warehouse",
+     "id": "halaman",
+     "title": "Halaman di menu Warehouse",
      "audience": null,
      "route": null,
      "body": [
       {
        "type": "table",
        "columns": [
-        "Tab",
+        "Halaman",
         "Isinya"
        ],
        "rows": [
         [
          "Hari ini",
-         "Ringkasan hari ini."
+         "Ringkasan hari ini: barang datang, SO yang harus dikirim, dan yang perlu perhatian."
+        ],
+        [
+         "Pergerakan barang",
+         "Tab Barang masuk, Barang keluar, Approval Supervisor, dan Riwayat transaksi: pergerakan yang dicatat tim gudang."
+        ],
+        [
+         "Stok",
+         "Tab Stok (per gudang dari Accurate), Dokumen Accurate (surat jalan, penerimaan, pindah gudang, penyesuaian), dan Cocokkan Accurate."
         ],
         [
          "Jadwal kirim",
          "SO yang harus dikirim, apakah stoknya cukup."
         ],
         [
-         "Stok",
-         "Stok dari Accurate per gudang."
-        ],
-        [
-         "Dokumen Accurate",
-         "Surat jalan, penerimaan, pindah gudang, penyesuaian."
-        ],
-        [
-         "Barang masuk / Barang keluar / Riwayat transaksi",
-         "Pergerakan yang dicatat tim gudang."
-        ],
-        [
-         "Cocokkan Accurate",
-         "Pergerakan aplikasi dibandingkan dengan dokumen Accurate."
-        ],
-        [
-         "Approval Supervisor",
-         "Pergerakan menunggu keputusan (Supervisor)."
-        ],
-        [
-         "Checklist / Insiden",
+         "Checklist & insiden",
          "Checklist harian dan laporan kejadian."
         ]
        ]
       },
       {
        "type": "note",
-       "text": "Anda hanya melihat tab yang sesuai akses Anda. Bila membuka tab lain lewat tautan, aplikasi menampilkan tab yang boleh Anda buka."
+       "text": "Batch stok dan dokumen gudang dari Accurate, beserta tombol \"Tarik sekarang\", ada di \"Data Accurate\" (grup Manajemen)."
+      },
+      {
+       "type": "note",
+       "text": "Anda hanya melihat halaman dan tab yang sesuai akses Anda. Tautan lama ke tab di halaman Warehouse (misalnya dari notifikasi) otomatis membuka halaman barunya."
       }
      ]
     },
@@ -3603,7 +3651,7 @@
        "warehouse.movement.create"
       ]
      },
-     "route": null,
+     "route": "/warehouse/movements",
      "body": [
       {
        "type": "steps",
@@ -3679,12 +3727,12 @@
        "head"
       ]
      },
-     "route": null,
+     "route": "/warehouse/movements?tab=approval",
      "body": [
       {
        "type": "steps",
        "items": [
-        "Buka tab \"Approval Supervisor\", atau notifikasi approval (juga dikirim lewat email).",
+        "Buka \"Pergerakan barang\" → tab \"Approval Supervisor\", atau notifikasi approval (juga dikirim lewat email).",
         "Periksa barang, jumlah, dan nomor referensi.",
         "Klik \"Setujui\", \"Minta revisi\" (catatan wajib), atau \"Tolak\" (catatan wajib)."
        ]
@@ -3726,11 +3774,11 @@
        "warehouse.stock.view"
       ]
      },
-     "route": null,
+     "route": "/warehouse/stock",
      "body": [
       {
        "type": "p",
-       "text": "Tab \"Stok\" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah disetujui Supervisor atau Head Warehouse."
+       "text": "Halaman \"Stok\" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah disetujui Supervisor atau Head Warehouse. Tab \"Dokumen Accurate\" di halaman yang sama memuat surat jalan, penerimaan, pindah gudang, dan penyesuaian."
       },
       {
        "type": "table",
@@ -3775,11 +3823,11 @@
        "warehouse.recon.view"
       ]
      },
-     "route": null,
+     "route": "/warehouse/stock?tab=recon",
      "body": [
       {
        "type": "p",
-       "text": "Tab \"Cocokkan Accurate\" membandingkan pergerakan di aplikasi dengan dokumen Accurate."
+       "text": "Tab \"Cocokkan Accurate\" di halaman \"Stok\" membandingkan pergerakan di aplikasi dengan dokumen Accurate."
       },
       {
        "type": "table",
@@ -3849,6 +3897,22 @@
      ]
     },
     {
+     "id": "jadwal-kirim",
+     "title": "Jadwal kirim",
+     "audience": {
+      "permissions": [
+       "warehouse.stock.view"
+      ]
+     },
+     "route": "/warehouse/shipping",
+     "body": [
+      {
+       "type": "p",
+       "text": "Halaman \"Jadwal kirim\" menampilkan SO dari Accurate yang harus dikirim hari ini atau sudah lewat, dan apakah stoknya cukup. Saring dengan chip status dan cari nomor SO."
+      }
+     ]
+    },
+    {
      "id": "checklist-insiden",
      "title": "Checklist harian dan insiden",
      "audience": {
@@ -3857,7 +3921,7 @@
        "warehouse.incident.manage"
       ]
      },
-     "route": null,
+     "route": "/warehouse/operations",
      "body": [
       {
        "type": "steps",
@@ -3897,14 +3961,14 @@
    "sections": [
     {
      "id": "hari-ini",
-     "title": "Hari ini, Purchase order, dan Pemasok",
+     "title": "Halaman di menu Procurement",
      "audience": null,
-     "route": null,
+     "route": "/procurement",
      "body": [
       {
        "type": "table",
        "columns": [
-        "Tab",
+        "Halaman",
         "Isinya"
        ],
        "rows": [
@@ -3918,9 +3982,21 @@
         ],
         [
          "Pemasok",
-         "Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari."
+         "Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari; tab \"Harga beli\" untuk yang berwenang."
+        ],
+        [
+         "Saran pesan ulang",
+         "Barang yang perlu dipesan (Supervisor/Head)."
         ]
        ]
+      },
+      {
+       "type": "note",
+       "text": "Batch PO dan pemasok dari Accurate, beserta tombol \"Tarik sekarang\", ada di \"Data Accurate\" (grup Manajemen)."
+      },
+      {
+       "type": "note",
+       "text": "Tautan lama ke tab di halaman Procurement (misalnya dari eskalasi) otomatis membuka halaman barunya."
       },
       {
        "type": "table",
@@ -3963,6 +4039,30 @@
      ]
     },
     {
+     "id": "purchase-order",
+     "title": "Purchase order",
+     "audience": null,
+     "route": "/procurement/orders",
+     "body": [
+      {
+       "type": "p",
+       "text": "Halaman \"Purchase order\" memuat semua PO dengan status penerimaan barangnya. Saring dengan chip status; klik baris untuk rincian baris barang dan penerimaannya."
+      }
+     ]
+    },
+    {
+     "id": "pemasok",
+     "title": "Pemasok",
+     "audience": null,
+     "route": "/procurement/vendors",
+     "body": [
+      {
+       "type": "p",
+       "text": "Halaman \"Pemasok\" menampilkan kinerja tiap pemasok. Klik baris untuk PO terakhirnya; dari sini pemasok baru atau perubahan pemasok bisa diajukan ke Accurate (lihat bab Data Accurate)."
+      }
+     ]
+    },
+    {
      "id": "saran-pesan",
      "title": "Saran pesan ulang",
      "audience": {
@@ -3974,11 +4074,11 @@
        "head"
       ]
      },
-     "route": null,
+     "route": "/procurement/reorder",
      "body": [
       {
        "type": "p",
-       "text": "Tab \"Saran pesan ulang\" menghitung barang yang perlu dipesan: bila stok ditambah PO berjalan tidak cukup sampai barang baru datang (ditambah stok pengaman)."
+       "text": "Halaman \"Saran pesan ulang\" menghitung barang yang perlu dipesan: bila stok ditambah PO berjalan tidak cukup sampai barang baru datang (ditambah stok pengaman)."
       },
       {
        "type": "table",
@@ -4022,11 +4122,11 @@
        "head"
       ]
      },
-     "route": null,
+     "route": "/procurement/vendors?tab=prices",
      "body": [
       {
        "type": "p",
-       "text": "Tab \"Harga beli\" menampilkan harga terakhir per barang, harga sebelumnya, dan perubahannya (chip Naik, Turun, Hanya 1 harga). Nilai PO dan harga satuan juga tampil di detail PO."
+       "text": "Tab \"Harga beli\" di halaman \"Pemasok\" menampilkan harga terakhir per barang, harga sebelumnya, dan perubahannya (chip Naik, Turun, Hanya 1 harga). Nilai PO dan harga satuan juga tampil di detail PO."
       },
       {
        "type": "warning",
@@ -4669,7 +4769,10 @@
    "audience": {
     "permissions": [
      "accurate.batch.view",
-     "sales.master.manage"
+     "sales.master.manage",
+     "warehouse.accurate.sync",
+     "procurement.accurate.sync",
+     "accurate.write.request"
     ]
    },
    "route": "/data-accurate",

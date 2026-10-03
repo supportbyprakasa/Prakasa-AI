@@ -88,7 +88,7 @@ function windowFrom(now = new Date()) {
   return day > RECON_FROM ? day : RECON_FROM;
 }
 
-const reconLink = (direction, key) => `/warehouse?tab=recon&direction=${direction}&group=${encodeURIComponent(key)}`;
+const reconLink = (direction, key) => `/warehouse/stock?tab=recon&direction=${direction}&group=${encodeURIComponent(key)}`;
 
 // WHERE fragment of a list filter (alias g = wh_recon_groups). A difference the
 // mirror cannot judge yet is 'waiting', not one of the problem statuses.

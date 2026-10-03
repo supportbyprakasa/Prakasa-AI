@@ -3,7 +3,7 @@
 // prices. The counted quantity of a movement line is the user's: the AI fills
 // what a document says (code, product, unit, batch, expiry), the user counts.
 const MOVEMENT_FILE = 'pages/warehouse/WarehouseMovementForm.jsx';
-const DASHBOARD_FILE = 'pages/warehouse/WarehouseDashboard.jsx';
+const DASHBOARD_FILE = 'pages/warehouse/WarehouseOperations.jsx';
 const MOVEMENT_FIELDS = {
   ai: ['movementDate', 'referenceNo', 'party', 'notes',
     'items', 'items.sku', 'items.product', 'items.unit', 'items.batchNo', 'items.expiresOn', 'items.location', 'items.note'],
@@ -33,13 +33,13 @@ module.exports = [
     note: `${MOVEMENT_NOTE} Tujuan: cabang atau nama pelanggan, tanpa alamat. Hanya draft atau pergerakan yang diminta revisi yang bisa diubah.`,
   },
   {
-    id: 'warehouse-checklist', title: 'Buat checklist harian', route: '/warehouse?tab=checklist&baru=1', permission: 'warehouse.checklist.manage',
+    id: 'warehouse-checklist', title: 'Buat checklist harian', route: '/warehouse/operations?tab=checklist&baru=1', permission: 'warehouse.checklist.manage',
     file: DASHBOARD_FILE,
     fields: { ai: ['checklistDate', 'title', 'items'], userOnly: [] },
     note: 'Item ditulis satu per baris. Mencentang item dan menyelesaikan checklist dilakukan pengguna.',
   },
   {
-    id: 'warehouse-incident', title: 'Laporkan insiden', route: '/warehouse?tab=incidents&baru=1', permission: 'warehouse.incident.manage',
+    id: 'warehouse-incident', title: 'Laporkan insiden', route: '/warehouse/operations?tab=incidents&baru=1', permission: 'warehouse.incident.manage',
     file: DASHBOARD_FILE,
     fields: { ai: ['incidentDate', 'category', 'severity', 'description'], userOnly: [] },
     note: 'Menyelesaikan atau menutup insiden (status dan resolusinya) adalah keputusan pengguna.',

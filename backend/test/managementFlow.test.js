@@ -302,9 +302,9 @@ test('purchaseFlow: LATE_FROM bound first, cohort in the period, receipts not re
   assert.ok(out.steps.every((s) => s.medianDays === null && s.count === 0));
   assert.equal(out.onTime.pct, null);
   assert.deepEqual(out.stuck, [
-    { state: 'late', count: 2, link: '/procurement?tab=orders&state=late' },
-    { state: 'partial', count: 1, link: '/procurement?tab=orders&state=partial' },
-    { state: 'legacy', count: 90, link: '/procurement?tab=orders&state=legacy' },
+    { state: 'late', count: 2, link: '/procurement/orders?state=late' },
+    { state: 'partial', count: 1, link: '/procurement/orders?state=partial' },
+    { state: 'legacy', count: 90, link: '/procurement/orders?state=legacy' },
   ]);
 });
 

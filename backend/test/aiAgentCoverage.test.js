@@ -59,7 +59,12 @@ const PRIVATE = { visibility: 'private' };
 // A page some roles open for a part no agent tool reads. Each entry is a decision, with its reason.
 // Empty since Wave C2: pergerakan_gudang reads the movement documents, so a role that opens Warehouse
 // for them alone (Procurement Member, Retail Commerce) holds a tool that serves the page.
-const NO_TOOL_FOR_ROLE = {};
+const NO_TOOL_FOR_ROLE = {
+  // Data Accurate for a proposer only (accurate.write.request without the batch
+  // view, owner 3 Oct 2026): the page is their own requests, which they type
+  // themselves; no agent tool reads a batch for them.
+  'accurate-batches': (role) => !role.permissions.some((code) => ['accurate.batch.view', 'sales.master.manage'].includes(code)),
+};
 
 test('a pending page shows only generic starters (the rule still holds, with nothing pending today)', () => {
   for (const entry of registry.TOOLS) {

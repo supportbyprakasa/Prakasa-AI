@@ -1245,7 +1245,7 @@ Kinerja penjualan marketplace (Shopee, Tokopedia, dan lainnya) dari data Accurat
 
 <a id="retail-commerce-membaca"></a>
 
-### Membaca halaman Retail Commerce
+### Membaca halaman Kinerja marketplace
 
 | Bagian | Isinya |
 | --- | --- |
@@ -1262,6 +1262,12 @@ Kinerja penjualan marketplace (Shopee, Tokopedia, dan lainnya) dari data Accurat
 >
 > - Klik "Muat ulang" untuk angka terbaru.
 > - Pelanggan, leads, dan Data Sales kanal ritel ada di menu Sales.
+
+<a id="retail-commerce-pesanan-piutang"></a>
+
+### Pesanan & piutang
+
+Halaman "Pesanan & piutang" memuat dua daftar: tab "SO belum dikirim" (SO marketplace yang belum terkirim penuh, dari yang tertua) dan tab "Faktur belum cair" (faktur rekap marketplace yang belum dibayar, dari jatuh tempo terlama). Keduanya dari data Accurate yang sudah disetujui dan bisa diekspor.
 
 <a id="marketing"></a>
 
@@ -1328,22 +1334,21 @@ Mencatat barang masuk dan keluar dengan approval Warehouse Supervisor, melihat s
 
 **Menu:** `/warehouse`
 
-<a id="warehouse-tab"></a>
+<a id="warehouse-halaman"></a>
 
-### Tab di halaman Warehouse
+### Halaman di menu Warehouse
 
-| Tab | Isinya |
+| Halaman | Isinya |
 | --- | --- |
-| Hari ini | Ringkasan hari ini. |
+| Hari ini | Ringkasan hari ini: barang datang, SO yang harus dikirim, dan yang perlu perhatian. |
+| Pergerakan barang | Tab Barang masuk, Barang keluar, Approval Supervisor, dan Riwayat transaksi: pergerakan yang dicatat tim gudang. |
+| Stok | Tab Stok (per gudang dari Accurate), Dokumen Accurate (surat jalan, penerimaan, pindah gudang, penyesuaian), dan Cocokkan Accurate. |
 | Jadwal kirim | SO yang harus dikirim, apakah stoknya cukup. |
-| Stok | Stok dari Accurate per gudang. |
-| Dokumen Accurate | Surat jalan, penerimaan, pindah gudang, penyesuaian. |
-| Barang masuk / Barang keluar / Riwayat transaksi | Pergerakan yang dicatat tim gudang. |
-| Cocokkan Accurate | Pergerakan aplikasi dibandingkan dengan dokumen Accurate. |
-| Approval Supervisor | Pergerakan menunggu keputusan (Supervisor). |
-| Checklist / Insiden | Checklist harian dan laporan kejadian. |
+| Checklist & insiden | Checklist harian dan laporan kejadian. |
 
-> **Catatan:** Anda hanya melihat tab yang sesuai akses Anda. Bila membuka tab lain lewat tautan, aplikasi menampilkan tab yang boleh Anda buka.
+> **Catatan:** Batch stok dan dokumen gudang dari Accurate, beserta tombol "Tarik sekarang", ada di "Data Accurate" (grup Manajemen).
+
+> **Catatan:** Anda hanya melihat halaman dan tab yang sesuai akses Anda. Tautan lama ke tab di halaman Warehouse (misalnya dari notifikasi) otomatis membuka halaman barunya.
 
 <a id="warehouse-catat-pergerakan"></a>
 
@@ -1379,7 +1384,7 @@ Mencatat barang masuk dan keluar dengan approval Warehouse Supervisor, melihat s
 
 ### Menyetujui pergerakan barang *(Khusus Supervisor & Head)*
 
-1. Buka tab "Approval Supervisor", atau notifikasi approval (juga dikirim lewat email).
+1. Buka "Pergerakan barang" → tab "Approval Supervisor", atau notifikasi approval (juga dikirim lewat email).
 2. Periksa barang, jumlah, dan nomor referensi.
 3. Klik "Setujui", "Minta revisi" (catatan wajib), atau "Tolak" (catatan wajib).
 
@@ -1397,7 +1402,7 @@ Mencatat barang masuk dan keluar dengan approval Warehouse Supervisor, melihat s
 
 ### Stok dari Accurate
 
-Tab "Stok" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah disetujui Supervisor atau Head Warehouse.
+Halaman "Stok" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah disetujui Supervisor atau Head Warehouse. Tab "Dokumen Accurate" di halaman yang sama memuat surat jalan, penerimaan, pindah gudang, dan penyesuaian.
 
 | Status | Artinya |
 | --- | --- |
@@ -1416,7 +1421,7 @@ Tab "Stok" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah d
 
 ### Cocokkan Accurate
 
-Tab "Cocokkan Accurate" membandingkan pergerakan di aplikasi dengan dokumen Accurate.
+Tab "Cocokkan Accurate" di halaman "Stok" membandingkan pergerakan di aplikasi dengan dokumen Accurate.
 
 | Status | Artinya |
 | --- | --- |
@@ -1438,6 +1443,12 @@ Tab "Cocokkan Accurate" membandingkan pergerakan di aplikasi dengan dokumen Accu
 3. Bila selisih memang wajar, klik "Tandai sudah dijelaskan" dan tulis alasannya (minimal 5 karakter).
 
 > **Perhatian:** Penjelasan harus diberikan oleh Supervisor/Head yang tidak mencatat pergerakan itu sendiri.
+
+<a id="warehouse-jadwal-kirim"></a>
+
+### Jadwal kirim
+
+Halaman "Jadwal kirim" menampilkan SO dari Accurate yang harus dikirim hari ini atau sudah lewat, dan apakah stoknya cukup. Saring dengan chip status dan cari nomor SO.
 
 <a id="warehouse-checklist-insiden"></a>
 
@@ -1469,13 +1480,18 @@ PO, pemasok, dan barang datang dari Accurate, setelah tarikan disetujui Supervis
 
 <a id="procurement-hari-ini"></a>
 
-### Hari ini, Purchase order, dan Pemasok
+### Halaman di menu Procurement
 
-| Tab | Isinya |
+| Halaman | Isinya |
 | --- | --- |
 | Hari ini | Barang datang hari ini, dijadwalkan datang hari ini & besok, dan yang perlu perhatian. |
 | Purchase order | Semua PO dengan status penerimaan barangnya. |
-| Pemasok | Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari. |
+| Pemasok | Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari; tab "Harga beli" untuk yang berwenang. |
+| Saran pesan ulang | Barang yang perlu dipesan (Supervisor/Head). |
+
+> **Catatan:** Batch PO dan pemasok dari Accurate, beserta tombol "Tarik sekarang", ada di "Data Accurate" (grup Manajemen).
+
+> **Catatan:** Tautan lama ke tab di halaman Procurement (misalnya dari eskalasi) otomatis membuka halaman barunya.
 
 **Status PO**
 
@@ -1490,11 +1506,23 @@ PO, pemasok, dan barang datang dari Accurate, setelah tarikan disetujui Supervis
 
 > **Catatan:** Kontak, alamat, NPWP, dan rekening pemasok tidak diambil dari Accurate; lihat langsung di Accurate.
 
+<a id="procurement-purchase-order"></a>
+
+### Purchase order
+
+Halaman "Purchase order" memuat semua PO dengan status penerimaan barangnya. Saring dengan chip status; klik baris untuk rincian baris barang dan penerimaannya.
+
+<a id="procurement-pemasok"></a>
+
+### Pemasok
+
+Halaman "Pemasok" menampilkan kinerja tiap pemasok. Klik baris untuk PO terakhirnya; dari sini pemasok baru atau perubahan pemasok bisa diajukan ke Accurate (lihat bab Data Accurate).
+
 <a id="procurement-saran-pesan"></a>
 
 ### Saran pesan ulang *(Khusus Supervisor & Head)*
 
-Tab "Saran pesan ulang" menghitung barang yang perlu dipesan: bila stok ditambah PO berjalan tidak cukup sampai barang baru datang (ditambah stok pengaman).
+Halaman "Saran pesan ulang" menghitung barang yang perlu dipesan: bila stok ditambah PO berjalan tidak cukup sampai barang baru datang (ditambah stok pengaman).
 
 | Label | Artinya |
 | --- | --- |
@@ -1511,7 +1539,7 @@ Tab "Saran pesan ulang" menghitung barang yang perlu dipesan: bila stok ditambah
 
 ### Harga beli *(Khusus Supervisor & Head)*
 
-Tab "Harga beli" menampilkan harga terakhir per barang, harga sebelumnya, dan perubahannya (chip Naik, Turun, Hanya 1 harga). Nilai PO dan harga satuan juga tampil di detail PO.
+Tab "Harga beli" di halaman "Pemasok" menampilkan harga terakhir per barang, harga sebelumnya, dan perubahannya (chip Naik, Turun, Hanya 1 harga). Nilai PO dan harga satuan juga tampil di detail PO.
 
 > **Perhatian:** Harga beli rahasia. Jangan meneruskannya ke pihak yang tidak berwenang.
 

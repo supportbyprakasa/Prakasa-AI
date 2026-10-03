@@ -16,5 +16,11 @@
   "source": "frontend/src/pages/marketing/MarketingInsights.jsx:41",
   "name": "'Channel'",
   "value": "(r) => (r.id === NO_CHANNEL || r.id === 'Export' ? <Translate>{r.channel}</Translate> : r.channel)"
+ },
+ {
+  "kind": "grid-column",
+  "source": "frontend/src/pages/warehouse/WarehouseOperations.jsx:286",
+  "name": "'Nomor'",
+  "value": "(row) => `#${row.id}`"
  }
 ]

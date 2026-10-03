@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useId, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import api from '../../api/client';
-import Banner from '../../components/Banner';
 import Button from '../../components/Button';
 import DateInput from '../../components/DateInput';
 import EmptyState from '../../components/EmptyState';
@@ -22,63 +20,35 @@ import { useAuth } from '../../context/AuthContext';
 import { defineAIForm, f } from '../../components/ai/aiFormFields';
 import useOpenFromUrl from '../../components/ai/useOpenFromUrl';
 import usePrakasaAIForm from '../../components/ai/usePrakasaAIForm';
-import MovementList from './WarehouseMovements';
-import WarehouseStock from './WarehouseStock';
-import WarehouseToday from './WarehouseToday';
-import WarehouseShipping from './WarehouseShipping';
-import WarehouseAccurateDocs from './WarehouseAccurateDocs';
-import WarehouseRecon from './WarehouseRecon';
-import { AccurateBatchList } from '../sales/SalesAccurateBatch';
 import { todayLocal } from './warehouseMovementModel';
 import { dateOnly, dayText } from './warehouseStockModel';
+import { DeniedTabBanner, NoAccess, useInnerTabs } from './WarehousePages';
 import './warehouse-movements.css';
 import { Translate } from '../../i18n/NoTranslate';
 
+// /warehouse/operations — the daily checklist and incident reports of the
+// warehouse team (owner, 3 Oct 2026: a page of its own, no longer tabs of
+// /warehouse). ?tab=checklist|incidents, and &baru=1 opens the tab's create
+// dialog (a link, or Prakasa AI's buka_halaman). It only opens.
 const TABS = [
-  // From approved Accurate data: the day at a glance, first for whoever may see stock.
-  { k: 'today', l: 'Hari ini', permission: 'warehouse.stock.view' },
-  { k: 'shipping', l: 'Jadwal kirim', permission: 'warehouse.stock.view' },
-  { k: 'inbound', l: 'Barang masuk', permission: 'warehouse.movement.view' },
-  { k: 'outbound', l: 'Barang keluar', permission: 'warehouse.movement.view' },
-  { k: 'stock', l: 'Stok', permission: 'warehouse.stock.view' },
-  { k: 'documents', l: 'Dokumen Accurate', permission: 'warehouse.stock.view' },
-  { k: 'recon', l: 'Cocokkan Accurate', permission: 'warehouse.recon.view' },
-  { k: 'approval', l: 'Approval Supervisor', permission: 'warehouse.movement.approve' },
-  { k: 'history', l: 'Riwayat transaksi', permission: 'warehouse.movement.view' },
   { k: 'checklist', l: 'Checklist', permission: 'warehouse.checklist.view' },
   { k: 'incidents', l: 'Insiden', permission: 'warehouse.incident.view' },
-  // Warehouse batches are decided by the Warehouse Supervisor or Head.
-  { k: 'accurate', l: 'Data Accurate', permission: ['accurate.batch.view', 'warehouse.accurate.sync'] },
 ];
 
 const errorMessage = (error, fallback) => error.response?.data?.error?.message || fallback;
 
-export default function WarehouseDashboard() {
+export default function WarehouseOperationsPage() {
   const { user } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
   const permissions = user?.permissions || [];
-  const can = (code) => (Array.isArray(code) ? code.some((c) => permissions.includes(c)) : permissions.includes(code));
-  const tabs = TABS.filter((entry) => can(entry.permission));
-  const requested = searchParams.get('tab');
-  const tab = tabs.some((entry) => entry.k === requested) ? requested : tabs[0]?.k;
-  // A link to a tab this user may not open (e.g. from an escalation) says so.
-  const denied = requested && !tabs.some((entry) => entry.k === requested) ? TABS.find((entry) => entry.k === requested) : null;
+  const can = (code) => permissions.includes(code);
+  const { tabs, tab, denied, setTab } = useInnerTabs(TABS, permissions);
   // Which create dialog the header button opened (checklist, incidents).
   const [creating, setCreating] = useState('');
-  const setTab = (next) => {
-    setCreating('');
-    setSearchParams({ tab: next }, { replace: true });
-  };
-
-  // The one "create" action of the open tab sits in the page header (§3.1).
+  const changeTab = (next) => { setCreating(''); setTab(next); };
   const headerAction = {
-    inbound: can('warehouse.movement.create') ? <Button icon="add" to="/warehouse/movements/inbound/new">Buat barang masuk</Button> : null,
-    outbound: can('warehouse.movement.create') ? <Button icon="add" to="/warehouse/movements/outbound/new">Buat barang keluar</Button> : null,
     checklist: can('warehouse.checklist.manage') ? <Button icon="add" onClick={() => setCreating('checklist')}>Buat checklist</Button> : null,
     incidents: can('warehouse.incident.manage') ? <Button icon="add" onClick={() => setCreating('incidents')}>Laporkan insiden</Button> : null,
   }[tab] || null;
-  // /warehouse?tab=checklist&baru=1 and ?tab=incidents&baru=1 open the tab's
-  // create dialog (a link, or Prakasa AI's buka_halaman). It only opens.
   useOpenFromUrl('baru', () => {
     if (tab === 'checklist' && can('warehouse.checklist.manage')) setCreating('checklist');
     else if (tab === 'incidents' && can('warehouse.incident.manage')) setCreating('incidents');
@@ -87,42 +57,17 @@ export default function WarehouseDashboard() {
 
   return (
     <Page>
-      <PageHeader
-        title="Warehouse"
-        description="Barang masuk dan keluar, stok dan dokumen dari Accurate, checklist, serta insiden gudang. Hanya jumlah barang, tanpa harga."
-        actions={headerAction}
-      />
-      {tabs.length ? <TabBar tabs={tabs} value={tab} onChange={setTab} label="Menu Warehouse" idPrefix="wh-tab" panelId="wh-tabpanel" /> : null}
-      {denied ? (
-        <Banner tone="warning" title={`Anda tidak punya akses ke tab ${denied.l}`}>Yang ditampilkan adalah tab lain yang boleh Anda buka.</Banner>
-      ) : null}
-      <div id="wh-tabpanel" role="tabpanel" aria-labelledby={tab ? `wh-tab-${tab}` : undefined}>
-        {!tab && <EmptyState title="Belum ada akses" description="Anda belum memiliki akses ke menu Warehouse." />}
-        {['inbound', 'outbound', 'approval', 'history'].includes(tab) && <MovementList key={tab} mode={tab} />}
-        {tab === 'checklist' && (
+      <PageHeader eyebrow="Warehouse" title="Checklist & insiden" description="Checklist harian gudang dan laporan kejadian: kerusakan, kehilangan, keterlambatan." actions={headerAction} />
+      {tabs.length ? <TabBar tabs={tabs} value={tab} onChange={changeTab} label="Checklist & insiden" idPrefix="wh-ops-tab" panelId="wh-ops-panel" /> : null}
+      <DeniedTabBanner denied={denied} />
+      <div id="wh-ops-panel" role="tabpanel" aria-labelledby={tab ? `wh-ops-tab-${tab}` : undefined}>
+        {!tab ? <NoAccess module="checklist dan insiden" /> : null}
+        {tab === 'checklist' ? (
           <ChecklistTab createOpen={creating === 'checklist'} onCreateClose={() => setCreating('')} canManage={can('warehouse.checklist.manage')} />
-        )}
-        {tab === 'incidents' && (
-          <IncidentsTab
-            canManage={can('warehouse.incident.manage')}
-            createOpen={creating === 'incidents'}
-            onCreateClose={() => setCreating('')}
-          />
-        )}
-        {tab === 'today' && <WarehouseToday />}
-        {tab === 'shipping' && <WarehouseShipping />}
-        {tab === 'stock' && <WarehouseStock />}
-        {tab === 'documents' && <WarehouseAccurateDocs />}
-        {tab === 'recon' && <WarehouseRecon />}
-        {tab === 'accurate' && (
-          <AccurateBatchList
-            detailBase="/data-accurate"
-            division="warehouse"
-            canPull={can('warehouse.accurate.sync')}
-            syncEndpoint="/warehouse/accurate/sync"
-            note="Stok dari Accurate baru dipakai di aplikasi setelah disetujui Supervisor atau Head Warehouse. Hanya jumlah barang — tanpa harga atau biaya."
-          />
-        )}
+        ) : null}
+        {tab === 'incidents' ? (
+          <IncidentsTab canManage={can('warehouse.incident.manage')} createOpen={creating === 'incidents'} onCreateClose={() => setCreating('')} />
+        ) : null}
       </div>
     </Page>
   );

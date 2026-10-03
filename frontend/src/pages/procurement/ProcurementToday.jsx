@@ -96,12 +96,12 @@ export default function ProcurementToday({ status, canSeeReorder = false }) {
         <h2 id="pc-today-attention" className="pw-title-section">Perlu perhatian</h2>
         <div className="pw-text-helper">{formatDate(day.date)} · dari Accurate, setelah disetujui Head Procurement.</div>
         <div className="pc-stats">
-          {stat('PO terlambat', count(day.attention.late, 'PO', '/procurement?tab=orders&state=late'))}
-          {stat('Dijadwalkan datang 7 hari', count(day.attention.dueSoon, 'PO', '/procurement?tab=orders&state=open'))}
+          {stat('PO terlambat', count(day.attention.late, 'PO', '/procurement/orders?state=late'))}
+          {stat('Dijadwalkan datang 7 hari', count(day.attention.dueSoon, 'PO', '/procurement/orders?state=open'))}
           {stat('PO tanpa tgl datang di Accurate', count(day.attention.noExpectedDate, 'PO'))}
-          {stat('PO lama belum ditutup', count(day.attention.legacy, 'PO', '/procurement?tab=orders&state=legacy'))}
-          {canSeeReorder ? stat('Perlu dipesan', reorderCount(reorder, 'total', '/procurement?tab=reorder')) : null}
-          {canSeeReorder ? stat('Habis sebelum barang datang', reorderCount(reorder, 'critical', '/procurement?tab=reorder&urgency=critical', { timed: true })) : null}
+          {stat('PO lama belum ditutup', count(day.attention.legacy, 'PO', '/procurement/orders?state=legacy'))}
+          {canSeeReorder ? stat('Perlu dipesan', reorderCount(reorder, 'total', '/procurement/reorder')) : null}
+          {canSeeReorder ? stat('Habis sebelum barang datang', reorderCount(reorder, 'critical', '/procurement/reorder?urgency=critical', { timed: true })) : null}
         </div>
       </section>
       <DataGrid

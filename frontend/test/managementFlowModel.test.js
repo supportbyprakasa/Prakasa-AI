@@ -43,10 +43,10 @@ test('a card links only to a page the user may open: no Umur piutang for the Man
     assert.equal(hasRouteAccess('/sales/orders', perms(key)), false, key);
     assert.equal(allowedLink('/escalations?source=flow_do_not_invoiced', perms(key)), '/escalations?source=flow_do_not_invoiced', key);
     assert.equal(allowedLink(PURCHASE_TARGET_LINK, perms(key)), PURCHASE_TARGET_LINK, key);
-    assert.equal(allowedLink('/procurement?tab=orders&state=late', perms(key)), '/procurement?tab=orders&state=late', key);
+    assert.equal(allowedLink('/procurement/orders?state=late', perms(key)), '/procurement/orders?state=late', key);
   }
   assert.equal(allowedLink(RECEIVABLE_AGING_LINK, ['management_dashboard.view', 'sales.order.view']), RECEIVABLE_AGING_LINK);
-  assert.equal(allowedLink('/procurement?tab=orders&state=late', ['management_dashboard.view']), null, 'no procurement.view, no link');
+  assert.equal(allowedLink('/procurement/orders?state=late', ['management_dashboard.view']), null, 'no procurement.view, no link');
   for (const bad of [null, '', 'https://evil.test/x', '//evil.test/x', 'javascript:alert(1)']) assert.equal(allowedLink(bad, perms('management_office.head')), null, String(bad));
 });
 

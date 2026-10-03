@@ -140,5 +140,10 @@
  "$1 $2 sudah ada di Accurate ($3). Ajukan perubahan, bukan data baru.": "$1 $2 already exists in Accurate ($3). Request a change, not a new record.",
  "$1 ini sudah punya pengajuan #$2 yang belum selesai.": "This $1 already has an open request #$2.",
  "Kolom: $1": "Fields: $1",
- "Matrix approval \"Pengajuan ke Accurate\" untuk $1 belum ada (migrasi 145), jadi pengajuan belum bisa dibuat.": "The \"Requests to Accurate\" approval matrix for $1 is missing (migration 145), so the request cannot be created."
+ "Matrix approval \"Pengajuan ke Accurate\" untuk $1 belum ada (migrasi 145), jadi pengajuan belum bisa dibuat.": "The \"Requests to Accurate\" approval matrix for $1 is missing (migration 145), so the request cannot be created.",
+ "Barang datang hari ini, dijadwalkan datang, dan yang perlu perhatian. $1": "Goods arriving today, scheduled to arrive, and what needs attention. $1",
+ "Semua PO dengan status penerimaan barangnya. $1": "Every PO with its receiving status. $1",
+ "Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari. $1": "Vendor performance: open POs, late ones, 90-day fill rate and on-time rate. $1",
+ "Barang yang perlu dipesan: stok ditambah PO berjalan tidak cukup sampai barang baru datang. $1": "Items to reorder: stock plus open POs will not last until new goods arrive. $1",
+ "Anda belum memiliki akses ke $1.": "You do not have access to $1 yet."
 }

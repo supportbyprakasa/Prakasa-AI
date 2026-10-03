@@ -97,14 +97,19 @@ test('audience: permissions any-of, levels and role prefixes', () => {
 test('a Sales Member reads Sales, not Finance, management or administration', () => {
   const ids = chapterIds(standardUser('sales.member'));
   for (const id of ['mulai', 'kerja-harian', 'dokumen', 'prakasa-ai', 'sales', 'glosarium', 'bantuan']) assert.ok(ids.includes(id), id);
-  for (const id of ['finance', 'warehouse', 'procurement', 'people-culture', 'it-aset', 'manajemen', 'dashboard-divisi', 'data-accurate']) {
+  for (const id of ['finance', 'warehouse', 'procurement', 'people-culture', 'it-aset', 'manajemen', 'dashboard-divisi']) {
     assert.ok(!ids.includes(id), `sales.member must not see ${id}`);
   }
+  // Data Accurate: a member proposes customers to Accurate (owner, 3 Oct 2026)
+  // and reads that section; deciding batches stays the Supervisor's/Head's.
+  assert.ok(ids.includes('data-accurate'));
   assert.ok(!ids.some((id) => chapter(id).scope === 'admin'), 'no admin chapter');
   // Payment requests yes (every division raises them); Finance's own processing no.
   const anchors = sectionAnchors(standardUser('sales.member'));
   assert.ok(anchors.includes('kerja-harian-pengajuan-pembayaran'));
   assert.ok(!anchors.some((anchor) => anchor.startsWith('kerja-harian-pengajuan-proses')));
+  assert.ok(anchors.includes('data-accurate-pengajuan-ke-accurate'));
+  assert.ok(!anchors.includes('data-accurate-menyetujui'));
 });
 
 test('a Sales Head reads the Accurate approval and the division dashboard', () => {

@@ -12,8 +12,8 @@ import { AccurateCustomerReconciliation, AccurateWriteRequestList } from './Accu
 // Supervisor/Head, never sent from here.
 const VIEW_PARAM = { quality: 'perlu-dibereskan', requests: 'pengajuan', reconciliation: 'selisih' };
 const ALL_VIEWS = [
-  { k: 'batches', l: 'Batch', permission: ['accurate.batch.view', 'sales.master.manage'] },
-  { k: 'quality', l: 'Perlu dibereskan di Accurate', permission: ['accurate.batch.view', 'sales.master.manage'] },
+  { k: 'batches', l: 'Batch', permission: ['accurate.batch.view', 'sales.master.manage', 'warehouse.accurate.sync', 'procurement.accurate.sync'] },
+  { k: 'quality', l: 'Perlu dibereskan di Accurate', permission: ['accurate.batch.view', 'sales.master.manage', 'warehouse.accurate.sync', 'procurement.accurate.sync'] },
   { k: 'requests', l: 'Pengajuan ke Accurate', permission: ['accurate.write.request', 'accurate.batch.view'] },
   { k: 'reconciliation', l: 'Selisih pelanggan', permission: ['accurate.write.request', 'accurate.batch.view'] },
 ];
@@ -24,7 +24,12 @@ const ALL_VIEWS = [
 export default function DataAccurate() {
   const { user } = useAuth();
   const permissions = user?.permissions || [];
-  const canPull = permissions.includes('sales.master.manage');
+  // "Tarik sekarang" for the one scope this person may pull (owner, 3 Oct 2026:
+  // the division pages lost their Data Accurate tab; the pull lives here).
+  const pull = permissions.includes('sales.master.manage') ? { endpoint: '/sales/accurate/sync' }
+    : permissions.includes('warehouse.accurate.sync') ? { endpoint: '/warehouse/accurate/sync' }
+      : permissions.includes('procurement.accurate.sync') ? { endpoint: '/procurement/accurate/sync' }
+        : null;
   const views = ALL_VIEWS.filter((v) => v.permission.some((p) => permissions.includes(p)));
   const [params, setParams] = useSearchParams();
   const fromUrl = Object.keys(VIEW_PARAM).find((k) => VIEW_PARAM[k] === params.get('view')) || 'batches';
@@ -46,7 +51,7 @@ export default function DataAccurate() {
         {view === 'quality' ? <AccurateQuality /> : null}
         {view === 'requests' ? <AccurateWriteRequestList /> : null}
         {view === 'reconciliation' ? <AccurateCustomerReconciliation /> : null}
-        {view === 'batches' ? <AccurateBatchList detailBase="/data-accurate" canPull={canPull} /> : null}
+        {view === 'batches' ? <AccurateBatchList detailBase="/data-accurate" canPull={Boolean(pull)} syncEndpoint={pull?.endpoint} /> : null}
       </div>
     </Page>
   );

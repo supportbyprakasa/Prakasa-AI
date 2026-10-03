@@ -1219,11 +1219,20 @@ const HANDBOOK = [
     sections: [
       {
         id: 'membaca',
-        title: 'Membaca halaman Retail Commerce',
+        title: 'Membaca halaman Kinerja marketplace',
+        route: '/retail-commerce',
         body: [
           { type: 'table', columns: ['Bagian', 'Isinya'], rows: [['Angka utama', 'Omzet bulan ini dan bulan lalu, pesanan, rata-rata per faktur, retur, piutang marketplace belum cair, SO belum dikirim.'], ['Porsi omzet per platform', 'Sumbangan tiap marketplace.'], ['Perbandingan platform', 'Omzet 12 bulan, faktur, SO, rasio retur, dan piutang per platform.'], ['Grafik capaian bulanan & Tren 12 bulan', 'Perjalanan capaian dari bulan ke bulan.'], ['Produk terlaris', 'Pilih "Bulan" untuk melihat bulan lain.'], ['SO belum dikirim / Faktur belum cair', 'Yang perlu ditindaklanjuti.']] },
           { type: 'note', text: 'Marketplace ditagih dengan satu faktur rekap per platform setiap bulan. Angka baru muncul setelah Supervisor atau Head Sales/Retail Commerce menyetujui batch data Accurate pertama.' },
           { type: 'tips', items: ['Klik "Muat ulang" untuk angka terbaru.', 'Pelanggan, leads, dan Data Sales kanal ritel ada di menu Sales.'] },
+        ],
+      },
+      {
+        id: 'pesanan-piutang',
+        title: 'Pesanan & piutang',
+        route: '/retail-commerce/pending',
+        body: [
+          { type: 'p', text: 'Halaman "Pesanan & piutang" memuat dua daftar: tab "SO belum dikirim" (SO marketplace yang belum terkirim penuh, dari yang tertua) dan tab "Faktur belum cair" (faktur rekap marketplace yang belum dibayar, dari jatuh tempo terlama). Keduanya dari data Accurate yang sudah disetujui dan bisa diekspor.' },
         ],
       },
     ],
@@ -1294,16 +1303,18 @@ const HANDBOOK = [
     summary: 'Mencatat barang masuk dan keluar dengan approval Warehouse Supervisor, melihat stok dari Accurate, mencocokkan catatan gudang dengan Accurate, serta checklist dan insiden gudang.',
     sections: [
       {
-        id: 'tab',
-        title: 'Tab di halaman Warehouse',
+        id: 'halaman',
+        title: 'Halaman di menu Warehouse',
         body: [
-          { type: 'table', columns: ['Tab', 'Isinya'], rows: [['Hari ini', 'Ringkasan hari ini.'], ['Jadwal kirim', 'SO yang harus dikirim, apakah stoknya cukup.'], ['Stok', 'Stok dari Accurate per gudang.'], ['Dokumen Accurate', 'Surat jalan, penerimaan, pindah gudang, penyesuaian.'], ['Barang masuk / Barang keluar / Riwayat transaksi', 'Pergerakan yang dicatat tim gudang.'], ['Cocokkan Accurate', 'Pergerakan aplikasi dibandingkan dengan dokumen Accurate.'], ['Approval Supervisor', 'Pergerakan menunggu keputusan (Supervisor).'], ['Checklist / Insiden', 'Checklist harian dan laporan kejadian.']] },
-          { type: 'note', text: 'Anda hanya melihat tab yang sesuai akses Anda. Bila membuka tab lain lewat tautan, aplikasi menampilkan tab yang boleh Anda buka.' },
+          { type: 'table', columns: ['Halaman', 'Isinya'], rows: [['Hari ini', 'Ringkasan hari ini: barang datang, SO yang harus dikirim, dan yang perlu perhatian.'], ['Pergerakan barang', 'Tab Barang masuk, Barang keluar, Approval Supervisor, dan Riwayat transaksi: pergerakan yang dicatat tim gudang.'], ['Stok', 'Tab Stok (per gudang dari Accurate), Dokumen Accurate (surat jalan, penerimaan, pindah gudang, penyesuaian), dan Cocokkan Accurate.'], ['Jadwal kirim', 'SO yang harus dikirim, apakah stoknya cukup.'], ['Checklist & insiden', 'Checklist harian dan laporan kejadian.']] },
+          { type: 'note', text: 'Batch stok dan dokumen gudang dari Accurate, beserta tombol "Tarik sekarang", ada di "Data Accurate" (grup Manajemen).' },
+          { type: 'note', text: 'Anda hanya melihat halaman dan tab yang sesuai akses Anda. Tautan lama ke tab di halaman Warehouse (misalnya dari notifikasi) otomatis membuka halaman barunya.' },
         ],
       },
       {
         id: 'catat-pergerakan',
         title: 'Mencatat barang masuk atau keluar',
+        route: '/warehouse/movements',
         audience: { permissions: ['warehouse.movement.create'] },
         body: [
           {
@@ -1330,12 +1341,13 @@ const HANDBOOK = [
       {
         id: 'approval-pergerakan',
         title: 'Menyetujui pergerakan barang',
+        route: '/warehouse/movements?tab=approval',
         audience: { permissions: ['warehouse.movement.approve'], levels: SUP },
         body: [
           {
             type: 'steps',
             items: [
-              'Buka tab "Approval Supervisor", atau notifikasi approval (juga dikirim lewat email).',
+              'Buka "Pergerakan barang" → tab "Approval Supervisor", atau notifikasi approval (juga dikirim lewat email).',
               'Periksa barang, jumlah, dan nomor referensi.',
               'Klik "Setujui", "Minta revisi" (catatan wajib), atau "Tolak" (catatan wajib).',
             ],
@@ -1354,9 +1366,10 @@ const HANDBOOK = [
       {
         id: 'stok',
         title: 'Stok dari Accurate',
+        route: '/warehouse/stock',
         audience: { permissions: ['warehouse.stock.view'] },
         body: [
-          { type: 'p', text: 'Tab "Stok" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah disetujui Supervisor atau Head Warehouse.' },
+          { type: 'p', text: 'Halaman "Stok" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah disetujui Supervisor atau Head Warehouse. Tab "Dokumen Accurate" di halaman yang sama memuat surat jalan, penerimaan, pindah gudang, dan penyesuaian.' },
           { type: 'table', columns: ['Status', 'Artinya'], rows: [['Ada', 'Stok tersedia.'], ['Menipis', 'Di bawah batas minimum.'], ['Habis', 'Stok nol.'], ['Minus', 'Stok di bawah nol; perlu dibereskan di Accurate.']] },
           { type: 'tips', items: ['Klik barang untuk melihat "Kartu stok" dan "Riwayat stok".', 'Banner "Ada pembaruan stok menunggu persetujuan" berarti tarikan baru belum disetujui.', 'Di "Jadwal kirim", stok dibagi ke SO dengan janji kirim paling awal lebih dulu.'] },
         ],
@@ -1364,9 +1377,10 @@ const HANDBOOK = [
       {
         id: 'cocokkan',
         title: 'Cocokkan Accurate',
+        route: '/warehouse/stock?tab=recon',
         audience: { permissions: ['warehouse.recon.view'] },
         body: [
-          { type: 'p', text: 'Tab "Cocokkan Accurate" membandingkan pergerakan di aplikasi dengan dokumen Accurate.' },
+          { type: 'p', text: 'Tab "Cocokkan Accurate" di halaman "Stok" membandingkan pergerakan di aplikasi dengan dokumen Accurate.' },
           { type: 'table', columns: ['Status', 'Artinya'], rows: [['Cocok', 'Aplikasi dan Accurate sama.'], ['Selisih jumlah', 'Jumlahnya berbeda.'], ['Belum di Accurate', 'Ada di aplikasi, belum ada dokumen Accurate.'], ['Belum di aplikasi', 'Ada di Accurate, belum dicatat di aplikasi.'], ['Dijelaskan', 'Selisih sudah dijelaskan Supervisor/Head.'], ['Menunggu data Accurate', 'Tarikan berikutnya belum disetujui.']] },
           { type: 'note', text: 'Accurate hanya dibaca. Selisih diperbaiki di sumbernya: dokumen Accurate atau pergerakan di aplikasi.' },
         ],
@@ -1381,8 +1395,18 @@ const HANDBOOK = [
         ],
       },
       {
+        id: 'jadwal-kirim',
+        title: 'Jadwal kirim',
+        route: '/warehouse/shipping',
+        audience: { permissions: ['warehouse.stock.view'] },
+        body: [
+          { type: 'p', text: 'Halaman "Jadwal kirim" menampilkan SO dari Accurate yang harus dikirim hari ini atau sudah lewat, dan apakah stoknya cukup. Saring dengan chip status dan cari nomor SO.' },
+        ],
+      },
+      {
         id: 'checklist-insiden',
         title: 'Checklist harian dan insiden',
+        route: '/warehouse/operations',
         audience: { permissions: ['warehouse.checklist.manage', 'warehouse.incident.manage'] },
         body: [
           { type: 'steps', title: 'Checklist', items: ['Klik "Buat checklist".', 'Isi "Tanggal", "Judul", dan "Item" (satu item per baris).', 'Centang item yang sudah dikerjakan.'] },
@@ -1406,19 +1430,39 @@ const HANDBOOK = [
     sections: [
       {
         id: 'hari-ini',
-        title: 'Hari ini, Purchase order, dan Pemasok',
+        title: 'Halaman di menu Procurement',
+        route: '/procurement',
         body: [
-          { type: 'table', columns: ['Tab', 'Isinya'], rows: [['Hari ini', 'Barang datang hari ini, dijadwalkan datang hari ini & besok, dan yang perlu perhatian.'], ['Purchase order', 'Semua PO dengan status penerimaan barangnya.'], ['Pemasok', 'Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari.']] },
+          { type: 'table', columns: ['Halaman', 'Isinya'], rows: [['Hari ini', 'Barang datang hari ini, dijadwalkan datang hari ini & besok, dan yang perlu perhatian.'], ['Purchase order', 'Semua PO dengan status penerimaan barangnya.'], ['Pemasok', 'Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari; tab "Harga beli" untuk yang berwenang.'], ['Saran pesan ulang', 'Barang yang perlu dipesan (Supervisor/Head).']] },
+          { type: 'note', text: 'Batch PO dan pemasok dari Accurate, beserta tombol "Tarik sekarang", ada di "Data Accurate" (grup Manajemen).' },
+          { type: 'note', text: 'Tautan lama ke tab di halaman Procurement (misalnya dari eskalasi) otomatis membuka halaman barunya.' },
           { type: 'table', title: 'Status PO', columns: ['Status', 'Artinya'], rows: [['Menunggu barang', 'Belum ada barang diterima.'], ['Sebagian diterima', 'Baru sebagian datang.'], ['Terlambat', 'Lewat tanggal diharapkan datang.'], ['Diterima', 'Semua barang sudah datang.'], ['Ditutup', 'PO ditutup di Accurate.'], ['PO lama', 'PO lama yang tidak dihitung lagi.']] },
           { type: 'note', text: 'Kontak, alamat, NPWP, dan rekening pemasok tidak diambil dari Accurate; lihat langsung di Accurate.' },
         ],
       },
       {
+        id: 'purchase-order',
+        title: 'Purchase order',
+        route: '/procurement/orders',
+        body: [
+          { type: 'p', text: 'Halaman "Purchase order" memuat semua PO dengan status penerimaan barangnya. Saring dengan chip status; klik baris untuk rincian baris barang dan penerimaannya.' },
+        ],
+      },
+      {
+        id: 'pemasok',
+        title: 'Pemasok',
+        route: '/procurement/vendors',
+        body: [
+          { type: 'p', text: 'Halaman "Pemasok" menampilkan kinerja tiap pemasok. Klik baris untuk PO terakhirnya; dari sini pemasok baru atau perubahan pemasok bisa diajukan ke Accurate (lihat bab Data Accurate).' },
+        ],
+      },
+      {
         id: 'saran-pesan',
         title: 'Saran pesan ulang',
+        route: '/procurement/reorder',
         audience: { permissions: ['procurement.reorder.view'], levels: SUP },
         body: [
-          { type: 'p', text: 'Tab "Saran pesan ulang" menghitung barang yang perlu dipesan: bila stok ditambah PO berjalan tidak cukup sampai barang baru datang (ditambah stok pengaman).' },
+          { type: 'p', text: 'Halaman "Saran pesan ulang" menghitung barang yang perlu dipesan: bila stok ditambah PO berjalan tidak cukup sampai barang baru datang (ditambah stok pengaman).' },
           { type: 'table', columns: ['Label', 'Artinya'], rows: [['Habis sebelum barang datang', 'Paling mendesak.'], ['Pesan sekarang', 'Perlu dipesan sekarang.'], ['Habis, perlu dicek', 'Stok habis; periksa apakah masih dibeli rutin.']] },
           { type: 'tips', items: ['Klik barang untuk melihat keluar per hari, PO berjalan, waktu datang, dan stok pengaman.', 'Jumlah saran dibulatkan ke atas per satuan beli. Keputusan memesan tetap di tangan Anda, di Accurate.'] },
         ],
@@ -1426,9 +1470,10 @@ const HANDBOOK = [
       {
         id: 'harga-beli',
         title: 'Harga beli',
+        route: '/procurement/vendors?tab=prices',
         audience: { permissions: ['procurement.price.view'], levels: SUP },
         body: [
-          { type: 'p', text: 'Tab "Harga beli" menampilkan harga terakhir per barang, harga sebelumnya, dan perubahannya (chip Naik, Turun, Hanya 1 harga). Nilai PO dan harga satuan juga tampil di detail PO.' },
+          { type: 'p', text: 'Tab "Harga beli" di halaman "Pemasok" menampilkan harga terakhir per barang, harga sebelumnya, dan perubahannya (chip Naik, Turun, Hanya 1 harga). Nilai PO dan harga satuan juga tampil di detail PO.' },
           { type: 'warning', text: 'Harga beli rahasia. Jangan meneruskannya ke pihak yang tidak berwenang.' },
         ],
       },
@@ -1706,7 +1751,7 @@ const HANDBOOK = [
     icon: 'fact_check',
     scope: 'division',
     route: '/data-accurate',
-    audience: { permissions: ['accurate.batch.view', 'sales.master.manage'] },
+    audience: { permissions: ['accurate.batch.view', 'sales.master.manage', 'warehouse.accurate.sync', 'procurement.accurate.sync', 'accurate.write.request'] },
     who: 'Supervisor dan Head Sales, Retail Commerce, Warehouse, Procurement, dan Finance; Head Management Office memantau.',
     summary: 'Data dari Accurate ditarik otomatis setiap beberapa menit, tetapi baru dipakai di aplikasi setelah Supervisor atau Head divisinya menyetujui batch-nya. Aplikasi hanya membaca Accurate; tidak ada data Accurate yang diubah atau dihapus.',
     sections: [

@@ -6,7 +6,7 @@ import lazyPage from './lazyPage';
 import PageTrail from './PageTrail';
 import Sidebar, { useNavConfig } from './Sidebar';
 import { useAuth } from '../context/AuthContext';
-import { hasRouteAccess, pageTrail } from './navigation';
+import { hasRouteAccess, legacyRedirect, pageTrail } from './navigation';
 import { PrakasaAIToolProvider, usePrakasaAIToolContext } from '../context/PrakasaAIToolContext';
 import { PANEL_DEFAULT_WIDTH, clampPanelWidth, panelModeForWidth } from './ai/aiToolModel';
 import '../styles/layout.css';
@@ -46,7 +46,8 @@ function readWidth() {
 }
 
 function LayoutShell() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const legacy = legacyRedirect(pathname, search);
   const { user } = useAuth();
   const sections = useNavConfig();
   const ai = usePrakasaAIToolContext();
@@ -112,9 +113,12 @@ function LayoutShell() {
           <PageTrail trail={pageTrail(pathname, sections)} />
           <main id="konten" className="prakasa-layout__main" tabIndex={-1}>
             {/* Pages are lazy chunks (App.jsx): the shell stays while one loads. */}
-            {hasRouteAccess(pathname, user?.permissions)
-              ? <Suspense fallback={<LoadingState />}><Outlet /></Suspense>
-              : <Navigate to="/" replace />}
+            {/* An old /warehouse?tab=… address lands on the tab's own page first (navigation.js LEGACY_TABS). */}
+            {legacy
+              ? <Navigate to={legacy} replace />
+              : hasRouteAccess(pathname, user?.permissions)
+                ? <Suspense fallback={<LoadingState />}><Outlet /></Suspense>
+                : <Navigate to="/" replace />}
           </main>
         </div>
       </div>

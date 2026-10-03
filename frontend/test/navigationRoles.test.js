@@ -50,7 +50,13 @@ test('oversight belongs to Management Office, plus the division dashboard for He
 });
 
 test('a division only shows the modules a role can use', () => {
-  assert.deepEqual(itemsFor('warehouse.member', 'warehouse').map((item) => item.to), ['/warehouse']);
+  assert.deepEqual(itemsFor('warehouse.member', 'warehouse').map((item) => item.to), ['/warehouse', '/warehouse/movements', '/warehouse/stock', '/warehouse/shipping', '/warehouse/operations']);
+  // Readers of movements alone (Procurement, Retail Commerce) get that page only; the day view needs stock.
+  assert.deepEqual(itemsFor('procurement.member', 'warehouse').map((item) => item.to), ['/warehouse/movements']);
+  assert.deepEqual(itemsFor('retail_commerce.member', 'warehouse').map((item) => item.to), ['/warehouse/movements']);
+  // Data Accurate is one page for everyone (Manajemen), never an entry inside another division's group.
+  assert.deepEqual(itemsFor('warehouse.supervisor', 'procurement').map((item) => item.to), []);
+  assert.deepEqual(itemsFor('procurement.supervisor', 'procurement').map((item) => item.to), ['/procurement', '/procurement/orders', '/procurement/vendors', '/procurement/reorder']);
   // Marketing reads customers, and leads are customers-to-be: both, nothing that needs order or sync access.
   assert.deepEqual(itemsFor('marketing.member', 'sales').map((item) => item.label), ['Pelanggan', 'Leads']);
   // Kerja Harian only carries cross-division utilities now (Calendar, Division
@@ -63,7 +69,12 @@ test('a division only shows the modules a role can use', () => {
 
 test('breadcrumbs point a multi-module division crumb back to home, and skip it for a single module', () => {
   const sections = sectionsFor('warehouse.member');
-  assert.deepEqual(pageTrail('/warehouse', sections).map((step) => step.label), ['Warehouse']);
+  // Warehouse is a group of pages (owner, 3 Oct 2026): the division crumb, then the page.
+  const warehouseTrail = pageTrail('/warehouse/stock', sections);
+  assert.deepEqual(warehouseTrail.map((step) => step.label), ['Warehouse', 'Stok']);
+  assert.equal(warehouseTrail[0].to, '/');
+  // A reader of movements alone has one Warehouse page: no division crumb.
+  assert.deepEqual(pageTrail('/warehouse/movements', sectionsFor('procurement.member')).map((step) => step.label), ['Pergerakan barang']);
   const kerjaTrail = pageTrail('/it/tickets', sections);
   assert.deepEqual(kerjaTrail.map((step) => step.label), ['Kerja Harian', 'Tiket IT']);
   assert.equal(kerjaTrail[0].to, '/');

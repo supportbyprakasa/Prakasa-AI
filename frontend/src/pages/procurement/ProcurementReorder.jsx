@@ -43,7 +43,7 @@ const lastPriceNode = (price, unit) => <>{`${rupiah(price)}/`}{unit || <Translat
 const onOrderLine = (r) => dots([r.onOrder.qty ? `PO berjalan ${qtyText(r.onOrder.qty, r.baseUnit)}` : '', onOrderMeta(r.onOrder)]);
 const coverLine = (r) => dots([dailyOutText(r.dailyOut, r.baseUnit), `datang ${r.leadTime.days} hari`]);
 const suggestionNote = (s, baseUnit) => dots(suggestionMeta(s, baseUnit).split(' · '));
-const poLink = (order) => <Link data-no-translate="" className="pw-link" to={`/procurement?tab=orders&po=${order.id}`}>{order.number}</Link>;
+const poLink = (order) => <Link data-no-translate="" className="pw-link" to={`/procurement/orders?po=${order.id}`}>{order.number}</Link>;
 
 function reorderColumns(prices) {
   return [

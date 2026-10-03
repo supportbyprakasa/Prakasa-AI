@@ -232,9 +232,9 @@ async function purchaseFlow(entityId, period) {
     // which the page links to.
     onTime: { completed, onTime, pct: receiptsReady && completed ? round1((100 * onTime) / completed) : null },
     stuck: [
-      { state: 'late', count: current.late, link: '/procurement?tab=orders&state=late' },
-      { state: 'partial', count: current.partial, link: '/procurement?tab=orders&state=partial' },
-      { state: 'legacy', count: current.legacy, link: '/procurement?tab=orders&state=legacy' },
+      { state: 'late', count: current.late, link: '/procurement/orders?state=late' },
+      { state: 'partial', count: current.partial, link: '/procurement/orders?state=partial' },
+      { state: 'legacy', count: current.legacy, link: '/procurement/orders?state=legacy' },
     ],
   };
 }

@@ -60,7 +60,7 @@ async function leadTimeRows(entityId, period, departmentId, whole) {
 module.exports = {
   key: 'procurement',
   label: 'Procurement',
-  navPaths: ['/procurement'],
+  navPaths: ['/procurement', '/procurement/orders', '/procurement/vendors', '/procurement/reorder'],
 
   escalations: [
     {
@@ -92,7 +92,7 @@ module.exports = {
           departmentName: row.department_name,
           daysLate: row.days_late,
           since: row.due,
-          link: `/procurement?tab=orders&state=late&po=${row.id}`,
+          link: `/procurement/orders?state=late&po=${row.id}`,
         }));
       },
       async locate(sourceId, { entityId } = {}) {
@@ -151,7 +151,7 @@ module.exports = {
           daysLate: row.days_late,
           since: row.since,
           // Opens exactly these items: critical, this vendor, nothing on order.
-          link: `/procurement?tab=reorder&urgency=critical&vendor=${encodeURIComponent(row.vendor_no)}&noPo=1`,
+          link: `/procurement/reorder?urgency=critical&vendor=${encodeURIComponent(row.vendor_no)}&noPo=1`,
         }));
       },
       async locate(sourceId, { entityId } = {}) {

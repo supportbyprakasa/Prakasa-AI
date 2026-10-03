@@ -86,8 +86,8 @@ const EXPECTED = {
   'warehouse-movement-outbound': ['warehouse.movement.create', 'create', undefined, '/warehouse/movements/outbound/new', MOVEMENT_AI, ['items.quantity']],
   'warehouse-movement-inbound-edit': ['warehouse.movement.update', 'edit', 'warehouse_movement', '/warehouse/movements/inbound/<id pergerakan>/edit', MOVEMENT_AI, ['items.quantity']],
   'warehouse-movement-outbound-edit': ['warehouse.movement.update', 'edit', 'warehouse_movement', '/warehouse/movements/outbound/<id pergerakan>/edit', MOVEMENT_AI, ['items.quantity']],
-  'warehouse-checklist': ['warehouse.checklist.manage', 'create', undefined, '/warehouse?tab=checklist&baru=1', ['checklistDate', 'title', 'items'], []],
-  'warehouse-incident': ['warehouse.incident.manage', 'create', undefined, '/warehouse?tab=incidents&baru=1', ['incidentDate', 'category', 'severity', 'description'], []],
+  'warehouse-checklist': ['warehouse.checklist.manage', 'create', undefined, '/warehouse/operations?tab=checklist&baru=1', ['checklistDate', 'title', 'items'], []],
+  'warehouse-incident': ['warehouse.incident.manage', 'create', undefined, '/warehouse/operations?tab=incidents&baru=1', ['incidentDate', 'category', 'severity', 'description'], []],
   'management-escalation-followup': [['management_dashboard.view', 'management_dashboard.division'], 'edit', 'escalation_followup', '/escalations?ubah=<sumber>-<id sumber>', ['note'], ['status', 'ownerUserId']],
   'management-target': ['management_dashboard.view', 'edit', 'division_target', '/targets?ubah=<id divisi>-<kunci metrik>', ['note'], ['value']],
 };
@@ -154,9 +154,9 @@ test('which route opens which form: the browser is told to wait for it', () => {
   assert.deepEqual(opened('/warehouse/movements/inbound/41/edit'), ['warehouse-movement-inbound-edit']);
   assert.deepEqual(opened('/warehouse/movements/outbound/41/edit'), ['warehouse-movement-outbound-edit']);
   assert.deepEqual(opened('/warehouse/movements/inbound/41'), [], 'the detail page opens no form');
-  assert.deepEqual(opened('/warehouse?tab=checklist&baru=1'), ['warehouse-checklist']);
-  assert.deepEqual(opened('/warehouse?tab=incidents&baru=1'), ['warehouse-incident']);
-  assert.deepEqual(opened('/warehouse?tab=incidents'), []);
+  assert.deepEqual(opened('/warehouse/operations?tab=checklist&baru=1'), ['warehouse-checklist']);
+  assert.deepEqual(opened('/warehouse/operations?tab=incidents&baru=1'), ['warehouse-incident']);
+  assert.deepEqual(opened('/warehouse/operations?tab=incidents'), []);
   assert.deepEqual(opened('/escalations?ubah=approval_aged-41'), ['management-escalation-followup']);
   assert.deepEqual(opened('/escalations'), []);
   assert.deepEqual(opened('/targets?period=2026-Q4&ubah=5-warehouse_movements_approved'), ['management-target']);

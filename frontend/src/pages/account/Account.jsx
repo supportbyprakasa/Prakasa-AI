@@ -12,7 +12,7 @@ import api from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { saveAccountLanguage } from '../../i18n/accountLanguage.js';
 import { getLanguage, setLanguage } from '../../i18n/language.js';
-import { LANGUAGE_OPTIONS, googleOnly, roleNames, signInMethods } from './accountModel';
+import { LANGUAGE_OPTIONS, googleOnly, roleNames, signInMethods, signatureTools } from './accountModel';
 import './account.css';
 
 // Akun saya (/akun): what the signed-in user may see and set about their own
@@ -23,10 +23,11 @@ import './account.css';
 export default function Account() {
   const { user } = useAuth();
   return (
-    <Page title="Akun saya" description="Profil, bahasa tampilan, beranda, dan sesi akun Anda.">
+    <Page title="Akun saya" description="Profil, bahasa tampilan, beranda, tanda tangan, dan sesi akun Anda.">
       <ProfileCard user={user} />
       <LanguageCard />
       <HomeCard user={user} />
+      <SignatureCard user={user} />
       <PasswordCard user={user} />
       <SessionCard />
     </Page>
@@ -121,6 +122,30 @@ function HomeCard({ user }) {
         <p className="account-text">
           Ringkasan pagi merangkum yang perlu Anda tindak hari ini: tugas, persetujuan, dan angka modul sesuai peran Anda.
           Disusun langsung dari data, tanpa model AI; tidak ada notifikasi atau email yang dikirim.
+        </p>
+      </div>
+    </Card>
+  );
+}
+
+// Where the signature tools are (revision F17). Requests are created by the
+// flows that need a signature; a Google Doc made from a template is not sent
+// for signature from here.
+function SignatureCard({ user }) {
+  const tools = signatureTools(user?.permissions);
+  if (!tools.length) return null;
+  return (
+    <Card title="Tanda tangan" variant="panel" size="sm">
+      <div className="pw-stack">
+        {tools.map((tool) => (
+          <div key={tool.to} className="pw-stack pw-stack--sm">
+            <Button variant="text" icon={tool.icon} to={tool.to}>{tool.label}</Button>
+            <p className="account-text">{tool.hint}</p>
+          </div>
+        ))}
+        <p className="account-text">
+          Permintaan tanda tangan baru dibuat oleh alur yang membutuhkannya, lalu muncul di notifikasi dan di "Permintaan tanda tangan".
+          Dokumen Google yang dibuat dari template di Drive belum bisa diajukan untuk tanda tangan dari aplikasi, dan tidak otomatis bertanda tangan.
         </p>
       </div>
     </Card>

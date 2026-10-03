@@ -189,6 +189,7 @@ export default function SoftwareSubscriptions() {
         title="Langganan software"
         showTitle={false}
         exportName="langganan-software"
+        exportNote={listMeta?.hasMore ? `${rows.length} dari ${listMeta.total} langganan` : ''}
         loading={loading}
         error={loadError}
         onRetry={load}

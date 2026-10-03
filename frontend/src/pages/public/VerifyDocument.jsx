@@ -11,6 +11,7 @@ import StatusBadge from '../../components/StatusBadge';
 import { SkeletonCard } from '../../components/Skeleton';
 import { formatDateTime } from '../../components/format';
 import { publicVerificationBaseUrl } from '../../api/endpoint';
+import { verifyErrorState } from './verifyModel';
 import './verify-document.css';
 
 // Public page behind a signature QR code (no app shell, no login): a white
@@ -39,13 +40,7 @@ export default function VerifyDocument() {
         }
       } catch (error) {
         if (active) {
-          setState({
-            loading: false,
-            data: null,
-            error:
-              error.response?.data?.error?.message ||
-              'Dokumen tidak dapat diverifikasi.',
-          });
+          setState({ loading: false, data: null, error: verifyErrorState(error) });
         }
       }
     }
@@ -71,11 +66,11 @@ export default function VerifyDocument() {
         <h1 className="pw-visually-hidden">Verifikasi dokumen</h1>
         <Card variant="panel">
           <EmptyState
-            tone="error"
-            icon="cancel"
-            title="Verifikasi tidak ditemukan"
-            description={state.error}
-            action={<Button variant="secondary" onClick={() => setAttempt((value) => value + 1)}>Coba lagi</Button>}
+            tone={state.error.tone}
+            icon={state.error.icon}
+            title={state.error.title}
+            description={state.error.description}
+            action={state.error.retry ? <Button variant="secondary" onClick={() => setAttempt((value) => value + 1)}>Coba lagi</Button> : null}
           />
         </Card>
       </main>
@@ -118,6 +113,10 @@ export default function VerifyDocument() {
           <p className="verify-doc__note">
             <Icon name="lock" size="sm" />
             Halaman ini hanya menampilkan metadata verifikasi yang aman.
+          </p>
+          <p className="verify-doc__note">
+            <Icon name="fingerprint" size="sm" />
+            Status di atas berasal dari data pendaftaran di server. Untuk memastikan salinan yang Anda pegang sama, bandingkan hash dokumennya dengan hash di atas.
           </p>
         </div>
       </Card>

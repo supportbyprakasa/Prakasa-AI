@@ -103,5 +103,15 @@
  "Diukur $1$2, dibanding $3. Omzet = porsi DPP faktur, sebelum retur. Ini perbandingan periode, bukan efek kausal atau ROI.": "Measured $1$2, against $3. Revenue = share of the invoice DPP, before returns. This compares periods; it is not a causal effect or ROI.",
  "$1 produk terjual, total baris faktur $2 (DPP sebelum retur), dibanding $3. Angka ini sebelum retur, jadi bisa lebih besar dari omzet bersih retur di atas; retur tidak dialokasikan ke produk.$4": "$1 products sold, invoice lines totalling $2 (DPP before returns), against $3. This is before returns, so it can be higher than the net revenue above; returns are not allocated to products.$4",
  "$1 Nilai produk = DPP baris faktur sebelum retur (porsi dari total baris faktur), jadi bisa lebih besar dari omzet bersih retur; retur tidak dialokasikan ke produk.": "$1 Product value = invoice-line DPP before returns (share of all invoice lines), so it can be higher than the net revenue; returns are not allocated to products.",
- "faktur lunas, SO baru ditagih sebagian$1": "invoices paid, order only partly billed$1"
+ "faktur lunas, SO baru ditagih sebagian$1": "invoices paid, order only partly billed$1",
+ "Semua hasil sesuai filter ($1 baris)": "Every result matching the filters ($1 rows)",
+ "Hanya halaman ini: $1 baris$2": "This page only: $1 rows$2",
+ "dari $1": "of $1",
+ "$1 baris yang dimuat (daftar terpotong)": "$1 rows loaded (list cut short)",
+ "Semua hasil terfilter: $1 baris": "All filtered results: $1 rows",
+ "$1 SO tertua dari $2": "oldest $1 SOs of $2",
+ "$1 faktur terlama dari $2": "$1 longest-due invoices of $2",
+ "$1 dari $2 langganan": "$1 of $2 subscriptions",
+ "Lewat tenggat $1 hari": "$1 days past deadline",
+ "$1 (sumber masih lewat tenggat)": "$1 (source still past its deadline)"
 }

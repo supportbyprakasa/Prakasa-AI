@@ -239,6 +239,7 @@ export default function MarketingInsights() {
                 columns={PRODUCT_COLUMNS}
                 searchPlaceholder="Cari produk atau kode"
                 exportName={`marketing-produk-${data.month}`}
+                exportNote="20 produk terlaris"
                 empty="Belum ada produk terjual bulan ini"
               />
               <div className="mkt__grid">

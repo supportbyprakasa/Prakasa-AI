@@ -25,3 +25,15 @@ export function roleNames(user) {
   const roles = Array.isArray(user?.roles) ? user.roles : [];
   return [...new Set(roles.map((role) => String(role?.name || '').trim()).filter(Boolean))];
 }
+
+// The signature tools the user may open from Akun saya (revision F17): the
+// pages exist but have no menu entry, and the old document centre that linked
+// them is retired. Only the tools the user's permissions allow.
+export function signatureTools(permissions) {
+  const has = (code) => Array.isArray(permissions) && permissions.includes(code);
+  return [
+    has('signature.view') ? { to: '/signatures', icon: 'signature', label: 'Permintaan tanda tangan', hint: 'Dokumen yang menunggu tanda tangan Anda dan riwayatnya.' } : null,
+    has('signature.manage_asset') ? { to: '/signatures/asset', icon: 'draw', label: 'Tanda tangan saya', hint: 'Unggah atau ganti gambar tanda tangan Anda.' } : null,
+    has('letterhead.view') ? { to: '/signatures/letterhead', icon: 'approval', label: 'Cap surat', hint: 'Cap atau kop surat resmi divisi Anda.' } : null,
+  ].filter(Boolean);
+}

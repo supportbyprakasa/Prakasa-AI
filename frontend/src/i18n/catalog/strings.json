@@ -16,7 +16,7 @@
    "frontend/src/components/navigation.js:95",
    "frontend/src/components/navigation.js:138",
    "frontend/src/components/statusTone.js:284",
-   "frontend/src/pages/account/Account.jsx:42",
+   "frontend/src/pages/account/Account.jsx:43",
    "frontend/src/pages/ActivityLogs.jsx:36",
    "frontend/src/pages/admin/AIProviderSettings.jsx:581",
    "frontend/src/pages/admin/AIUsage.jsx:162",
@@ -258,7 +258,7 @@
    "frontend/src/components/statusTone.js:186",
    "frontend/src/components/tasks/taskModel.js:15",
    "frontend/src/pages/admin/WorkspaceSync.jsx:310",
-   "frontend/src/pages/advanced/Escalations.jsx:337",
+   "frontend/src/pages/advanced/Escalations.jsx:344",
    "frontend/src/pages/advanced/escalationsModel.js:29",
    "frontend/src/pages/ga/GaForms.jsx:56",
    "frontend/src/pages/ga/gaModel.js:12",
@@ -950,6 +950,7 @@
    "backend/src/controllers/signatures.controller.js:209",
    "frontend/src/components/navigation.js:460",
    "frontend/src/components/notifications/notificationModel.js:96",
+   "frontend/src/pages/account/accountModel.js:35",
    "frontend/src/pages/ActivityLogs.jsx:98",
    "frontend/src/pages/documents/DocumentCenter.jsx:169",
    "frontend/src/pages/handbook/handbookContent.js:768",
@@ -1812,7 +1813,7 @@
    "backend/src/services/morningBriefing.service.js:310",
    "frontend/src/components/PageTrail.jsx:10",
    "frontend/src/components/PageTrail.jsx:16",
-   "frontend/src/pages/account/Account.jsx:117",
+   "frontend/src/pages/account/Account.jsx:118",
    "frontend/src/pages/handbook/handbookContent.js:113"
   ],
   "chunk": "shell-1"
@@ -1971,6 +1972,7 @@
    "frontend/src/components/notifications/notificationModel.js:95",
    "frontend/src/components/notifications/notificationModel.js:128",
    "frontend/src/components/search/searchResultModel.js:22",
+   "frontend/src/pages/account/Account.jsx:138",
    "frontend/src/pages/ActivityLogs.jsx:94",
    "frontend/src/pages/admin/DocumentTypes.jsx:123"
   ],
@@ -1982,6 +1984,7 @@
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:693",
    "frontend/src/components/navigation.js:461",
+   "frontend/src/pages/account/accountModel.js:36",
    "frontend/src/pages/documents/DocumentCenter.jsx:168",
    "frontend/src/pages/handbook/handbookContent.js:788",
    "frontend/src/pages/signatures/SignatureAsset.jsx:47"
@@ -1994,6 +1997,7 @@
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:694",
    "frontend/src/components/navigation.js:462",
+   "frontend/src/pages/account/accountModel.js:37",
    "frontend/src/pages/ActivityLogs.jsx:70",
    "frontend/src/pages/documents/DocumentCenter.jsx:170",
    "frontend/src/pages/signatures/Letterhead.jsx:125"
@@ -2297,7 +2301,7 @@
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:784",
    "frontend/src/components/navigation.js:27",
-   "frontend/src/pages/advanced/Escalations.jsx:292",
+   "frontend/src/pages/advanced/Escalations.jsx:299",
    "frontend/src/pages/handbook/aiForms.generated.js:82",
    "frontend/src/pages/handbook/handbookContent.js:1871"
   ],
@@ -2417,7 +2421,7 @@
   "sources": [
    "backend/src/services/aiToolRegistry.service.js:795",
    "frontend/src/components/navigation.js:136",
-   "frontend/src/pages/account/Account.jsx:43",
+   "frontend/src/pages/account/Account.jsx:44",
    "frontend/src/pages/ActivityLogs.jsx:78",
    "frontend/src/pages/admin/roleInfoModel.js:53",
    "frontend/src/pages/admin/Roles.jsx:99",
@@ -2676,7 +2680,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/itInfraImport.service.js:237",
-   "frontend/src/components/datagrid/gridModel.js:73",
+   "frontend/src/components/datagrid/gridModel.js:75",
    "frontend/src/pages/admin/NotificationPolicy.jsx:93",
    "frontend/src/pages/admin/NotificationPolicy.jsx:94",
    "frontend/src/pages/admin/NotificationPolicy.jsx:108",
@@ -2702,7 +2706,7 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/itInfraImport.service.js:237",
-   "frontend/src/components/datagrid/gridModel.js:73",
+   "frontend/src/components/datagrid/gridModel.js:75",
    "frontend/src/components/statusTone.js:121",
    "frontend/src/pages/admin/DocumentTypes.jsx:123",
    "frontend/src/pages/admin/DocumentTypes.jsx:124",
@@ -2751,8 +2755,8 @@
   "kind": "exact",
   "sources": [
    "backend/src/services/marketingInsights.service.js:40",
-   "frontend/src/components/datagrid/DataGrid.jsx:255",
-   "frontend/src/components/datagrid/DataGrid.jsx:268",
+   "frontend/src/components/datagrid/DataGrid.jsx:259",
+   "frontend/src/components/datagrid/DataGrid.jsx:272",
    "frontend/src/pages/marketing/marketingModel.js:13"
   ],
   "chunk": "shell-1"
@@ -2784,7 +2788,7 @@
    "backend/src/services/pdf.service.js:80",
    "frontend/src/components/statusTone.js:59",
    "frontend/src/pages/handbook/handbookContent.js:782",
-   "frontend/src/pages/public/VerifyDocument.jsx:112"
+   "frontend/src/pages/public/VerifyDocument.jsx:107"
   ],
   "chunk": "shell-1"
  },
@@ -2797,7 +2801,7 @@
   ],
   "sources": [
    "backend/src/services/subscriptionBilling.service.js:31",
-   "frontend/src/components/datagrid/gridModel.js:37"
+   "frontend/src/components/datagrid/gridModel.js:39"
   ],
   "chunk": "shell-1"
  },
@@ -2822,7 +2826,7 @@
   "sources": [
    "backend/src/services/trackerModel.js:73",
    "backend/src/services/trackerModel.js:79",
-   "frontend/src/components/datagrid/gridModel.js:33"
+   "frontend/src/components/datagrid/gridModel.js:35"
   ],
   "chunk": "shell-1"
  },
@@ -2928,7 +2932,7 @@
    "frontend/src/pages/admin/UserEditorPanel.jsx:170",
    "frontend/src/pages/admin/Users.jsx:303",
    "frontend/src/pages/admin/Users.jsx:439",
-   "frontend/src/pages/advanced/Escalations.jsx:453",
+   "frontend/src/pages/advanced/Escalations.jsx:466",
    "frontend/src/pages/advanced/Targets.jsx:442",
    "frontend/src/pages/calendar/EventFormModal.jsx:150",
    "frontend/src/pages/documents/DivisionStorage.jsx:198",
@@ -2976,8 +2980,8 @@
    "frontend/src/pages/it/ItTicketForm.jsx:98",
    "frontend/src/pages/it/LocationsPanel.jsx:118",
    "frontend/src/pages/it/ReportImportDialog.jsx:339",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:223",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:248",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:224",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:249",
    "frontend/src/pages/it/SubscriptionDetail.jsx:98",
    "frontend/src/pages/it/SubscriptionDetail.jsx:407",
    "frontend/src/pages/it/SubscriptionDetail.jsx:423",
@@ -3064,7 +3068,7 @@
    "frontend/src/components/ai/AIConversation.jsx:599",
    "frontend/src/components/ai/AIInbox.jsx:150",
    "frontend/src/components/AiAssistantPanel.jsx:47",
-   "frontend/src/components/datagrid/DataGrid.jsx:548",
+   "frontend/src/components/datagrid/DataGrid.jsx:554",
    "frontend/src/components/gantt/DependencyGraphModal.jsx:55",
    "frontend/src/components/tasks/TaskActivityTimeline.jsx:52",
    "frontend/src/components/tasks/TaskChecklist.jsx:154",
@@ -3078,7 +3082,7 @@
    "frontend/src/pages/admin/IntegrationLogs.jsx:150",
    "frontend/src/pages/admin/RoleEditorPanel.jsx:155",
    "frontend/src/pages/admin/UserEditorPanel.jsx:181",
-   "frontend/src/pages/advanced/Escalations.jsx:315",
+   "frontend/src/pages/advanced/Escalations.jsx:322",
    "frontend/src/pages/advanced/flow/FlowPurchase.jsx:32",
    "frontend/src/pages/advanced/flow/FlowSales.jsx:82",
    "frontend/src/pages/advanced/flow/MarginEstimate.jsx:79",
@@ -3139,7 +3143,7 @@
    "frontend/src/pages/projects/ProjectTracker.jsx:272",
    "frontend/src/pages/projects/TrackerPortfolio.jsx:112",
    "frontend/src/pages/projects/TrackerReports.jsx:170",
-   "frontend/src/pages/public/VerifyDocument.jsx:78",
+   "frontend/src/pages/public/VerifyDocument.jsx:73",
    "frontend/src/pages/retail/RetailCommerce.jsx:166",
    "frontend/src/pages/sales/SalesAccurateBatch.jsx:248",
    "frontend/src/pages/sales/SalesAging.jsx:30",
@@ -3210,8 +3214,8 @@
   "sources": [
    "frontend/src/components/ai/AISessionList.jsx:310",
    "frontend/src/components/AppLauncher.jsx:47",
-   "frontend/src/components/datagrid/DataGrid.jsx:736",
-   "frontend/src/components/datagrid/DataGrid.jsx:871",
+   "frontend/src/components/datagrid/DataGrid.jsx:742",
+   "frontend/src/components/datagrid/DataGrid.jsx:886",
    "frontend/src/components/notifications/NotificationItem.jsx:74",
    "frontend/src/pages/admin/ApprovalDelegations.jsx:110"
   ],
@@ -3559,7 +3563,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/components/charts/AnimatedNumber.jsx:12",
-   "frontend/src/components/datagrid/DataGrid.jsx:312",
+   "frontend/src/components/datagrid/DataGrid.jsx:316",
    "frontend/src/components/statusTone.js:236",
    "frontend/src/pages/admin/claudeTeamHealthModel.js:29",
    "frontend/src/pages/advanced/managementDashboardModel.js:17",
@@ -3584,7 +3588,7 @@
   "text": "Periksa koneksi, lalu coba lagi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:179",
+   "frontend/src/components/datagrid/DataGrid.jsx:183",
    "frontend/src/components/gantt/DependencyGraphModal.jsx:26",
    "frontend/src/pages/ActivityLogs.jsx:316",
    "frontend/src/pages/admin/NotificationPolicy.jsx:30",
@@ -3621,7 +3625,7 @@
   "text": "— Pilih —",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:222"
+   "frontend/src/components/datagrid/DataGrid.jsx:226"
   ],
   "chunk": "shell-1"
  },
@@ -3629,7 +3633,7 @@
   "text": "Excel (.xlsx)",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:272"
+   "frontend/src/components/datagrid/DataGrid.jsx:276"
   ],
   "chunk": "shell-1"
  },
@@ -3637,7 +3641,7 @@
   "text": "CSV (.csv)",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:273"
+   "frontend/src/components/datagrid/DataGrid.jsx:277"
   ],
   "chunk": "shell-1"
  },
@@ -3645,7 +3649,7 @@
   "text": "Tambah data",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:306"
+   "frontend/src/components/datagrid/DataGrid.jsx:310"
   ],
   "chunk": "shell-1"
  },
@@ -3653,7 +3657,7 @@
   "text": "Data berhasil ditambahkan",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:470",
+   "frontend/src/components/datagrid/DataGrid.jsx:476",
    "frontend/src/pages/admin/RecordDialog.jsx:58"
   ],
   "chunk": "shell-1"
@@ -3662,7 +3666,7 @@
   "text": "Perubahan tersimpan",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:474",
+   "frontend/src/components/datagrid/DataGrid.jsx:480",
    "frontend/src/pages/admin/RecordDialog.jsx:58"
   ],
   "chunk": "shell-1"
@@ -3671,7 +3675,7 @@
   "text": "Data gagal disimpan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:483",
+   "frontend/src/components/datagrid/DataGrid.jsx:489",
    "frontend/src/pages/admin/RecordDialog.jsx:64",
    "frontend/src/pages/hrga/WorkflowFormDialog.jsx:160"
   ],
@@ -3681,7 +3685,7 @@
   "text": "Data dihapus",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:495"
+   "frontend/src/components/datagrid/DataGrid.jsx:501"
   ],
   "chunk": "shell-1"
  },
@@ -3689,7 +3693,7 @@
   "text": "Data gagal dihapus.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:499"
+   "frontend/src/components/datagrid/DataGrid.jsx:505"
   ],
   "chunk": "shell-1"
  },
@@ -3697,8 +3701,8 @@
   "text": "Ekspor gagal.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:508",
-   "frontend/src/components/datagrid/DataGrid.jsx:515"
+   "frontend/src/components/datagrid/DataGrid.jsx:514",
+   "frontend/src/components/datagrid/DataGrid.jsx:521"
   ],
   "chunk": "shell-1"
  },
@@ -3706,7 +3710,7 @@
   "text": "Otomatis",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:568"
+   "frontend/src/components/datagrid/DataGrid.jsx:574"
   ],
   "chunk": "shell-1"
  },
@@ -3714,7 +3718,7 @@
   "text": "Menyimpan…",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:573"
+   "frontend/src/components/datagrid/DataGrid.jsx:579"
   ],
   "chunk": "shell-1"
  },
@@ -3722,7 +3726,7 @@
   "text": "Simpan (Enter)",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:573"
+   "frontend/src/components/datagrid/DataGrid.jsx:579"
   ],
   "chunk": "shell-1"
  },
@@ -3730,7 +3734,7 @@
   "text": "Batal (Esc)",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:574"
+   "frontend/src/components/datagrid/DataGrid.jsx:580"
   ],
   "chunk": "shell-1"
  },
@@ -3738,7 +3742,7 @@
   "text": "Pilih semua baris di halaman ini",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:620"
+   "frontend/src/components/datagrid/DataGrid.jsx:626"
   ],
   "chunk": "shell-1"
  },
@@ -3746,7 +3750,7 @@
   "text": "Tindakan",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:652",
+   "frontend/src/components/datagrid/DataGrid.jsx:658",
    "frontend/src/pages/google/chat/SpaceDetails.jsx:330"
   ],
   "chunk": "shell-1"
@@ -3755,8 +3759,8 @@
   "text": "Data gagal dimuat",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:682",
-   "frontend/src/components/datagrid/DataGrid.jsx:836"
+   "frontend/src/components/datagrid/DataGrid.jsx:688",
+   "frontend/src/components/datagrid/DataGrid.jsx:851"
   ],
   "chunk": "shell-1"
  },
@@ -3768,7 +3772,7 @@
    "String(displayValue(columns[0], row) ?? '').slice(0, 60)"
   ],
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:714"
+   "frontend/src/components/datagrid/DataGrid.jsx:720"
   ],
   "chunk": "shell-1"
  },
@@ -3776,7 +3780,7 @@
   "text": "Ubah",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:732",
+   "frontend/src/components/datagrid/DataGrid.jsx:738",
    "frontend/src/components/navigation.js:450",
    "frontend/src/pages/admin/ApprovalDelegations.jsx:109",
    "frontend/src/pages/admin/DocumentTypes.jsx:148",
@@ -3801,7 +3805,7 @@
    "searchText"
   ],
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:752"
+   "frontend/src/components/datagrid/DataGrid.jsx:758"
   ],
   "chunk": "shell-1"
  },
@@ -3809,7 +3813,7 @@
   "text": "Memuat data",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:761"
+   "frontend/src/components/datagrid/DataGrid.jsx:767"
   ],
   "chunk": "shell-1"
  },
@@ -3821,7 +3825,7 @@
    "formatNumber(totalCount)"
   ],
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:761"
+   "frontend/src/components/datagrid/DataGrid.jsx:767"
   ],
   "chunk": "shell-1"
  },
@@ -3829,7 +3833,7 @@
   "text": "dipilih",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:778"
+   "frontend/src/components/datagrid/DataGrid.jsx:784"
   ],
   "chunk": "shell-1"
  },
@@ -3837,7 +3841,7 @@
   "text": "Batalkan pilihan",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:781"
+   "frontend/src/components/datagrid/DataGrid.jsx:787"
   ],
   "chunk": "shell-1"
  },
@@ -3845,7 +3849,7 @@
   "text": "Cari data",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:799"
+   "frontend/src/components/datagrid/DataGrid.jsx:805"
   ],
   "chunk": "shell-1"
  },
@@ -3853,7 +3857,7 @@
   "text": "Cari di halaman ini",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:801"
+   "frontend/src/components/datagrid/DataGrid.jsx:807"
   ],
   "chunk": "shell-1"
  },
@@ -3861,7 +3865,7 @@
   "text": "Cari",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:801",
+   "frontend/src/components/datagrid/DataGrid.jsx:807",
    "frontend/src/components/Navbar.jsx:187",
    "frontend/src/components/Navbar.jsx:228",
    "frontend/src/components/Navbar.jsx:233",
@@ -3875,7 +3879,7 @@
   "text": "Impor",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:810",
+   "frontend/src/components/datagrid/DataGrid.jsx:816",
    "frontend/src/components/datagrid/GridImportDialog.jsx:103",
    "frontend/src/pages/admin/Departments.jsx:47"
   ],
@@ -3885,7 +3889,7 @@
   "text": "Menampilkan",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:829",
+   "frontend/src/components/datagrid/DataGrid.jsx:844",
    "frontend/src/components/datagrid/GridImportDialog.jsx:194"
   ],
   "chunk": "shell-1"
@@ -3894,7 +3898,7 @@
   "text": "data pertama. Persempit pencarian untuk melihat sisanya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:830"
+   "frontend/src/components/datagrid/DataGrid.jsx:845"
   ],
   "chunk": "shell-1"
  },
@@ -3902,7 +3906,7 @@
   "text": "Hapus data ini?",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:869"
+   "frontend/src/components/datagrid/DataGrid.jsx:884"
   ],
   "chunk": "shell-1"
  },
@@ -3910,7 +3914,7 @@
   "text": "Data yang dihapus tidak tampil lagi di daftar.",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/DataGrid.jsx:870"
+   "frontend/src/components/datagrid/DataGrid.jsx:885"
   ],
   "chunk": "shell-1"
  },
@@ -4183,7 +4187,7 @@
   "text": "Format email tidak valid",
   "kind": "exact",
   "sources": [
-   "frontend/src/components/datagrid/gridModel.js:35"
+   "frontend/src/components/datagrid/gridModel.js:37"
   ],
   "chunk": "shell-1"
  },
@@ -4195,9 +4199,78 @@
    "column.header"
   ],
   "sources": [
-   "frontend/src/components/datagrid/gridModel.js:39"
+   "frontend/src/components/datagrid/gridModel.js:41"
   ],
   "chunk": "shell-1"
+ },
+ {
+  "text": "Semua hasil sesuai filter",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/components/datagrid/gridModel.js:321"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Semua hasil sesuai filter ($1 baris)",
+  "kind": "pattern",
+  "regex": "^Semua hasil sesuai filter \\(([\\s\\S]*?) baris\\)$",
+  "vars": [
+   "n(total)"
+  ],
+  "sources": [
+   "frontend/src/components/datagrid/gridModel.js:321"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Hanya halaman ini: $1 baris$2",
+  "kind": "pattern",
+  "regex": "^Hanya halaman ini: ([\\s\\S]*?) baris([\\s\\S]*?)$",
+  "vars": [
+   "n(pageRows)",
+   "total === null || total === undefined ? '' : ` dari ${n(total)}`"
+  ],
+  "sources": [
+   "frontend/src/components/datagrid/gridModel.js:322"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "dari $1",
+  "kind": "pattern",
+  "regex": "^dari ([\\s\\S]*?)$",
+  "vars": [
+   "n(total)"
+  ],
+  "sources": [
+   "frontend/src/components/datagrid/gridModel.js:322"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "$1 baris yang dimuat (daftar terpotong)",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?) baris yang dimuat \\(daftar terpotong\\)$",
+  "vars": [
+   "n(filteredRows)"
+  ],
+  "sources": [
+   "frontend/src/components/datagrid/gridModel.js:323"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Semua hasil terfilter: $1 baris",
+  "kind": "pattern",
+  "regex": "^Semua hasil terfilter: ([\\s\\S]*?) baris$",
+  "vars": [
+   "n(filteredRows)"
+  ],
+  "sources": [
+   "frontend/src/components/datagrid/gridModel.js:324"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Paginasi",
@@ -4289,7 +4362,7 @@
    "frontend/src/components/gantt/GanttToolbar.jsx:47",
    "frontend/src/pages/admin/AIUsage.jsx:118",
    "frontend/src/pages/admin/IntegrationLogs.jsx:194",
-   "frontend/src/pages/advanced/Escalations.jsx:295",
+   "frontend/src/pages/advanced/Escalations.jsx:302",
    "frontend/src/pages/advanced/ManagementDashboard.jsx:137",
    "frontend/src/pages/advanced/Roadmap.jsx:128",
    "frontend/src/pages/advanced/Targets.jsx:245",
@@ -4502,7 +4575,7 @@
    "frontend/src/pages/admin/AIUsage.jsx:141",
    "frontend/src/pages/admin/AIUsage.jsx:164",
    "frontend/src/pages/admin/NotificationPolicy.jsx:81",
-   "frontend/src/pages/advanced/Escalations.jsx:420",
+   "frontend/src/pages/advanced/Escalations.jsx:427",
    "frontend/src/pages/handbook/handbookContent.js:922"
   ],
   "chunk": "shell-1"
@@ -5999,7 +6072,7 @@
   "sources": [
    "frontend/src/components/search/searchResultModel.js:44",
    "frontend/src/pages/it/ItDashboard.jsx:197",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:210",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:211",
    "frontend/src/pages/it/SubscriptionDetail.jsx:390"
   ],
   "chunk": "shell-2"
@@ -6011,7 +6084,7 @@
    "frontend/src/components/search/searchResultModel.js:45",
    "frontend/src/pages/admin/ApprovalMatrix.jsx:520",
    "frontend/src/pages/admin/ApprovalMatrixEditor.jsx:261",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:260",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:261",
    "frontend/src/pages/it/SubscriptionDetail.jsx:476",
    "frontend/src/pages/it/SubscriptionDetail.jsx:477",
    "frontend/src/pages/sales/accurateBatchModel.js:46"
@@ -6481,8 +6554,7 @@
   "sources": [
    "frontend/src/components/statusTone.js:73",
    "frontend/src/components/statusTone.js:113",
-   "frontend/src/pages/advanced/Escalations.jsx:237",
-   "frontend/src/pages/advanced/Escalations.jsx:423",
+   "frontend/src/pages/advanced/Escalations.jsx:430",
    "frontend/src/pages/advanced/flow/FlowSales.jsx:40",
    "frontend/src/pages/finance/FinancePayables.jsx:43",
    "frontend/src/pages/handbook/handbookContent.js:1409",
@@ -6592,7 +6664,7 @@
    "frontend/src/components/statusTone.js:88",
    "frontend/src/pages/handbook/handbookContent.js:1367",
    "frontend/src/pages/marketing/MarketingInsights.jsx:230",
-   "frontend/src/pages/marketing/MarketingInsights.jsx:254",
+   "frontend/src/pages/marketing/MarketingInsights.jsx:255",
    "frontend/src/pages/warehouse/WarehouseRecon.jsx:268",
    "frontend/src/pages/warehouse/warehouseReconModel.js:15"
   ],
@@ -6849,7 +6921,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/components/statusTone.js:140",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:209"
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:210"
   ],
   "chunk": "shell-2"
  },
@@ -7416,7 +7488,7 @@
   "text": "Kata sandi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:135",
+   "frontend/src/pages/account/Account.jsx:160",
    "frontend/src/pages/handbook/handbookContent.js:114",
    "frontend/src/pages/Login.jsx:158"
   ],
@@ -9611,7 +9683,7 @@
    "frontend/src/components/ai/usePrakasaAIForm.jsx:47",
    "frontend/src/pages/admin/AIProviderSettings.jsx:700",
    "frontend/src/pages/advanced/Escalations.jsx:46",
-   "frontend/src/pages/advanced/Escalations.jsx:454",
+   "frontend/src/pages/advanced/Escalations.jsx:467",
    "frontend/src/pages/advanced/Targets.jsx:44",
    "frontend/src/pages/advanced/Targets.jsx:443",
    "frontend/src/pages/documents/DocTemplateDialogs.jsx:48",
@@ -11222,7 +11294,7 @@
    "backend/src/config/docTemplates.js:61",
    "frontend/src/components/tasks/TaskDependencies.jsx:225",
    "frontend/src/pages/advanced/Escalations.jsx:187",
-   "frontend/src/pages/advanced/Escalations.jsx:419",
+   "frontend/src/pages/advanced/Escalations.jsx:426",
    "frontend/src/pages/finance/PaymentRequestDetail.jsx:202",
    "frontend/src/pages/finance/PaymentRequests.jsx:22",
    "frontend/src/pages/finance/PaymentRequests.jsx:113",
@@ -11418,8 +11490,7 @@
   "sources": [
    "frontend/src/components/charts/chartModel.js:28",
    "frontend/src/pages/accurate/accurateQualityModel.js:17",
-   "frontend/src/pages/advanced/Escalations.jsx:241",
-   "frontend/src/pages/advanced/Escalations.jsx:423",
+   "frontend/src/pages/advanced/Escalations.jsx:430",
    "frontend/src/pages/advanced/managementDashboardModel.js:144",
    "frontend/src/pages/advanced/managementFlowModel.js:49",
    "frontend/src/pages/advanced/targetsModel.js:348",
@@ -13055,7 +13126,7 @@
    "frontend/src/pages/it/ReportImportDialog.jsx:233",
    "frontend/src/pages/it/reportImportModel.js:14",
    "frontend/src/pages/it/reportImportModel.js:15",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:211",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:212",
    "frontend/src/pages/it/SubscriptionDetail.jsx:434",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:57",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:85",
@@ -13075,7 +13146,7 @@
    "frontend/src/pages/projects/CreateIssueModal.jsx:150",
    "frontend/src/pages/projects/IssueDrawer.jsx:215",
    "frontend/src/pages/projects/TrackerIssueList.jsx:20",
-   "frontend/src/pages/public/VerifyDocument.jsx:105",
+   "frontend/src/pages/public/VerifyDocument.jsx:100",
    "frontend/src/pages/retail/RetailCommerce.jsx:90",
    "frontend/src/pages/retail/RetailCommerce.jsx:105",
    "frontend/src/pages/sales/accurateBatchModel.js:34",
@@ -13143,6 +13214,24 @@
   "chunk": "pages-home"
  },
  {
+  "text": "Kode verifikasi tidak valid",
+  "kind": "exact",
+  "sources": [
+   "backend/src/controllers/signatureQr.controller.js:172",
+   "frontend/src/pages/public/verifyModel.js:18"
+  ],
+  "chunk": "backend-controllers"
+ },
+ {
+  "text": "Kode verifikasi tidak ditemukan",
+  "kind": "exact",
+  "sources": [
+   "backend/src/controllers/signatureQr.controller.js:194",
+   "frontend/src/pages/public/verifyModel.js:11"
+  ],
+  "chunk": "backend-controllers"
+ },
+ {
   "text": "Tanggal mulai",
   "kind": "exact",
   "sources": [
@@ -13153,7 +13242,7 @@
    "frontend/src/pages/hrga/WorkflowFormDialog.jsx:58",
    "frontend/src/pages/hrga/WorkflowFormDialog.jsx:279",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:41",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:234",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:235",
    "frontend/src/pages/it/SubscriptionDetail.jsx:432",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:54",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:290",
@@ -13245,7 +13334,7 @@
   "sources": [
    "backend/src/routes/finance.routes.js:28",
    "frontend/src/pages/advanced/Escalations.jsx:200",
-   "frontend/src/pages/advanced/Escalations.jsx:421",
+   "frontend/src/pages/advanced/Escalations.jsx:428",
    "frontend/src/pages/approvals/ApprovalInbox.jsx:209",
    "frontend/src/pages/calendar/EventFormModal.jsx:21",
    "frontend/src/pages/calendar/EventFormModal.jsx:161",
@@ -13701,9 +13790,9 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/ActivityLogs.jsx:46",
-   "frontend/src/pages/public/VerifyDocument.jsx:62",
-   "frontend/src/pages/public/VerifyDocument.jsx:71",
-   "frontend/src/pages/public/VerifyDocument.jsx:94"
+   "frontend/src/pages/public/VerifyDocument.jsx:57",
+   "frontend/src/pages/public/VerifyDocument.jsx:66",
+   "frontend/src/pages/public/VerifyDocument.jsx:89"
   ],
   "chunk": "pages-home"
  },
@@ -13893,8 +13982,8 @@
    "frontend/src/pages/it/ItDashboard.jsx:196",
    "frontend/src/pages/it/ItDashboard.jsx:210",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:37",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:205",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:230",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:206",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:231",
    "frontend/src/pages/marketing/MarketingCampaigns.jsx:82",
    "frontend/src/pages/marketing/MarketingInsights.jsx:28",
    "frontend/src/pages/marketing/MarketingInsights.jsx:61",
@@ -14958,7 +15047,7 @@
    "frontend/src/pages/admin/ApprovalDelegations.jsx:82",
    "frontend/src/pages/admin/ApprovalDelegations.jsx:83",
    "frontend/src/pages/advanced/Escalations.jsx:37",
-   "frontend/src/pages/advanced/Escalations.jsx:328",
+   "frontend/src/pages/advanced/Escalations.jsx:335",
    "frontend/src/pages/advanced/GlobalSearch.jsx:203",
    "frontend/src/pages/advanced/managementFlowModel.js:247",
    "frontend/src/pages/advanced/managementFlowModel.js:271",
@@ -15019,7 +15108,7 @@
    "frontend/src/pages/documents/DocumentCenter.jsx:113",
    "frontend/src/pages/documents/DocumentCenter.jsx:114",
    "frontend/src/pages/documents/DocumentCenter.jsx:139",
-   "frontend/src/pages/public/VerifyDocument.jsx:108"
+   "frontend/src/pages/public/VerifyDocument.jsx:103"
   ],
   "chunk": "pages-home"
  },
@@ -15029,7 +15118,7 @@
   "sources": [
    "frontend/src/pages/admin/ApprovalMatrix.jsx:85",
    "frontend/src/pages/admin/SignatureRules.jsx:93",
-   "frontend/src/pages/public/VerifyDocument.jsx:111"
+   "frontend/src/pages/public/VerifyDocument.jsx:106"
   ],
   "chunk": "pages-home"
  },
@@ -16400,7 +16489,7 @@
   "sources": [
    "frontend/src/pages/documents/DocTemplateDialogs.jsx:63",
    "frontend/src/pages/documents/DocTemplateDialogs.jsx:257",
-   "frontend/src/pages/public/VerifyDocument.jsx:107"
+   "frontend/src/pages/public/VerifyDocument.jsx:102"
   ],
   "chunk": "pages-home"
  },
@@ -16437,7 +16526,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:812",
-   "frontend/src/pages/public/VerifyDocument.jsx:97"
+   "frontend/src/pages/public/VerifyDocument.jsx:92"
   ],
   "chunk": "pages-home"
  },
@@ -16446,16 +16535,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/handbook/handbookContent.js:812",
-   "frontend/src/pages/public/VerifyDocument.jsx:97"
-  ],
-  "chunk": "pages-home"
- },
- {
-  "text": "Verifikasi tidak ditemukan",
-  "kind": "exact",
-  "sources": [
-   "frontend/src/pages/handbook/handbookContent.js:812",
-   "frontend/src/pages/public/VerifyDocument.jsx:76"
+   "frontend/src/pages/public/VerifyDocument.jsx:92"
   ],
   "chunk": "pages-home"
  },
@@ -16807,18 +16887,10 @@
   "chunk": "pages-home"
  },
  {
-  "text": "Dokumen tidak dapat diverifikasi.",
-  "kind": "exact",
-  "sources": [
-   "frontend/src/pages/public/VerifyDocument.jsx:47"
-  ],
-  "chunk": "pages-home"
- },
- {
   "text": "Dokumen ini terdaftar dan tanda tangannya masih berlaku.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/public/VerifyDocument.jsx:99"
+   "frontend/src/pages/public/VerifyDocument.jsx:94"
   ],
   "chunk": "pages-home"
  },
@@ -16826,7 +16898,7 @@
   "text": "Dokumen ini terdaftar, tetapi tanda tangannya sudah tidak berlaku.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/public/VerifyDocument.jsx:100"
+   "frontend/src/pages/public/VerifyDocument.jsx:95"
   ],
   "chunk": "pages-home"
  },
@@ -16834,7 +16906,7 @@
   "text": "Valid",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/public/VerifyDocument.jsx:105"
+   "frontend/src/pages/public/VerifyDocument.jsx:100"
   ],
   "chunk": "pages-home"
  },
@@ -16842,7 +16914,7 @@
   "text": "Kode verifikasi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/public/VerifyDocument.jsx:106"
+   "frontend/src/pages/public/VerifyDocument.jsx:101"
   ],
   "chunk": "pages-home"
  },
@@ -16850,7 +16922,7 @@
   "text": "Hash dokumen",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/public/VerifyDocument.jsx:109"
+   "frontend/src/pages/public/VerifyDocument.jsx:104"
   ],
   "chunk": "pages-home"
  },
@@ -16858,7 +16930,7 @@
   "text": "Algoritma hash",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/public/VerifyDocument.jsx:110"
+   "frontend/src/pages/public/VerifyDocument.jsx:105"
   ],
   "chunk": "pages-home"
  },
@@ -16866,7 +16938,7 @@
   "text": "Berlaku sampai",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/public/VerifyDocument.jsx:113",
+   "frontend/src/pages/public/VerifyDocument.jsx:108",
    "frontend/src/pages/signatures/SignatureDetail.jsx:150"
   ],
   "chunk": "pages-home"
@@ -16875,7 +16947,7 @@
   "text": "Tidak dibatasi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/public/VerifyDocument.jsx:113",
+   "frontend/src/pages/public/VerifyDocument.jsx:108",
    "frontend/src/pages/signatures/SignatureDetail.jsx:150"
   ],
   "chunk": "pages-home"
@@ -16884,7 +16956,7 @@
   "text": "Terdaftar",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/public/VerifyDocument.jsx:114"
+   "frontend/src/pages/public/VerifyDocument.jsx:109"
   ],
   "chunk": "pages-home"
  },
@@ -16892,16 +16964,65 @@
   "text": "Halaman ini hanya menampilkan metadata verifikasi yang aman.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/public/VerifyDocument.jsx:119"
+   "frontend/src/pages/public/VerifyDocument.jsx:114"
   ],
   "chunk": "pages-home"
+ },
+ {
+  "text": "Status di atas berasal dari data pendaftaran di server. Untuk memastikan salinan yang Anda pegang sama, bandingkan hash dokumennya dengan hash di atas.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/public/VerifyDocument.jsx:118"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Kode ini tidak terdaftar. Periksa kembali kode atau QR yang dipindai.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/public/verifyModel.js:12"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Format kode tidak dikenali. Periksa kembali kode atau QR yang dipindai.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/public/verifyModel.js:19"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Belum dapat memverifikasi",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/public/verifyModel.js:25",
+   "frontend/src/pages/public/verifyModel.js:31"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Terlalu banyak permintaan verifikasi dalam waktu singkat. Tunggu sebentar, lalu coba lagi. Ini bukan tanda dokumen bermasalah.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/public/verifyModel.js:26"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Layanan verifikasi belum dapat dihubungi (koneksi terputus atau server sedang bermasalah). Ini bukan tanda dokumen palsu; coba lagi beberapa saat lagi.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/public/verifyModel.js:32"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Nama",
   "kind": "exact",
   "sources": [
    "backend/src/config/docTemplates.js:48",
-   "frontend/src/pages/account/Account.jsx:40",
+   "frontend/src/pages/account/Account.jsx:41",
    "frontend/src/pages/admin/DocumentTypes.jsx:121",
    "frontend/src/pages/admin/DocumentTypes.jsx:180",
    "frontend/src/pages/admin/Users.jsx:242",
@@ -17087,7 +17208,7 @@
    "frontend/src/pages/finance/PaymentRequestForm.jsx:91",
    "frontend/src/pages/finance/PaymentRequestForm.jsx:205",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:55",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:258"
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:259"
   ],
   "chunk": "pages-admin-1"
  },
@@ -17404,7 +17525,7 @@
   "text": "Sesi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:157",
+   "frontend/src/pages/account/Account.jsx:182",
    "frontend/src/pages/admin/AIUsage.jsx:159",
    "frontend/src/pages/google/analyticsModel.js:17",
    "frontend/src/pages/google/analyticsModel.js:26",
@@ -21296,7 +21417,7 @@
   ],
   "sources": [
    "frontend/src/pages/admin/FilterChips.jsx:131",
-   "frontend/src/pages/advanced/Escalations.jsx:357"
+   "frontend/src/pages/advanced/Escalations.jsx:364"
   ],
   "chunk": "pages-admin-2"
  },
@@ -22342,7 +22463,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/admin/Roles.jsx:112",
-   "frontend/src/pages/advanced/Escalations.jsx:253",
+   "frontend/src/pages/advanced/Escalations.jsx:260",
    "frontend/src/pages/hrga/ChecklistTemplates.jsx:426",
    "frontend/src/pages/people/PersonSheet.jsx:89",
    "frontend/src/pages/projects/IssueDrawer.jsx:362",
@@ -23868,7 +23989,7 @@
    "backend/src/services/itInfraImport.service.js:219",
    "backend/src/services/warehouseMovementModel.js:149",
    "frontend/src/pages/advanced/Escalations.jsx:49",
-   "frontend/src/pages/advanced/Escalations.jsx:443",
+   "frontend/src/pages/advanced/Escalations.jsx:456",
    "frontend/src/pages/advanced/Targets.jsx:47",
    "frontend/src/pages/advanced/Targets.jsx:421",
    "frontend/src/pages/ga/GaBookingDetail.jsx:177",
@@ -24200,7 +24321,7 @@
    "frontend/src/pages/finance/PaymentRequestForm.jsx:90",
    "frontend/src/pages/finance/PaymentRequestForm.jsx:204",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:54",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:257",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:258",
    "frontend/src/pages/sales/accurateBatchModel.js:53",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:365",
    "frontend/src/pages/sales/SalesPrint.jsx:102"
@@ -24220,7 +24341,7 @@
    "frontend/src/pages/finance/PaymentRequestForm.jsx:207",
    "frontend/src/pages/finance/PaymentRequests.jsx:26",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:56",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:259",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:260",
    "frontend/src/pages/procurement/ProcurementOrders.jsx:96",
    "frontend/src/pages/sales/accurateBatchModel.js:52",
    "frontend/src/pages/sales/SalesAging.jsx:38",
@@ -24426,7 +24547,7 @@
    "backend/src/services/financeRequests.service.js:66",
    "frontend/src/pages/finance/financeModel.js:32",
    "frontend/src/pages/handbook/aiForms.generated.js:47",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:245",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:246",
    "frontend/src/pages/it/SubscriptionDetail.jsx:326",
    "frontend/src/pages/it/SubscriptionDetail.jsx:454",
    "frontend/src/pages/it/SubscriptionDetail.jsx:501",
@@ -24668,7 +24789,7 @@
   "sources": [
    "backend/src/services/subscriptionBilling.service.js:205",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:53",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:256",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:257",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:68",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:144",
    "frontend/src/pages/sales/SalesPrint.jsx:217"
@@ -25105,7 +25226,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:52",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:255",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:256",
    "frontend/src/pages/sales/SalesOrderDetail.jsx:67"
   ],
   "chunk": "pages-it-2"
@@ -34700,7 +34821,6 @@
    "backend/src/management/providers/procurement.js:340",
    "backend/src/management/providers/warehouse.js:571",
    "backend/src/management/providers/warehouse.js:785",
-   "frontend/src/pages/advanced/Escalations.jsx:242",
    "frontend/src/pages/advanced/targetsModel.js:29",
    "frontend/src/pages/advanced/targetsModel.js:31",
    "frontend/src/pages/finance/financeReportsModel.js:107",
@@ -37513,10 +37633,18 @@
   "chunk": "pages-finance"
  },
  {
-  "text": "Belum ada produk terjual bulan ini",
+  "text": "20 produk terlaris",
   "kind": "exact",
   "sources": [
    "frontend/src/pages/marketing/MarketingInsights.jsx:242"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Belum ada produk terjual bulan ini",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/marketing/MarketingInsights.jsx:243"
   ],
   "chunk": "pages-finance"
  },
@@ -37524,7 +37652,7 @@
   "text": "Naik paling tinggi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:245"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:246"
   ],
   "chunk": "pages-finance"
  },
@@ -37536,7 +37664,7 @@
    "data.prevMonthLabel"
   ],
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:245"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:246"
   ],
   "chunk": "pages-finance"
  },
@@ -37544,7 +37672,7 @@
   "text": "Produk dengan kenaikan omzet terbesar",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:246"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:247"
   ],
   "chunk": "pages-finance"
  },
@@ -37552,7 +37680,7 @@
   "text": "Tidak ada produk yang naik",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:246"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:247"
   ],
   "chunk": "pages-finance"
  },
@@ -37560,7 +37688,7 @@
   "text": "Turun paling dalam",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:248"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:249"
   ],
   "chunk": "pages-finance"
  },
@@ -37572,7 +37700,7 @@
    "data.prevMonthLabel"
   ],
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:248"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:249"
   ],
   "chunk": "pages-finance"
  },
@@ -37580,7 +37708,7 @@
   "text": "Produk dengan penurunan omzet terbesar",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:249"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:250"
   ],
   "chunk": "pages-finance"
  },
@@ -37588,7 +37716,7 @@
   "text": "Tidak ada produk yang turun",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:249"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:250"
   ],
   "chunk": "pages-finance"
  },
@@ -37596,7 +37724,7 @@
   "text": "Omzet produk = porsi DPP tiap baris faktur: voucher dan diskon faktur dialokasikan proporsional terhadap nilai baris, sebelum retur.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:252"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:253"
   ],
   "chunk": "additions"
  },
@@ -37604,7 +37732,7 @@
   "text": "Produk terlaris muncul setelah batch Accurate pertama disetujui divisi Sales.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:254"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:255"
   ],
   "chunk": "pages-finance"
  },
@@ -37612,7 +37740,7 @@
   "text": "Pelanggan baru (NOO) per channel",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:261"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:262"
   ],
   "chunk": "pages-finance"
  },
@@ -37620,7 +37748,7 @@
   "text": "Belum ada pelanggan baru dalam 12 bulan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:266"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:267"
   ],
   "chunk": "pages-finance"
  },
@@ -37628,7 +37756,7 @@
   "text": "Leads per area",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:270"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:271"
   ],
   "chunk": "pages-finance"
  },
@@ -37636,7 +37764,7 @@
   "text": "Cari area",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:273"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:274"
   ],
   "chunk": "pages-finance"
  },
@@ -37644,7 +37772,7 @@
   "text": "Belum ada leads",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:275"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:276"
   ],
   "chunk": "pages-finance"
  },
@@ -37657,7 +37785,7 @@
    "formatNumber(data.leads.newThisMonth)"
   ],
   "sources": [
-   "frontend/src/pages/marketing/MarketingInsights.jsx:278"
+   "frontend/src/pages/marketing/MarketingInsights.jsx:279"
   ],
   "chunk": "pages-finance"
  },
@@ -38353,10 +38481,18 @@
   "chunk": "additions"
  },
  {
+  "text": "15 produk terlaris",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:297"
+  ],
+  "chunk": "additions"
+ },
+ {
   "text": "Belum ada produk terjual di bulan ini",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:298"
+   "frontend/src/pages/retail/RetailCommerce.jsx:299"
   ],
   "chunk": "pages-finance"
  },
@@ -38368,7 +38504,7 @@
    "shipments?.total ? ` (${formatNumber(shipments.total)})` : ''"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:303"
+   "frontend/src/pages/retail/RetailCommerce.jsx:304"
   ],
   "chunk": "pages-finance"
  },
@@ -38376,15 +38512,28 @@
   "text": "Cari nomor SO",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:307"
+   "frontend/src/pages/retail/RetailCommerce.jsx:308"
   ],
   "chunk": "pages-finance"
+ },
+ {
+  "text": "$1 SO tertua dari $2",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?) SO tertua dari ([\\s\\S]*?)$",
+  "vars": [
+   "formatNumber(shipments.rows.length)",
+   "formatNumber(shipments.total)"
+  ],
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:310"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Semua SO marketplace sudah terkirim",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:309"
+   "frontend/src/pages/retail/RetailCommerce.jsx:311"
   ],
   "chunk": "pages-finance"
  },
@@ -38397,7 +38546,7 @@
    "formatNumber(shipments.total)"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:312"
+   "frontend/src/pages/retail/RetailCommerce.jsx:314"
   ],
   "chunk": "pages-finance"
  },
@@ -38405,7 +38554,7 @@
   "text": "Faktur marketplace belum cair",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:316"
+   "frontend/src/pages/retail/RetailCommerce.jsx:318"
   ],
   "chunk": "pages-finance"
  },
@@ -38413,15 +38562,28 @@
   "text": "Cari nomor faktur",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:320"
+   "frontend/src/pages/retail/RetailCommerce.jsx:322"
   ],
   "chunk": "pages-finance"
+ },
+ {
+  "text": "$1 faktur terlama dari $2",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?) faktur terlama dari ([\\s\\S]*?)$",
+  "vars": [
+   "formatNumber(receivables.rows.length)",
+   "formatNumber(receivables.total)"
+  ],
+  "sources": [
+   "frontend/src/pages/retail/RetailCommerce.jsx:324"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Tidak ada faktur marketplace yang belum cair",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:322"
+   "frontend/src/pages/retail/RetailCommerce.jsx:325"
   ],
   "chunk": "pages-finance"
  },
@@ -38434,7 +38596,7 @@
    "formatNumber(receivables.total)"
   ],
   "sources": [
-   "frontend/src/pages/retail/RetailCommerce.jsx:325"
+   "frontend/src/pages/retail/RetailCommerce.jsx:328"
   ],
   "chunk": "pages-finance"
  },
@@ -39484,7 +39646,7 @@
   "text": "Email kerja",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:41",
+   "frontend/src/pages/account/Account.jsx:42",
    "frontend/src/pages/it/ReportImportDialog.jsx:234",
    "frontend/src/pages/people/Directory.jsx:162",
    "frontend/src/pages/people/PersonFormDialog.jsx:29",
@@ -39521,7 +39683,7 @@
   "text": "Perlu ditindaklanjuti",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:334",
+   "frontend/src/pages/advanced/Escalations.jsx:341",
    "frontend/src/pages/advanced/managementDashboardModel.js:107",
    "frontend/src/pages/advanced/Targets.jsx:318",
    "frontend/src/pages/ga/GaOperations.jsx:221"
@@ -40471,7 +40633,7 @@
   "sources": [
    "frontend/src/pages/ga/gaModel.js:135",
    "frontend/src/pages/ga/gaModel.js:137",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:208"
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:209"
   ],
   "chunk": "pages-people-1"
  },
@@ -44850,8 +45012,8 @@
    "frontend/src/pages/it/infraModel.js:225",
    "frontend/src/pages/it/infraModel.js:460",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:38",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:206",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:231",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:207",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:232",
    "frontend/src/pages/it/SubscriptionDetail.jsx:430"
   ],
   "chunk": "pages-it-1"
@@ -45551,7 +45713,7 @@
   "sources": [
    "backend/src/controllers/softwareSubscriptions.controller.js:184",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:42",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:235",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:236",
    "frontend/src/pages/it/SubscriptionDetail.jsx:433"
   ],
   "chunk": "pages-it-2"
@@ -45813,7 +45975,7 @@
    "frontend/src/pages/handbook/aiForms.generated.js:120",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:33",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:181",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:219"
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:220"
   ],
   "chunk": "pages-it-2"
  },
@@ -46407,7 +46569,7 @@
   "sources": [
    "frontend/src/pages/handbook/aiForms.generated.js:120",
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:40",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:233"
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:234"
   ],
   "chunk": "pages-it-2"
  },
@@ -48980,7 +49142,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/it/ItDashboard.jsx:199",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:207",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:208",
    "frontend/src/pages/it/SubscriptionDetail.jsx:386"
   ],
   "chunk": "pages-it-2"
@@ -50226,7 +50388,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:35",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:224"
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:225"
   ],
   "chunk": "pages-it-2"
  },
@@ -50235,7 +50397,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:39",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:232"
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:233"
   ],
   "chunk": "pages-it-2"
  },
@@ -50244,7 +50406,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:43",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:236",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:237",
    "frontend/src/pages/it/SubscriptionDetail.jsx:388",
    "frontend/src/pages/it/SubscriptionDetail.jsx:431"
   ],
@@ -50255,8 +50417,8 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/it/SoftwareSubscriptions.jsx:50",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:201",
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:249"
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:202",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:250"
   ],
   "chunk": "additions"
  },
@@ -50338,10 +50500,23 @@
   "chunk": "additions"
  },
  {
+  "text": "$1 dari $2 langganan",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?) dari ([\\s\\S]*?) langganan$",
+  "vars": [
+   "rows.length",
+   "listMeta.total"
+  ],
+  "sources": [
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:192"
+  ],
+  "chunk": "additions"
+ },
+ {
   "text": "Belum ada langganan software",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:196"
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:197"
   ],
   "chunk": "pages-it-2"
  },
@@ -50349,7 +50524,7 @@
   "text": "Ubah langganan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:200",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:201",
    "frontend/src/pages/it/SubscriptionDetail.jsx:282",
    "frontend/src/pages/it/SubscriptionDetail.jsx:290",
    "frontend/src/pages/it/SubscriptionDetail.jsx:419"
@@ -50360,7 +50535,7 @@
   "text": "Informasi langganan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:220"
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:221"
   ],
   "chunk": "pages-it-2"
  },
@@ -50372,7 +50547,7 @@
    "invoiceOpen?.productName || ''"
   ],
   "sources": [
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:244"
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:245"
   ],
   "chunk": "additions"
  },
@@ -50380,7 +50555,7 @@
   "text": "Subtotal + pajak.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:259"
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:260"
   ],
   "chunk": "additions"
  },
@@ -50388,7 +50563,7 @@
   "text": "File invoice (PDF)",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:262",
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:263",
    "frontend/src/pages/it/SubscriptionDetail.jsx:488"
   ],
   "chunk": "additions"
@@ -50397,7 +50572,7 @@
   "text": "Tanpa file, invoice tercatat sebagai Menunggu file PDF dan belum bisa diverifikasi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/it/SoftwareSubscriptions.jsx:262"
+   "frontend/src/pages/it/SoftwareSubscriptions.jsx:263"
   ],
   "chunk": "additions"
  },
@@ -51311,7 +51486,7 @@
   "sources": [
    "backend/src/services/ai/agent/forms/management.js:10",
    "frontend/src/pages/advanced/Escalations.jsx:43",
-   "frontend/src/pages/advanced/Escalations.jsx:413",
+   "frontend/src/pages/advanced/Escalations.jsx:420",
    "frontend/src/pages/handbook/aiForms.generated.js:82"
   ],
   "chunk": "pages-management-1"
@@ -51575,8 +51750,8 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/advanced/Escalations.jsx:50",
-   "frontend/src/pages/advanced/Escalations.jsx:246",
-   "frontend/src/pages/advanced/Escalations.jsx:428"
+   "frontend/src/pages/advanced/Escalations.jsx:248",
+   "frontend/src/pages/advanced/Escalations.jsx:441"
   ],
   "chunk": "pages-management-1"
  },
@@ -51585,7 +51760,7 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/advanced/Escalations.jsx:51",
-   "frontend/src/pages/advanced/Escalations.jsx:435"
+   "frontend/src/pages/advanced/Escalations.jsx:448"
   ],
   "chunk": "pages-management-1"
  },
@@ -51623,6 +51798,47 @@
   "chunk": "additions"
  },
  {
+  "text": "Kondisi sumber",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/advanced/Escalations.jsx:239"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Lewat tenggat $1 hari",
+  "kind": "pattern",
+  "regex": "^Lewat tenggat ([\\s\\S]*?) hari$",
+  "vars": [
+   "r.daysLate"
+  ],
+  "sources": [
+   "frontend/src/pages/advanced/Escalations.jsx:243",
+   "frontend/src/pages/advanced/Escalations.jsx:244"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "$1 (sumber masih lewat tenggat)",
+  "kind": "pattern",
+  "regex": "^([\\s\\S]*?) \\(sumber masih lewat tenggat\\)$",
+  "vars": [
+   "STATUS_LABELS.resolved"
+  ],
+  "sources": [
+   "frontend/src/pages/advanced/Escalations.jsx:250"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Sumber masih lewat tenggat",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/advanced/Escalations.jsx:254"
+  ],
+  "chunk": "additions"
+ },
+ {
   "text": "Hapus filter jenis $1",
   "kind": "pattern",
   "regex": "^Hapus filter jenis ([\\s\\S]*?)$",
@@ -51630,7 +51846,7 @@
    "sourceLabel(sources, source)"
   ],
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:281"
+   "frontend/src/pages/advanced/Escalations.jsx:288"
   ],
   "chunk": "pages-management-1"
  },
@@ -51642,7 +51858,7 @@
    "sourceLabel(sources, source)"
   ],
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:284"
+   "frontend/src/pages/advanced/Escalations.jsx:291"
   ],
   "chunk": "pages-management-1"
  },
@@ -51650,7 +51866,7 @@
   "text": "Satu antrean berisi semua pekerjaan dari setiap modul divisi yang sudah melewati tenggatnya, supaya manajemen bisa menindaklanjuti tanpa membuka modulnya satu per satu.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:293"
+   "frontend/src/pages/advanced/Escalations.jsx:300"
   ],
   "chunk": "pages-management-1"
  },
@@ -51658,7 +51874,7 @@
   "text": "Akun Anda belum terhubung ke divisi",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:305",
+   "frontend/src/pages/advanced/Escalations.jsx:312",
    "frontend/src/pages/advanced/ManagementDashboard.jsx:147",
    "frontend/src/pages/advanced/Roadmap.jsx:138",
    "frontend/src/pages/advanced/Targets.jsx:254"
@@ -51669,7 +51885,7 @@
   "text": "Pusat Eskalasi menampilkan pekerjaan per divisi, jadi akun Anda perlu terdaftar pada salah satu divisi. Hubungi admin untuk menautkannya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:306"
+   "frontend/src/pages/advanced/Escalations.jsx:313"
   ],
   "chunk": "pages-management-1"
  },
@@ -51677,7 +51893,7 @@
   "text": "Daftar eskalasi gagal dimuat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:313"
+   "frontend/src/pages/advanced/Escalations.jsx:320"
   ],
   "chunk": "pages-management-1"
  },
@@ -51689,7 +51905,7 @@
    "scope.departmentName"
   ],
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:321",
+   "frontend/src/pages/advanced/Escalations.jsx:328",
    "frontend/src/pages/advanced/ManagementDashboard.jsx:163",
    "frontend/src/pages/advanced/Roadmap.jsx:154",
    "frontend/src/pages/advanced/Targets.jsx:270",
@@ -51701,7 +51917,7 @@
   "text": "Tampilan dibatasi pada divisi Anda.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:321",
+   "frontend/src/pages/advanced/Escalations.jsx:328",
    "frontend/src/pages/advanced/ManagementDashboard.jsx:163",
    "frontend/src/pages/advanced/Roadmap.jsx:154",
    "frontend/src/pages/advanced/Targets.jsx:270",
@@ -51713,7 +51929,7 @@
   "text": "Belum ditangani",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:330",
+   "frontend/src/pages/advanced/Escalations.jsx:337",
    "frontend/src/pages/advanced/escalationsModel.js:27"
   ],
   "chunk": "pages-management-1"
@@ -51722,7 +51938,7 @@
   "text": "Sedang ditangani",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:336",
+   "frontend/src/pages/advanced/Escalations.jsx:343",
    "frontend/src/pages/advanced/escalationsModel.js:28"
   ],
   "chunk": "pages-management-1"
@@ -51731,7 +51947,7 @@
   "text": "Per modul",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:346"
+   "frontend/src/pages/advanced/Escalations.jsx:353"
   ],
   "chunk": "pages-management-1"
  },
@@ -51739,39 +51955,39 @@
   "text": "Antrean",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:377"
+   "frontend/src/pages/advanced/Escalations.jsx:384"
   ],
   "chunk": "pages-management-1"
  },
  {
-  "text": "Tidak ada yang perlu dieskalasi",
+  "text": "Tidak ada eskalasi pada filter ini",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:389"
+   "frontend/src/pages/advanced/Escalations.jsx:396"
   ],
-  "chunk": "pages-management-1"
+  "chunk": "additions"
  },
  {
-  "text": "Semua pekerjaan di setiap modul masih dalam tenggat — tidak ada yang menunggu keputusan Anda.",
+  "text": "Tidak ada eskalasi yang belum ditindaklanjuti. Eskalasi yang sudah dicatat Ditangani atau Selesai ada di filter lain dan bisa saja masih lewat tenggat di modul asalnya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:391"
+   "frontend/src/pages/advanced/Escalations.jsx:398"
   ],
-  "chunk": "pages-management-1"
+  "chunk": "additions"
  },
  {
-  "text": "Tidak ada eskalasi yang cocok dengan filter ini.",
+  "text": "Coba filter lain. Antrean hanya memuat pekerjaan yang saat ini lewat tenggat di modul asalnya.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:392"
+   "frontend/src/pages/advanced/Escalations.jsx:399"
   ],
-  "chunk": "pages-management-1"
+  "chunk": "additions"
  },
  {
   "text": "Tindak lanjut",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:404",
+   "frontend/src/pages/advanced/Escalations.jsx:411",
    "frontend/src/pages/advanced/flow/FlowSales.jsx:43",
    "frontend/src/pages/advanced/flow/FlowSales.jsx:57"
   ],
@@ -51785,7 +52001,7 @@
    "(!row.referenceLabel && row.reference) || row.title"
   ],
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:405"
+   "frontend/src/pages/advanced/Escalations.jsx:412"
   ],
   "chunk": "pages-management-1"
  },
@@ -51793,7 +52009,7 @@
   "text": "Konteks",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:422",
+   "frontend/src/pages/advanced/Escalations.jsx:429",
    "frontend/src/pages/ai/AICommandCenter.jsx:53"
   ],
   "chunk": "pages-management-1"
@@ -51802,15 +52018,31 @@
   "text": "Sejak",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:424"
+   "frontend/src/pages/advanced/Escalations.jsx:431"
   ],
   "chunk": "pages-management-1"
+ },
+ {
+  "text": "Status di sini hanya catatan tindak lanjut. Menyimpannya tidak membayar, menyetujui, atau menutup pekerjaan di modul asal; selama sumbernya masih lewat tenggat, eskalasi tetap muncul di antrean.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/advanced/Escalations.jsx:434"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Buka sumber",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/advanced/Escalations.jsx:438"
+  ],
+  "chunk": "additions"
  },
  {
   "text": "Anda bisa menugaskan ke diri sendiri atau mengosongkannya; daftar pengguna lain tidak tersedia di halaman ini.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:439"
+   "frontend/src/pages/advanced/Escalations.jsx:452"
   ],
   "chunk": "pages-management-1"
  },
@@ -51823,7 +52055,7 @@
    "NOTE_MAX"
   ],
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:447"
+   "frontend/src/pages/advanced/Escalations.jsx:460"
   ],
   "chunk": "pages-management-1"
  },
@@ -51831,7 +52063,7 @@
   "text": "Mis. sudah dibahas dengan Head divisi, target selesai Jumat.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/advanced/Escalations.jsx:448"
+   "frontend/src/pages/advanced/Escalations.jsx:461"
   ],
   "chunk": "pages-management-1"
  },
@@ -63722,7 +63954,7 @@
   "text": "Profil",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:48",
+   "frontend/src/pages/account/Account.jsx:49",
    "frontend/src/pages/handbook/handbookContent.js:111"
   ],
   "chunk": "additions"
@@ -63731,7 +63963,7 @@
   "text": "Bahasa",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:79",
+   "frontend/src/pages/account/Account.jsx:80",
    "frontend/src/pages/handbook/handbookContent.js:112"
   ],
   "chunk": "additions"
@@ -67318,6 +67550,14 @@
    "frontend/src/pages/handbook/handbookContent.js:812"
   ],
   "chunk": "handbook-1"
+ },
+ {
+  "text": "Verifikasi tidak ditemukan",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/handbook/handbookContent.js:812"
+  ],
+  "chunk": "pages-home"
  },
  {
   "text": "Kode salah atau dokumen tidak terdaftar. Waspadai dokumen palsu.",
@@ -72741,7 +72981,7 @@
   "chunk": "handbook-2"
  },
  {
-  "text": "Profil, bahasa tampilan, beranda, dan sesi akun Anda.",
+  "text": "Profil, bahasa tampilan, beranda, tanda tangan, dan sesi akun Anda.",
   "kind": "exact",
   "sources": [
    "frontend/src/pages/account/Account.jsx:26"
@@ -72752,7 +72992,7 @@
   "text": "Cara masuk",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:45"
+   "frontend/src/pages/account/Account.jsx:46"
   ],
   "chunk": "additions"
  },
@@ -72760,7 +73000,7 @@
   "text": "Nama, divisi, dan peran diatur oleh Administrator dan disinkronkan dari Google Workspace. Hubungi Administrator Sistem bila ada yang perlu diubah.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:51"
+   "frontend/src/pages/account/Account.jsx:52"
   ],
   "chunk": "additions"
  },
@@ -72768,7 +73008,7 @@
   "text": "Bahasa belum tersimpan di akun Anda. Periksa koneksi lalu coba lagi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:71"
+   "frontend/src/pages/account/Account.jsx:72"
   ],
   "chunk": "additions"
  },
@@ -72776,7 +73016,7 @@
   "text": "Bahasa tampilan aplikasi. Pilihan ini disimpan di akun Anda, jadi ikut dipakai saat Anda masuk dari perangkat lain.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:82"
+   "frontend/src/pages/account/Account.jsx:83"
   ],
   "chunk": "additions"
  },
@@ -72784,7 +73024,7 @@
   "text": "Bahasa tampilan",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:86"
+   "frontend/src/pages/account/Account.jsx:87"
   ],
   "chunk": "additions"
  },
@@ -72792,7 +73032,7 @@
   "text": "Data dari Accurate dan teks yang diketik pengguna tidak diterjemahkan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:88"
+   "frontend/src/pages/account/Account.jsx:89"
   ],
   "chunk": "additions"
  },
@@ -72800,7 +73040,7 @@
   "text": "Pilihan belum tersimpan di akun Anda. Periksa koneksi lalu coba lagi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:112"
+   "frontend/src/pages/account/Account.jsx:113"
   ],
   "chunk": "additions"
  },
@@ -72808,7 +73048,7 @@
   "text": "Tampilkan ringkasan pagi di beranda",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:120"
+   "frontend/src/pages/account/Account.jsx:121"
   ],
   "chunk": "additions"
  },
@@ -72816,7 +73056,15 @@
   "text": "Ringkasan pagi merangkum yang perlu Anda tindak hari ini: tugas, persetujuan, dan angka modul sesuai peran Anda. Disusun langsung dari data, tanpa model AI; tidak ada notifikasi atau email yang dikirim.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:121"
+   "frontend/src/pages/account/Account.jsx:122"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Permintaan tanda tangan baru dibuat oleh alur yang membutuhkannya, lalu muncul di notifikasi dan di \"Permintaan tanda tangan\". Dokumen Google yang dibuat dari template di Drive belum bisa diajukan untuk tanda tangan dari aplikasi, dan tidak otomatis bertanda tangan.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/account/Account.jsx:146"
   ],
   "chunk": "additions"
  },
@@ -72824,7 +73072,7 @@
   "text": "Anda masuk dengan Google; tidak perlu kata sandi.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:138"
+   "frontend/src/pages/account/Account.jsx:163"
   ],
   "chunk": "additions"
  },
@@ -72832,7 +73080,7 @@
   "text": "Kata sandi akun Anda dikelola oleh Super Admin. Untuk mengganti atau memulihkannya, hubungi Super Admin.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:139"
+   "frontend/src/pages/account/Account.jsx:164"
   ],
   "chunk": "additions"
  },
@@ -72840,7 +73088,7 @@
   "text": "Akun Anda dikeluarkan dari semua browser dan perangkat, termasuk yang ini. Pakai bila perangkat hilang atau Anda lupa keluar di komputer lain.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:159"
+   "frontend/src/pages/account/Account.jsx:184"
   ],
   "chunk": "additions"
  },
@@ -72848,8 +73096,8 @@
   "text": "Keluar dari semua perangkat",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:163",
-   "frontend/src/pages/account/Account.jsx:170"
+   "frontend/src/pages/account/Account.jsx:188",
+   "frontend/src/pages/account/Account.jsx:195"
   ],
   "chunk": "additions"
  },
@@ -72857,7 +73105,7 @@
   "text": "Keluar dari semua perangkat?",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:168"
+   "frontend/src/pages/account/Account.jsx:193"
   ],
   "chunk": "additions"
  },
@@ -72865,7 +73113,7 @@
   "text": "Semua sesi akun Anda berakhir, termasuk di perangkat ini. Anda perlu masuk lagi untuk melanjutkan.",
   "kind": "exact",
   "sources": [
-   "frontend/src/pages/account/Account.jsx:169"
+   "frontend/src/pages/account/Account.jsx:194"
   ],
   "chunk": "additions"
  },
@@ -72898,6 +73146,30 @@
   "kind": "exact",
   "sources": [
    "frontend/src/pages/account/accountModel.js:14"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Dokumen yang menunggu tanda tangan Anda dan riwayatnya.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/account/accountModel.js:35"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Unggah atau ganti gambar tanda tangan Anda.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/account/accountModel.js:36"
+  ],
+  "chunk": "additions"
+ },
+ {
+  "text": "Cap atau kop surat resmi divisi Anda.",
+  "kind": "exact",
+  "sources": [
+   "frontend/src/pages/account/accountModel.js:37"
   ],
   "chunk": "additions"
  },
@@ -75559,22 +75831,6 @@
   "kind": "exact",
   "sources": [
    "backend/src/controllers/signatureQr.controller.js:58"
-  ],
-  "chunk": "backend-controllers"
- },
- {
-  "text": "Kode verifikasi tidak valid",
-  "kind": "exact",
-  "sources": [
-   "backend/src/controllers/signatureQr.controller.js:172"
-  ],
-  "chunk": "backend-controllers"
- },
- {
-  "text": "Kode verifikasi tidak ditemukan",
-  "kind": "exact",
-  "sources": [
-   "backend/src/controllers/signatureQr.controller.js:194"
   ],
   "chunk": "backend-controllers"
  },

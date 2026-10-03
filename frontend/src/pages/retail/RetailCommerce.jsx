@@ -294,6 +294,7 @@ export default function RetailCommerce() {
           idKey="code"
           searchable={false}
           exportName={`retail-commerce-produk-${productMonth}`}
+          exportNote="15 produk terlaris"
           pageSize={15}
           empty="Belum ada produk terjual di bulan ini"
         />
@@ -306,6 +307,7 @@ export default function RetailCommerce() {
         loading={loading && !shipments}
         searchPlaceholder="Cari nomor SO"
         exportName="retail-commerce-so-belum-dikirim"
+        exportNote={shipments?.total > shipments?.rows?.length ? `${formatNumber(shipments.rows.length)} SO tertua dari ${formatNumber(shipments.total)}` : ''}
         empty="Semua SO marketplace sudah terkirim"
       />
       {shipments?.total > shipments?.rows?.length ? (
@@ -319,6 +321,7 @@ export default function RetailCommerce() {
         loading={loading && !receivables}
         searchPlaceholder="Cari nomor faktur"
         exportName="retail-commerce-piutang"
+        exportNote={receivables?.total > receivables?.rows?.length ? `${formatNumber(receivables.rows.length)} faktur terlama dari ${formatNumber(receivables.total)}` : ''}
         empty="Tidak ada faktur marketplace yang belum cair"
       />
       {receivables?.total > receivables?.rows?.length ? (

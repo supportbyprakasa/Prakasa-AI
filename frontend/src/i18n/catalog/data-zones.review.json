@@ -1,6 +1,12 @@
 [
  {
   "kind": "grid-column",
+  "source": "frontend/src/pages/advanced/Escalations.jsx:246",
+  "name": "'Status tindak lanjut'",
+  "value": "(r) => (itemStatus(r) === 'resolved' ? ( <span className=\"pw-cell\"> <StatusBadge status={statusKey('resolved')} label={STATUS_LABELS.resolved} /> <span classNam"
+ },
+ {
+  "kind": "grid-column",
   "source": "frontend/src/pages/marketing/MarketingCampaigns.jsx:80",
   "name": "'Channel'",
   "value": "(r) => (r.channels === 'all' ? <Translate>{channelsText(r.channels)}</Translate> : channelsText(r.channels))"

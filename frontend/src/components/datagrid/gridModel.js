@@ -2,6 +2,8 @@
 // alignment, paging and selection. Kept framework-free so it is unit-tested
 // directly (test/gridModel.test.js, test/dataGrid.test.js).
 
+import { formatNumber } from '../format.js';
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Spreadsheet apps execute cells starting with these as formulas (CSV injection).
 const FORMULA_PREFIX = /^[=+\-@\t\r]/;
@@ -305,4 +307,20 @@ export function fieldErrorsFromApi(error) {
 
 export function apiErrorMessage(error, fallback) {
   return error?.response?.data?.error?.message || fallback;
+}
+
+// What an export holds (revision F04), said on the export menu itself so a
+// file is never mistaken for the whole list:
+//   exportAll    the page exports every match from its own API (onExport)
+//   manual       a server-paged list without export-all: only the page shown
+//   otherwise    the rows loaded in the browser, after search and filters
+// `note` names a list that is itself limited (top-N, first N of a total).
+export function exportScope({ exportAll = false, manual = false, pageRows = 0, filteredRows = 0, total = null, truncated = false, note = '' } = {}) {
+  const n = (value) => formatNumber(Number(value || 0));
+  let text;
+  if (exportAll) text = total === null || total === undefined ? 'Semua hasil sesuai filter' : `Semua hasil sesuai filter (${n(total)} baris)`;
+  else if (manual) text = `Hanya halaman ini: ${n(pageRows)} baris${total === null || total === undefined ? '' : ` dari ${n(total)}`}`;
+  else if (truncated) text = `${n(filteredRows)} baris yang dimuat (daftar terpotong)`;
+  else text = `Semua hasil terfilter: ${n(filteredRows)} baris`;
+  return note ? `${text} · ${note}` : text;
 }

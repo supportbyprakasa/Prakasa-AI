@@ -234,19 +234,26 @@ export default function Escalations() {
     },
     {
       key: 'daysLate',
-      header: 'Terlambat',
+      // Every row here is still past its deadline in its own module (the
+      // queue lists live breaches); the follow-up status is a separate column.
+      header: 'Kondisi sumber',
       translate: true,
       align: 'end',
       sortValue: (r) => r.daysLate,
-      exportValue: (r) => `${r.daysLate} hari`,
-      render: (r) => <span className={`esc-late is-${severityTone(r.severity)}`}>{r.daysLate} hari</span>,
+      exportValue: (r) => `Lewat tenggat ${r.daysLate} hari`,
+      render: (r) => <span className={`esc-late is-${severityTone(r.severity)}`}>{`Lewat tenggat ${r.daysLate} hari`}</span>,
     },
     {
       key: 'followupStatus',
       header: 'Status tindak lanjut',
       sortValue: (r) => STATUS_LABELS[itemStatus(r)],
-      exportValue: (r) => STATUS_LABELS[itemStatus(r)],
-      render: (r) => <StatusBadge status={statusKey(itemStatus(r))} label={STATUS_LABELS[itemStatus(r)]} />,
+      exportValue: (r) => (itemStatus(r) === 'resolved' ? `${STATUS_LABELS.resolved} (sumber masih lewat tenggat)` : STATUS_LABELS[itemStatus(r)]),
+      render: (r) => (itemStatus(r) === 'resolved' ? (
+        <span className="pw-cell">
+          <StatusBadge status={statusKey('resolved')} label={STATUS_LABELS.resolved} />
+          <span className="pw-cell__meta">Sumber masih lewat tenggat</span>
+        </span>
+      ) : <StatusBadge status={statusKey(itemStatus(r))} label={STATUS_LABELS[itemStatus(r)]} />),
     },
     {
       key: 'updatedAt',
@@ -385,11 +392,11 @@ export default function Escalations() {
             pageSize={20}
             empty={(
               <EmptyState
-                icon="celebration"
-                title="Tidak ada yang perlu dieskalasi"
+                icon="filter_alt_off"
+                title="Tidak ada eskalasi pada filter ini"
                 description={status === 'open'
-                  ? 'Semua pekerjaan di setiap modul masih dalam tenggat — tidak ada yang menunggu keputusan Anda.'
-                  : 'Tidak ada eskalasi yang cocok dengan filter ini.'}
+                  ? 'Tidak ada eskalasi yang belum ditindaklanjuti. Eskalasi yang sudah dicatat Ditangani atau Selesai ada di filter lain dan bisa saja masih lewat tenggat di modul asalnya.'
+                  : 'Coba filter lain. Antrean hanya memuat pekerjaan yang saat ini lewat tenggat di modul asalnya.'}
                 compact
               />
             )}
@@ -424,6 +431,12 @@ export default function Escalations() {
                 { label: 'Sejak', value: formatDateTime(target.since) },
               ]}
             />
+            <Banner tone="info">
+              Status di sini hanya catatan tindak lanjut. Menyimpannya tidak membayar, menyetujui, atau menutup pekerjaan di modul asal; selama sumbernya masih lewat tenggat, eskalasi tetap muncul di antrean.
+            </Banner>
+            {allowedLink(target.link, user?.permissions) ? (
+              <Button variant="text" icon="open_in_new" to={target.link}>Buka sumber</Button>
+            ) : null}
             <Select
               label="Status tindak lanjut"
               required

@@ -96,3 +96,10 @@ test('the page keeps to its scope: own account only, no HR data, no native dialo
   assert.match(read('components/LanguageSwitch.jsx'), /chooseLanguage\(/);
   assert.match(read('i18n/accountLanguage.js'), /'\/auth\/me\/preferences'/);
 });
+
+test('F17: Akun saya lists only the signature tools the user may open', async () => {
+  const { signatureTools } = await import('../src/pages/account/accountModel.js');
+  assert.deepEqual(signatureTools(['signature.view', 'signature.manage_asset']).map((t) => t.to), ['/signatures', '/signatures/asset']);
+  assert.deepEqual(signatureTools(['letterhead.view']).map((t) => t.to), ['/signatures/letterhead']);
+  assert.deepEqual(signatureTools([]), []);
+});

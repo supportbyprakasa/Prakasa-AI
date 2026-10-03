@@ -97,7 +97,6 @@ const NAV = [
       // Movements, or stock from Accurate only (Management Office oversight).
       { to: '/warehouse', label: 'Warehouse', symbol: 'warehouse', permission: ['warehouse.movement.view', 'warehouse.stock.view'] },
       { to: '/procurement', label: 'Procurement', symbol: 'assignment_turned_in', permission: 'procurement.view' },
-      // Modules still being prepared ("Segera hadir"), last.
       // Marketplace performance (migration 120).
       { to: '/retail-commerce', label: 'Retail Commerce', symbol: 'storefront', permission: 'retail.insight.view' },
     ],
@@ -178,9 +177,7 @@ export function hasNavPermission(permissions, required) {
 
 // What each division works in most, in the order they reach for it (role key
 // prefix → [section title, ...paths]). These entries move up, right under the
-// everyday entries; everything else keeps the order above. Divisions whose
-// module is still "Segera hadir" (Finance) only get the division dashboard: a page that
-// does nothing yet is not their priority. Management Office's work is the
+// everyday entries; everything else keeps the order above. Management Office's work is the
 // oversight toolkit; People & Culture runs onboarding/offboarding, GA and IT.
 const ROLE_FOCUS = {
   sales: [['Sales', '/division-dashboard', '/sales/pipeline', '/sales/customers', '/sales/leads', '/sales/orders']],
@@ -196,7 +193,7 @@ const ROLE_FOCUS = {
   ],
   retail_commerce: [['Retail Commerce', '/division-dashboard', '/retail-commerce'], ['Sales', '/sales/customers', '/sales/leads', '/sales/orders', '/sales/pipeline'], ['Warehouse', '/warehouse']],
   marketing: [['Marketing', '/division-dashboard', '/marketing/insights', '/marketing/campaigns'], ['Sales', '/sales/customers', '/sales/leads']],
-  // Finance's module is still "Segera hadir"; its Supervisor/Head get the division dashboard.
+  // Finance: receivables, payables and payment requests (live modules).
   finance: [['Finance', '/division-dashboard', '/finance/receivables', '/finance/payables', '/finance/payment-requests']],
   // Administrator Sistem (role key system.admin, matched whole): no division,
   // its work is the administration groups.
@@ -319,7 +316,7 @@ export const divisions = [
   { slug: 'ai', title: 'Prakasa AI', symbol: 'auto_awesome', paths: ['/ai-command'],
     summary: 'Tanya, ringkas, dan susun draft bersama Prakasa AI.' },
   { slug: 'sales', title: 'Sales & Pelanggan', symbol: 'handshake', paths: ['/sales/pipeline', '/sales/customers', '/sales/leads', '/sales/orders'],
-    summary: 'Pipeline, pelanggan, sample request, dan kunjungan lapangan.' },
+    summary: 'Pipeline, pelanggan dan leads, kunjungan lapangan, dan Data Sales.' },
   { slug: 'warehouse', title: 'Warehouse', symbol: 'warehouse', paths: ['/warehouse'],
     summary: 'Barang masuk dan keluar, approval Supervisor, serta operasional gudang.' },
   { slug: 'finance', title: 'Finance', symbol: 'account_balance_wallet', paths: ['/finance/receivables', '/finance/payables'],

@@ -67,7 +67,7 @@ Cara paling mudah adalah memakai akun Google kantor Anda (alamat email perusahaa
 | Gagal masuk. Periksa email dan kata sandi. | Email atau kata sandi salah. Coba lagi dengan teliti. |
 | Gagal masuk dengan Google. | Akun Google yang dipilih bukan akun kantor, atau belum terdaftar. |
 
-Akun belum dibuat atau dinonaktifkan? Hubungi Super Admin atau Administrator Sistem, seperti tertulis di bawah tombol "Masuk".
+Akun belum dibuat atau dinonaktifkan? Hubungi Administrator Sistem atau Super Admin, seperti tertulis di bawah tombol "Masuk". Lupa kata sandi? Hanya Super Admin yang dapat mereset kata sandi; tidak ada reset mandiri.
 
 <a id="mulai-ganti-kata-sandi"></a>
 
@@ -375,6 +375,8 @@ Semua kebutuhan IT diajukan lewat tiket, supaya tercatat dan bisa dipantau. Cara
 
 > **Catatan:** Anda mendapat notifikasi di aplikasi setiap kali status tiket berubah atau ada tanggapan baru.
 
+> **Catatan:** Tiket juga tampil sebagai issue di project IT Project Tracker. Status issue itu hanya dapat dipindahkan oleh pengelola tiket IT, dan mengikuti status tiketnya; tiket yang ditutup atau dibatalkan tidak dibuka lagi dari papan. Bila tiket tidak ikut berubah, papan memberi tahu dan riwayat issue mencatatnya.
+
 <a id="kerja-harian-layanan-ga"></a>
 
 ### Layanan GA: ATK, perbaikan, dan pinjam ruang
@@ -394,7 +396,7 @@ Semua kebutuhan IT diajukan lewat tiket, supaya tercatat dan bisa dipantau. Cara
 3. Periksa keterangan jadwal: bila tertulis "Sudah terpakai" atau "bentrok", pilih jam lain.
 4. Klik "Pesan ruang". Bila ruang kosong, pesanan langsung terkonfirmasi.
 
-> **Catatan:** Pinjam kendaraan dilakukan lewat TrackCar (tombol "Pinjam kendaraan" membuka TrackCar di tab baru), bukan di Prakasa Workspace.
+> **Catatan:** Pinjam kendaraan dilakukan lewat TrackCar: pilihan "Pinjam kendaraan" di "Buat permintaan" membuka TrackCar di tab baru dan tidak membuat pemesanan di Prakasa Workspace. Data TrackCar tidak disinkronkan ke Workspace.
 
 **Status permintaan dan pemesanan**
 
@@ -639,7 +641,7 @@ Kondisi barang dipilih dari: Sangat baik, Baik, Cukup, Kurang, atau Rusak. Dokum
 
 ### Permintaan tanda tangan
 
-Dokumen yang perlu ditandatangani dibuka dari pratinjau dokumen atau dari notifikasi "Dokumen menunggu tanda tangan Anda" (juga dikirim lewat email).
+Buka "Permintaan tanda tangan" dari Akun saya (kartu "Tanda tangan") atau dari notifikasi "Dokumen menunggu tanda tangan Anda" (juga dikirim lewat email).
 
 1. Buka notifikasi atau kartu di Dashboard.
 2. Baca dokumen dan ringkasannya. Bila ada kartu "Cek awal tanda tangan (AI)", periksa temuannya.
@@ -655,11 +657,13 @@ Dokumen yang perlu ditandatangani dibuka dari pratinjau dokumen atau dari notifi
 
 > **Catatan:** Cek awal AI hanya saran. Hasilnya tidak menyetujui atau menolak dokumen; keputusan tetap di tangan penanda tangan.
 
+> **Catatan:** Permintaan tanda tangan baru dibuat oleh alur yang membutuhkannya. Dokumen Google yang dibuat dari Template dokumen di Drive belum bisa diajukan untuk tanda tangan dari aplikasi, dan tidak otomatis bertanda tangan.
+
 <a id="dokumen-tanda-tangan-saya"></a>
 
 ### Tanda tangan saya
 
-1. Buka "Tanda tangan saya" dari alat dokumen.
+1. Buka Akun saya, lalu di kartu "Tanda tangan" klik "Tanda tangan saya".
 2. Di "Unggah tanda tangan", pilih "File tanda tangan" (PNG atau JPEG, maksimal 500 KB). Pakai latar putih atau transparan.
 3. Klik "Simpan tanda tangan".
 
@@ -669,7 +673,7 @@ Dokumen yang perlu ditandatangani dibuka dari pratinjau dokumen atau dari notifi
 
 ### Cap surat divisi
 
-"Cap surat" adalah cap atau kop surat resmi divisi yang dipakai bersama oleh semua anggota divisi.
+"Cap surat" adalah cap atau kop surat resmi divisi yang dipakai bersama oleh semua anggota divisi. Buka dari Akun saya, kartu "Tanda tangan", lalu "Cap surat".
 
 Hanya Head divisi yang bisa mengunggah atau mengganti cap surat ("Unggah atau ganti cap surat", PNG/JPEG maksimal 500 KB, lalu "Simpan cap surat").
 
@@ -683,7 +687,10 @@ Setiap dokumen bertanda tangan punya kode atau QR verifikasi. Siapa pun yang mem
 | --- | --- |
 | Tanda tangan valid | Dokumen terdaftar dan tanda tangannya masih berlaku. |
 | Tanda tangan sudah tidak berlaku | Masa berlaku habis atau dicabut. |
-| Verifikasi tidak ditemukan | Kode salah atau dokumen tidak terdaftar. Waspadai dokumen palsu. |
+| Kode verifikasi tidak ditemukan / tidak valid | Server menjawab kodenya tidak terdaftar atau salah format. Waspadai dokumen palsu. |
+| Belum dapat memverifikasi | Layanan verifikasi tidak bisa dihubungi (koneksi, server, atau terlalu banyak permintaan). Ini bukan tanda dokumen palsu; coba lagi. |
+
+> **Catatan:** Hasil verifikasi berasal dari data pendaftaran di server. Untuk memastikan salinan yang Anda pegang sama, bandingkan hash dokumennya dengan hash di halaman verifikasi.
 
 <a id="dokumen-my-drive"></a>
 
@@ -1514,7 +1521,7 @@ Tab "Harga beli" menampilkan harga terakhir per barang, harga sebelumnya, dan pe
 
 *Bagian: Modul divisi*
 
-Piutang pelanggan dan utang ke pemasok dari faktur dan pembayaran Accurate yang sudah disetujui Supervisor/Head Finance. Pengajuan pembayaran dibahas di bab Kerja harian.
+Piutang pelanggan dari faktur dan penerimaan Accurate yang batch-nya disetujui Sales atau Retail Commerce; utang ke pemasok dari faktur dan pembayaran pembelian Accurate yang batch-nya disetujui Supervisor/Head Finance. Pengajuan pembayaran dibahas di bab Kerja harian.
 
 **Siapa yang memakai:** Tim Finance dan Management Office.
 
@@ -1532,6 +1539,8 @@ Piutang pelanggan dan utang ke pemasok dari faktur dan pembayaran Accurate yang 
 2. Buka tab "Pelanggan terlambat" untuk daftar penagihan.
 3. Buka tab "Jatuh tempo 14 hari" untuk mengingatkan pelanggan lebih awal.
 
+> **Catatan:** Sumber piutang adalah batch Data Accurate divisi Sales dan Retail Commerce. Piutang baru berubah setelah Supervisor/Head divisi penjual menyetujui batch-nya, bukan setelah persetujuan Finance. Bila piutang belum terbaru, tanyakan ke Sales atau Retail Commerce apakah batch-nya masih menunggu.
+
 <a id="finance-utang"></a>
 
 ### Utang
@@ -1542,7 +1551,7 @@ Piutang pelanggan dan utang ke pemasok dari faktur dan pembayaran Accurate yang 
 - Tab "Lewat jatuh tempo": prioritas.
 - Tab "Per pemasok": total per pemasok.
 
-> **Catatan:** Bila tertulis "Data utang belum tersedia", tarikan data Accurate Finance pertama belum disetujui Supervisor/Head Finance.
+> **Catatan:** Sumber utang adalah batch Data Accurate Finance, yang disetujui Supervisor/Head Finance. Bila tertulis "Data utang belum tersedia", tarikan pertama belum disetujui. Status pengajuan pembayaran di Workspace (Disetujui, Diproses, Dibayar) tidak mengubah utang; utang berubah saat pembayaran pembelian di Accurate masuk lewat batch berikutnya.
 
 <a id="finance-umur"></a>
 
@@ -1644,7 +1653,10 @@ Daftar tugas onboarding dan offboarding per divisi. Tanpa template aktif, checkl
 1. Buka "Layanan GA", tab "Semua permintaan".
 2. Buka permintaan, klik "Tugaskan ke…" bila perlu.
 3. Klik "Proses" saat mulai dikerjakan, lalu "Selesaikan". Lampirkan foto/PDF bukti bila ada.
-4. Untuk ruang: "Serahkan kunci" saat dipakai dan "Terima kembali" setelahnya.
+
+Pemesanan ruang langsung terkonfirmasi bila slotnya kosong, dan pemakaiannya mengikuti jadwal: tidak ada serah terima kunci di aplikasi. GA dapat membatalkan pemesanan bila perlu.
+
+> **Catatan:** Peminjaman kendaraan baru dilakukan di TrackCar, bukan di Workspace, dan Workspace tidak menyinkronkan data TrackCar. Pemesanan kendaraan lama yang tercatat sebelum TrackCar dipakai tetap bisa dibuka sebagai riwayat; tombol "Serahkan kunci" dan "Terima kembali" hanya muncul di pemesanan kendaraan lama itu.
 
 > **Tips**
 >
@@ -1958,6 +1970,8 @@ Satu antrean untuk semua pekerjaan dari setiap modul yang sudah lewat tenggat. P
 1. Klik baris eskalasi.
 2. Di "Tindak lanjut eskalasi", pilih "Penanggung jawab tindak lanjut" (boleh diri sendiri) dan tulis "Catatan".
 3. Perbarui statusnya: "Belum ditangani", "Sedang ditangani", "Selesai".
+
+> **Catatan:** Kolom "Kondisi sumber" menunjukkan berapa lama pekerjaan di modul asalnya lewat tenggat; "Status tindak lanjut" hanya catatan di sini. Menandai "Selesai" tidak membayar, menyetujui, atau menutup pekerjaan di modulnya: selama sumbernya masih lewat tenggat, eskalasi tetap tampil. Antrean kosong pada satu filter tidak berarti semua pekerjaan dalam tenggat.
 
 <a id="manajemen-target"></a>
 

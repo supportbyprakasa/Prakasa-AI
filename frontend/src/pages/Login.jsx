@@ -199,7 +199,7 @@ export default function Login() {
       )}
 
       <p className="pw-login__help">
-        Hubungi Super Admin jika akun belum dibuat atau akses dinonaktifkan.
+        Akun belum dibuat atau dinonaktifkan? Hubungi Administrator Sistem atau Super Admin. Lupa kata sandi? Hubungi Super Admin.
       </p>
     </LoginShell>
   );

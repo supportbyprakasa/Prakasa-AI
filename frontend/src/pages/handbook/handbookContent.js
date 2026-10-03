@@ -76,7 +76,7 @@ const HANDBOOK = [
               ['Gagal masuk dengan Google.', 'Akun Google yang dipilih bukan akun kantor, atau belum terdaftar.'],
             ],
           },
-          { type: 'p', text: 'Akun belum dibuat atau dinonaktifkan? Hubungi Super Admin atau Administrator Sistem, seperti tertulis di bawah tombol "Masuk".' },
+          { type: 'p', text: 'Akun belum dibuat atau dinonaktifkan? Hubungi Administrator Sistem atau Super Admin, seperti tertulis di bawah tombol "Masuk". Lupa kata sandi? Hanya Super Admin yang dapat mereset kata sandi; tidak ada reset mandiri.' },
         ],
       },
       {
@@ -454,6 +454,7 @@ const HANDBOOK = [
             ],
           },
           { type: 'note', text: 'Anda mendapat notifikasi di aplikasi setiap kali status tiket berubah atau ada tanggapan baru.' },
+          { type: 'note', text: 'Tiket juga tampil sebagai issue di project IT Project Tracker. Status issue itu hanya dapat dipindahkan oleh pengelola tiket IT, dan mengikuti status tiketnya; tiket yang ditutup atau dibatalkan tidak dibuka lagi dari papan. Bila tiket tidak ikut berubah, papan memberi tahu dan riwayat issue mencatatnya.' },
         ],
       },
       {
@@ -484,7 +485,7 @@ const HANDBOOK = [
               'Klik "Pesan ruang". Bila ruang kosong, pesanan langsung terkonfirmasi.',
             ],
           },
-          { type: 'note', text: 'Pinjam kendaraan dilakukan lewat TrackCar (tombol "Pinjam kendaraan" membuka TrackCar di tab baru), bukan di Prakasa Workspace.' },
+          { type: 'note', text: 'Pinjam kendaraan dilakukan lewat TrackCar: pilihan "Pinjam kendaraan" di "Buat permintaan" membuka TrackCar di tab baru dan tidak membuat pemesanan di Prakasa Workspace. Data TrackCar tidak disinkronkan ke Workspace.' },
           {
             type: 'table',
             title: 'Status permintaan dan pemesanan',
@@ -769,7 +770,7 @@ const HANDBOOK = [
         route: '/signatures',
         audience: { permissions: ['signature.view'] },
         body: [
-          { type: 'p', text: 'Dokumen yang perlu ditandatangani dibuka dari pratinjau dokumen atau dari notifikasi "Dokumen menunggu tanda tangan Anda" (juga dikirim lewat email).' },
+          { type: 'p', text: 'Buka "Permintaan tanda tangan" dari Akun saya (kartu "Tanda tangan") atau dari notifikasi "Dokumen menunggu tanda tangan Anda" (juga dikirim lewat email).' },
           {
             type: 'steps',
             items: [
@@ -781,6 +782,7 @@ const HANDBOOK = [
           },
           { type: 'table', columns: ['Status', 'Artinya'], rows: [['Menunggu', 'Belum ditandatangani.'], ['Disetujui', 'Approval sudah lengkap.'], ['Ditandatangani', 'Sudah ditandatangani; kode verifikasi berlaku.'], ['Ditolak / Dibatalkan', 'Tidak dilanjutkan.']] },
           { type: 'note', text: 'Cek awal AI hanya saran. Hasilnya tidak menyetujui atau menolak dokumen; keputusan tetap di tangan penanda tangan.' },
+          { type: 'note', text: 'Permintaan tanda tangan baru dibuat oleh alur yang membutuhkannya. Dokumen Google yang dibuat dari Template dokumen di Drive belum bisa diajukan untuk tanda tangan dari aplikasi, dan tidak otomatis bertanda tangan.' },
         ],
       },
       {
@@ -789,7 +791,7 @@ const HANDBOOK = [
         route: '/signatures/asset',
         audience: { permissions: ['signature.manage_asset'] },
         body: [
-          { type: 'steps', items: ['Buka "Tanda tangan saya" dari alat dokumen.', 'Di "Unggah tanda tangan", pilih "File tanda tangan" (PNG atau JPEG, maksimal 500 KB). Pakai latar putih atau transparan.', 'Klik "Simpan tanda tangan".'] },
+          { type: 'steps', items: ['Buka Akun saya, lalu di kartu "Tanda tangan" klik "Tanda tangan saya".', 'Di "Unggah tanda tangan", pilih "File tanda tangan" (PNG atau JPEG, maksimal 500 KB). Pakai latar putih atau transparan.', 'Klik "Simpan tanda tangan".'] },
           { type: 'note', text: 'Gambar tanda tangan disimpan terenkripsi dan hanya dipakai saat Anda sendiri menandatangani.' },
         ],
       },
@@ -799,7 +801,7 @@ const HANDBOOK = [
         route: '/signatures/letterhead',
         audience: { permissions: ['letterhead.view'] },
         body: [
-          { type: 'p', text: '"Cap surat" adalah cap atau kop surat resmi divisi yang dipakai bersama oleh semua anggota divisi.' },
+          { type: 'p', text: '"Cap surat" adalah cap atau kop surat resmi divisi yang dipakai bersama oleh semua anggota divisi. Buka dari Akun saya, kartu "Tanda tangan", lalu "Cap surat".' },
           { type: 'p', text: 'Hanya Head divisi yang bisa mengunggah atau mengganti cap surat ("Unggah atau ganti cap surat", PNG/JPEG maksimal 500 KB, lalu "Simpan cap surat").' },
         ],
       },
@@ -809,7 +811,8 @@ const HANDBOOK = [
         audience: { permissions: ['signature.view'] },
         body: [
           { type: 'p', text: 'Setiap dokumen bertanda tangan punya kode atau QR verifikasi. Siapa pun yang memindai QR itu melihat halaman verifikasi.' },
-          { type: 'table', columns: ['Hasil', 'Artinya'], rows: [['Tanda tangan valid', 'Dokumen terdaftar dan tanda tangannya masih berlaku.'], ['Tanda tangan sudah tidak berlaku', 'Masa berlaku habis atau dicabut.'], ['Verifikasi tidak ditemukan', 'Kode salah atau dokumen tidak terdaftar. Waspadai dokumen palsu.']] },
+          { type: 'table', columns: ['Hasil', 'Artinya'], rows: [['Tanda tangan valid', 'Dokumen terdaftar dan tanda tangannya masih berlaku.'], ['Tanda tangan sudah tidak berlaku', 'Masa berlaku habis atau dicabut.'], ['Kode verifikasi tidak ditemukan / tidak valid', 'Server menjawab kodenya tidak terdaftar atau salah format. Waspadai dokumen palsu.'], ['Belum dapat memverifikasi', 'Layanan verifikasi tidak bisa dihubungi (koneksi, server, atau terlalu banyak permintaan). Ini bukan tanda dokumen palsu; coba lagi.']] },
+          { type: 'note', text: 'Hasil verifikasi berasal dari data pendaftaran di server. Untuk memastikan salinan yang Anda pegang sama, bandingkan hash dokumennya dengan hash di halaman verifikasi.' },
         ],
       },
       {
@@ -1442,7 +1445,7 @@ const HANDBOOK = [
     route: '/finance/receivables',
     audience: { permissions: ['finance.receivable.view'] },
     who: 'Tim Finance dan Management Office.',
-    summary: 'Piutang pelanggan dan utang ke pemasok dari faktur dan pembayaran Accurate yang sudah disetujui Supervisor/Head Finance. Pengajuan pembayaran dibahas di bab Kerja harian.',
+    summary: 'Piutang pelanggan dari faktur dan penerimaan Accurate yang batch-nya disetujui Sales atau Retail Commerce; utang ke pemasok dari faktur dan pembayaran pembelian Accurate yang batch-nya disetujui Supervisor/Head Finance. Pengajuan pembayaran dibahas di bab Kerja harian.',
     sections: [
       {
         id: 'piutang',
@@ -1451,6 +1454,7 @@ const HANDBOOK = [
         body: [
           { type: 'p', text: '"Piutang" berisi tagihan pelanggan seluruh divisi: total piutang, lewat jatuh tempo, terlambat lebih dari 90 hari, jatuh tempo 14 hari, tertagih bulan ini, dan perkiraan DSO.' },
           { type: 'steps', items: ['Lihat kartu "Umur piutang"; saring per channel dengan chip.', 'Buka tab "Pelanggan terlambat" untuk daftar penagihan.', 'Buka tab "Jatuh tempo 14 hari" untuk mengingatkan pelanggan lebih awal.'] },
+          { type: 'note', text: 'Sumber piutang adalah batch Data Accurate divisi Sales dan Retail Commerce. Piutang baru berubah setelah Supervisor/Head divisi penjual menyetujui batch-nya, bukan setelah persetujuan Finance. Bila piutang belum terbaru, tanyakan ke Sales atau Retail Commerce apakah batch-nya masih menunggu.' },
         ],
       },
       {
@@ -1461,7 +1465,7 @@ const HANDBOOK = [
         body: [
           { type: 'p', text: '"Utang" berisi utang ke pemasok: total utang, lewat jatuh tempo, jatuh tempo 14 hari, dan dibayar bulan ini.' },
           { type: 'list', items: ['Tab "Jatuh tempo 14 hari": rencana pembayaran.', 'Tab "Lewat jatuh tempo": prioritas.', 'Tab "Per pemasok": total per pemasok.'] },
-          { type: 'note', text: 'Bila tertulis "Data utang belum tersedia", tarikan data Accurate Finance pertama belum disetujui Supervisor/Head Finance.' },
+          { type: 'note', text: 'Sumber utang adalah batch Data Accurate Finance, yang disetujui Supervisor/Head Finance. Bila tertulis "Data utang belum tersedia", tarikan pertama belum disetujui. Status pengajuan pembayaran di Workspace (Disetujui, Diproses, Dibayar) tidak mengubah utang; utang berubah saat pembayaran pembelian di Accurate masuk lewat batch berikutnya.' },
         ],
       },
       {
@@ -1565,7 +1569,9 @@ const HANDBOOK = [
         route: '/ga',
         audience: { permissions: ['ga.request.process'] },
         body: [
-          { type: 'steps', items: ['Buka "Layanan GA", tab "Semua permintaan".', 'Buka permintaan, klik "Tugaskan ke…" bila perlu.', 'Klik "Proses" saat mulai dikerjakan, lalu "Selesaikan". Lampirkan foto/PDF bukti bila ada.', 'Untuk ruang: "Serahkan kunci" saat dipakai dan "Terima kembali" setelahnya.'] },
+          { type: 'steps', items: ['Buka "Layanan GA", tab "Semua permintaan".', 'Buka permintaan, klik "Tugaskan ke…" bila perlu.', 'Klik "Proses" saat mulai dikerjakan, lalu "Selesaikan". Lampirkan foto/PDF bukti bila ada.'] },
+          { type: 'p', text: 'Pemesanan ruang langsung terkonfirmasi bila slotnya kosong, dan pemakaiannya mengikuti jadwal: tidak ada serah terima kunci di aplikasi. GA dapat membatalkan pemesanan bila perlu.' },
+          { type: 'note', text: 'Peminjaman kendaraan baru dilakukan di TrackCar, bukan di Workspace, dan Workspace tidak menyinkronkan data TrackCar. Pemesanan kendaraan lama yang tercatat sebelum TrackCar dipakai tetap bisa dibuka sebagai riwayat; tombol "Serahkan kunci" dan "Terima kembali" hanya muncul di pemesanan kendaraan lama itu.' },
           { type: 'tips', items: ['Tab "Jadwal" menunjukkan pemakaian ruang.', 'Perbaikan mendesak bertarget 1 hari; permintaan "Lainnya" 5 hari sejak disetujui.'] },
         ],
       },
@@ -1873,6 +1879,7 @@ const HANDBOOK = [
         body: [
           { type: 'p', text: 'Satu antrean untuk semua pekerjaan dari setiap modul yang sudah lewat tenggat. Pilih tampilan "Antrean" atau "Per modul".' },
           { type: 'steps', items: ['Klik baris eskalasi.', 'Di "Tindak lanjut eskalasi", pilih "Penanggung jawab tindak lanjut" (boleh diri sendiri) dan tulis "Catatan".', 'Perbarui statusnya: "Belum ditangani", "Sedang ditangani", "Selesai".'] },
+          { type: 'note', text: 'Kolom "Kondisi sumber" menunjukkan berapa lama pekerjaan di modul asalnya lewat tenggat; "Status tindak lanjut" hanya catatan di sini. Menandai "Selesai" tidak membayar, menyetujui, atau menutup pekerjaan di modulnya: selama sumbernya masih lewat tenggat, eskalasi tetap tampil. Antrean kosong pada satu filter tidak berarti semua pekerjaan dalam tenggat.' },
         ],
       },
       {

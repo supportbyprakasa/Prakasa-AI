@@ -50,7 +50,7 @@ function ProfileCard({ user }) {
       <div className="pw-stack">
         <KeyValue items={items} columns={2} />
         <p className="account-text">
-          Nama, divisi, dan peran diatur oleh Administrator dan disinkronkan dari Google Workspace. Hubungi Administrator Sistem bila ada yang perlu diubah.
+          Nama, divisi, dan peran diatur oleh Administrator Sistem atau Super Admin dan disinkronkan dari Google Workspace. Hubungi Administrator Sistem atau Super Admin bila ada yang perlu diubah; reset kata sandi hanya oleh Super Admin.
         </p>
       </div>
     </Card>

@@ -91,7 +91,7 @@ module.exports = [
     id: 'hr-task-license', title: 'Berikan lisensi', route: TASK_ROUTE('license_assign'), permission: 'subscription.license.manage',
     file: TASKS,
     fields: { ai: ['licenseId'], userOnly: [] },
-    note: 'Seat lisensi yang masih kosong, ditulis dengan nama produk atau label seat. Menekan "Berikan lisensi" menyelesaikan tugas: itu keputusan pengguna.',
+    note: 'Seat lisensi yang masih kosong, ditulis dengan nama produk atau label seat. Menekan "Berikan lisensi" mencatat seat di Workspace dan menyelesaikan tugas: itu keputusan pengguna. Akses di portal vendor diberikan IT di luar aplikasi.',
   },
   {
     id: 'people-person', title: 'Tambah orang ke direktori', route: '/people/directory?baru=1', permission: 'people.directory.manage',

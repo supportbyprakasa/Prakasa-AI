@@ -31,7 +31,7 @@ function assertScoped(calls, label) {
   const touching = calls.filter((c) => /\b(devices|device_assignments|device_repair_logs|software_subscriptions|software_vendors|subscription_licenses|subscription_invoices)\b/.test(c.sql)
     && !/^\s*INSERT INTO (device_warranty_logs|device_maintenance_logs|device_repair_logs|device_handover_documents|software_assignments|subscription_payments)/i.test(c.sql)
     // Child rows read by their parent's id run only after the parent passed the company check.
-    && !/WHERE (a\.device_id|device_id|l\.subscription_id|subscription_id)=\?/.test(c.sql));
+    && !/WHERE (a\.device_id|device_id|l\.subscription_id|i\.subscription_id|p\.subscription_id|subscription_id)=\?/.test(c.sql));
   assert.ok(touching.length, `${label}: queried something`);
   for (const c of touching) {
     assert.ok(c.args.includes(ME), `${label}: binds the user's company — ${c.sql.replace(/\s+/g, ' ').slice(0, 90)}`);

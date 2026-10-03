@@ -49,7 +49,7 @@ const assignTask = inTx((tx, req) => svc.assignTask(tx, req.user, req.params.id,
 const deviceHandover = inTx((tx, req) => svc.deviceHandover(tx, req.user, req.params.id, req.params.taskId, req.body));
 const deviceReturn = inTx((tx, req) => svc.deviceReturn(tx, req.user, req.params.id, req.params.taskId, req.body));
 const licenseAssign = inTx((tx, req) => svc.licenseAssign(tx, req.user, req.params.id, req.params.taskId, req.body));
-const licenseRevoke = inTx((tx, req) => svc.licenseRevoke(tx, req.user, req.params.id, req.params.taskId));
+const licenseRevoke = inTx((tx, req) => svc.licenseRevoke(tx, req.user, req.params.id, req.params.taskId, req.body || {}));
 const phoneLine = inTx((tx, req) => svc.phoneLine(tx, req.user, req.params.id, req.params.taskId, req.body));
 const phoneLineReturn = inTx((tx, req) => svc.phoneLineReturn(tx, req.user, req.params.id, req.params.taskId));
 const itTicket = inTx((tx, req) => svc.itTicket(tx, req.user, req.params.id, req.params.taskId, req.body), 201);

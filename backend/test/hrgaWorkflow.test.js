@@ -300,7 +300,9 @@ test('db: offboarding — holdings become linked tasks, resign on the last day, 
 
       const back = await runTx(conn, (tx) => svc.deviceReturn(tx, f.pcHead, created.id, byCat.device_return.id, { conditionOnReturn: 'good' }));
       assert.equal(back.newStatus, 'available');
-      await runTx(conn, (tx) => svc.licenseRevoke(tx, f.pcHead, created.id, byCat.software_license.id));
+      // F06: the task does not close until the vendor portal step is confirmed.
+      await assert.rejects(runTx(conn, (tx) => svc.licenseRevoke(tx, f.pcHead, created.id, byCat.software_license.id)), { code: 'VENDOR_CONFIRM_REQUIRED' });
+      await runTx(conn, (tx) => svc.licenseRevoke(tx, f.pcHead, created.id, byCat.software_license.id, { confirmedAtVendor: true }));
       const [[l]] = await conn.query('SELECT status, assigned_to FROM subscription_licenses WHERE id = ?', [f.licenseId]);
       assert.deepEqual({ ...l }, { status: 'available', assigned_to: null });
 

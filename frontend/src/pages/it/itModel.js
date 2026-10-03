@@ -275,9 +275,98 @@ export const BILLING_CYCLE_LABELS = {
   one_time: 'Sekali bayar',
 };
 
-// Invoice statuses the shared status map does not name; the tone stays the
-// shared one (StatusBadge `label`).
-export const INVOICE_STATUS_LABELS = { void: 'Batal' };
+// Invoice statuses as the Langganan pages say them; the tone stays the shared
+// one (StatusBadge `label`). "Lunas" is the register: payments recorded here
+// cover the invoice total — it is not a bank or Accurate confirmation.
+export const INVOICE_STATUS_LABELS = {
+  pending_upload: 'Menunggu file PDF',
+  uploaded: 'Menunggu verifikasi',
+  verified: 'Terverifikasi',
+  paid: 'Lunas (tercatat)',
+  void: 'Batal',
+};
+export const INVOICE_STATUS_HELP = {
+  pending_upload: 'Invoice dicatat tanpa file. Unggah PDF-nya agar dapat diverifikasi.',
+  uploaded: 'PDF sudah diunggah dan menunggu pemeriksaan Head People & Culture.',
+  verified: 'PDF sudah diperiksa. Catat pembayaran setelah dibayar di luar aplikasi.',
+  paid: 'Pembayaran yang dicatat di sini sudah menutup total invoice.',
+  void: 'Invoice dibatalkan dan tidak dapat dibayar.',
+};
+// What the payments recorded against an invoice add up to (server: paymentState).
+export const PAYMENT_STATE_LABELS = { unpaid: 'Belum ada pembayaran', partial: 'Dibayar sebagian', paid: 'Lunas', void: 'Batal' };
+
+// The bookkeeping reference typed by hand: Finance books in Accurate. The app
+// neither reads nor writes Accurate from here (the database column keeps its
+// old name, jurnal_reference_id).
+export const LEDGER_REFERENCE_LABEL = 'Nomor bukti di Accurate';
+// A subscription's own currency when it has none recorded, and the field's hint.
+export const DEFAULT_CURRENCY = 'IDR';
+export const CURRENCY_HINT = 'Kode tiga huruf, misalnya IDR atau USD.';
+export const LEDGER_REFERENCE_HINT = 'Opsional. Dicatat manual dari Accurate bila sudah dibukukan; aplikasi tidak menyinkronkan Accurate.';
+
+// What the signed-in user may do on the Langganan pages: the same permissions
+// the API checks (a custom role gets what its permissions give, not its name).
+export function subscriptionAbilities(permissions) {
+  const has = (code) => Array.isArray(permissions) && permissions.includes(code);
+  return {
+    manage: has('subscription.manage'),
+    invoice: has('subscription.invoice.manage'),
+    license: has('subscription.license.manage'),
+    payment: has('subscription.payment.manage'),
+  };
+}
+
+// A seat's next step: available → "Catat penetapan"; assigned or idle (still
+// held) → "Catat pencabutan". Idle is never given to someone else directly.
+export function licenseActions(license, abilities) {
+  if (!abilities?.license || !license) return [];
+  if (license.status === 'available') return ['assign'];
+  if (license.status === 'assigned' || license.status === 'idle') return ['revoke'];
+  return [];
+}
+
+// Invoices a payment may be recorded against, labelled with what decides the
+// choice: number, currency, total, outstanding and status.
+export function payableInvoiceOptions(invoices) {
+  return (invoices || [])
+    .filter((inv) => ['pending_upload', 'uploaded', 'verified'].includes(inv.status) && inv.paymentState !== 'paid')
+    .map((inv) => ({
+      value: inv.id,
+      label: `${inv.invoiceNumber} · total ${formatAmount(inv.totalAmount, inv.currency)} · sisa ${formatAmount(inv.outstandingAmount ?? inv.totalAmount, inv.currency)} · ${labelFor(INVOICE_STATUS_LABELS, inv.status)}`,
+      currency: inv.currency || DEFAULT_CURRENCY,
+      outstanding: Number(inv.outstandingAmount ?? inv.totalAmount),
+    }));
+}
+
+// The invoice's own next steps for an invoice manager.
+export function invoiceActions(invoice, abilities) {
+  if (!abilities?.invoice || !invoice) return [];
+  const out = [];
+  if (!invoice.hasFile && invoice.status !== 'void') out.push('attach');
+  if (invoice.status === 'uploaded') out.push('verify');
+  if (['pending_upload', 'uploaded', 'verified'].includes(invoice.status) && !(Number(invoice.paidAmount) > 0)) out.push('void');
+  return out;
+}
+
+// A subscription whose renewal date is near or past: the page offers "Ubah
+// langganan" to move the date once the vendor renewed (no approval flow here).
+export function renewalNotice(subscription, today = new Date()) {
+  const date = subscription?.renewalDate || subscription?.renewal_date;
+  if (!date || ['cancelled', 'paused'].includes(subscription?.status)) return null;
+  const day = String(date).slice(0, 10);
+  const todayText = new Date(today.getTime() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+  const days = Math.round((Date.parse(`${day}T00:00:00Z`) - Date.parse(`${todayText}T00:00:00Z`)) / 86400000);
+  if (!Number.isFinite(days) || days > 30) return null;
+  return { days, overdue: days < 0 };
+}
+
+// A short random key for one opened payment form: a retry of the same request
+// is recorded once (server: request_key).
+export function newRequestKey(random = Math.random) {
+  let key = '';
+  while (key.length < 24) key += Math.floor(random() * 36 ** 6).toString(36).padStart(6, '0');
+  return key.slice(0, 24);
+}
 
 // The label for a code, or the code itself when it is not in the map (a new
 // value from the server stays readable instead of disappearing).

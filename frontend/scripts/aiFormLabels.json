@@ -28,6 +28,7 @@
     "businessPhone": "Telepon usaha",
     "cost": "Biaya",
     "costPrice": "Harga pokok",
+    "currency": "Mata uang",
     "customer": "Pelanggan",
     "customerCode": "Kode pelanggan",
     "customerNumber": "ID pelanggan atau nomor meter",
@@ -77,7 +78,7 @@
   },
   "forms": {
     "doc-generate": "Kolom template bernama data pribadi, rekening bank, pengenal perangkat, atau rupiah",
-    "it-subscription-invoice": "Subtotal, Pajak, Total, File invoice",
+    "it-subscription-invoice": "Subtotal, Pajak, Total, Mata uang, File invoice (PDF)",
     "people-person": "Telepon kerja, Jenis dan alasan dikecualikan, Status, Tanggal resign, Catatan",
     "people-person-edit": "Telepon kerja, Jenis dan alasan dikecualikan, Status, Tanggal resign, Catatan",
     "hr-checklist-template-edit": "Jenis dan divisi (tidak bisa diubah)",

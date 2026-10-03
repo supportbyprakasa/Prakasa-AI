@@ -1537,7 +1537,7 @@ const HANDBOOK = [
         title: 'Mengerjakan checklist alur karyawan',
         body: [
           { type: 'p', text: 'Setiap tugas checklist dimiliki satu tim: IT, GA, Atasan, atau People & Culture.' },
-          { type: 'list', items: ['Tugas perangkat: "Serahkan perangkat" / "Terima kembali".', 'Tugas lisensi: "Berikan lisensi" / "Cabut lisensi".', 'Tugas nomor: "Serahkan nomor" / "Terima kembali nomor".', 'Tugas lain: "Tandai selesai", "Lewati", "Tugaskan ke", atau "Buat tiket IT".'] },
+          { type: 'list', items: ['Tugas perangkat: "Serahkan perangkat" / "Terima kembali".', 'Tugas lisensi: "Berikan lisensi" / "Cabut lisensi". Akses di portal vendor diberikan atau dicabut IT di luar aplikasi; tugas pencabutan baru selesai setelah IT mencentang "Akses sudah dicabut di portal vendor".', 'Tugas nomor: "Serahkan nomor" / "Terima kembali nomor".', 'Tugas lain: "Tandai selesai", "Lewati", "Tugaskan ke", atau "Buat tiket IT".'] },
           { type: 'note', text: 'Akun Google dibuat atau dinonaktifkan di konsol admin Google; di aplikasi tugasnya cukup ditandai selesai.' },
         ],
       },
@@ -1657,9 +1657,14 @@ const HANDBOOK = [
         route: '/it/subscriptions',
         audience: { permissions: ['subscription.view'] },
         body: [
-          { type: 'p', text: 'Daftar langganan: produk, paket, jumlah seat, harga per seat, siklus tagihan, dan tanggal perpanjangan.' },
-          { type: 'list', items: ['"Tambah langganan" dan "Unggah invoice" (Supervisor/Head).', '"Tambah lisensi", "Tetapkan pengguna", "Cabut lisensi", dan "Catat pembayaran" (Head).'] },
-          { type: 'note', text: 'Perpanjangan yang perlu diputuskan dan pembayaran yang belum dilakukan dikirim lewat notifikasi dan email. Pembayarannya diajukan lewat Pengajuan pembayaran.' },
+          { type: 'p', text: 'Daftar langganan: produk, paket, jumlah seat, harga per seat, siklus tagihan, dan tanggal perpanjangan. Semua yang dicatat di sini adalah register Workspace; akun di vendor, pembayaran ke vendor, dan pembukuan di Accurate dikerjakan di luar aplikasi.' },
+          { type: 'list', items: [
+            '"Tambah langganan" dan "Ubah langganan" (izin kelola langganan; standar Supervisor dan Head People & Culture). Setelah vendor memperpanjang, perbarui tanggal perpanjangan langganan yang sama; status Akan berakhir kembali Aktif bila tanggal baru lebih dari 30 hari lagi.',
+            '"Catat invoice", "Unggah PDF invoice", dan "Tandai terverifikasi" (izin kelola invoice; standar Head). Invoice tanpa PDF berstatus Menunggu file PDF; setelah PDF diunggah statusnya Menunggu verifikasi, lalu Terverifikasi.',
+            '"Tambah lisensi", "Catat penetapan lisensi", dan "Catat pencabutan lisensi" (izin kelola lisensi; standar Head). Beri atau cabut akses di portal vendor dulu, lalu catat di sini. Lisensi idle masih dipegang dan harus dicabut sebelum diberikan ke orang lain.',
+            '"Catat pembayaran" (izin kelola pembayaran; standar Head). Pembayaran sebagian membuat invoice Dibayar sebagian; invoice Lunas (tercatat) bila pembayaran yang dicatat menutup totalnya. Nomor bukti di Accurate diisi manual.',
+          ] },
+          { type: 'note', text: 'Tombol hanya muncul bagi yang punya izinnya; peran custom mengikuti izinnya, bukan nama perannya. Persetujuan perpanjangan belum tersedia di Workspace. Perpanjangan yang mendekati tanggal dikirim lewat notifikasi dan email; invoice yang belum diunggah atau diverifikasi lewat notifikasi. Pembayarannya diajukan lewat Pengajuan pembayaran.' },
         ],
       },
       {

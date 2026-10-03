@@ -118,7 +118,7 @@ export const AI_FORM_TABLES = [
       ['Tambah lokasi', 'Perangkat', 'Tidak ada'],
       ['Ubah lokasi', 'Perangkat', 'Aktif atau nonaktif'],
       ['Tambah langganan', 'Langganan software', 'Harga per seat'],
-      ['Unggah invoice langganan', 'Langganan software', 'Subtotal, Pajak, Total, File invoice'],
+      ['Catat invoice langganan', 'Langganan software', 'Subtotal, Pajak, Total, Mata uang, File invoice (PDF)'],
       ['Tambah lisensi', 'Langganan software', 'Tidak ada'],
       ['Tambah perangkat jaringan', 'Infrastruktur IT', 'Nomor seri, Alamat IP, Status'],
       ['Ubah perangkat jaringan', 'Infrastruktur IT', 'Nomor seri, Alamat IP, Status'],

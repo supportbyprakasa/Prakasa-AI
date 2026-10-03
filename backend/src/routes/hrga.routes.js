@@ -133,7 +133,7 @@ router.post('/workflows/:id/tasks/:taskId/device-return', requirePermission('dev
 router.post('/workflows/:id/tasks/:taskId/license-assign', requirePermission('subscription.license.manage'),
   validate(z.object({ licenseId: ID }).strict()), ctrl.licenseAssign);
 router.post('/workflows/:id/tasks/:taskId/license-revoke', requirePermission('subscription.license.manage'),
-  validate(z.object({}).strict()), ctrl.licenseRevoke);
+  validate(z.object({ confirmedAtVendor: z.boolean().optional() }).strict()), ctrl.licenseRevoke);
 router.post('/workflows/:id/tasks/:taskId/phone-line', requirePermission('it.infra.manage'),
   validate(z.object({ phoneLineId: ID }).strict()), ctrl.phoneLine);
 router.post('/workflows/:id/tasks/:taskId/phone-line-return', requirePermission('it.infra.manage'),

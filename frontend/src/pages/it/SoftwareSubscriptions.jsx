@@ -1,6 +1,8 @@
 import { useEffect, useId, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
+import Banner from '../../components/Banner';
 import Button from '../../components/Button';
 import DateInput from '../../components/DateInput';
 import FullScreenDialog from '../../components/FullScreenDialog';
@@ -15,7 +17,7 @@ import { statusLabel } from '../../components/statusTone';
 import { defineAIForm, f } from '../../components/ai/aiFormFields';
 import useOpenFromUrl from '../../components/ai/useOpenFromUrl';
 import usePrakasaAIForm from '../../components/ai/usePrakasaAIForm';
-import { BILLING_CYCLE_LABELS, optionsFrom } from './itModel';
+import { BILLING_CYCLE_LABELS, CURRENCY_HINT, DEFAULT_CURRENCY, LEDGER_REFERENCE_HINT, LEDGER_REFERENCE_LABEL, optionsFrom, subscriptionAbilities } from './itModel';
 
 const BILLING_CYCLES = optionsFrom(BILLING_CYCLE_LABELS, ['monthly', 'quarterly', 'yearly', 'multi_year']);
 const errorMessage = (error, fallback) => error.response?.data?.error?.message || fallback;
@@ -43,25 +45,29 @@ const AI_SUBSCRIPTION = defineAIForm({
 });
 const AI_INVOICE = defineAIForm({
   id: 'it-subscription-invoice',
-  title: 'Unggah invoice langganan',
+  title: 'Catat invoice langganan',
   permission: 'subscription.invoice.manage',
-  submitLabel: 'Unggah invoice',
+  submitLabel: 'Catat invoice',
   fields: [
     f.text('invoiceNumber', 'Nomor invoice', { required: true, maxLength: 120 }),
     f.date('invoiceDate', 'Tanggal invoice', { required: true }),
     f.userOnly('amount', 'Subtotal', 'number'),
     f.userOnly('taxAmount', 'Pajak', 'number'),
     f.userOnly('totalAmount', 'Total', 'number'),
-    f.text('jurnalReferenceId', 'Referensi Jurnal.id', { maxLength: 190 }),
+    f.text('jurnalReferenceId', LEDGER_REFERENCE_LABEL, { maxLength: 190, hint: LEDGER_REFERENCE_HINT }),
     f.userOnly('file', 'File invoice'),
   ],
 });
 
 export default function SoftwareSubscriptions() {
   const navigate = useNavigate();
+  // Buttons, menus and ?form links follow the permissions the API checks.
+  const { user } = useAuth();
+  const can = subscriptionAbilities(user?.permissions);
   const createFormId = useId();
   const invoiceFormId = useId();
   const [rows, setRows] = useState([]);
+  const [listMeta, setListMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [open, setOpen] = useState(false);
@@ -95,10 +101,10 @@ export default function SoftwareSubscriptions() {
   // invoice form of that subscription once the list has loaded. Opening saves nothing.
   const [params, setParams] = useSearchParams();
   const invoiceFor = params.get('langganan');
-  useOpenFromUrl('baru', () => setOpen(true), { keepUnsaved: true });
+  useOpenFromUrl('baru', () => { if (can.manage) setOpen(true); }, { keepUnsaved: true });
   useOpenFromUrl('form', (name) => {
     const target = rows.find((row) => String(row.id) === String(invoiceFor));
-    if (name === 'invoice' && target) setInvoiceOpen(target);
+    if (name === 'invoice' && target && can.invoice) setInvoiceOpen(target);
   }, { enabled: !loading && rows.length > 0, keepUnsaved: true });
   // `langganan` only named the row for `form`: it leaves the URL once `form` has.
   const hasFormParam = params.has('form');
@@ -111,7 +117,7 @@ export default function SoftwareSubscriptions() {
     setLoading(true);
     setLoadError('');
     api.get('/it/subscriptions')
-      .then((r) => setRows(r.data.data || []))
+      .then((r) => { setRows(r.data.data || []); setListMeta(r.data.meta || null); })
       .catch((error) => setLoadError(errorMessage(error, 'Periksa koneksi, lalu coba lagi.')))
       .finally(() => setLoading(false));
   };
@@ -145,15 +151,24 @@ export default function SoftwareSubscriptions() {
   const uploadInvoice = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
+    const file = fd.get('file');
+    if (!file || !file.size) fd.delete('file');
+    const amount = Number(fd.get('amount') || 0);
+    const tax = Number(fd.get('taxAmount') || 0);
+    const total = Number(fd.get('totalAmount') || 0);
+    if (Math.round((amount + tax) * 100) !== Math.round(total * 100)) {
+      toast('Total harus sama dengan subtotal + pajak.', 'error');
+      return;
+    }
     setSaving(true);
     try {
-      await api.post(`/it/subscriptions/${invoiceOpen.id}/invoices`, fd, {
+      const r = await api.post(`/it/subscriptions/${invoiceOpen.id}/invoices`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      toast('Invoice diunggah', 'success');
+      toast(r.data?.data?.status === 'uploaded' ? 'Invoice dicatat dan PDF diunggah' : 'Invoice dicatat tanpa file — unggah PDF-nya dari halaman langganan', 'success');
       setInvoiceOpen(null); load();
     } catch (err) {
-      toast(errorMessage(err, 'Invoice gagal diunggah'), 'error');
+      toast(errorMessage(err, 'Invoice gagal dicatat'), 'error');
     } finally {
       setSaving(false);
     }
@@ -163,8 +178,13 @@ export default function SoftwareSubscriptions() {
     <Page
       title="Langganan software"
       description="Software berlangganan, lisensinya, invoice, dan pembayarannya."
-      actions={<Button icon="add" onClick={() => setOpen(true)}>Tambah langganan</Button>}
+      actions={can.manage ? <Button icon="add" onClick={() => setOpen(true)}>Tambah langganan</Button> : null}
     >
+      {listMeta?.hasMore ? (
+        <Banner tone="warning">
+          {`Menampilkan ${rows.length} dari ${listMeta.total} langganan (urut tanggal perpanjangan terdekat). Pencarian dan ekspor hanya mencakup baris yang tampil.`}
+        </Banner>
+      ) : null}
       <DataGrid
         title="Langganan software"
         showTitle={false}
@@ -175,9 +195,12 @@ export default function SoftwareSubscriptions() {
         rows={rows}
         empty="Belum ada langganan software"
         onRowClick={(r) => navigate(`/it/subscriptions/${r.id}`)}
-        rowActions={(r) => (
-          <IconButton label="Unggah invoice" icon="upload_file" size="sm" onClick={() => setInvoiceOpen(r)} />
-        )}
+        rowActions={can.manage || can.invoice ? (r) => (
+          <>
+            {can.manage ? <IconButton label="Ubah langganan" icon="edit" size="sm" onClick={() => navigate(`/it/subscriptions/${r.id}?form=ubah`)} /> : null}
+            {can.invoice ? <IconButton label="Catat invoice" icon="upload_file" size="sm" onClick={() => setInvoiceOpen(r)} /> : null}
+          </>
+        ) : undefined}
         columns={[
           { key: 'productName', header: 'Produk', render: (r) => r.productName || r.product_name },
           { key: 'planName', header: 'Paket' },
@@ -218,12 +241,12 @@ export default function SoftwareSubscriptions() {
         open={!!invoiceOpen}
         onClose={() => setInvoiceOpen(null)}
         dirty={invoiceDirty}
-        title={`Unggah invoice ${invoiceOpen?.productName || ''}`.trim()}
+        title={`Catat invoice ${invoiceOpen?.productName || ''}`.trim()}
         sectionTitle="Invoice"
         actions={(
           <>
             <Button variant="text" type="button" onClick={() => setInvoiceOpen(null)}>Batal</Button>
-            <Button type="submit" form={invoiceFormId} loading={saving}>Unggah invoice</Button>
+            <Button type="submit" form={invoiceFormId} loading={saving}>Catat invoice</Button>
           </>
         )}
       >
@@ -233,9 +256,10 @@ export default function SoftwareSubscriptions() {
           <DateInput label="Tanggal invoice" name="invoiceDate" required value={invoice.invoiceDate} {...aiInvoice.field('invoiceDate')} onChange={setInvoiceField('invoiceDate')} />
           <Input label="Subtotal" name="amount" type="number" required />
           <Input label="Pajak" name="taxAmount" type="number" defaultValue={0} />
-          <Input label="Total" name="totalAmount" type="number" required />
-          <Input label="Referensi Jurnal.id" name="jurnalReferenceId" value={invoice.jurnalReferenceId} {...aiInvoice.field('jurnalReferenceId')} onChange={setInvoiceField('jurnalReferenceId')} />
-          <Input label="File invoice" name="file" type="file" hint="PDF." />
+          <Input label="Total" name="totalAmount" type="number" required hint="Subtotal + pajak." />
+          <Input label="Mata uang" name="currency" defaultValue={invoiceOpen?.currency || DEFAULT_CURRENCY} maxLength={3} hint={CURRENCY_HINT} />
+          <Input label={LEDGER_REFERENCE_LABEL} name="jurnalReferenceId" value={invoice.jurnalReferenceId} {...aiInvoice.field('jurnalReferenceId')} onChange={setInvoiceField('jurnalReferenceId')} hint={LEDGER_REFERENCE_HINT} />
+          <Input label="File invoice (PDF)" name="file" type="file" accept="application/pdf" hint="Tanpa file, invoice tercatat sebagai Menunggu file PDF dan belum bisa diverifikasi." />
         </form>
       </FullScreenDialog>
     </Page>

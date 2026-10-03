@@ -2,6 +2,7 @@ const pool = require('../db/pool');
 const { ok, fail } = require('../utils/response');
 const { log } = require('../services/activityLog.service');
 const notif = require('../services/notification.service');
+const licenses = require('../services/licenseAssignment.service');
 
 async function createLicense(req, res, next) {
   try {
@@ -32,105 +33,83 @@ async function createLicense(req, res, next) {
   } catch (e) { next(e); }
 }
 
+// The seat lifecycle is one state machine for this page and for the People &
+// Culture checklist (licenseAssignment.service): available → assigned → idle
+// (still held, not in use) → revoked back to available. A seat is given only
+// when available — an idle seat keeps its holder until the revoke is recorded —
+// and only to an active account of the same company. These endpoints record the
+// seat in Workspace; the vendor portal is changed by IT, outside the app.
+function licenseFail(res, error, next) {
+  if (error instanceof licenses.LicenseError) return fail(res, error.code, error.message, error.status);
+  return next(error);
+}
+
 async function assignLicense(req, res, next) {
   const conn = await pool.getConnection();
+  let result;
   try {
-    const { id } = req.params; // license id
-    const { userId } = req.body;
-
     await conn.beginTransaction();
-    const [l] = await conn.query(
-      `SELECT l.* FROM subscription_licenses l JOIN software_subscriptions s ON s.id = l.subscription_id
-        WHERE l.id=? AND s.entity_id=? FOR UPDATE`, [id, req.user.entityId]
-    );
-    if (!l[0]) { await conn.rollback(); return fail(res, 'NOT_FOUND', 'License tidak ditemukan', 404); }
-    if (l[0].status === 'assigned') {
-      await conn.rollback();
-      return fail(res, 'CONFLICT', 'License sudah di-assign', 409);
-    }
-    const [[holder]] = await conn.query(
-      `SELECT id FROM users WHERE id=? AND entity_id=? AND deleted_at IS NULL LIMIT 1`, [userId, req.user.entityId]
-    );
-    if (!holder) { await conn.rollback(); return fail(res, 'NOT_FOUND', 'Pengguna tidak ditemukan di perusahaan ini', 404); }
-
-    await conn.query(
-      `UPDATE subscription_licenses
-          SET status='assigned', assigned_to=?, assigned_at=NOW()
-        WHERE id=?`, [userId, id]
-    );
-    const [sa] = await conn.query(
-      `INSERT INTO software_assignments
-       (subscription_id, license_id, user_id, assigned_by, status)
-       VALUES (?, ?, ?, ?, 'active')`,
-      [l[0].subscription_id, id, userId, req.user.sub]
-    );
-    await conn.commit();
-
-    await log({
-      entityId: null, userId: req.user.sub,
-      action: 'subscription_license.assign', subjectType: 'subscription_license',
-      subjectId: Number(id), metadata: { userId },
+    result = await licenses.assignLicense(conn, {
+      entityId: req.user.entityId, licenseId: Number(req.params.id), userId: Number(req.body.userId), actorId: req.user.sub, via: 'subscription',
     });
+    await conn.commit();
+  } catch (e) {
+    await conn.rollback().catch(() => {});
+    return licenseFail(res, e, next);
+  } finally { conn.release(); }
 
-    // Notif ke user
-    const [sub] = await pool.query(
-      `SELECT entity_id AS entityId, product_name AS productName
-         FROM software_subscriptions WHERE id=?`, [l[0].subscription_id]
-    );
-    if (sub[0]) {
-      await notif.create({
-        userId, entityId: sub[0].entityId,
-        title: 'License software ditugaskan',
-        body: sub[0].productName,
-        event: 'license.assigned',
-        subjectType: 'subscription_license', subjectId: Number(id),
-        actionUrl: `/it/subscriptions/${l[0].subscription_id}`,
-      });
-    }
-
-    return ok(res, { id: Number(id), assignmentId: sa.insertId });
-  } catch (e) { await conn.rollback(); next(e); }
-  finally { conn.release(); }
+  await notif.create({
+    userId: Number(req.body.userId), entityId: req.user.entityId,
+    title: 'License software ditugaskan',
+    body: result.productName,
+    event: 'license.assigned',
+    subjectType: 'subscription_license', subjectId: result.licenseId,
+    actionUrl: `/it/subscriptions/${result.subscriptionId}`,
+  }).catch(() => {});
+  return ok(res, { id: result.licenseId, assignmentId: result.assignmentId });
 }
 
 async function revokeLicense(req, res, next) {
+  if (req.body.confirmedAtVendor !== true) {
+    return fail(res, 'VENDOR_CONFIRM_REQUIRED', 'Cabut akses pengguna di portal vendor dulu, lalu centang konfirmasinya. Aplikasi tidak mengubah akun di vendor.', 409);
+  }
   const conn = await pool.getConnection();
+  let result;
   try {
-    const { id } = req.params;
-    const { reason } = req.body;
-
     await conn.beginTransaction();
-    const [l] = await conn.query(
-      `SELECT l.* FROM subscription_licenses l JOIN software_subscriptions s ON s.id = l.subscription_id
-        WHERE l.id=? AND s.entity_id=? FOR UPDATE`, [id, req.user.entityId]
-    );
-    if (!l[0]) { await conn.rollback(); return fail(res, 'NOT_FOUND', 'License tidak ditemukan', 404); }
-    if (l[0].status !== 'assigned') {
-      await conn.rollback();
-      return fail(res, 'CONFLICT', 'License tidak dalam status assigned', 409);
-    }
-
-    await conn.query(
-      `UPDATE subscription_licenses
-          SET status='available', assigned_to=NULL, assigned_at=NULL
-        WHERE id=?`, [id]
-    );
-    await conn.query(
-      `UPDATE software_assignments
-          SET status='revoked', revoked_at=NOW(), notes=?
-        WHERE license_id=? AND status='active'`,
-      [reason || null, id]
-    );
-    await conn.commit();
-
-    await log({
-      entityId: null, userId: req.user.sub,
-      action: 'subscription_license.revoke', subjectType: 'subscription_license',
-      subjectId: Number(id), metadata: { reason },
+    result = await licenses.revokeLicense(conn, {
+      entityId: req.user.entityId, licenseId: Number(req.params.id), actorId: req.user.sub, reason: req.body.reason || null, via: 'subscription', confirmedAtVendor: true,
     });
-    return ok(res, { id: Number(id) });
-  } catch (e) { await conn.rollback(); next(e); }
-  finally { conn.release(); }
+    if (!result.changed) {
+      await conn.rollback();
+      return fail(res, 'CONFLICT', 'Lisensi ini tidak sedang ditetapkan ke pengguna.', 409);
+    }
+    await conn.commit();
+  } catch (e) {
+    await conn.rollback().catch(() => {});
+    return licenseFail(res, e, next);
+  } finally { conn.release(); }
+  return ok(res, { id: result.licenseId, recordedOnly: true });
+}
+
+// Active accounts of the signed-in user's company a seat may be given to,
+// searched by name or work email; the id stays the internal value.
+async function assignableUsers(req, res, next) {
+  try {
+    const q = String(req.query.q || '').trim().slice(0, 100);
+    const args = [req.user.entityId];
+    let filter = '';
+    if (q) { filter = ' AND (u.name LIKE ? OR u.email LIKE ?)'; args.push(`%${q}%`, `%${q}%`); }
+    const [rows] = await pool.query(
+      `SELECT u.id, u.name, u.email
+         FROM users u
+        WHERE u.entity_id = ? AND u.status = 'active' AND u.deleted_at IS NULL${filter}
+        ORDER BY u.name ASC, u.email ASC
+        LIMIT 20`,
+      args
+    );
+    return ok(res, rows.map((row) => ({ id: Number(row.id), name: row.name, email: row.email })));
+  } catch (e) { next(e); }
 }
 
 async function markIdle(req, res, next) {
@@ -151,4 +130,4 @@ async function markIdle(req, res, next) {
   } catch (e) { next(e); }
 }
 
-module.exports = { createLicense, assignLicense, revokeLicense, markIdle };
+module.exports = { createLicense, assignLicense, revokeLicense, markIdle, assignableUsers };

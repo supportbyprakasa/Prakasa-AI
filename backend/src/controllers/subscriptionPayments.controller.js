@@ -1,43 +1,21 @@
-const pool = require('../db/pool');
 const { ok, fail } = require('../utils/response');
-const { log } = require('../services/activityLog.service');
+const billing = require('../services/subscriptionBilling.service');
 
+// "Catat pembayaran": a register entry of a payment made outside the app
+// (subscriptionBilling.service). It never sends money or touches Accurate.
 async function create(req, res, next) {
   try {
-    const { id } = req.params; // subscription id
-    const {
-      invoiceId, paidAt, amount, currency = 'IDR',
-      paymentMethod, referenceNo, jurnalReferenceId, notes,
-    } = req.body;
-
-    const [s] = await pool.query(
-      `SELECT * FROM software_subscriptions WHERE id=? AND entity_id=? AND deleted_at IS NULL`, [id, req.user.entityId]
-    );
-    if (!s[0]) return fail(res, 'NOT_FOUND', 'Subscription tidak ditemukan', 404);
-
-    const [r] = await pool.query(
-      `INSERT INTO subscription_payments
-       (subscription_id, invoice_id, paid_at, amount, currency, payment_method,
-        reference_no, jurnal_reference_id, notes, processed_by, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'processed')`,
-      [id, invoiceId || null, paidAt || new Date(), amount, currency,
-       paymentMethod || null, referenceNo || null, jurnalReferenceId || null,
-       notes || null, req.user.sub]
-    );
-
-    if (invoiceId) {
-      await pool.query(
-        `UPDATE subscription_invoices SET status='paid' WHERE id=? AND subscription_id=?`, [invoiceId, id]
-      );
-    }
-
-    await log({
-      entityId: s[0].entity_id, userId: req.user.sub,
-      action: 'subscription_payment.create', subjectType: 'subscription_payment',
-      subjectId: r.insertId, metadata: { amount, invoiceId },
+    const result = await billing.recordPayment({
+      entityId: req.user.entityId,
+      subscriptionId: Number(req.params.id),
+      actorId: req.user.sub,
+      body: req.body,
     });
-    return ok(res, { id: r.insertId }, undefined, 201);
-  } catch (e) { next(e); }
+    return ok(res, result, undefined, result.duplicate ? 200 : 201);
+  } catch (e) {
+    if (e.status) return fail(res, e.code, e.message, e.status);
+    return next(e);
+  }
 }
 
 module.exports = { create };

@@ -318,6 +318,48 @@ export function PhoneLineDialog({ open, workflowId, task, mode = 'assign', onClo
   );
 }
 
+// Offboarding licence task: the access is removed in the vendor portal by IT,
+// confirmed here; the app records the seat as released (it changes nothing at
+// the vendor) — the same clarity as the Google account tasks.
+export function LicenseRevokeDialog({ open, workflowId, task, employeeName, onClose, onDone }) {
+  const [checked, setChecked] = useState(false);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { if (open) { setChecked(false); setError(''); } }, [open]);
+  const confirm = async () => {
+    if (!checked) { setError('Centang konfirmasi dulu.'); return; }
+    setSaving(true);
+    setError('');
+    try {
+      await api.post(`${taskUrl(workflowId, task.id)}/license-revoke`, { confirmedAtVendor: true });
+      toast('Pencabutan lisensi dicatat', 'success');
+      await onDone?.();
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Pencabutan lisensi gagal dicatat.'));
+    } finally {
+      setSaving(false);
+    }
+  };
+  return (
+    <ConfirmDialog
+      open={open}
+      tone="primary"
+      title="Catat pencabutan lisensi?"
+      confirmLabel="Catat pencabutan"
+      loading={saving}
+      onClose={onClose}
+      onConfirm={confirm}
+      message={(
+        <div className="pw-stack pw-stack--sm">
+          <span>{`Cabut akses ${task?.linkedSubscriptionName || 'lisensi'} milik ${employeeName || 'karyawan ini'} di portal vendor. Setelah dicatat, seat tersedia di Workspace. Aplikasi tidak mengubah akun di vendor.`}</span>
+          <Checkbox label="Akses sudah dicabut di portal vendor" checked={checked} onChange={(event) => { setChecked(event.target.checked); setError(''); }} />
+          {error ? <span className="hrga-error-text" role="alert">{error}</span> : null}
+        </div>
+      )}
+    />
+  );
+}
+
 // Google account tasks: done in the admin console, confirmed here.
 export function GoogleCompleteDialog({ open, workflowId, task, onClose, onDone }) {
   const [checked, setChecked] = useState(false);

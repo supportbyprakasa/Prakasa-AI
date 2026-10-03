@@ -7,5 +7,8 @@
  "WIP $1/$2",
  "Indonesia",
  "English",
- "failed"
+ "failed",
+ "invoice $1",
+ "unpaid",
+ "paid"
 ]

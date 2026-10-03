@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BILLING_CYCLE_LABELS, DEVICE_TYPE_LABELS, formatAmount, labelFor, optionsFrom } from '../src/pages/it/itModel.js';
+import * as itModel from '../src/pages/it/itModel.js';
 
 test('IT amounts are rupiah through format.js; another currency keeps its code', () => {
   assert.equal(formatAmount(1250000, 'IDR'), 'Rp 1.250.000');
@@ -149,4 +150,73 @@ test('dashboard bars: the report\'s four statuses, types and locations, each lin
   assert.equal(bars.byLocation[0].note, '4 bermasalah');
   assert.equal(bars.byLocation[1].to, '/it/devices?location=none');
   assert.deepEqual(dashboardBars({ devices: { total: 0, byStatus: {} } }).byStatus, []);
+});
+
+// ------------------------------------------------ Langganan (revision F02–F27)
+
+test('F02: subscription actions follow the permissions the API checks, not the role name', () => {
+  const member = itModel.subscriptionAbilities(['subscription.view']);
+  assert.deepEqual(member, { manage: false, invoice: false, license: false, payment: false });
+  const supervisor = itModel.subscriptionAbilities(['subscription.view', 'subscription.manage']);
+  assert.deepEqual(supervisor, { manage: true, invoice: false, license: false, payment: false });
+  const head = itModel.subscriptionAbilities(['subscription.manage', 'subscription.invoice.manage', 'subscription.license.manage', 'subscription.payment.manage']);
+  assert.deepEqual(head, { manage: true, invoice: true, license: true, payment: true });
+  // A custom role with only the payment permission gets only payment.
+  assert.deepEqual(itModel.subscriptionAbilities(['subscription.payment.manage']), { manage: false, invoice: false, license: false, payment: true });
+  assert.deepEqual(itModel.subscriptionAbilities(undefined), { manage: false, invoice: false, license: false, payment: false });
+});
+
+test('F27: a seat offers "Catat penetapan" only when available; assigned and idle offer "Catat pencabutan"', () => {
+  const can = { license: true };
+  assert.deepEqual(itModel.licenseActions({ status: 'available' }, can), ['assign']);
+  assert.deepEqual(itModel.licenseActions({ status: 'assigned' }, can), ['revoke']);
+  assert.deepEqual(itModel.licenseActions({ status: 'idle' }, can), ['revoke'], 'idle is never given away directly');
+  assert.deepEqual(itModel.licenseActions({ status: 'revoked' }, can), []);
+  assert.deepEqual(itModel.licenseActions({ status: 'available' }, { license: false }), [], 'no action without the permission');
+});
+
+test('F25: the payment picker lists only payable invoices, with currency, total, outstanding and status', () => {
+  const options = itModel.payableInvoiceOptions([
+    { id: 1, invoiceNumber: 'A', status: 'verified', currency: 'IDR', totalAmount: 1000, outstandingAmount: 900, paymentState: 'partial' },
+    { id: 2, invoiceNumber: 'B', status: 'paid', currency: 'IDR', totalAmount: 1000, outstandingAmount: 0, paymentState: 'paid' },
+    { id: 3, invoiceNumber: 'C', status: 'void', currency: 'IDR', totalAmount: 1000, paymentState: 'void' },
+    { id: 4, invoiceNumber: 'D', status: 'pending_upload', currency: 'USD', totalAmount: 50, outstandingAmount: 50, paymentState: 'unpaid' },
+  ]);
+  assert.deepEqual(options.map((o) => o.value), [1, 4]);
+  assert.equal(options[0].outstanding, 900);
+  assert.match(options[0].label, /^A · total .*1\.000 · sisa .*900 · Terverifikasi$/);
+  assert.equal(options[1].currency, 'USD');
+  assert.match(options[1].label, /USD 50/);
+});
+
+test('F26: invoice next steps — attach a PDF, verify only after upload, void only before payments', () => {
+  const can = { invoice: true };
+  assert.deepEqual(itModel.invoiceActions({ status: 'pending_upload', hasFile: false }, can), ['attach', 'void']);
+  assert.deepEqual(itModel.invoiceActions({ status: 'uploaded', hasFile: true }, can), ['verify', 'void']);
+  assert.deepEqual(itModel.invoiceActions({ status: 'verified', hasFile: true, paidAmount: 100 }, can), []);
+  assert.deepEqual(itModel.invoiceActions({ status: 'paid', hasFile: true }, can), []);
+  assert.deepEqual(itModel.invoiceActions({ status: 'paid', hasFile: false }, can), ['attach']);
+  assert.deepEqual(itModel.invoiceActions({ status: 'uploaded', hasFile: true }, { invoice: false }), []);
+  assert.equal(itModel.INVOICE_STATUS_LABELS.uploaded, 'Menunggu verifikasi', 'uploaded is not "verified"');
+  assert.equal(itModel.INVOICE_STATUS_LABELS.paid, 'Lunas (tercatat)', 'paid names the register, not a bank confirmation');
+});
+
+test('F03: a renewal within 30 days or past its date is flagged; paused or cancelled are not', () => {
+  const today = new Date('2026-10-03T03:00:00Z');
+  assert.deepEqual(itModel.renewalNotice({ renewalDate: '2026-10-13', status: 'expiring' }, today), { days: 10, overdue: false });
+  assert.deepEqual(itModel.renewalNotice({ renewal_date: '2026-09-30', status: 'expiring' }, today), { days: -3, overdue: true });
+  assert.equal(itModel.renewalNotice({ renewalDate: '2026-12-31', status: 'active' }, today), null);
+  assert.equal(itModel.renewalNotice({ renewalDate: '2026-10-05', status: 'cancelled' }, today), null);
+});
+
+test('F15: the bookkeeping reference names Accurate and promises no sync', () => {
+  assert.equal(itModel.LEDGER_REFERENCE_LABEL, 'Nomor bukti di Accurate');
+  assert.match(itModel.LEDGER_REFERENCE_HINT, /tidak menyinkronkan/);
+});
+
+test('F25: a payment form request key is 24 safe characters, new each time', () => {
+  const a = itModel.newRequestKey();
+  const b = itModel.newRequestKey();
+  assert.match(a, /^[a-z0-9]{24}$/);
+  assert.notEqual(a, b);
 });

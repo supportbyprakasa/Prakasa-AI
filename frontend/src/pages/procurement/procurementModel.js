@@ -63,6 +63,9 @@ export const rupiah = (value) => formatMoney(value);
 // Before the first approved batch, the pages say why they are empty.
 export function procurementNotice(status) {
   if (!status || status.ready) return null;
+  if (status.enabled === false) {
+    return { title: 'Tarikan Procurement dari Accurate belum dinyalakan', body: 'Modul ini mengisi datanya dari tarikan Accurate (ACCURATE_PROCUREMENT). Sampai dinyalakan oleh Administrator Sistem, tidak ada PO, pemasok, atau harga beli yang tampil, dan "Tarik sekarang" tidak bisa dijalankan.' };
+  }
   if (status.pending) {
     return { title: 'Data PO menunggu persetujuan', body: 'Data PO dan pemasok dari Accurate tampil setelah Head Procurement menyetujui batch pertamanya.' };
   }

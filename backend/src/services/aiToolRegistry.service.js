@@ -710,11 +710,16 @@ const TOOLS = Object.freeze([
   tool('sales-orders', 'Data Sales', ['/sales/orders', '/sales/orders/new', '/sales/orders/:id', '/sales/orders/:id/edit', '/sales/orders/accurate/:id'], 'sales.order.view', {
     queryKeys: ['tab', 'periode', 'channel', 'status'],
   }),
-  tool('accurate-batches', 'Data Accurate', ['/data-accurate', '/data-accurate/:id'], ['accurate.batch.view', 'sales.master.manage'], {
-    queryKeys: ['status'],
+  // Proposers (accurate.write.request) open the page for "Pengajuan ke
+  // Accurate" and "Selisih pelanggan" (owner, 3 Oct 2026); a proposal has its own page.
+  tool('accurate-batches', 'Data Accurate', ['/data-accurate', '/data-accurate/pengajuan/:id', '/data-accurate/:id'], ['accurate.batch.view', 'sales.master.manage', 'warehouse.accurate.sync', 'procurement.accurate.sync', 'accurate.write.request'], {
+    queryKeys: ['status', 'view'],
   }),
   // Movements, or stock from Accurate only (Management Office oversight) — the same as the menu.
-  tool('warehouse', 'Warehouse', ['/warehouse', '/warehouse/movements/:type/new', '/warehouse/movements/:type/:id', '/warehouse/movements/:type/:id/edit'], ['warehouse.movement.view', 'warehouse.stock.view'], {
+  // Open to whoever opens any Warehouse page (navigation.js): the union of the
+  // group's entries. Every standard role with a narrower code also reads stock or movements.
+  tool('warehouse', 'Warehouse', ['/warehouse', '/warehouse/movements', '/warehouse/stock', '/warehouse/shipping', '/warehouse/operations', '/warehouse/movements/:type/new', '/warehouse/movements/:type/:id', '/warehouse/movements/:type/:id/edit'],
+    ['warehouse.movement.view', 'warehouse.stock.view', 'warehouse.recon.view', 'warehouse.checklist.view', 'warehouse.incident.view'], {
     subjects: [
       { pattern: '/warehouse/movements/:type/:id', type: 'warehouse_movement', params: ['type', 'id'] },
       { pattern: '/warehouse/movements/:type/:id/edit', type: 'warehouse_movement', params: ['type', 'id'] },
@@ -768,7 +773,7 @@ const TOOLS = Object.freeze([
   tool('ga-operations', 'Operasional GA', ['/ga/operations'], 'ga.ops.view', { publishesState: false, queryKeys: ['tab'] }),
   tool('finance-receivables', 'Piutang', ['/finance/receivables', '/coming-soon/finance'], 'finance.receivable.view', { publishesState: false, queryKeys: ['tab'] }),
   tool('finance-payables', 'Utang', ['/finance/payables'], 'finance.payable.view', { publishesState: false, queryKeys: ['tab'] }),
-  tool('procurement', 'Procurement', ['/procurement', '/coming-soon/procurement'], 'procurement.view', {
+  tool('procurement', 'Procurement', ['/procurement', '/procurement/orders', '/procurement/vendors', '/procurement/reorder', '/coming-soon/procurement'], ['procurement.view', 'procurement.reorder.view'], {
     queryKeys: ['tab', 'state', 'urgency', 'q', 'filter', 'from', 'to', 'page', 'nomor_po', 'kode_pemasok'],
     starters: {
       member: ['PO mana yang terlambat datang, dan dari pemasok siapa?', 'Barang apa saja yang datang hari ini?'],
@@ -776,7 +781,7 @@ const TOOLS = Object.freeze([
       head: ['Ringkas PO yang jatuh tempo minggu ini dan risikonya', { text: 'Barang apa yang hari-cukupnya kurang dari 7 hari?', permission: ['procurement.reorder.view', 'warehouse.stock.view'] }],
     },
   }),
-  tool('retail-commerce', 'Retail Commerce', ['/retail-commerce', '/coming-soon/retail-commerce'], 'retail.insight.view', { publishesState: false }),
+  tool('retail-commerce', 'Retail Commerce', ['/retail-commerce', '/retail-commerce/pending', '/coming-soon/retail-commerce'], 'retail.insight.view', { publishesState: false }),
   tool('marketing-insights', 'Produk & channel', ['/marketing/insights', '/coming-soon/marketing'], 'marketing.insight.view', { publishesState: false, queryKeys: ['month', 'tab'] }),
   tool('marketing-campaigns', 'Kampanye', ['/marketing/campaigns'], 'marketing.insight.view', { publishesState: false, queryKeys: ['open'] }),
   // Either permission opens the page: the entity-wide view, or a division

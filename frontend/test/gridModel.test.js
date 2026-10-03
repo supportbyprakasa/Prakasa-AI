@@ -121,3 +121,16 @@ test('export writes dates in local, spreadsheet-friendly form', () => {
   assert.deepEqual(exportMatrix(cols, [{ d: '2026-09-24', t: at.toISOString() }])[1], ['2026-09-24', '2026-09-24 07:05']);
   assert.deepEqual(exportMatrix(cols, [{ d: null, t: 'bukan tanggal' }])[1], ['', 'bukan tanggal']);
 });
+
+test('F04: the export menu says what the file holds', async () => {
+  const { exportScope } = await import('../src/components/datagrid/gridModel.js');
+  // 45 rows, 20 per page, no export-all: the file has the 20 on this page.
+  assert.equal(exportScope({ manual: true, pageRows: 20, total: 45 }), 'Hanya halaman ini: 20 baris dari 45');
+  // A page that exports every match from its API.
+  assert.equal(exportScope({ exportAll: true, manual: true, total: 45 }), 'Semua hasil sesuai filter (45 baris)');
+  // Rows loaded in the browser, after search and filters.
+  assert.equal(exportScope({ filteredRows: 12 }), 'Semua hasil terfilter: 12 baris');
+  assert.equal(exportScope({ filteredRows: 5000, truncated: true }), '5.000 baris yang dimuat (daftar terpotong)');
+  // A list that is itself limited says so.
+  assert.equal(exportScope({ filteredRows: 20, note: '20 produk terlaris' }), 'Semua hasil terfilter: 20 baris · 20 produk terlaris');
+});

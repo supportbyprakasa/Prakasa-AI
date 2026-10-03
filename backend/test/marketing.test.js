@@ -99,10 +99,10 @@ test('uplift: the campaign against the same number of days right before it', () 
   assert.equal(campaigns.upliftPct(500, 0), null, 'no baseline → no uplift, never Infinity');
 
   const sum = campaigns.summarizeDays([
-    { d: '2026-09-02', revenue: '100.00', qty: '2' },
-    { d: '2026-09-10', revenue: '50.00', qty: '1' },
-    { d: '2026-09-12', revenue: '300.00', qty: '5' },
-    { d: '2026-09-25', revenue: '999.00', qty: '9' }, // outside both windows
+    { d: '2026-09-02', unit: 'PCS', revenue: '100.00', qty: '2' },
+    { d: '2026-09-10', unit: 'PCS', revenue: '50.00', qty: '1' },
+    { d: '2026-09-12', unit: 'PCS', revenue: '300.00', qty: '5' },
+    { d: '2026-09-25', unit: 'PCS', revenue: '999.00', qty: '9' }, // outside both windows
   ], done);
   assert.equal(sum.revenue, 300);
   assert.equal(sum.baselineRevenue, 150);
@@ -117,6 +117,27 @@ test('uplift: the campaign against the same number of days right before it', () 
 });
 
 // ------------------------------------------------------------ insights shaping (pure)
+test('F08: quantities of different units are never added; uplift only on one comparable unit', () => {
+  const win = campaigns.campaignWindow({ startOn: '2026-09-11', endOn: '2026-09-20', today: TODAY, dataThrough: '2026-09-30' });
+  const mixed = campaigns.summarizeDays([
+    { d: '2026-09-12', unit: 'Box', revenue: '300.00', qty: '1' },
+    { d: '2026-09-13', unit: 'PCS', revenue: '50.00', qty: '5' },
+    { d: '2026-09-05', unit: 'PCS', revenue: '40.00', qty: '4' },
+  ], win);
+  assert.equal(mixed.revenue, 350, 'revenue still adds up across units');
+  assert.equal(mixed.qty, null, '1 Box + 5 PCS is not 6');
+  assert.equal(mixed.qtyNote, 'mixed_units');
+  assert.deepEqual(mixed.qtyByUnit.map((u) => [u.unit, u.qty, u.baselineQty, u.upliftPct]), [['Box', 1, 0, null], ['PCS', 5, 4, 25]]);
+  // kg and PCS stay apart even when each product could be converted on its own.
+  const kg = campaigns.summarizeDays([{ d: '2026-09-12', unit: 'kg', revenue: '10', qty: '2' }, { d: '2026-09-12', unit: 'PCS', revenue: '10', qty: '3' }], win);
+  assert.equal(kg.qty, null);
+  // One unit now and before: a total and its uplift.
+  const one = campaigns.summarizeDays([{ d: '2026-09-12', unit: 'PCS', revenue: '10', qty: '6' }, { d: '2026-09-02', unit: 'pcs', revenue: '10', qty: '3' }], win);
+  assert.deepEqual([one.qty, one.baselineQty, one.qtyUnit, one.qtyNote], [6, 3, 'PCS', null]);
+  // A line without a unit: no total, and the reason says why.
+  assert.equal(campaigns.summarizeDays([{ d: '2026-09-12', unit: null, revenue: '1', qty: '1' }], win).qtyNote, 'unit_unknown');
+});
+
 test('insights: months, channel series with unknown months, products, movers', () => {
   assert.equal(insights.resolveMonth(undefined, TODAY), '2026-10');
   assert.throws(() => insights.resolveMonth('2026-11', TODAY), (e) => e.code === 'VALIDATION_ERROR');
@@ -130,7 +151,7 @@ test('insights: months, channel series with unknown months, products, movers', (
       { month: '2026-08', channel: 'GT', revenue: '100' }, { month: '2026-09', channel: 'GT', revenue: '50' },
       { month: '2026-09', channel: null, revenue: '70' },
     ],
-    lineRows: [{ month: '2026-09', channel: 'GT', qty: '3', has_ratio: 0 }],
+    lineRows: [{ month: '2026-09', channel: 'GT', unit: 'PCS', qty: '3', has_ratio: 0 }],
     nooRows: [{ month: '2026-09', channel: 'GT', customers: 2 }],
     firstMonth: '2026-08',
     lastMonth: '2026-09',
@@ -141,6 +162,13 @@ test('insights: months, channel series with unknown months, products, movers', (
   assert.equal(series[0].revenue[0], null, 'before the first data month: unknown, not 0');
   assert.deepEqual(series[0].revenue.slice(-2), [100, 50]);
   assert.equal(series[0].qty[11], 3);
+  // F08: a channel that sells in two units has no single quantity, only one per unit.
+  const mixed = insights.channelSeries(months, {
+    lineRows: [{ month: '2026-09', channel: 'GT', unit: 'Box', qty: '1', has_ratio: 0 }, { month: '2026-09', channel: 'GT', unit: 'PCS', qty: '5', has_ratio: 0 }],
+    firstMonth: '2025-10', lastMonth: '2026-09',
+  });
+  assert.equal(mixed[0].qty[11], null, '1 Box + 5 PCS is not 6');
+  assert.deepEqual(mixed[0].qtyByUnit.map((u) => [u.unit, u.values[11]]), [['Box', 1], ['PCS', 5]]);
   assert.equal(series[0].noo[11], 2);
 
   const rows = [

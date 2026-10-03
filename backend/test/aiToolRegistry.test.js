@@ -43,14 +43,24 @@ test('every authenticated frontend route resolves to an AI tool descriptor', () 
   assert.ok(resolveTool('/'), 'home dashboard');
 });
 
-test('an AI tool never needs less permission than its navigation entry', () => {
+test('an AI tool never needs less permission than its navigation entries', () => {
   const items = sidebarItems();
   assert.ok(items.length > 40, `expected sidebar items, got ${items.length}`);
+  // A tool serving several sidebar entries (Warehouse: Hari ini needs stock,
+  // Pergerakan barang needs movements) is open to exactly the union of them:
+  // whoever opens one of its pages may use it, nobody else.
+  const byTool = new Map();
   for (const item of items) {
     const resolved = resolveTool(item.to);
     assert.ok(resolved, item.to);
-    const required = [].concat(resolved.tool.readPermission || []);
-    assert.deepEqual([...required].sort(), [...item.permissions].sort(), `${item.to} permission drift`);
+    const entry = byTool.get(resolved.tool.key) || { routes: [], permissions: new Set() };
+    entry.routes.push(item.to);
+    for (const code of item.permissions) entry.permissions.add(code);
+    byTool.set(resolved.tool.key, entry);
+  }
+  for (const [key, entry] of byTool) {
+    const required = [].concat(TOOLS.find((t) => t.key === key).readPermission || []);
+    assert.deepEqual([...required].sort(), [...entry.permissions].sort(), `${entry.routes.join(', ')} permission drift`);
   }
 });
 

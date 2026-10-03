@@ -41,6 +41,7 @@ const NOT_A_DIVISION_MODULE = new Map([
   ['/division-storage', 'Penyimpanan file, bukan proses kerja'],
   ['/my-drive', 'Penyimpanan file pribadi'],
   ['/division-dashboard', 'Membaca provider manajemen yang sudah ada (ringkasan per divisi), bukan modul sendiri'],
+  ['/data-accurate', 'Batch dan pengajuan Accurate: lapisan integrasi, dibaca provider accurate.js'],
   ['/doc-templates', 'Alat dokumen lintas divisi: template, kop & footer, dokumen di Shared Drive divisi'],
   ['/management', 'Lapisan manajemen itu sendiri'],
   ['/escalations', 'Lapisan manajemen itu sendiri'],

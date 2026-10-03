@@ -528,6 +528,9 @@ async function afterDecision(outcome, actorUserId) {
   // division dashboards are refilled in the background a moment later.
   if (outcome.status === 'applied') {
     invalidateFigures();
+    // A "Pengajuan ke Accurate" already sent is confirmed by the mirror, so
+    // every applied batch is a chance to confirm one (lazy: no load cycle).
+    require('./accurateWriteRequests.service').confirmSent(outcome.entityId).catch(() => {});
     const timer = setTimeout(() => {
       require('./divisionDashboard.service').warmDivisionDashboards(Number(outcome.entityId)).catch(() => {});
     }, WARM_AFTER_APPLY_MS);

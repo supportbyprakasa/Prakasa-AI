@@ -9,10 +9,12 @@ import IconButton from '../../components/IconButton';
 import Page from '../../components/Page';
 import PageHeader from '../../components/PageHeader';
 import StatCard from '../../components/StatCard';
+import AnimatedNumber from '../../components/charts/AnimatedNumber';
+import BarList from '../../components/charts/BarList';
 import DataGrid from '../../components/datagrid/DataGrid';
 import { useAuth } from '../../context/AuthContext';
 import {
-  apiError, daysAgoText, formatCount, formatRupiahShort, monthBars, soldQty, todayIso,
+  apiError, daysAgoText, formatCount, formatRupiahShort, monthBars, salesScopeText, soldQty, todayIso,
 } from './salesModel';
 import SalesScopeBanner, { AccurateHoldBanner, useTransactionsReliable } from './SalesScopeBanner';
 import SalesTodo from './SalesTodo';
@@ -26,24 +28,17 @@ import { Translate } from '../../i18n/NoTranslate';
 const DEFAULT_STAGE = 'dormant';
 const PAGE_SIZE = 25;
 
+// Omzet per bulan as the shared bar list, so the bars grow the way every
+// dashboard's bars do (BarList); the newest month is at the bottom.
 function RevenueBars({ months, unitShort }) {
-  const rows = useMemo(() => monthBars(months, { count: 9 }), [months]);
-  return (
-    <ul className="sales-bars" aria-label="Omzet per bulan, sebelum PPN">
-      {rows.map((r) => (
-        <li key={r.month} className="sales-bars__row">
-          <span className="sales-bars__label">{r.label}</span>
-          <span className="sales-bars__track" aria-hidden="true">
-            <span className="sales-bars__fill" style={{ width: `${r.pct}%` }} />
-          </span>
-          <span className="sales-bars__value">
-            {r.revenue ? formatRupiahShort(r.revenue) : '—'}
-            <span className="pw-muted"> · {formatCount(r.orders)} {unitShort} · {formatCount(r.newCustomers)} NOO</span>
-          </span>
-        </li>
-      ))}
-    </ul>
-  );
+  const items = useMemo(() => monthBars(months, { count: 9 }).map((r) => ({
+    key: r.month,
+    label: r.label,
+    value: r.revenue,
+    display: r.revenue ? formatRupiahShort(r.revenue) : '—',
+    note: `${formatCount(r.orders)} ${unitShort} · ${formatCount(r.newCustomers)} NOO`,
+  })), [months, unitShort]);
+  return <BarList items={items} label="Omzet per bulan, sebelum PPN" />;
 }
 
 const TOP_PRODUCT_COLUMNS = [
@@ -151,7 +146,7 @@ export default function SalesPipeline() {
     <Page>
       <PageHeader
         title="Pipeline sales"
-        description="Otomatis dari kunjungan dan sales order; tidak ada kartu yang perlu digeser manual. Angka omzet mencakup seluruh perusahaan, termasuk marketplace (Retail Commerce)."
+        description={`Otomatis dari kunjungan dan sales order; tidak ada kartu yang perlu digeser manual. ${salesScopeText(ov?.scope)}`}
         actions={<Button variant="secondary" icon="refresh" onClick={() => { loadOverview(); loadStage(); }} disabled={state.loading}>Muat ulang</Button>}
       />
 
@@ -165,22 +160,22 @@ export default function SalesPipeline() {
 
       {ov ? (
         <div className="pw-cols-4">
-          <StatCard label="Pelanggan aktif" value={formatCount(ov.customers.aktif)} note={`Order < ${ov.rules.activeDays} hari`} />
+          <StatCard label="Pelanggan aktif" value={<AnimatedNumber value={ov.customers.aktif} />} note={`Order < ${ov.rules.activeDays} hari`} />
           <StatCard
             label="Dormant"
-            value={formatCount(ov.customers.dormant)}
+            value={<AnimatedNumber value={ov.customers.dormant} />}
             note={`Hubungi sebelum ${ov.rules.lostDays} hari (Lost)`}
             alert={reliable && ov.customers.dormant > 0}
           />
-          <StatCard label="Lost" value={formatCount(ov.customers.lost)} note={`${formatCount(ov.customers.neverOrdered)} belum pernah order`} />
+          <StatCard label="Lost" value={<AnimatedNumber value={ov.customers.lost} />} note={`${formatCount(ov.customers.neverOrdered)} belum pernah order`} />
           {ov.sales ? (
             <StatCard
               label="Omzet bulan ini (sebelum PPN)"
-              value={thisMonth?.month === currentMonth ? formatRupiahShort(thisMonth.revenue) : 'Rp 0'}
+              value={<AnimatedNumber value={thisMonth?.month === currentMonth ? thisMonth.revenue : 0} unit="rupiah" compact />}
               note={thisMonth?.month === currentMonth ? `${formatCount(thisMonth.orders)} ${ov.sales.unit || 'sales order'} · ${formatCount(thisMonth.newCustomers)} pelanggan baru` : 'Belum ada order bulan ini'}
             />
           ) : (
-            <StatCard label="Prospek belum order" value={formatCount(ov.leads.open)} note={`${formatCount(ov.leads.needsVisit)} perlu dikunjungi ulang`} />
+            <StatCard label="Prospek belum order" value={<AnimatedNumber value={ov.leads.open} />} note={`${formatCount(ov.leads.needsVisit)} perlu dikunjungi ulang`} />
           )}
         </div>
       ) : null}
@@ -249,7 +244,7 @@ export default function SalesPipeline() {
               Omzet dihitung dari DPP (sebelum PPN), sama seperti laporan Penjualan per Pelanggan di Accurate; ongkir tidak termasuk.
               {' '}
               {ov.sales.unit === 'faktur'
-                ? 'Dari faktur Accurate yang sudah disetujui, menurut tanggal faktur, seluruh perusahaan termasuk marketplace (Retail Commerce; ditagih bulanan, satu faktur rekap per akhir bulan). Saldo awal Accurate (faktur 31 Des 2025 tanpa baris barang) bukan penjualan: tetap di piutang, tidak dihitung sebagai omzet maupun NOO. NOO = pelanggan Accurate (per nomor pelanggan) yang pertama kali difakturkan di bulan itu.'
+                ? `Dari faktur Accurate yang sudah disetujui, menurut tanggal faktur. ${salesScopeText(ov?.scope)} Marketplace (Retail Commerce) ditagih bulanan, satu faktur rekap per akhir bulan. Saldo awal Accurate (faktur 31 Des 2025 tanpa baris barang) bukan penjualan: tetap di piutang, tidak dihitung sebagai omzet maupun NOO. NOO = pelanggan Accurate (per nomor pelanggan) yang pertama kali difakturkan di bulan itu.`
                 : 'Tanggal transaksi mengikuti tanggal kirim (ETD), atau tanggal order bila belum ada. NOO = pelanggan yang order pertama kali di bulan itu.'}
             </p>
           </div>

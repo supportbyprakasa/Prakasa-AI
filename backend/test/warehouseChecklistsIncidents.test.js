@@ -15,7 +15,9 @@ function fakeDb(t) {
     calls.push({ sql, args });
     if (/FROM departments/.test(sql)) return [[{ id: 9 }]];
     if (/^\s*INSERT INTO (warehouse_checklists|warehouse_incidents)/.test(sql)) return [{ insertId: 55 }];
-    if (/^\s*UPDATE/.test(sql)) return [{ affectedRows: args[args.length - 1] === 1 ? 1 : 0 }];
+    // A checklist completion also names the Warehouse division (and the
+    // department twice: "department_id=? OR ? IS NULL"); the entity is 4th.
+    if (/^\s*UPDATE/.test(sql)) return [{ affectedRows: (/completed=0/.test(sql) ? args[3] : args[args.length - 1]) === 1 ? 1 : 0 }];
     return [[]];
   });
   return calls;
@@ -63,8 +65,12 @@ test('completing or resolving only reaches the user\'s own company', async (t) =
   assert.equal(updates.length, 2);
   for (const c of updates) {
     assert.match(c.sql, /WHERE id=\? AND entity_id=\?/);
-    assert.equal(c.args[c.args.length - 1], 1);
+    assert.equal(/completed=0/.test(c.sql) ? c.args[3] : c.args[c.args.length - 1], 1);
   }
+  // Completing is scoped to the Warehouse division and refused once done.
+  const complete = updates.find((c) => /completed=0/.test(c.sql));
+  assert.ok(complete, 'the completion names completed=0');
+  assert.equal(complete.args[4], 9, 'the Warehouse department from departments');
   const other = await run(incidents.resolve, { user: { sub: 7, entityId: 2 }, params: { id: '6' }, body: {} });
   assert.equal(other.statusCode, 404);
 });

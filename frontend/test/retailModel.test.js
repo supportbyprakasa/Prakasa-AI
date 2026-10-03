@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  changeOf, changeText, emptyReason, kpiCards, latestValue, monthOptions, motionSeries, platformRows, productChange,
+  attentionItems, changeOf, changeText, emptyReason, kpiCards, latestValue, monthOptions, motionSeries, platformRows, productChange,
   productRows, qtyText, receivableBars, receivableStatus, revenueBars, shipmentStatus, trendCards,
 } from '../src/pages/retail/retailModel.js';
 
@@ -134,4 +134,15 @@ test('statuses use the shared status map', () => {
 
 test('month options newest first', () => {
   assert.deepEqual(monthOptions(months).map((m) => m.value), ['2026-10', '2026-09', '2026-08']);
+});
+
+test('section 2: what the marketplaces still owe — unshipped SOs and unpaid invoices, red when any is late', () => {
+  const items = attentionItems(overview, { total: 7, rows: [] }, { total: 18, rows: [] });
+  assert.deepEqual(items.map((i) => [i.key, i.value, i.display, i.note, i.tone]), [
+    ['unshipped', 7, '7', '2 lewat batas kirim', 'error'],
+    ['receivable', 18, '18', '18 lewat jatuh tempo', 'error'],
+  ]);
+  const calm = attentionItems({ kpis: { shipments: { open: 3, late: 0 }, receivable: { invoices: 0, overdueInvoices: 0 } } }, null, null);
+  assert.deepEqual(calm.map((i) => [i.key, i.tone, i.note]), [['unshipped', 'warning', undefined]]);
+  assert.deepEqual(attentionItems(null, null, null), []);
 });

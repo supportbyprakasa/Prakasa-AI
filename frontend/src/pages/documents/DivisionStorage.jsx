@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/Button';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import EmptyState, { LoadingState } from '../../components/EmptyState';
@@ -45,6 +46,9 @@ const fileMeta = (file) => {
 // The division's Shared Drive folder. Standalone at /division-storage, and the
 // "Drive divisi" tab of My Drive (`embedded`: no page header of its own).
 export default function DivisionStorage({ embedded = false }) {
+  const { user } = useAuth();
+  // Deleting a division file is the Head's (document.delete, what the API checks).
+  const canDelete = (user?.permissions || []).includes('document.delete');
   const [divisions, setDivisions] = useState(null);
   const [divisionsError, setDivisionsError] = useState('');
   const [departmentId, setDepartmentId] = useState(null);
@@ -181,7 +185,7 @@ export default function DivisionStorage({ embedded = false }) {
             icon={fileKindIcon(file)}
             thumbnail={file.thumbnailLink}
             onOpen={() => setOpenDoc(file)}
-            onDelete={() => setDeleteTarget(file)}
+            onDelete={canDelete ? () => setDeleteTarget(file) : undefined}
           />
         ))}
       </FileGrid>

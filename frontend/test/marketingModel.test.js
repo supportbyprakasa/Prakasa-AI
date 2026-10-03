@@ -161,3 +161,24 @@ test('performance: messages, figures and the series', () => {
   assert.equal(trend.points[0].label, '01/09 (sebelum)');
   assert.equal(trend.step, 'per hari');
 });
+
+test('F08: a campaign in several units shows no single quantity or uplift, but the quantity per unit', async () => {
+  const m = await import('../src/pages/marketing/marketingModel.js');
+  const base = { state: 'ok', window: { days: 10 }, revenue: 1000, baselineRevenue: 500, upliftPct: 100, noo: 1, baselineNoo: 0 };
+  const mixed = m.perfFigures({ ...base, qty: null, baselineQty: null, qtyUpliftPct: null, qtyUnit: null, qtyByUnit: [{ unit: 'Box', qty: 1 }, { unit: 'PCS', qty: 5 }] });
+  const qty = mixed.find((f) => f.key === 'qty');
+  assert.equal(qty.value, null);
+  assert.match(qty.note, /tidak dapat dihitung/);
+  assert.match(qty.note, /1 Box \+ 5 PCS/);
+  const one = m.perfFigures({ ...base, qty: 6, baselineQty: 3, qtyUpliftPct: 100, qtyUnit: 'PCS', qtyByUnit: [{ unit: 'PCS', qty: 6 }] }).find((f) => f.key === 'qty');
+  assert.equal(one.value, 6);
+  assert.equal(one.label, 'Jumlah terjual (PCS)');
+  assert.match(m.perfFigures({ ...base, qty: 0, baselineQty: 0, qtyByUnit: [] }).find((f) => f.key === 'noo').note, /belum tentu membeli produk target/);
+});
+
+test('F08: the channel table writes quantities per unit, never one sum', async () => {
+  const m = await import('../src/pages/marketing/marketingModel.js');
+  const channel = { key: 'GT', label: 'GT', revenue: [100], qty: [null], noo: [0], qtyByUnit: [{ unit: 'Box', values: [1] }, { unit: 'PCS', values: [5] }] };
+  assert.equal(m.channelQtyText(channel, 0), '1 Box + 5 PCS');
+  assert.equal(m.channelRows([channel], 0)[0].qtyText, '1 Box + 5 PCS');
+});

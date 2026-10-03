@@ -231,7 +231,7 @@ export default function WarehouseMovementForm() {
     }
   };
 
-  const leaveTo = editing ? `/warehouse/movements/${type}/${id}` : `/warehouse?tab=${type}`;
+  const leaveTo = editing ? `/warehouse/movements/${type}/${id}` : `/warehouse/movements?tab=${type}`;
   const leave = () => {
     setLeaveOpen(false);
     navigate(leaveTo);

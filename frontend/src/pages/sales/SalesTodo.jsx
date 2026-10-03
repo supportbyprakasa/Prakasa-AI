@@ -83,7 +83,9 @@ function actionFor(type, r, accurate) {
 export default function SalesTodo() {
   const accurate = useAccurateSource();
   const reliable = useTransactionsReliable();
-  const [type, setType] = useState('dormant');
+  // Opens on overdue invoices: the Dormant list is already the stage grid's
+  // default right below, so the two blocks never show the same customers.
+  const [type, setType] = useState('overdue');
   const list = useSalesList('/sales/actions', { type }, { limit: 10 });
   const types = list.meta.types || [];
   const current = types.find((t) => t.key === type);

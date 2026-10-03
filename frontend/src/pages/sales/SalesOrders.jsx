@@ -20,6 +20,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   DOCUMENT_TABS, INVOICE_STATUS_FILTERS, ORDER_STATUS_FILTERS, PERIOD_OPTIONS, apiError, formatRupiahShort,
   periodRange, soldQty, splitServerErrors,
+  orderBillingStatus, orderBillingText,
 } from './salesModel';
 import SalesScopeBanner, { AccurateHoldBanner, useAccurateSource, useNumbersFromAccurate, useSalesScope } from './SalesScopeBanner';
 import { defineAIForm, f } from '../../components/ai/aiFormFields';
@@ -38,8 +39,8 @@ import './sales.css';
 
 const money = (key, header) => ({ key, header, type: 'money' });
 
-const paidBadge = (r) => (Number(r.outstandingAmount) > 0 ? <StatusBadge status="unpaid" /> : <StatusBadge status="paid" label="Lunas" />);
-const paidText = (r) => (Number(r.outstandingAmount) > 0 ? 'Belum lunas' : 'Lunas');
+const paidBadge = (r) => <StatusBadge status={`so_${orderBillingStatus(r)}`} label={orderBillingText(r)} />;
+const paidText = (r) => orderBillingText(r);
 const PAID_COLUMN = { key: 'paid', header: 'Status', render: paidBadge, exportValue: paidText, nowrap: true };
 const activeColumn = {
   key: 'isActive', header: 'Status', nowrap: true,
@@ -485,7 +486,7 @@ export default function SalesOrders() {
       : `Nilai faktur ${formatRupiahShort(list.meta.revenue || 0)} (sebelum PPN) · piutang ${formatRupiahShort(list.meta.outstanding || 0)}`)
     : (list.meta.sum ? `Total ${formatRupiahShort(list.meta.sum)}` : '');
   const productNote = accurate && tab === 'products'
-    ? (fromAccurate ? 'Omzet per produk = bagian tiap baris faktur Accurate dari DPP fakturnya (sebelum PPN; diskon dan biaya di faktur dibagi rata ke produk), tanpa faktur uang muka.' : 'Master produk mengikuti Accurate.')
+    ? (fromAccurate ? 'Nilai per produk = bagian tiap baris faktur Accurate dari DPP fakturnya (sebelum PPN; diskon dan biaya di faktur dialokasikan proporsional terhadap nilai baris), sebelum retur, tanpa faktur uang muka.' : 'Master produk mengikuti Accurate.')
     : '';
   const footnote = list.loading ? '' : [values, productNote].filter(Boolean).join(' · ');
 

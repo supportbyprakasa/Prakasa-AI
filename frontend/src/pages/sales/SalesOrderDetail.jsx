@@ -24,7 +24,7 @@ import { formatDate, formatDateTime } from '../../components/format';
 import { toast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
 import {
-  apiError, dueDate as addTerms, formatRupiah, todayIso,
+  apiError, dueDate as addTerms, formatRupiah, orderBillingStatus, orderBillingText, todayIso,
 } from './salesModel';
 import { AccurateHoldBanner, useAccurateSource } from './SalesScopeBanner';
 import { salesChanged } from '../../components/useSalesActionBadge';
@@ -288,7 +288,7 @@ export default function SalesOrderDetail() {
           <span className="pw-row">
             {order.daysOverdue
               ? <StatusBadge status="overdue" label={`Terlambat bayar ${order.daysOverdue} hari`} />
-              : (unpaid ? <StatusBadge status="unpaid" /> : <StatusBadge status="paid" label="Lunas" />)}
+              : <StatusBadge status={`so_${orderBillingStatus(order)}`} label={orderBillingText(order)} />}
             <span>
               <Mixed parts={[data(order.customerName), data(order.channel), order.transactionDate ? formatDate(order.transactionDate) : null, ...pending]} />
             </span>

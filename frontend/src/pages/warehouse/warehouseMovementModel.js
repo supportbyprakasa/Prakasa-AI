@@ -195,3 +195,29 @@ export function formatQuantity(value) {
   const number = Number(value);
   return Number.isFinite(number) ? QUANTITY.format(number) : String(value ?? '');
 }
+
+// The quantities of a movement, per unit (revision F07): 2 Box and 3 PCS stay
+// "2 Box + 3 PCS" — different units are never added into one number. A movement
+// line has no conversion ratio, so nothing is converted here. Used by the list,
+// its export and anything else that sums a movement.
+export function quantityByUnit(items) {
+  const byUnit = new Map();
+  for (const item of items || []) {
+    const qty = Number(item?.quantity);
+    const unit = String(item?.unit || '').trim();
+    if (!Number.isFinite(qty) || !unit) continue;
+    const key = unit.toLowerCase();
+    const entry = byUnit.get(key) || { unit, quantity: 0 };
+    entry.quantity += qty;
+    byUnit.set(key, entry);
+  }
+  return [...byUnit.values()];
+}
+
+export function movementItemsText(items, format = (n) => String(n)) {
+  const rows = items || [];
+  const skus = new Set(rows.map((item) => String(item?.sku || item?.product || '').trim().toLowerCase()).filter(Boolean));
+  const units = quantityByUnit(rows).map((entry) => `${format(entry.quantity)} ${entry.unit}`);
+  const head = `${rows.length} baris · ${skus.size} SKU`;
+  return units.length ? `${head} · ${units.join(' + ')}` : head;
+}

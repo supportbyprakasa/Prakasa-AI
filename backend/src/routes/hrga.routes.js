@@ -103,15 +103,12 @@ router.patch('/workflows/:id', requirePermission('hrga.request'), validate(updat
 router.delete('/workflows/:id', requirePermission('hrga.request'), ctrl.remove);
 
 router.post('/workflows/:id/submit', requirePermission('hrga.request'), ctrl.submitForApproval);
-router.post('/workflows/:id/submit-approval', requirePermission('hrga.request'), ctrl.submitForApproval);
 router.post('/workflows/:id/withdraw', validate(z.object({ note: z.string().trim().min(1).max(500) }).strict()), ctrl.withdraw);
 router.post('/workflows/:id/cancel', requirePermission('hrga.manage'),
   validate(z.object({ reason: z.string().trim().min(1).max(255) }).strict()), ctrl.cancel);
-router.post('/workflows/:id/apply-approval', ctrl.applyApprovalResult);
 router.post('/workflows/:id/holdings-sync', requirePermission('hrga.manage'), ctrl.holdingsSync);
 
 // Checklist tasks: the responsible user or hrga.manage (rule in the service).
-router.patch('/workflows/:id/tasks/:taskId/link', ctrl.linkTask);
 router.patch('/workflows/:id/tasks/:taskId/assign', requirePermission('hrga.manage'),
   validate(z.object({ responsibleUserId: ID.nullable() }).strict()), ctrl.assignTask);
 router.get('/workflows/:id/tasks/:taskId/options', ctrl.taskOptions);
@@ -133,7 +130,7 @@ router.post('/workflows/:id/tasks/:taskId/device-return', requirePermission('dev
 router.post('/workflows/:id/tasks/:taskId/license-assign', requirePermission('subscription.license.manage'),
   validate(z.object({ licenseId: ID }).strict()), ctrl.licenseAssign);
 router.post('/workflows/:id/tasks/:taskId/license-revoke', requirePermission('subscription.license.manage'),
-  validate(z.object({}).strict()), ctrl.licenseRevoke);
+  validate(z.object({ confirmedAtVendor: z.boolean().optional() }).strict()), ctrl.licenseRevoke);
 router.post('/workflows/:id/tasks/:taskId/phone-line', requirePermission('it.infra.manage'),
   validate(z.object({ phoneLineId: ID }).strict()), ctrl.phoneLine);
 router.post('/workflows/:id/tasks/:taskId/phone-line-return', requirePermission('it.infra.manage'),

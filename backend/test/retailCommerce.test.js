@@ -36,7 +36,7 @@ test('provider: contract, RC keys of its own, nav path /retail-commerce, no esca
   assert.doesNotThrow(() => validateProvider(provider));
   assert.equal(provider.key, 'retail_commerce');
   assert.equal(provider.label, 'Retail Commerce');
-  assert.deepEqual(provider.navPaths, ['/retail-commerce']);
+  assert.deepEqual(provider.navPaths, ['/retail-commerce', '/retail-commerce/pending']);
   // SO past the promise is escalated by Warehouse (warehouse_so_late) for every SO.
   assert.equal(provider.escalations, undefined);
   assert.deepEqual(provider.metrics.map((m) => m.key), ['rc_marketplace_revenue', 'rc_orders', 'rc_return_rate']);

@@ -93,7 +93,7 @@ export function itemDiffText(item) {
 }
 export const qtyBaseText = (qty, unit) => (qty === null || qty === undefined ? '—' : `${idNumber.format(qty)} ${unit || 'satuan dasar'}`);
 
-export const reconUrl = (direction, groupKey) => `/warehouse?tab=recon&direction=${direction}&group=${encodeURIComponent(groupKey)}`;
+export const reconUrl = (direction, groupKey) => `/warehouse/stock?tab=recon&direction=${direction}&group=${encodeURIComponent(groupKey)}`;
 
 // "3 hari" — and "· belum dieskalasi" while it is not in Pusat Eskalasi: inside
 // the grace period (it is escalated on the day it is `graceDays` old), or not

@@ -1089,7 +1089,11 @@ async function updateIssue(user, issueId, body = {}) {
     }
 
     if (columnChanged && toColumn) {
-      if (fromColumn?.category !== toColumn.category) movedToCategory = toColumn.category;
+      if (fromColumn?.category !== toColumn.category) {
+        movedToCategory = toColumn.category;
+        // An issue linked to an IT ticket moves only as the ticket may move.
+        await require('./itTracker.service').assertIssueMove(id, toColumn.category, user);
+      }
       set('column_id', toColumn.id);
       set('status', M.STATUS_FOR_CATEGORY[toColumn.category]);
       const wasDone = fromColumn?.category === 'done';
@@ -1149,19 +1153,32 @@ async function updateIssue(user, issueId, body = {}) {
     conn.release();
   }
 
+  // An issue linked to an IT ticket carries its move back to the ticket. The
+  // result is returned so the board says whether the ticket followed; a failure
+  // is kept in the issue's history with the ticket link, never shown as success.
+  let ticketSync = null;
+  if (changed && movedToCategory) {
+    try {
+      ticketSync = await require('./itTracker.service').onIssueMoved(id, movedToCategory, user);
+    } catch (error) {
+      logger.warn({ err: error.message, issueId: id }, '[tracker] IT ticket not updated from issue');
+      ticketSync = { synced: false, reason: 'failed', message: error.message };
+    }
+    if (ticketSync && !ticketSync.synced) {
+      await taskActivity.record({
+        taskId: id, entityId: board.entity_id, actorUserId: user.sub, event: 'tracker.ticket_sync_failed',
+        metadata: { ticketId: ticketSync.ticketId || null, reason: ticketSync.reason || 'failed', status: ticketSync.status || null },
+      }).catch(() => {});
+    }
+  }
+
   const issue = await fetchIssue(id, board);
   if (changed) {
     emit('issue.updated', board, user, id);
     announce(user, board, issue, announcements);
     if (assignee?.userId) notifyAssignee(user, board, issue);
-    // An issue linked to an IT ticket carries its move back to the ticket.
-    if (movedToCategory) {
-      require('./itTracker.service').onIssueMoved(id, movedToCategory, user).catch((error) => {
-        logger.warn({ err: error.message, issueId: id }, '[tracker] IT ticket not updated from issue');
-      });
-    }
   }
-  return { issue };
+  return ticketSync ? { issue, ticketSync } : { issue };
 }
 
 async function deleteIssue(user, issueId) {

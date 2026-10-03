@@ -56,6 +56,7 @@ test('targets: a member sees only their own row; progress is actual over target'
   });
   assert.match(calls[0].sql, /AND u\.id = \?/);
   assert.deepEqual(calls[0].args, [1, 32]);
+  assert.equal(result.orderUnit, 'sales order', 'recap mode counts sales orders (F09)');
   const revenue = calls.find((c) => /SUM\(o\.dpp_amount\)/.test(c.sql));
   assert.deepEqual(revenue.args.slice(-2), ['2026-09-01', '2026-09-30']);
   await assert.rejects(() => targets.listTargets(member, '2026-13'), (e) => e.status === 400);
@@ -134,4 +135,17 @@ test('a salesperson is notified when someone else makes them PIC — never about
   sent.length = 0;
   await records.createLead({ ...manager, sub: 32 }, { name: 'Kafe Sendiri', ownerUserId: 32 });
   assert.equal(sent.length, 0);
+});
+
+test('F09: with Accurate numbers the target counts invoices and says "faktur" (2 SOs billed in 3 invoices = 3)', async (t) => {
+  const accurateMember = { ...member, entityId: 77 };
+  t.mock.method(pool, 'query', async (sql) => {
+    if (/FROM sales_accurate_batches b/.test(sql)) return [[{ n: 1 }]];
+    if (/FROM users u JOIN departments d/.test(sql)) return [[{ id: 32, name: 'Fajar', departmentName: 'Sales' }]];
+    if (/FROM sales_revenue_accurate|JOIN sales_revenue_accurate/.test(sql)) return [[{ user_id: 32, orders: 3, revenue: '3000000' }]];
+    return [[]];
+  });
+  const result = await targets.listTargets(accurateMember, '2026-09');
+  assert.equal(result.orderUnit, 'faktur');
+  assert.equal(result.rows[0].orders, 3);
 });

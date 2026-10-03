@@ -76,6 +76,8 @@ export default function DeviceDetail() {
   const { user } = useAuth();
   const permissions = user?.permissions || [];
   const canManage = permissions.includes('device.manage');
+  // Maintenance and repair logs: the API checks device.log.manage (it.routes.js).
+  const canLog = permissions.includes('device.log.manage');
   const canAssign = permissions.includes('device.assign');
   // BAST: IT (device.handover.manage) and GA (ga.ops.manage) both make them.
   const canBast = permissions.includes('device.handover.manage') || permissions.includes('ga.ops.manage');
@@ -245,12 +247,12 @@ export default function DeviceDetail() {
           <span data-no-translate={device.assetCode || device.serialNumber ? '' : undefined}>{[device.assetCode, device.serialNumber].filter(Boolean).join(' · ') || typeLabel}</span>
         </span>
       )}
-      actions={canManage || canAssign ? (
+      actions={canManage || canAssign || canLog ? (
         <>
           {canManage ? <Button variant="secondary" icon="swap_horiz" disabled={final} onClick={() => setStatusOpen('')}>Ubah status</Button> : null}
           {canManage ? <Button variant="secondary" icon="edit" onClick={() => setEditOpen(true)}>Ubah perangkat</Button> : null}
           {primary}
-          {canManage ? (
+          {canLog ? (
             <ActionMenu
               label="Aksi perangkat lainnya"
               items={[

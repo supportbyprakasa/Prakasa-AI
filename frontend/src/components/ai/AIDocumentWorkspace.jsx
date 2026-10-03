@@ -1,18 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import api from '../../api/client';
 import Button from '../Button';
 import EmptyState, { LoadingState } from '../EmptyState';
 import Icon from '../Icon';
 import IconButton from '../IconButton';
 import KeyValue from '../KeyValue';
+import Menu from '../Menu';
 import Spinner from '../Spinner';
 import StatusBadge from '../StatusBadge';
 import { toast } from '../Toast';
+import { useAuth } from '../../context/AuthContext';
 import { getGooglePreviewUrl } from '../../pages/ai/aiCommandCenterModel';
+import { artifactMessage, conversionMenuItems, isNativeFormat } from './aiConversionModel';
 import './ai-components.css';
 import { dateLocale } from '../../i18n/language.js';
 
-export default function AIDocumentWorkspace({ sessionId, refreshKey, onAttachContext }) {
+export default function AIDocumentWorkspace({ sessionId, refreshKey, onAttachContext, onConverted }) {
+  const { user } = useAuth();
   const [documents, setDocuments] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -20,6 +24,14 @@ export default function AIDocumentWorkspace({ sessionId, refreshKey, onAttachCon
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailUnavailable, setDetailUnavailable] = useState(false);
   const [downloadingId, setDownloadingId] = useState(null);
+  // "Konversi ke…" (Wave 1): the formats the server allows for the selected
+  // document; the result is a new document of this conversation.
+  const [convertOpen, setConvertOpen] = useState(false);
+  const [converting, setConverting] = useState(false);
+  const [localRefresh, setLocalRefresh] = useState(0);
+  const convertRef = useRef(null);
+  const convertMenuId = useId();
+  const canConvert = (user?.permissions || []).includes('document.create');
 
   useEffect(() => {
     if (!sessionId) {
@@ -53,7 +65,7 @@ export default function AIDocumentWorkspace({ sessionId, refreshKey, onAttachCon
       });
 
     return () => { cancelled = true; };
-  }, [sessionId, refreshKey]);
+  }, [sessionId, refreshKey, localRefresh]);
 
   const selectedDocument = documents.find((document) => document.id === selectedId);
 
@@ -108,6 +120,31 @@ export default function AIDocumentWorkspace({ sessionId, refreshKey, onAttachCon
       setDownloadingId(null);
     }
   };
+
+  const convertDocument = async (format) => {
+    if (!selectedDocument || !sessionId || converting) return;
+    setConverting(true);
+    try {
+      const response = await api.post(
+        `/ai-command/sessions/${sessionId}/artifacts/${selectedDocument.contextId}/convert`,
+        { format },
+      );
+      const artifact = response.data.data;
+      if (!isNativeFormat(format) || !artifact.native) {
+        const download = await api.get(artifact.downloadUrl, { responseType: 'blob' });
+        downloadBlob(download.data, artifact.originalName || `${selectedDocument.title || 'dokumen'}.${format}`);
+      }
+      toast(artifactMessage(artifact.native ? format : (isNativeFormat(format) ? 'docx' : format), { converted: true }), 'success');
+      setLocalRefresh((current) => current + 1);
+      setSelectedId(null);
+      onConverted?.(artifact);
+    } catch (error) {
+      toast(error.response?.data?.error?.message || 'Gagal mengonversi dokumen', 'error');
+    } finally {
+      setConverting(false);
+    }
+  };
+  const conversionItems = conversionMenuItems(documentDetail?.conversions);
 
   if (!sessionId) {
     return (
@@ -187,6 +224,34 @@ export default function AIDocumentWorkspace({ sessionId, refreshKey, onAttachCon
                 onClick={downloadDocument}
                 disabled={downloadingId === selectedDocument.id}
               />
+              {canConvert && conversionItems.length > 0 && (
+                <>
+                  <IconButton
+                    ref={convertRef}
+                    label="Konversi ke…"
+                    icon={converting ? <Spinner label={null} /> : 'swap_horiz'}
+                    aria-haspopup="menu"
+                    aria-expanded={convertOpen}
+                    aria-controls={convertOpen ? convertMenuId : undefined}
+                    disabled={converting || detailLoading}
+                    onClick={() => setConvertOpen((current) => !current)}
+                  />
+                  <Menu
+                    id={convertMenuId}
+                    open={convertOpen}
+                    anchorRef={convertRef}
+                    onClose={() => setConvertOpen(false)}
+                    label="Konversi dokumen ke"
+                    align="end"
+                    items={conversionItems.map((item) => ({
+                      key: item.value,
+                      label: item.label,
+                      description: item.description,
+                      onClick: () => { setConvertOpen(false); convertDocument(item.value); },
+                    }))}
+                  />
+                </>
+              )}
               {documentDetail?.webViewLink && (
                 // A link, not an action: keeps open-in-new-tab semantics.
                 <IconButton

@@ -300,9 +300,16 @@ async function actionCount(req, res, next) {
   } catch (e) { next(e); }
 }
 
+// The overdue and no_do lists carry invoice and SO amounts: order.view only
+// (migration 130 keeps money figures from Marketing, which has customer.view).
+const MONEY_TYPES = new Set(['overdue', 'no_do']);
+
 async function actions(req, res, next) {
   try {
     const type = salesActions.TYPES[req.query.type] ? req.query.type : 'dormant';
+    if (MONEY_TYPES.has(type) && !(req.user.permissions || []).includes('sales.order.view')) {
+      return fail(res, 'FORBIDDEN', 'Daftar ini berisi nominal order; butuh izin Data Sales', 403);
+    }
     const { page, limit, offset } = paging(req.query);
     const [list, summary, reliable] = await Promise.all([
       salesActions.list(req.user, type, { page, limit, offset, q: req.query.q }),

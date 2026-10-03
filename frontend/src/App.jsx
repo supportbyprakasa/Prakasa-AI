@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { lazy, Suspense } from 'react';
 import lazyPage from './components/lazyPage';
@@ -46,10 +46,19 @@ const SalesOrders = lazyPage(() => import('./pages/sales/SalesOrders'));
 const SalesOrderDetail = lazyPage(() => import('./pages/sales/SalesOrderDetail'));
 const SalesAccurateBatch = lazyPage(() => import('./pages/sales/SalesAccurateBatch'));
 const DataAccurate = lazyPage(() => import('./pages/accurate/DataAccurate'));
-const ProcurementDashboard = lazyPage(() => import('./pages/procurement/ProcurementDashboard'));
+const AccurateWriteRequestDetail = lazyPage(() => import('./pages/accurate/AccurateWriteRequestDetail'));
 const SalesOrderForm = lazyPage(() => import('./pages/sales/SalesOrderForm'));
 const SalesPrint = lazyPage(() => import('./pages/sales/SalesPrint'));
-const WarehouseDashboard = lazyPage(() => import('./pages/warehouse/WarehouseDashboard'));
+const WarehouseOperations = lazyPage(() => import('./pages/warehouse/WarehouseOperations'));
+const WarehouseTodayPage = lazyPage(() => import('./pages/warehouse/WarehousePages').then((m) => ({ default: m.WarehouseTodayPage })));
+const WarehouseMovementsPage = lazyPage(() => import('./pages/warehouse/WarehousePages').then((m) => ({ default: m.WarehouseMovementsPage })));
+const WarehouseStockPage = lazyPage(() => import('./pages/warehouse/WarehousePages').then((m) => ({ default: m.WarehouseStockPage })));
+const WarehouseShippingPage = lazyPage(() => import('./pages/warehouse/WarehousePages').then((m) => ({ default: m.WarehouseShippingPage })));
+const ProcurementTodayPage = lazyPage(() => import('./pages/procurement/ProcurementPages').then((m) => ({ default: m.ProcurementTodayPage })));
+const ProcurementOrdersPage = lazyPage(() => import('./pages/procurement/ProcurementPages').then((m) => ({ default: m.ProcurementOrdersPage })));
+const ProcurementVendorsPage = lazyPage(() => import('./pages/procurement/ProcurementPages').then((m) => ({ default: m.ProcurementVendorsPage })));
+const ProcurementReorderPage = lazyPage(() => import('./pages/procurement/ProcurementPages').then((m) => ({ default: m.ProcurementReorderPage })));
+const RetailPending = lazyPage(() => import('./pages/retail/RetailPending'));
 const WarehouseMovementForm = lazyPage(() => import('./pages/warehouse/WarehouseMovementForm'));
 const WarehouseMovementDetail = lazyPage(() => import('./pages/warehouse/WarehouseMovementDetail'));
 const ItDashboard = lazyPage(() => import('./pages/it/ItDashboard'));
@@ -119,6 +128,13 @@ function RequireAuth({ children, path }) {
   return children;
 }
 
+// Accurate batches have one page, /data-accurate/:id (audit 3 Oct 2026); the
+// old Data Sales address still lands there.
+function BatchRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/data-accurate/${id}`} replace />;
+}
+
 export default function App() {
   // Full-page routes outside the Layout (verify, AI, print) suspend here;
   // pages inside the Layout suspend in its own <Suspense> around <Outlet />.
@@ -171,10 +187,15 @@ export default function App() {
           <Route path="sales/orders/new" element={<SalesOrderForm />} />
           <Route path="sales/orders/:id/edit" element={<SalesOrderForm />} />
           <Route path="sales/orders/:id" element={<SalesOrderDetail />} />
-          <Route path="sales/orders/accurate/:id" element={<SalesAccurateBatch />} />
+          <Route path="sales/orders/accurate/:id" element={<BatchRedirect />} />
           <Route path="data-accurate" element={<DataAccurate />} />
+          <Route path="data-accurate/pengajuan/:id" element={<AccurateWriteRequestDetail />} />
           <Route path="data-accurate/:id" element={<SalesAccurateBatch />} />
-          <Route path="warehouse" element={<WarehouseDashboard />} />
+          <Route path="warehouse" element={<WarehouseTodayPage />} />
+          <Route path="warehouse/movements" element={<WarehouseMovementsPage />} />
+          <Route path="warehouse/stock" element={<WarehouseStockPage />} />
+          <Route path="warehouse/shipping" element={<WarehouseShippingPage />} />
+          <Route path="warehouse/operations" element={<WarehouseOperations />} />
           <Route path="warehouse/movements/:type/new" element={<WarehouseMovementForm />} />
           <Route path="warehouse/movements/:type/:id" element={<WarehouseMovementDetail />} />
           <Route path="warehouse/movements/:type/:id/edit" element={<WarehouseMovementForm />} />
@@ -201,9 +222,13 @@ export default function App() {
           <Route path="finance/receivables" element={<FinanceReceivables />} />
           <Route path="finance/payables" element={<FinancePayables />} />
           <Route path="coming-soon/finance" element={<Navigate to="/finance/receivables" replace />} />
-          <Route path="procurement" element={<ProcurementDashboard />} />
+          <Route path="procurement" element={<ProcurementTodayPage />} />
+          <Route path="procurement/orders" element={<ProcurementOrdersPage />} />
+          <Route path="procurement/vendors" element={<ProcurementVendorsPage />} />
+          <Route path="procurement/reorder" element={<ProcurementReorderPage />} />
           <Route path="coming-soon/procurement" element={<Navigate to="/procurement" replace />} />
           <Route path="retail-commerce" element={<RetailCommerce />} />
+          <Route path="retail-commerce/pending" element={<RetailPending />} />
           <Route path="coming-soon/retail-commerce" element={<Navigate to="/retail-commerce" replace />} />
           <Route path="marketing/insights" element={<MarketingInsights />} />
           <Route path="marketing/campaigns" element={<MarketingCampaigns />} />

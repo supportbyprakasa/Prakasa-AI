@@ -1266,3 +1266,73 @@ dengan CLI asli bahwa model tidak memakai pola dua kalimat itu untuk kasus atura
 `templates`, `approvals`, dan `approval-delegations` tetap ada, begitu juga alatnya (datanya masih dilayani alat). Karena
 rutenya tidak pernah dirender (`BLOCKED_ROUTES` di `components/navigation.js`), `toolDto` dan konteks halaman mengembalikan
 `starters: []` untuk keempatnya. `startersFor` dan daftar pertanyaan yang dideklarasikan tidak berubah.
+
+## 10. Program: Prakasa AI untuk internal dan eksternal (3 Oktober 2026)
+
+Arahan owner (3 Oktober 2026), setelah semua modul dinyatakan siap production: *"fokus ke Prakasa AI untuk penggunaan
+internal dan eksternal"*. Jawaban owner atas pertanyaan pembuka: eksternal = bot untuk pelanggan dan pemasok (WhatsApp
+atau widget); internal = dokumen dan asisten di dalam Docs, Sheets, Slides, dan produk Google lainnya; mesin tetap Claude
+Team CLI (untuk bot eksternal sudah diingatkan: harus Claude API, karena ToS dan satu seat); batas pemakaian mengikuti
+rekomendasi; *"intinya Prakasa AI harus tau semua hal … seperti claude ai, bisa convert file apapun, bisa buat dokumen,
+bisa assist pekerjaan"*; dan *"segala hal apapun sesuai batasan divisi dan setiap role. Semua modul dan fitur termasuk
+Prakasa AI harus terintegrasi dengan tools product Google yang sering user gunakan, seperti Gmail, Google Chat, Calendar,
+Meeting, dan banyak hal lainnya"*. Aturan §4 dan §9.2 tetap berlaku tanpa pengecualian: AI membaca sesuai hak akses
+pengguna, tidak pernah menyimpan, mengirim, menyetujui, atau menghapus.
+
+### 10.1 Gelombang pengerjaan
+
+| Gelombang | Isi | Status |
+|---|---|---|
+| **1. Dokumen dan file** | Jawaban jadi PDF/DOCX/XLSX/**PPTX** atau **Google Doc/Sheet/Slides**; **"Konversi ke…"** untuk setiap dokumen percakapan lewat konverter Google; alat `baca_dokumen` (isi dokumen yang boleh dibuka pengguna, per bagian, dengan kutipan). Hasil: §10.2 | Selesai (3 Oktober 2026) |
+| **2. Asisten di Google Workspace** | Alat baca Gmail, Google Chat, Calendar, dan Meet milik pengguna (yang sudah tersambung lewat Google Mail/Chat/Calendar di Workspace) untuk agen; panel Prakasa AI di halaman Google Files saat Doc/Sheet/Slides terbuka ("ringkas dokumen ini", "buat draft balasan"); draft email/pesan/undangan disiapkan AI, pengguna yang menekan Kirim | Berikutnya |
+| **3. Pekerjaan sehari-hari** | Starter per peran dari dokumen ke formulir yang sudah ada diperluas ke semua modul; "dari email/Chat ke tugas atau pengajuan" (AI mengisi form, pengguna menyimpan); ringkasan pagi ditambah agenda Calendar dan email penting | Menunggu Gelombang 2 |
+| **4. Batas dan pemakaian** | Kuota per peran dari layar Admin (rekomendasi: anggota 50 pesan/hari, Supervisor/Head 100; peringatan di 80 %), laporan pemakaian per divisi, antrean CLI tetap 2 bersamaan | Menunggu |
+| **5. Eksternal: bot pelanggan dan pemasok** | WhatsApp/widget dengan **Claude API** (bukan CLI Team), **tembok terpisah**: hanya data yang memang untuk pihak luar (status SO/PO miliknya, jadwal kirim, dokumen yang dibagikan), tanpa akses ke modul internal, tanpa riset web, log penuh; butuh keputusan owner soal nomor WA Business dan biaya API | Menunggu keputusan owner |
+
+### 10.2 Hasil Gelombang 1: dokumen dan file (3 Oktober 2026)
+
+**Jawaban menjadi dokumen.** Di bawah setiap jawaban: chip PDF, DOCX, XLSX, **PPTX**, dan menu **Google** (Google Doc,
+Google Sheet, Google Slides). PPTX dibuat dengan `pptxgenjs` (`aiDocumentArtifact.service.js` `generatePptx`,
+`slidesFromMarkdown`: slide sampul "Disusun dengan Prakasa AI", sembilan baris per slide, tabel Markdown menjadi slide
+tabel). Format Google = file Office kembarannya yang **diimpor** lewat konverter Drive (`googleDrive.service.js`
+`importAsNative`, `files.create` dengan `mimeType` tujuan); hasilnya hidup di Shared Drive dan dibuka di editornya, tidak
+diunduh. Di penyimpanan lokal (pengembangan) file Office-nya yang disimpan, dan UI mengunduhnya (`artifact.native=false`).
+Rute `POST /ai-command/sessions/:id/artifacts` menerima `format` ∈ pdf, docx, xlsx, pptx, txt, md, csv, gdoc, gsheet, gslides.
+
+**Konversi dokumen percakapan.** `POST /ai-command/sessions/:id/artifacts/:documentId/convert` `{ format }`
+(`ai_command.use` + `document.create`, akses `send_message` ke percakapan). Matriks (`conversionTargets`): file Google →
+PDF, kembaran Office, dan TXT/Markdown bila teksnya terbaca; file Office/teks → kembaran Google, PDF, kembaran Office,
+TXT/Markdown; PDF dan gambar → hanya TXT/Markdown dari teks yang sudah terbaca. Jalur: TXT/MD dari `extracted_text` tanpa
+Google; file Google → `files.export`; Office → Google = impor; Office → PDF/Office = impor sementara `~konversi <judul>`,
+ekspor, lalu file sementara dihapus (`finally`). Hasil = dokumen baru di folder yang sama, relasi `converted`, event
+`document_converted`, judul `<judul> (<format>)`; sumber tidak pernah diubah. Metadata artefak (`GET …/artifacts/:id`)
+kini membawa `storedMimeType`, `sourceMimeType`, dan `conversions` (daftar yang boleh, sudah dikurangi ke TXT/MD bila
+penyimpanan lokal) untuk menu **"Konversi ke…"** di panel dokumen (`AIDocumentWorkspace.jsx`, hanya pemegang
+`document.create`; model `components/ai/aiConversionModel.js`).
+
+**Alat `baca_dokumen`** (`tools/documents.js`; izin `document.view`, pribadi saja; modul `documents` dan
+`division-storage`). Masukan `dokumen_id` (dari `cari_dokumen`/`dokumen_divisi`), `bagian` (3.500 karakter per bagian,
+di bawah batas 4.000 kontrak sehingga tidak terpotong `capResult`), atau `cari` (sampai 8 cuplikan 240 karakter dengan
+nomor bagiannya). Sumber teks: `documentContent.service.js` `readDocumentText` → `documentRead.documentById`
+(aturan `documentVisibilitySql`, sama dengan halaman Dokumen) lalu `document_ai_content.extracted_text`; dokumen yang
+hanya tertaut ke Drive (dibuat di halaman Dokumen atau dari template) diunduh **sekali** dengan akses aplikasi (file
+Google datang sebagai ekspor PDF), dibaca dengan `extractReadableText` yang sama dengan unggahan, dan teksnya disimpan di
+`document_ai_content` (`INSERT … ON DUPLICATE KEY UPDATE`, hanya kolom ekstraksi) untuk pertanyaan berikutnya. Hasil yang
+pernah dibaca dan tidak punya teks (`no_text`/`unsupported`/`failed`) dijawab apa adanya tanpa mengunduh ulang. Kunci hasil
+bebas dari pola `outputGuard`; isi dokumen adalah teks yang boleh dibuka pengguna. Dokumen divisi lain: `ditemukan: false`
+tanpa judul atau petunjuk apa pun. Pengecualian pada aturan "tidak pernah isi file" di berkas alat dokumen dicatat di
+kepala berkasnya; `cari_dokumen` dan `dokumen_divisi` tetap metadata saja dan menunjuk ke `baca_dokumen`.
+
+**Panduan** bab Prakasa AI: langkah "jadikan PDF / DOCX / XLSX / PPTX … atau pilih Google", bagian baru "Mengonversi dan
+membaca dokumen", contoh pertanyaan dokumen; turunan (`docs/handbook/*.md`, `handbook.generated.json`, `aiForms.generated.js`)
+dan katalog bahasa (EN di `additions*.json`) diperbarui, todo 0.
+
+**Uji.** `backend/test/aiDocumentConvert.test.js` (PPTX nyata dengan JSZip, kembaran Office untuk format Google, matriks
+konversi, `convertSessionDocument` dengan pool dan Drive tiruan: 400/409/404, jalur TXT tanpa Google, ekspor file Google,
+impor-ekspor-hapus untuk Office, impor sebagai hasil; metadata `conversions`; `readDocumentText` cache/Drive/404;
+`baca_dokumen` bagian, cuplikan, penjagaan kunci, 403), `aiAgentWork.test.js` (alat ke-13, `baca_dokumen` pada DB nyata
+dengan Drive dilarang: teks terbaca, cuplikan, dokumen divisi lain tidak bocor), `frontend/test/aiConversionModel.test.js`.
+
+**Belum.** OCR gambar/scan (bergantung keputusan vision di jalur dokumen tersimpan); konversi di penyimpanan lokal hanya
+TXT/MD; pembacaan file yang hanya ada di Drive tanpa catatan dokumen (bukan dokumen Workspace) tidak termasuk, sesuai
+aturan "yang tidak ada di aplikasi tidak dibaca".

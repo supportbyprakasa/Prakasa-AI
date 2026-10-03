@@ -70,7 +70,7 @@ async function runEverything(departmentId) {
 
 test('the warehouse provider satisfies the contract and claims its sidebar route', () => {
   const p = validateProvider(warehouse);
-  assert.deepEqual(p.navPaths, ['/warehouse']);
+  assert.deepEqual(p.navPaths, ['/warehouse', '/warehouse/movements', '/warehouse/stock', '/warehouse/shipping', '/warehouse/operations']);
   assert.ok(p.escalations.length && p.metrics.length && p.kpis.length);
   for (const item of [...p.escalations, ...p.metrics, ...p.kpis]) {
     assert.match(item.key, /^warehouse_/, `${item.key} is prefixed so it never clashes with another module`);
@@ -122,14 +122,14 @@ test('incident and checklist escalations map rows and apply severity', async (t)
   assert.equal(incident.severity, 'medium');
   assert.equal(incident.daysLate, 4);
   assert.equal(incident.since, '2026-09-25T02:00:00.000Z');
-  assert.equal(incident.link, '/warehouse?tab=incidents');
+  assert.equal(incident.link, '/warehouse/operations?tab=incidents');
 
   const [checklist] = await source('warehouse_checklist_missed').list(1, { departmentId: null });
   assert.equal(checklist.title, 'Checklist harian gudang A');
   assert.equal(checklist.context, 'Belum diselesaikan');
   assert.equal(checklist.ownerName, null);
   assert.equal(checklist.severity, 'medium');
-  assert.equal(checklist.link, '/warehouse?tab=checklist');
+  assert.equal(checklist.link, '/warehouse/operations?tab=checklist');
 });
 
 test('a division Head is filtered in SQL on every query of every capability', async (t) => {
@@ -275,7 +275,7 @@ test('stock minus reaches management per gudang, and stock KPIs wait for the fir
   const [item] = await source.list(1, { departmentId: 9 });
   assert.equal(item.sourceId, 3 * 1000000 + 9764, 'the gudang plus the day its episode began');
   assert.equal(warehouse.warehouseOfEpisode(item.sourceId), 3);
-  assert.equal(item.link, '/warehouse?tab=stock&status=minus&warehouseId=3', 'opens that gudang\'s minus items');
+  assert.equal(item.link, '/warehouse/stock?status=minus&warehouseId=3', 'opens that gudang\'s minus items');
   assert.match(item.context, /157 barang stoknya minus/);
   assert.match(calls[0].sql, new RegExp(`- ${warehouse.NEGATIVE_STOCK_DAYS} AS days_late`));
   const kpi = (key) => warehouse.kpis.find((k) => k.key === key);
@@ -320,7 +320,7 @@ test('a late SO escalates to Warehouse with an episode per promise and says wher
   const [item] = await source('warehouse_so_late').list(1, { departmentId: null });
   assert.equal(item.sourceId, 4398 * 100000 + 9761);
   assert.equal(item.context, '50% terkirim · janji kirim 2026-09-22 (standar 2×24 jam dari tanggal SO)');
-  assert.equal(item.link, '/warehouse?tab=shipping&status=late&q=SO.3%2FQGB');
+  assert.equal(item.link, '/warehouse/shipping?status=late&q=SO.3%2FQGB');
   assert.match(calls[0].sql, /x\.so_state IN \('open', 'partial'\) AND x\.judged AND x\.promised_date < DATE\(UTC_TIMESTAMP\(\) \+ INTERVAL 7 HOUR\)/);
   assert.deepEqual(calls[0].args, [1]);
   assert.ok(calls[0].sql.includes(`x.trans_date >= '2026-09-22'`), 'OTIF_FROM, inside the shared late-SO rule');
@@ -451,7 +451,7 @@ test('a movement not in Accurate links to its group, with a direction- and episo
   assert.equal(item.sourceId, 82 * reconModel.EPISODE_FACTOR + 9764, 'inbound 41 → 41×2, then the day of its since');
   assert.deepEqual(reconModel.decodeEpisodeSourceId(item.sourceId), { direction: 'inbound', movementId: 41 });
   assert.equal(item.title, 'Barang Masuk SJ-001');
-  assert.equal(item.link, '/warehouse?tab=recon&direction=inbound&group=SJ001');
+  assert.equal(item.link, '/warehouse/stock?tab=recon&direction=inbound&group=SJ001');
   assert.equal(item.context, 'disetujui di aplikasi, belum ada dokumen Accurate yang cocok · PT Sumber Makmur');
   assert.equal(item.daysLate, 3);
   warehouse.resetReconMemo();
@@ -495,7 +495,7 @@ test('an Accurate document not recorded by the Warehouse escalates per document 
   assert.deepEqual(reconModel.decodeDocSourceId(item.sourceId), { docType: 'delivery', docId: 202 });
   assert.equal(item.title, 'Surat jalan DO.2026.09.00068');
   assert.equal(item.context, 'Big House Cafe · belum dicatat sebagai Barang Keluar di aplikasi');
-  assert.equal(item.link, '/warehouse?tab=recon&direction=outbound&group=delivery-202');
+  assert.equal(item.link, '/warehouse/stock?tab=recon&direction=outbound&group=delivery-202');
 });
 
 test('reconciliation KPI adds MySQL string counts as numbers and waits for Accurate documents', async (t) => {

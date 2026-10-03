@@ -37,7 +37,7 @@ const EXPECTED = {
   'it-location': ['device.manage', 'create', undefined, []],
   'it-location-edit': ['device.manage', 'edit', 'it_location', ['isActive']],
   'it-subscription': ['subscription.manage', 'create', undefined, ['unitPrice']],
-  'it-subscription-invoice': ['subscription.invoice.manage', 'create', undefined, ['amount', 'taxAmount', 'totalAmount', 'file']],
+  'it-subscription-invoice': ['subscription.invoice.manage', 'create', undefined, ['amount', 'taxAmount', 'totalAmount', 'currency', 'file']],
   'it-license': ['subscription.license.manage', 'create', undefined, []],
   'it-infra-network': ['it.infra.manage', 'create', undefined, ['serialNumber', 'ipAddress', 'status']],
   'it-infra-network-edit': ['it.infra.manage', 'edit', 'it_network_device', ['serialNumber', 'ipAddress', 'status']],

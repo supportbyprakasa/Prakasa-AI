@@ -289,6 +289,12 @@ async function holders(entityId, code) {
 async function list(user, query = {}) {
   const page = Math.max(1, parseInt(query.page, 10) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(query.limit, 10) || PAGE_SIZE));
+  // ?awaiting=1: only the requests whose active approval step is the caller's
+  // (the "Menunggu keputusan saya" chip; /approvals is retired).
+  if (query.awaiting === '1' || query.awaiting === 'true') {
+    const mine = await awaitingMyDecision(user, { limit });
+    return { rows: mine.rows, meta: { page: 1, limit, total: mine.total } };
+  }
   const where = ['f.entity_id = ?', 'f.deleted_at IS NULL'];
   const args = [user.entityId];
   const scope = readScope(user);

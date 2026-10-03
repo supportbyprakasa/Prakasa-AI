@@ -54,6 +54,36 @@ async function searchDocuments(user, { q = '', documentType = '', status = '', d
   return { total: Number(total), rows };
 }
 
+/**
+ * One document record the user may see (the same visibility rule as the
+ * list), with its Drive file and the text the app has already read out of it
+ * (document_ai_content). null when it does not exist or is not visible.
+ */
+async function documentById(user, documentId) {
+  const id = Number(documentId);
+  if (!Number.isInteger(id) || id <= 0) return null;
+  const visible = documentVisibilitySql(user, 'd');
+  const [rows] = await pool.query(
+    `SELECT d.id, d.title, d.document_type AS documentType, dt.name AS documentTypeName, d.status,
+            d.department_id AS departmentId, dep.name AS departmentName,
+            u.name AS createdByName, d.created_at AS createdAt, d.updated_at AS updatedAt,
+            d.drive_file_id AS driveFileId,
+            f.web_view_link AS webViewLink, f.mime_type AS mimeType, f.name AS fileName, f.size AS fileSize,
+            c.extraction_status AS extractionStatus, c.extracted_text AS extractedText, c.extraction_error AS extractionError,
+            c.original_name AS originalName, c.original_mime_type AS originalMimeType, c.compression_method AS compressionMethod
+       FROM documents d
+       LEFT JOIN departments dep ON dep.id = d.department_id
+       LEFT JOIN users u ON u.id = d.created_by
+       LEFT JOIN document_types dt ON dt.entity_id = d.entity_id AND dt.code = d.document_type AND dt.deleted_at IS NULL
+       LEFT JOIN drive_files_metadata f ON f.drive_file_id = d.drive_file_id
+       LEFT JOIN document_ai_content c ON c.document_id = d.id
+      WHERE d.id = ? AND d.deleted_at IS NULL AND d.entity_id = ? AND ${visible.sql}
+      LIMIT 1`,
+    [id, Number(user.entityId) || 0, ...visible.args]
+  );
+  return rows[0] || null;
+}
+
 /** Documents made from templates (docTemplates.listGenerated: own division unless cross-division). */
 function generatedDocuments(user, options = {}) {
   return docTemplates.listGenerated(pool, user, options);
@@ -64,4 +94,4 @@ function templates(user) {
   return docTemplates.listTemplates(pool, user);
 }
 
-module.exports = { divisions, searchDocuments, generatedDocuments, templates };
+module.exports = { divisions, searchDocuments, documentById, generatedDocuments, templates };

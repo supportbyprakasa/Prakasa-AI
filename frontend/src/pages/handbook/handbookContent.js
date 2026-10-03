@@ -76,7 +76,7 @@ const HANDBOOK = [
               ['Gagal masuk dengan Google.', 'Akun Google yang dipilih bukan akun kantor, atau belum terdaftar.'],
             ],
           },
-          { type: 'p', text: 'Akun belum dibuat atau dinonaktifkan? Hubungi Super Admin atau Administrator Sistem, seperti tertulis di bawah tombol "Masuk".' },
+          { type: 'p', text: 'Akun belum dibuat atau dinonaktifkan? Hubungi Administrator Sistem atau Super Admin, seperti tertulis di bawah tombol "Masuk". Lupa kata sandi? Hanya Super Admin yang dapat mereset kata sandi; tidak ada reset mandiri.' },
         ],
       },
       {
@@ -454,6 +454,7 @@ const HANDBOOK = [
             ],
           },
           { type: 'note', text: 'Anda mendapat notifikasi di aplikasi setiap kali status tiket berubah atau ada tanggapan baru.' },
+          { type: 'note', text: 'Tiket juga tampil sebagai issue di project IT Project Tracker. Status issue itu hanya dapat dipindahkan oleh pengelola tiket IT, dan mengikuti status tiketnya; tiket yang ditutup atau dibatalkan tidak dibuka lagi dari papan. Bila tiket tidak ikut berubah, papan memberi tahu dan riwayat issue mencatatnya.' },
         ],
       },
       {
@@ -484,7 +485,7 @@ const HANDBOOK = [
               'Klik "Pesan ruang". Bila ruang kosong, pesanan langsung terkonfirmasi.',
             ],
           },
-          { type: 'note', text: 'Pinjam kendaraan dilakukan lewat TrackCar (tombol "Pinjam kendaraan" membuka TrackCar di tab baru), bukan di Prakasa Workspace.' },
+          { type: 'note', text: 'Pinjam kendaraan dilakukan lewat TrackCar: pilihan "Pinjam kendaraan" di "Buat permintaan" membuka TrackCar di tab baru dan tidak membuat pemesanan di Prakasa Workspace. Data TrackCar tidak disinkronkan ke Workspace.' },
           {
             type: 'table',
             title: 'Status permintaan dan pemesanan',
@@ -769,7 +770,7 @@ const HANDBOOK = [
         route: '/signatures',
         audience: { permissions: ['signature.view'] },
         body: [
-          { type: 'p', text: 'Dokumen yang perlu ditandatangani dibuka dari pratinjau dokumen atau dari notifikasi "Dokumen menunggu tanda tangan Anda" (juga dikirim lewat email).' },
+          { type: 'p', text: 'Buka "Permintaan tanda tangan" dari Akun saya (kartu "Tanda tangan") atau dari notifikasi "Dokumen menunggu tanda tangan Anda" (juga dikirim lewat email).' },
           {
             type: 'steps',
             items: [
@@ -781,6 +782,7 @@ const HANDBOOK = [
           },
           { type: 'table', columns: ['Status', 'Artinya'], rows: [['Menunggu', 'Belum ditandatangani.'], ['Disetujui', 'Approval sudah lengkap.'], ['Ditandatangani', 'Sudah ditandatangani; kode verifikasi berlaku.'], ['Ditolak / Dibatalkan', 'Tidak dilanjutkan.']] },
           { type: 'note', text: 'Cek awal AI hanya saran. Hasilnya tidak menyetujui atau menolak dokumen; keputusan tetap di tangan penanda tangan.' },
+          { type: 'note', text: 'Permintaan tanda tangan baru dibuat oleh alur yang membutuhkannya. Dokumen Google yang dibuat dari Template dokumen di Drive belum bisa diajukan untuk tanda tangan dari aplikasi, dan tidak otomatis bertanda tangan.' },
         ],
       },
       {
@@ -789,7 +791,7 @@ const HANDBOOK = [
         route: '/signatures/asset',
         audience: { permissions: ['signature.manage_asset'] },
         body: [
-          { type: 'steps', items: ['Buka "Tanda tangan saya" dari alat dokumen.', 'Di "Unggah tanda tangan", pilih "File tanda tangan" (PNG atau JPEG, maksimal 500 KB). Pakai latar putih atau transparan.', 'Klik "Simpan tanda tangan".'] },
+          { type: 'steps', items: ['Buka Akun saya, lalu di kartu "Tanda tangan" klik "Tanda tangan saya".', 'Di "Unggah tanda tangan", pilih "File tanda tangan" (PNG atau JPEG, maksimal 500 KB). Pakai latar putih atau transparan.', 'Klik "Simpan tanda tangan".'] },
           { type: 'note', text: 'Gambar tanda tangan disimpan terenkripsi dan hanya dipakai saat Anda sendiri menandatangani.' },
         ],
       },
@@ -799,7 +801,7 @@ const HANDBOOK = [
         route: '/signatures/letterhead',
         audience: { permissions: ['letterhead.view'] },
         body: [
-          { type: 'p', text: '"Cap surat" adalah cap atau kop surat resmi divisi yang dipakai bersama oleh semua anggota divisi.' },
+          { type: 'p', text: '"Cap surat" adalah cap atau kop surat resmi divisi yang dipakai bersama oleh semua anggota divisi. Buka dari Akun saya, kartu "Tanda tangan", lalu "Cap surat".' },
           { type: 'p', text: 'Hanya Head divisi yang bisa mengunggah atau mengganti cap surat ("Unggah atau ganti cap surat", PNG/JPEG maksimal 500 KB, lalu "Simpan cap surat").' },
         ],
       },
@@ -809,7 +811,8 @@ const HANDBOOK = [
         audience: { permissions: ['signature.view'] },
         body: [
           { type: 'p', text: 'Setiap dokumen bertanda tangan punya kode atau QR verifikasi. Siapa pun yang memindai QR itu melihat halaman verifikasi.' },
-          { type: 'table', columns: ['Hasil', 'Artinya'], rows: [['Tanda tangan valid', 'Dokumen terdaftar dan tanda tangannya masih berlaku.'], ['Tanda tangan sudah tidak berlaku', 'Masa berlaku habis atau dicabut.'], ['Verifikasi tidak ditemukan', 'Kode salah atau dokumen tidak terdaftar. Waspadai dokumen palsu.']] },
+          { type: 'table', columns: ['Hasil', 'Artinya'], rows: [['Tanda tangan valid', 'Dokumen terdaftar dan tanda tangannya masih berlaku.'], ['Tanda tangan sudah tidak berlaku', 'Masa berlaku habis atau dicabut.'], ['Kode verifikasi tidak ditemukan / tidak valid', 'Server menjawab kodenya tidak terdaftar atau salah format. Waspadai dokumen palsu.'], ['Belum dapat memverifikasi', 'Layanan verifikasi tidak bisa dihubungi (koneksi, server, atau terlalu banyak permintaan). Ini bukan tanda dokumen palsu; coba lagi.']] },
+          { type: 'note', text: 'Hasil verifikasi berasal dari data pendaftaran di server. Untuk memastikan salinan yang Anda pegang sama, bandingkan hash dokumennya dengan hash di halaman verifikasi.' },
         ],
       },
       {
@@ -873,7 +876,7 @@ const HANDBOOK = [
               'Klik "Percakapan baru".',
               'Ketik permintaan di "Tanyakan atau minta apa saja ke Prakasa AI…", atau pilih saran seperti "Bantu susun draft dokumen".',
               'Tekan Enter untuk mengirim (Shift+Enter untuk baris baru). Klik "Hentikan jawaban" bila ingin berhenti.',
-              'Klik "Salin jawaban", atau jadikan PDF / DOCX / XLSX; file tersimpan di Shared Drive dan terunduh.',
+              'Klik "Salin jawaban", atau jadikan PDF / DOCX / XLSX / PPTX (file tersimpan di Shared Drive dan terunduh), atau pilih "Google" untuk Google Doc, Sheet, atau Slides yang langsung bisa diedit di Google Workspace.',
             ],
           },
           { type: 'tips', items: ['Tulis permintaan dengan jelas: apa yang diminta, untuk siapa, dan formatnya.', 'Nyalakan "Aktifkan riset web" bila AI perlu mencari di internet; sumbernya akan dicantumkan.', 'Klik "Edit pesan" lalu "Kirim ulang" untuk memperbaiki pertanyaan.'] },
@@ -886,6 +889,23 @@ const HANDBOOK = [
           { type: 'steps', items: ['Klik "Lampirkan file", atau seret/tempel file ke kotak pesan.', 'Tulis apa yang ingin dilakukan dengan file itu, misalnya "ringkas" atau "cari selisih angka".'] },
           { type: 'list', items: ['Jenis file: PDF, Word, Excel, PowerPoint, gambar (PNG/JPG/WEBP), TXT, CSV, dan sejenisnya.', 'Maksimal 5 file per pesan, masing-masing paling besar 25 MB.', 'Gambar atau hasil scan dibaca dengan AI vision.'] },
           { type: 'warning', text: 'Jangan melampirkan data pribadi karyawan (KTP, slip gaji, rekening) atau kata sandi.' },
+        ],
+      },
+      {
+        id: 'konversi-dokumen',
+        title: 'Mengonversi dan membaca dokumen',
+        body: [
+          { type: 'p', text: 'Setiap file di panel dokumen percakapan (lampiran, hasil jawaban, atau hasil konversi) bisa diubah ke format lain. Hasilnya menjadi dokumen baru di Shared Drive yang sama; file aslinya tidak berubah.' },
+          {
+            type: 'steps',
+            items: [
+              'Buka panel "Dokumen, konteks & aksi" di kanan atas percakapan, lalu pilih dokumennya.',
+              'Klik "Konversi ke…" dan pilih formatnya. Pilihan mengikuti jenis file: Word, Excel, PowerPoint, dan CSV bisa menjadi Google Doc/Sheet/Slides atau PDF; Google Doc/Sheet/Slides bisa menjadi PDF atau file Office; file yang teksnya sudah terbaca bisa menjadi TXT atau Markdown.',
+              'File terunduh otomatis; hasil Google Doc/Sheet/Slides dibuka lewat "Buka di Google Workspace".',
+            ],
+          },
+          { type: 'p', text: 'Prakasa AI juga bisa membaca isi dokumen yang boleh Anda buka di halaman Dokumen atau Penyimpanan divisi, misalnya "Ringkas dokumen SOP gudang" atau "Apa isi kontrak itu tentang garansi?". Dokumen panjang dibaca per bagian; AI menyebut nomor bagian saat mengutip. Dokumen divisi lain tidak bisa dibaca, dan hasil scan atau gambar belum bisa (belum ada OCR).' },
+          { type: 'note', text: 'Konversi memakai Google Drive perusahaan. Membaca isi file yang hanya tertaut dari Drive dilakukan sekali, lalu teksnya disimpan di aplikasi untuk pertanyaan berikutnya.' },
         ],
       },
       {
@@ -923,7 +943,7 @@ const HANDBOOK = [
             rows: [
               ['Beranda dan pekerjaan harian', '"Apa yang perlu saya kerjakan hari ini?" · "Tugas saya mana yang terlambat?" · "Pengajuan saya sudah sampai mana?"'],
               ['Persetujuan dan tanda tangan', '"Pengajuan apa saja yang menunggu keputusan saya?" · "Dokumen apa yang menunggu tanda tangan saya?"'],
-              ['Dokumen dan template', '"Carikan dokumen kontrak divisi saya" · "Apa saja yang perlu saya isi untuk membuat BAST dari template?"'],
+              ['Dokumen dan template', '"Carikan dokumen kontrak divisi saya" · "Ringkas isi dokumen SOP gudang" · "Apa saja yang perlu saya isi untuk membuat BAST dari template?"'],
               ['Sales', '"Customer dormant mana yang perlu saya hubungi minggu ini?" · "Order mana yang belum terkirim penuh?" · "Omzet bulan ini (sebelum PPN) dibanding target dan bulan lalu"'],
               ['Retail Commerce dan Marketing', '"Pesanan marketplace mana yang belum terkirim atau terlambat?" · "Kampanye apa yang sedang berjalan?"'],
               ['Finance', '"Pengajuan pembayaran saya sudah sampai mana?" · "Ringkas posisi piutang dan perkiraan DSO"'],
@@ -1216,11 +1236,20 @@ const HANDBOOK = [
     sections: [
       {
         id: 'membaca',
-        title: 'Membaca halaman Retail Commerce',
+        title: 'Membaca halaman Kinerja marketplace',
+        route: '/retail-commerce',
         body: [
           { type: 'table', columns: ['Bagian', 'Isinya'], rows: [['Angka utama', 'Omzet bulan ini dan bulan lalu, pesanan, rata-rata per faktur, retur, piutang marketplace belum cair, SO belum dikirim.'], ['Porsi omzet per platform', 'Sumbangan tiap marketplace.'], ['Perbandingan platform', 'Omzet 12 bulan, faktur, SO, rasio retur, dan piutang per platform.'], ['Grafik capaian bulanan & Tren 12 bulan', 'Perjalanan capaian dari bulan ke bulan.'], ['Produk terlaris', 'Pilih "Bulan" untuk melihat bulan lain.'], ['SO belum dikirim / Faktur belum cair', 'Yang perlu ditindaklanjuti.']] },
           { type: 'note', text: 'Marketplace ditagih dengan satu faktur rekap per platform setiap bulan. Angka baru muncul setelah Supervisor atau Head Sales/Retail Commerce menyetujui batch data Accurate pertama.' },
           { type: 'tips', items: ['Klik "Muat ulang" untuk angka terbaru.', 'Pelanggan, leads, dan Data Sales kanal ritel ada di menu Sales.'] },
+        ],
+      },
+      {
+        id: 'pesanan-piutang',
+        title: 'Pesanan & piutang',
+        route: '/retail-commerce/pending',
+        body: [
+          { type: 'p', text: 'Halaman "Pesanan & piutang" memuat dua daftar: tab "SO belum dikirim" (SO marketplace yang belum terkirim penuh, dari yang tertua) dan tab "Faktur belum cair" (faktur rekap marketplace yang belum dibayar, dari jatuh tempo terlama). Keduanya dari data Accurate yang sudah disetujui dan bisa diekspor.' },
         ],
       },
     ],
@@ -1291,16 +1320,18 @@ const HANDBOOK = [
     summary: 'Mencatat barang masuk dan keluar dengan approval Warehouse Supervisor, melihat stok dari Accurate, mencocokkan catatan gudang dengan Accurate, serta checklist dan insiden gudang.',
     sections: [
       {
-        id: 'tab',
-        title: 'Tab di halaman Warehouse',
+        id: 'halaman',
+        title: 'Halaman di menu Warehouse',
         body: [
-          { type: 'table', columns: ['Tab', 'Isinya'], rows: [['Hari ini', 'Ringkasan hari ini.'], ['Jadwal kirim', 'SO yang harus dikirim, apakah stoknya cukup.'], ['Stok', 'Stok dari Accurate per gudang.'], ['Dokumen Accurate', 'Surat jalan, penerimaan, pindah gudang, penyesuaian.'], ['Barang masuk / Barang keluar / Riwayat transaksi', 'Pergerakan yang dicatat tim gudang.'], ['Cocokkan Accurate', 'Pergerakan aplikasi dibandingkan dengan dokumen Accurate.'], ['Approval Supervisor', 'Pergerakan menunggu keputusan (Supervisor).'], ['Checklist / Insiden', 'Checklist harian dan laporan kejadian.']] },
-          { type: 'note', text: 'Anda hanya melihat tab yang sesuai akses Anda. Bila membuka tab lain lewat tautan, aplikasi menampilkan tab yang boleh Anda buka.' },
+          { type: 'table', columns: ['Halaman', 'Isinya'], rows: [['Hari ini', 'Ringkasan hari ini: barang datang, SO yang harus dikirim, dan yang perlu perhatian.'], ['Pergerakan barang', 'Tab Barang masuk, Barang keluar, Approval Supervisor, dan Riwayat transaksi: pergerakan yang dicatat tim gudang.'], ['Stok', 'Tab Stok (per gudang dari Accurate), Dokumen Accurate (surat jalan, penerimaan, pindah gudang, penyesuaian), dan Cocokkan Accurate.'], ['Jadwal kirim', 'SO yang harus dikirim, apakah stoknya cukup.'], ['Checklist & insiden', 'Checklist harian dan laporan kejadian.']] },
+          { type: 'note', text: 'Batch stok dan dokumen gudang dari Accurate, beserta tombol "Tarik sekarang", ada di "Data Accurate" (grup Manajemen).' },
+          { type: 'note', text: 'Anda hanya melihat halaman dan tab yang sesuai akses Anda. Tautan lama ke tab di halaman Warehouse (misalnya dari notifikasi) otomatis membuka halaman barunya.' },
         ],
       },
       {
         id: 'catat-pergerakan',
         title: 'Mencatat barang masuk atau keluar',
+        route: '/warehouse/movements',
         audience: { permissions: ['warehouse.movement.create'] },
         body: [
           {
@@ -1327,12 +1358,13 @@ const HANDBOOK = [
       {
         id: 'approval-pergerakan',
         title: 'Menyetujui pergerakan barang',
+        route: '/warehouse/movements?tab=approval',
         audience: { permissions: ['warehouse.movement.approve'], levels: SUP },
         body: [
           {
             type: 'steps',
             items: [
-              'Buka tab "Approval Supervisor", atau notifikasi approval (juga dikirim lewat email).',
+              'Buka "Pergerakan barang" → tab "Approval Supervisor", atau notifikasi approval (juga dikirim lewat email).',
               'Periksa barang, jumlah, dan nomor referensi.',
               'Klik "Setujui", "Minta revisi" (catatan wajib), atau "Tolak" (catatan wajib).',
             ],
@@ -1351,9 +1383,10 @@ const HANDBOOK = [
       {
         id: 'stok',
         title: 'Stok dari Accurate',
+        route: '/warehouse/stock',
         audience: { permissions: ['warehouse.stock.view'] },
         body: [
-          { type: 'p', text: 'Tab "Stok" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah disetujui Supervisor atau Head Warehouse.' },
+          { type: 'p', text: 'Halaman "Stok" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah disetujui Supervisor atau Head Warehouse. Tab "Dokumen Accurate" di halaman yang sama memuat surat jalan, penerimaan, pindah gudang, dan penyesuaian.' },
           { type: 'table', columns: ['Status', 'Artinya'], rows: [['Ada', 'Stok tersedia.'], ['Menipis', 'Di bawah batas minimum.'], ['Habis', 'Stok nol.'], ['Minus', 'Stok di bawah nol; perlu dibereskan di Accurate.']] },
           { type: 'tips', items: ['Klik barang untuk melihat "Kartu stok" dan "Riwayat stok".', 'Banner "Ada pembaruan stok menunggu persetujuan" berarti tarikan baru belum disetujui.', 'Di "Jadwal kirim", stok dibagi ke SO dengan janji kirim paling awal lebih dulu.'] },
         ],
@@ -1361,9 +1394,10 @@ const HANDBOOK = [
       {
         id: 'cocokkan',
         title: 'Cocokkan Accurate',
+        route: '/warehouse/stock?tab=recon',
         audience: { permissions: ['warehouse.recon.view'] },
         body: [
-          { type: 'p', text: 'Tab "Cocokkan Accurate" membandingkan pergerakan di aplikasi dengan dokumen Accurate.' },
+          { type: 'p', text: 'Tab "Cocokkan Accurate" di halaman "Stok" membandingkan pergerakan di aplikasi dengan dokumen Accurate.' },
           { type: 'table', columns: ['Status', 'Artinya'], rows: [['Cocok', 'Aplikasi dan Accurate sama.'], ['Selisih jumlah', 'Jumlahnya berbeda.'], ['Belum di Accurate', 'Ada di aplikasi, belum ada dokumen Accurate.'], ['Belum di aplikasi', 'Ada di Accurate, belum dicatat di aplikasi.'], ['Dijelaskan', 'Selisih sudah dijelaskan Supervisor/Head.'], ['Menunggu data Accurate', 'Tarikan berikutnya belum disetujui.']] },
           { type: 'note', text: 'Accurate hanya dibaca. Selisih diperbaiki di sumbernya: dokumen Accurate atau pergerakan di aplikasi.' },
         ],
@@ -1378,8 +1412,18 @@ const HANDBOOK = [
         ],
       },
       {
+        id: 'jadwal-kirim',
+        title: 'Jadwal kirim',
+        route: '/warehouse/shipping',
+        audience: { permissions: ['warehouse.stock.view'] },
+        body: [
+          { type: 'p', text: 'Halaman "Jadwal kirim" menampilkan SO dari Accurate yang harus dikirim hari ini atau sudah lewat, dan apakah stoknya cukup. Saring dengan chip status dan cari nomor SO.' },
+        ],
+      },
+      {
         id: 'checklist-insiden',
         title: 'Checklist harian dan insiden',
+        route: '/warehouse/operations',
         audience: { permissions: ['warehouse.checklist.manage', 'warehouse.incident.manage'] },
         body: [
           { type: 'steps', title: 'Checklist', items: ['Klik "Buat checklist".', 'Isi "Tanggal", "Judul", dan "Item" (satu item per baris).', 'Centang item yang sudah dikerjakan.'] },
@@ -1403,19 +1447,39 @@ const HANDBOOK = [
     sections: [
       {
         id: 'hari-ini',
-        title: 'Hari ini, Purchase order, dan Pemasok',
+        title: 'Halaman di menu Procurement',
+        route: '/procurement',
         body: [
-          { type: 'table', columns: ['Tab', 'Isinya'], rows: [['Hari ini', 'Barang datang hari ini, dijadwalkan datang hari ini & besok, dan yang perlu perhatian.'], ['Purchase order', 'Semua PO dengan status penerimaan barangnya.'], ['Pemasok', 'Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari.']] },
+          { type: 'table', columns: ['Halaman', 'Isinya'], rows: [['Hari ini', 'Barang datang hari ini, dijadwalkan datang hari ini & besok, dan yang perlu perhatian.'], ['Purchase order', 'Semua PO dengan status penerimaan barangnya.'], ['Pemasok', 'Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari; tab "Harga beli" untuk yang berwenang.'], ['Saran pesan ulang', 'Barang yang perlu dipesan (Supervisor/Head).']] },
+          { type: 'note', text: 'Batch PO dan pemasok dari Accurate, beserta tombol "Tarik sekarang", ada di "Data Accurate" (grup Manajemen).' },
+          { type: 'note', text: 'Tautan lama ke tab di halaman Procurement (misalnya dari eskalasi) otomatis membuka halaman barunya.' },
           { type: 'table', title: 'Status PO', columns: ['Status', 'Artinya'], rows: [['Menunggu barang', 'Belum ada barang diterima.'], ['Sebagian diterima', 'Baru sebagian datang.'], ['Terlambat', 'Lewat tanggal diharapkan datang.'], ['Diterima', 'Semua barang sudah datang.'], ['Ditutup', 'PO ditutup di Accurate.'], ['PO lama', 'PO lama yang tidak dihitung lagi.']] },
           { type: 'note', text: 'Kontak, alamat, NPWP, dan rekening pemasok tidak diambil dari Accurate; lihat langsung di Accurate.' },
         ],
       },
       {
+        id: 'purchase-order',
+        title: 'Purchase order',
+        route: '/procurement/orders',
+        body: [
+          { type: 'p', text: 'Halaman "Purchase order" memuat semua PO dengan status penerimaan barangnya. Saring dengan chip status; klik baris untuk rincian baris barang dan penerimaannya.' },
+        ],
+      },
+      {
+        id: 'pemasok',
+        title: 'Pemasok',
+        route: '/procurement/vendors',
+        body: [
+          { type: 'p', text: 'Halaman "Pemasok" menampilkan kinerja tiap pemasok. Klik baris untuk PO terakhirnya; dari sini pemasok baru atau perubahan pemasok bisa diajukan ke Accurate (lihat bab Data Accurate).' },
+        ],
+      },
+      {
         id: 'saran-pesan',
         title: 'Saran pesan ulang',
+        route: '/procurement/reorder',
         audience: { permissions: ['procurement.reorder.view'], levels: SUP },
         body: [
-          { type: 'p', text: 'Tab "Saran pesan ulang" menghitung barang yang perlu dipesan: bila stok ditambah PO berjalan tidak cukup sampai barang baru datang (ditambah stok pengaman).' },
+          { type: 'p', text: 'Halaman "Saran pesan ulang" menghitung barang yang perlu dipesan: bila stok ditambah PO berjalan tidak cukup sampai barang baru datang (ditambah stok pengaman).' },
           { type: 'table', columns: ['Label', 'Artinya'], rows: [['Habis sebelum barang datang', 'Paling mendesak.'], ['Pesan sekarang', 'Perlu dipesan sekarang.'], ['Habis, perlu dicek', 'Stok habis; periksa apakah masih dibeli rutin.']] },
           { type: 'tips', items: ['Klik barang untuk melihat keluar per hari, PO berjalan, waktu datang, dan stok pengaman.', 'Jumlah saran dibulatkan ke atas per satuan beli. Keputusan memesan tetap di tangan Anda, di Accurate.'] },
         ],
@@ -1423,9 +1487,10 @@ const HANDBOOK = [
       {
         id: 'harga-beli',
         title: 'Harga beli',
+        route: '/procurement/vendors?tab=prices',
         audience: { permissions: ['procurement.price.view'], levels: SUP },
         body: [
-          { type: 'p', text: 'Tab "Harga beli" menampilkan harga terakhir per barang, harga sebelumnya, dan perubahannya (chip Naik, Turun, Hanya 1 harga). Nilai PO dan harga satuan juga tampil di detail PO.' },
+          { type: 'p', text: 'Tab "Harga beli" di halaman "Pemasok" menampilkan harga terakhir per barang, harga sebelumnya, dan perubahannya (chip Naik, Turun, Hanya 1 harga). Nilai PO dan harga satuan juga tampil di detail PO.' },
           { type: 'warning', text: 'Harga beli rahasia. Jangan meneruskannya ke pihak yang tidak berwenang.' },
         ],
       },
@@ -1442,7 +1507,7 @@ const HANDBOOK = [
     route: '/finance/receivables',
     audience: { permissions: ['finance.receivable.view'] },
     who: 'Tim Finance dan Management Office.',
-    summary: 'Piutang pelanggan dan utang ke pemasok dari faktur dan pembayaran Accurate yang sudah disetujui Supervisor/Head Finance. Pengajuan pembayaran dibahas di bab Kerja harian.',
+    summary: 'Piutang pelanggan dari faktur dan penerimaan Accurate yang batch-nya disetujui Sales atau Retail Commerce; utang ke pemasok dari faktur dan pembayaran pembelian Accurate yang batch-nya disetujui Supervisor/Head Finance. Pengajuan pembayaran dibahas di bab Kerja harian.',
     sections: [
       {
         id: 'piutang',
@@ -1451,6 +1516,7 @@ const HANDBOOK = [
         body: [
           { type: 'p', text: '"Piutang" berisi tagihan pelanggan seluruh divisi: total piutang, lewat jatuh tempo, terlambat lebih dari 90 hari, jatuh tempo 14 hari, tertagih bulan ini, dan perkiraan DSO.' },
           { type: 'steps', items: ['Lihat kartu "Umur piutang"; saring per channel dengan chip.', 'Buka tab "Pelanggan terlambat" untuk daftar penagihan.', 'Buka tab "Jatuh tempo 14 hari" untuk mengingatkan pelanggan lebih awal.'] },
+          { type: 'note', text: 'Sumber piutang adalah batch Data Accurate divisi Sales dan Retail Commerce. Piutang baru berubah setelah Supervisor/Head divisi penjual menyetujui batch-nya, bukan setelah persetujuan Finance. Bila piutang belum terbaru, tanyakan ke Sales atau Retail Commerce apakah batch-nya masih menunggu.' },
         ],
       },
       {
@@ -1461,7 +1527,7 @@ const HANDBOOK = [
         body: [
           { type: 'p', text: '"Utang" berisi utang ke pemasok: total utang, lewat jatuh tempo, jatuh tempo 14 hari, dan dibayar bulan ini.' },
           { type: 'list', items: ['Tab "Jatuh tempo 14 hari": rencana pembayaran.', 'Tab "Lewat jatuh tempo": prioritas.', 'Tab "Per pemasok": total per pemasok.'] },
-          { type: 'note', text: 'Bila tertulis "Data utang belum tersedia", tarikan data Accurate Finance pertama belum disetujui Supervisor/Head Finance.' },
+          { type: 'note', text: 'Sumber utang adalah batch Data Accurate Finance, yang disetujui Supervisor/Head Finance. Bila tertulis "Data utang belum tersedia", tarikan pertama belum disetujui. Status pengajuan pembayaran di Workspace (Disetujui, Diproses, Dibayar) tidak mengubah utang; utang berubah saat pembayaran pembelian di Accurate masuk lewat batch berikutnya.' },
         ],
       },
       {
@@ -1537,7 +1603,7 @@ const HANDBOOK = [
         title: 'Mengerjakan checklist alur karyawan',
         body: [
           { type: 'p', text: 'Setiap tugas checklist dimiliki satu tim: IT, GA, Atasan, atau People & Culture.' },
-          { type: 'list', items: ['Tugas perangkat: "Serahkan perangkat" / "Terima kembali".', 'Tugas lisensi: "Berikan lisensi" / "Cabut lisensi".', 'Tugas nomor: "Serahkan nomor" / "Terima kembali nomor".', 'Tugas lain: "Tandai selesai", "Lewati", "Tugaskan ke", atau "Buat tiket IT".'] },
+          { type: 'list', items: ['Tugas perangkat: "Serahkan perangkat" / "Terima kembali".', 'Tugas lisensi: "Berikan lisensi" / "Cabut lisensi". Akses di portal vendor diberikan atau dicabut IT di luar aplikasi; tugas pencabutan baru selesai setelah IT mencentang "Akses sudah dicabut di portal vendor".', 'Tugas nomor: "Serahkan nomor" / "Terima kembali nomor".', 'Tugas lain: "Tandai selesai", "Lewati", "Tugaskan ke", atau "Buat tiket IT".'] },
           { type: 'note', text: 'Akun Google dibuat atau dinonaktifkan di konsol admin Google; di aplikasi tugasnya cukup ditandai selesai.' },
         ],
       },
@@ -1565,7 +1631,9 @@ const HANDBOOK = [
         route: '/ga',
         audience: { permissions: ['ga.request.process'] },
         body: [
-          { type: 'steps', items: ['Buka "Layanan GA", tab "Semua permintaan".', 'Buka permintaan, klik "Tugaskan ke…" bila perlu.', 'Klik "Proses" saat mulai dikerjakan, lalu "Selesaikan". Lampirkan foto/PDF bukti bila ada.', 'Untuk ruang: "Serahkan kunci" saat dipakai dan "Terima kembali" setelahnya.'] },
+          { type: 'steps', items: ['Buka "Layanan GA", tab "Semua permintaan".', 'Buka permintaan, klik "Tugaskan ke…" bila perlu.', 'Klik "Proses" saat mulai dikerjakan, lalu "Selesaikan". Lampirkan foto/PDF bukti bila ada.'] },
+          { type: 'p', text: 'Pemesanan ruang langsung terkonfirmasi bila slotnya kosong, dan pemakaiannya mengikuti jadwal: tidak ada serah terima kunci di aplikasi. GA dapat membatalkan pemesanan bila perlu.' },
+          { type: 'note', text: 'Peminjaman kendaraan baru dilakukan di TrackCar, bukan di Workspace, dan Workspace tidak menyinkronkan data TrackCar. Pemesanan kendaraan lama yang tercatat sebelum TrackCar dipakai tetap bisa dibuka sebagai riwayat; tombol "Serahkan kunci" dan "Terima kembali" hanya muncul di pemesanan kendaraan lama itu.' },
           { type: 'tips', items: ['Tab "Jadwal" menunjukkan pemakaian ruang.', 'Perbaikan mendesak bertarget 1 hari; permintaan "Lainnya" 5 hari sejak disetujui.'] },
         ],
       },
@@ -1657,9 +1725,14 @@ const HANDBOOK = [
         route: '/it/subscriptions',
         audience: { permissions: ['subscription.view'] },
         body: [
-          { type: 'p', text: 'Daftar langganan: produk, paket, jumlah seat, harga per seat, siklus tagihan, dan tanggal perpanjangan.' },
-          { type: 'list', items: ['"Tambah langganan" dan "Unggah invoice" (Supervisor/Head).', '"Tambah lisensi", "Tetapkan pengguna", "Cabut lisensi", dan "Catat pembayaran" (Head).'] },
-          { type: 'note', text: 'Perpanjangan yang perlu diputuskan dan pembayaran yang belum dilakukan dikirim lewat notifikasi dan email. Pembayarannya diajukan lewat Pengajuan pembayaran.' },
+          { type: 'p', text: 'Daftar langganan: produk, paket, jumlah seat, harga per seat, siklus tagihan, dan tanggal perpanjangan. Semua yang dicatat di sini adalah register Workspace; akun di vendor, pembayaran ke vendor, dan pembukuan di Accurate dikerjakan di luar aplikasi.' },
+          { type: 'list', items: [
+            '"Tambah langganan" dan "Ubah langganan" (izin kelola langganan; standar Supervisor dan Head People & Culture). Setelah vendor memperpanjang, perbarui tanggal perpanjangan langganan yang sama; status Akan berakhir kembali Aktif bila tanggal baru lebih dari 30 hari lagi.',
+            '"Catat invoice", "Unggah PDF invoice", dan "Tandai terverifikasi" (izin kelola invoice; standar Head). Invoice tanpa PDF berstatus Menunggu file PDF; setelah PDF diunggah statusnya Menunggu verifikasi, lalu Terverifikasi.',
+            '"Tambah lisensi", "Catat penetapan lisensi", dan "Catat pencabutan lisensi" (izin kelola lisensi; standar Head). Beri atau cabut akses di portal vendor dulu, lalu catat di sini. Lisensi idle masih dipegang dan harus dicabut sebelum diberikan ke orang lain.',
+            '"Catat pembayaran" (izin kelola pembayaran; standar Head). Pembayaran sebagian membuat invoice Dibayar sebagian; invoice Lunas (tercatat) bila pembayaran yang dicatat menutup totalnya. Nomor bukti di Accurate diisi manual.',
+          ] },
+          { type: 'note', text: 'Tombol hanya muncul bagi yang punya izinnya; peran custom mengikuti izinnya, bukan nama perannya. Persetujuan perpanjangan belum tersedia di Workspace. Perpanjangan yang mendekati tanggal dikirim lewat notifikasi dan email; invoice yang belum diunggah atau diverifikasi lewat notifikasi. Pembayarannya diajukan lewat Pengajuan pembayaran.' },
         ],
       },
       {
@@ -1695,7 +1768,7 @@ const HANDBOOK = [
     icon: 'fact_check',
     scope: 'division',
     route: '/data-accurate',
-    audience: { permissions: ['accurate.batch.view', 'sales.master.manage'] },
+    audience: { permissions: ['accurate.batch.view', 'sales.master.manage', 'warehouse.accurate.sync', 'procurement.accurate.sync', 'accurate.write.request'] },
     who: 'Supervisor dan Head Sales, Retail Commerce, Warehouse, Procurement, dan Finance; Head Management Office memantau.',
     summary: 'Data dari Accurate ditarik otomatis setiap beberapa menit, tetapi baru dipakai di aplikasi setelah Supervisor atau Head divisinya menyetujui batch-nya. Aplikasi hanya membaca Accurate; tidak ada data Accurate yang diubah atau dihapus.',
     sections: [
@@ -1782,6 +1855,26 @@ const HANDBOOK = [
         ],
       },
       {
+        id: 'pengajuan-ke-accurate',
+        title: 'Pengajuan ke Accurate: pelanggan dan pemasok dari aplikasi',
+        audience: { permissions: ['accurate.write.request', 'accurate.batch.view'], roles: ['sales', 'retail_commerce', 'procurement'] },
+        body: [
+          { type: 'p', text: 'Accurate tetap sumber kebenaran. Pelanggan atau pemasok yang dibuat atau diperbaiki di aplikasi tidak langsung masuk ke Accurate: ia menjadi "Pengajuan ke Accurate" yang diputuskan Supervisor atau Head divisi, lalu menunggu di antrean kirim. Tujuannya satu: data di aplikasi dan di Accurate sama, tanpa dobel dan tanpa selisih.' },
+          {
+            type: 'steps',
+            items: [
+              'Buka pelanggan di "Pelanggan" → menu titik tiga → "Ajukan ke Accurate", atau tab "Selisih pelanggan" di "Data Accurate" → ikon kirim pada baris yang belum ada di Accurate. Pemasok: tab "Pemasok" di Procurement → "Ajukan pemasok baru" atau "Ajukan perubahan ke Accurate" di detail pemasok.',
+              'Periksa kolom yang akan dikirim (nama wajib; ID boleh kosong bila Accurate yang memberi nomor), lalu klik "Ajukan".',
+              'Supervisor atau Head divisi membuka notifikasinya atau "Data Accurate" → "Pengajuan ke Accurate", lalu "Setujui" atau "Tolak" dengan alasan. Pengaju tidak bisa memutuskan pengajuannya sendiri.',
+              'Setelah disetujui, pengajuan berstatus "Disetujui, antre kirim". Ia terkirim saat saluran kirim ke Accurate dinyalakan pemilik, dan berstatus "Terkonfirmasi di Accurate" setelah tarikan berikutnya menampilkannya.',
+            ],
+          },
+          { type: 'table', columns: ['Status pengajuan', 'Artinya'], rows: [['Menunggu persetujuan', 'Belum diputuskan; belum ada yang dikirim.'], ['Disetujui, antre kirim', 'Disetujui; menunggu saluran kirim ke Accurate.'], ['Terkirim ke Accurate', 'Sudah dikirim; menunggu tarikan berikutnya sebagai bukti.'], ['Terkonfirmasi di Accurate', 'Accurate menampilkan data yang sama. Selesai.'], ['Ditolak / Dibatalkan', 'Tidak ada yang dikirim. Ajukan ulang bila perlu.'], ['Gagal dikirim', 'Accurate menolak; alasannya tertulis di pengajuan.']] },
+          { type: 'warning', text: 'Satu data hanya boleh punya satu pengajuan yang belum selesai, dan ID yang sudah ada di Accurate tidak bisa diajukan sebagai data baru. Dengan begitu Accurate tidak pernah menerima data dobel dari aplikasi.' },
+          { type: 'note', text: 'Pengajuan bisa dibatalkan oleh pengaju atau Supervisor/Head selama belum terkirim. Tab "Selisih pelanggan" membandingkan pelanggan di aplikasi dengan data Accurate yang disetujui, per ID pelanggan; selisih diselesaikan dengan pengajuan, bukan dengan mengubah aplikasi.' },
+        ],
+      },
+      {
         id: 'tarik-sekarang',
         title: 'Tarik sekarang',
         audience: { permissions: ['sales.master.manage', 'warehouse.accurate.sync', 'procurement.accurate.sync'], levels: SUP },
@@ -1809,14 +1902,22 @@ const HANDBOOK = [
     route: '/division-dashboard',
     audience: { permissions: ['division_dashboard.view', 'management_dashboard.view'] },
     who: 'Supervisor dan Head setiap divisi; Management Office memilih divisi mana pun.',
-    summary: 'Angka utama divisi, perjalanan 12 bulan dalam grafik capaian bulanan, tren dengan garis target, dan pekerjaan yang lewat tenggat.',
+    summary: 'Satu susunan dashboard yang sama untuk setiap divisi: angka utama, perlu perhatian, grafik capaian bulanan, tren 12 bulan, capaian terhadap target, dan pekerjaan lewat tenggat.',
     sections: [
       {
         id: 'membaca',
         title: 'Membaca dashboard divisi',
         body: [
-          { type: 'steps', items: ['Buka "Dashboard divisi". Management Office memilih divisi di "Divisi".', 'Lihat angka utama di bagian atas.', 'Klik "Muat ulang" untuk data terbaru.'] },
-          { type: 'note', text: 'Angka yang berasal dari Accurate hanya mencakup batch yang sudah disetujui.' },
+          { type: 'steps', items: ['Buka "Dashboard divisi". Management Office memilih divisi di "Divisi".', 'Baca dari atas ke bawah: bagian yang sama selalu ada di urutan yang sama, apa pun divisinya.', 'Klik "Muat ulang" untuk data terbaru.'] },
+          { type: 'table', columns: ['Urutan', 'Bagian', 'Isinya'], rows: [
+            ['1', 'Angka utama', 'Posisi hari ini per modul divisi; angkanya naik saat halaman dibuka.'],
+            ['2', 'Perlu perhatian', 'Jumlah pekerjaan lewat tenggat per sumber, dengan tombol ke Pusat eskalasi.'],
+            ['3', 'Grafik capaian bulanan', 'Grafik bergerak 12 bulan terakhir.'],
+            ['4', 'Tren 12 bulan', 'Satu kartu per ukuran, dengan garis target bila ada.'],
+            ['5', 'Capaian terhadap target', 'Persentase capaian tiap ukuran pada bulan lengkap terakhir.'],
+            ['6', 'Pekerjaan lewat tenggat', 'Daftar kerja yang paling lama menunggu.'],
+          ] },
+          { type: 'note', text: 'Bagian yang datanya belum ada tetap tampil di tempatnya dengan keterangan "menunggu data", supaya dashboard setiap divisi terbaca sama. Angka yang berasal dari Accurate hanya mencakup batch yang sudah disetujui.' },
         ],
       },
       {
@@ -1833,9 +1934,14 @@ const HANDBOOK = [
         body: [{ type: 'p', text: 'Setiap grafik tren menampilkan realisasi per bulan dan garis target bulanan. Target ditetapkan manajemen di "Target & realisasi".' }],
       },
       {
+        id: 'capaian-target',
+        title: 'Capaian terhadap target',
+        body: [{ type: 'p', text: 'Untuk setiap ukuran yang punya target bulanan, bagian ini menampilkan capaian bulan lengkap terakhir sebagai persentase: hijau bila target tercapai, oranye bila 80% atau lebih, merah bila di bawahnya. Ukuran "makin rendah makin baik" dianggap tercapai bila di bawah target. Tanpa target bulanan, bagian ini meminta target diisi di "Target".' }],
+      },
+      {
         id: 'lewat-tenggat',
-        title: 'Lewat tenggat',
-        body: [{ type: 'p', text: 'Bagian "Lewat tenggat" menghitung pekerjaan divisi yang menunggu tindak lanjut. Klik "Buka Pusat eskalasi" untuk menanganinya (Head dan manajemen).' }],
+        title: 'Perlu perhatian dan pekerjaan lewat tenggat',
+        body: [{ type: 'p', text: '"Perlu perhatian" menghitung pekerjaan divisi yang lewat tenggat per sumber; "Pekerjaan lewat tenggat" mendaftar yang paling lama menunggu. Klik "Buka Pusat eskalasi" untuk menanganinya (Head dan manajemen).' }],
       },
     ],
   },
@@ -1868,6 +1974,7 @@ const HANDBOOK = [
         body: [
           { type: 'p', text: 'Satu antrean untuk semua pekerjaan dari setiap modul yang sudah lewat tenggat. Pilih tampilan "Antrean" atau "Per modul".' },
           { type: 'steps', items: ['Klik baris eskalasi.', 'Di "Tindak lanjut eskalasi", pilih "Penanggung jawab tindak lanjut" (boleh diri sendiri) dan tulis "Catatan".', 'Perbarui statusnya: "Belum ditangani", "Sedang ditangani", "Selesai".'] },
+          { type: 'note', text: 'Kolom "Kondisi sumber" menunjukkan berapa lama pekerjaan di modul asalnya lewat tenggat; "Status tindak lanjut" hanya catatan di sini. Menandai "Selesai" tidak membayar, menyetujui, atau menutup pekerjaan di modulnya: selama sumbernya masih lewat tenggat, eskalasi tetap tampil. Antrean kosong pada satu filter tidak berarti semua pekerjaan dalam tenggat.' },
         ],
       },
       {

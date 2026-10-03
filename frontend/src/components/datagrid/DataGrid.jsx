@@ -38,7 +38,7 @@ import { downloadMatrix } from './gridFile';
 import {
   apiErrorMessage, columnAlign, columnNowrap, displayValue, exportMatrix, fieldErrorsFromApi, isEditableColumn,
   pageCount, pageSizeOptions, payloadFromValues, selectionState, skeletonWidth, sortKey,
-  toggleAllSelection, toggleSelection, validateValues, PAGE_SIZES, cellTranslation } from './gridModel';
+  toggleAllSelection, toggleSelection, validateValues, PAGE_SIZES, cellTranslation, exportScope } from './gridModel';
 import './datagrid.css';
 
 // DataGrid — the one list surface (docs/ui-guideline.md §4.9, admin console
@@ -63,6 +63,10 @@ import './datagrid.css';
 //   flush              no panel border (inside a Card that already frames it)
 //   onExport(format)   the export menu calls this instead of exporting the rows
 //                      on screen (a server-paged list exporting every match)
+//   exportNote         said under the export choices when the list is itself
+//                      limited ("20 produk terlaris", "200 dari 201 langganan");
+//                      the menu always says whether it exports this page only
+//                      or every filtered row
 //   columns[].type     'date' | 'datetime' | 'money' formatted; 'number' | 'money' right-aligned
 //   columns[].nowrap   keep the cell on one line (default for dates, amounts, numbers)
 
@@ -244,7 +248,7 @@ function CellEditor({ column, value, error, onChange, autoFocus, onKeyDown }) {
 
 // Export sits in the toolbar as an icon button with the shared Menu
 // (portal, arrow keys, Escape and outside click close it).
-function ExportMenu({ disabled, onExport }) {
+function ExportMenu({ disabled, onExport, scope }) {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef(null);
   const menuId = useId();
@@ -269,8 +273,8 @@ function ExportMenu({ disabled, onExport }) {
         align="end"
         onClose={() => setOpen(false)}
         items={[
-          { label: 'Excel (.xlsx)', icon: 'table_chart', onClick: () => onExport('xlsx') },
-          { label: 'CSV (.csv)', icon: 'description', onClick: () => onExport('csv') },
+          { label: 'Excel (.xlsx)', description: scope, icon: 'table_chart', onClick: () => onExport('xlsx') },
+          { label: 'CSV (.csv)', description: scope, icon: 'description', onClick: () => onExport('csv') },
         ]}
       />
     </>
@@ -321,6 +325,8 @@ export default function DataGrid({
   searchDelay = 300,
   exportable = true,
   onExport,
+  // A short note when the list itself is limited (top-N, first N of a total).
+  exportNote = '',
   selectable = false,
   selected: selectedProp,
   onSelectionChange,
@@ -810,7 +816,16 @@ export default function DataGrid({
                     <Icon name="upload" size="sm" /> Impor
                   </Button>
                 ) : null}
-                {exportable ? <ExportMenu disabled={loading || (!rows.length && !onExport)} onExport={runExport} /> : null}
+                {exportable ? (
+                  <ExportMenu
+                    disabled={loading || (!rows.length && !onExport)}
+                    onExport={runExport}
+                    scope={exportScope({
+                      exportAll: Boolean(onExport), manual, pageRows: pageRows.length, filteredRows: filteredCount,
+                      total: manual ? (meta.total ?? null) : null, truncated: Boolean(resource && resourceState.truncated), note: exportNote,
+                    })}
+                  />
+                ) : null}
                 {showCreate ? (
                   <Button type="button" onClick={startCreate} disabled={loading || Boolean(editing)}>
                     <Icon name="add" size="sm" /> {createLabel}

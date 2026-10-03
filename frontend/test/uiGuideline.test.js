@@ -95,11 +95,9 @@ export const MODAL_WIDTH_BUDGET = {};
 // §4.2 — inline style only for genuinely dynamic values.
 export const INLINE_STYLE_BUDGET = {
   // Revenue bar width per month.
-  'pages/sales/SalesPipeline.jsx': 1,
   // Kop preview: the accent colour the user picks (one CSS variable).
   'pages/documents/DocTemplateDialogs.jsx': 1,
   // Escalation bars: each source's share (one CSS variable).
-  'pages/management/DivisionDashboard.jsx': 1,
 };
 
 // §1.9 — breakpoints still on the old 760/1279/1280 scale, per file.

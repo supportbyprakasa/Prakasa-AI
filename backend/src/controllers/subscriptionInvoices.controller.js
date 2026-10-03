@@ -1,7 +1,7 @@
 const pool = require('../db/pool');
 const { ok, fail } = require('../utils/response');
-const { log } = require('../services/activityLog.service');
 const drive = require('../services/googleDrive.service');
+const billing = require('../services/subscriptionBilling.service');
 
 async function list(req, res, next) {
   try {
@@ -27,88 +27,41 @@ async function list(req, res, next) {
   } catch (e) { next(e); }
 }
 
+function billingFail(res, e, next) {
+  if (e.status) return fail(res, e.code, e.message, e.status);
+  return next(e);
+}
+
 /**
- * Upload invoice PDF (multipart) + create dokumen Fase 2.
+ * "Catat invoice": with a valid PDF the invoice is "uploaded"; without one it
+ * stays "pending_upload" until the PDF is attached (subscriptionBilling.service).
  */
 async function upload(req, res, next) {
-  const conn = await pool.getConnection();
   try {
-    const { id } = req.params; // subscription id
-    const {
-      invoiceNumber, invoiceDate, amount, taxAmount = 0, totalAmount,
-      currency = 'IDR', jurnalReferenceId,
-    } = req.body;
-
-    const [s] = await pool.query(
-      `SELECT * FROM software_subscriptions WHERE id=? AND entity_id=? AND deleted_at IS NULL`, [id, req.user.entityId]
-    );
-    if (!s[0]) return fail(res, 'NOT_FOUND', 'Subscription tidak ditemukan', 404);
-
-    let driveFileId = null;
-    let webViewLink = null;
-    let documentId = null;
-
-    if (req.file) {
-      const up = await drive.uploadFile({
-        name: req.file.originalname,
-        mimeType: req.file.mimetype,
-        buffer: req.file.buffer,
-      });
-      driveFileId = up.id; webViewLink = up.webViewLink;
-
-      // Buat dokumen Fase 2 juga
-      const [doc] = await pool.query(
-        `INSERT INTO documents
-         (entity_id, department_id, title, document_type, status,
-          drive_file_id, drive_folder_id, created_by)
-         VALUES (?, ?, ?, 'invoice', 'final', ?, NULL, ?)`,
-        [s[0].entity_id, s[0].department_id,
-         `Invoice ${invoiceNumber} - ${s[0].product_name}`,
-         up.id, req.user.sub]
-      );
-      documentId = doc.insertId;
-    }
-
-    const [inv] = await pool.query(
-      `INSERT INTO subscription_invoices
-       (subscription_id, invoice_number, invoice_date, amount, currency,
-        tax_amount, total_amount, status, document_id, jurnal_reference_id,
-        uploaded_by, uploaded_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'uploaded', ?, ?, ?, NOW())`,
-      [id, invoiceNumber, invoiceDate, amount, currency,
-       taxAmount, totalAmount, documentId || null, jurnalReferenceId || null, req.user.sub]
-    );
-
-    await log({
-      entityId: s[0].entity_id, userId: req.user.sub,
-      action: 'subscription_invoice.upload', subjectType: 'subscription_invoice',
-      subjectId: inv.insertId, metadata: { invoiceNumber, subscriptionId: Number(id) },
+    const result = await billing.recordInvoice({
+      entityId: req.user.entityId, subscriptionId: Number(req.params.id), actorId: req.user.sub,
+      body: req.body, file: req.file || null, drive,
     });
+    return ok(res, result, undefined, 201);
+  } catch (e) { return billingFail(res, e, next); }
+}
 
-    return ok(res, {
-      id: inv.insertId, documentId, webViewLink,
-    }, undefined, 201);
-  } catch (e) { next(e); }
-  finally { conn.release(); }
+async function attachFile(req, res, next) {
+  try {
+    const result = await billing.attachInvoiceFile({
+      entityId: req.user.entityId, invoiceId: Number(req.params.id), actorId: req.user.sub, file: req.file || null, drive,
+    });
+    return ok(res, result);
+  } catch (e) { return billingFail(res, e, next); }
 }
 
 async function verify(req, res, next) {
   try {
-    const { id } = req.params;
-    const { status } = req.body; // 'verified' | 'void'
-    const [r] = await pool.query(
-      `UPDATE subscription_invoices i JOIN software_subscriptions s ON s.id = i.subscription_id
-          SET i.status=?, i.verified_by=?, i.verified_at=NOW()
-        WHERE i.id=? AND s.entity_id=?`, [status, req.user.sub, id, req.user.entityId]
-    );
-    if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'Invoice tidak ditemukan', 404);
-    await log({
-      entityId: req.user.entityId, userId: req.user.sub,
-      action: 'subscription_invoice.verify', subjectType: 'subscription_invoice',
-      subjectId: Number(id), metadata: { status },
+    const result = await billing.verifyInvoice({
+      entityId: req.user.entityId, invoiceId: Number(req.params.id), actorId: req.user.sub, status: req.body.status,
     });
-    return ok(res, { id: Number(id), status });
-  } catch (e) { next(e); }
+    return ok(res, result);
+  } catch (e) { return billingFail(res, e, next); }
 }
 
 async function pendingUpload(req, res, next) {
@@ -127,4 +80,4 @@ async function pendingUpload(req, res, next) {
   } catch (e) { next(e); }
 }
 
-module.exports = { list, upload, verify, pendingUpload };
+module.exports = { list, upload, attachFile, verify, pendingUpload };

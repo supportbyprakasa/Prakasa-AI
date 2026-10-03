@@ -474,6 +474,7 @@ SHELL=/bin/bash
 */5    *  *   *   *    /bin/bash /home/USER/prakasa-work-os-backend/cron-wrapper.sh src/jobs/accurateSync.js            >> /home/USER/logs/accurateSync.log 2>&1
 2-59/5 *  *   *   *    /bin/bash /home/USER/prakasa-work-os-backend/cron-wrapper.sh src/jobs/claudeTeamHealth.js        >> /home/USER/logs/claudeTeamHealth.log 2>&1
 0      *  *   *   *    /bin/bash /home/USER/prakasa-work-os-backend/cron-wrapper.sh src/jobs/approvalReminders.js       >> /home/USER/logs/approvalReminders.log 2>&1
+7-59/15 * *   *   *    /bin/bash /home/USER/prakasa-work-os-backend/cron-wrapper.sh src/jobs/accurateWriteDispatch.js   >> /home/USER/logs/accurateWriteDispatch.log 2>&1
 30     2  *   *   *    /bin/bash /home/USER/prakasa-work-os-backend/cron-wrapper.sh src/jobs/retention.js               >> /home/USER/logs/retention.log 2>&1
 30     6  *   *   *    /bin/bash /home/USER/prakasa-work-os-backend/cron-wrapper.sh src/jobs/accurateTokenRefresh.js    >> /home/USER/logs/accurateTokenRefresh.log 2>&1
 # Job harian selesai sebelum 07:30 WIB (jam semua orang masuk, §3.9)
@@ -499,6 +500,10 @@ Catatan:
   mendukung `CRON_TZ` (job jalan 7 jam lebih awal/lambat), hapus baris itu
   dan geser jam ke zona server (`date` di Terminal; WIB = UTC+7, mis. 07:00
   WIB = `0 0 * * *` UTC).
+- `accurateWriteDispatch.js` (Pengajuan ke Accurate, migrasi 145; fitur tampil
+  ke pengguna setelah migrasi 146 dijalankan) hanya
+  mencoba antrean dan mengonfirmasi pengajuan dari mirror. Selama
+  `ACCURATE_WRITE_ENABLED` kosong ia tidak mengirim apa pun ke Accurate.
 - `accurateSync.js` memakai kunci database (`GET_LOCK`), jadi dua jalan yang
   tumpang tindih tidak menarik dua kali. Sebelum Accurate tersambung (§8),
   job ini hanya mencatat satu baris "belum tersambung" per jalan.

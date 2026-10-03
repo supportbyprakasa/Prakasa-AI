@@ -287,7 +287,10 @@ router.get('/subscriptions/:id', requirePermission('subscription.view'), subsCtr
 router.post('/subscriptions', requirePermission('subscription.manage'), validate(subsBody), subsCtrl.create);
 router.patch('/subscriptions/:id',
   requirePermission('subscription.manage'),
-  validate(subsBody.partial()),
+  // "Ubah langganan": the register is corrected after the vendor's own work;
+  // the status may be set to active, paused or cancelled (expiring/expired
+  // follow the renewal date).
+  validate(subsBody.partial().extend({ status: z.enum(['active', 'paused', 'cancelled']).optional() })),
   subsCtrl.update);
 router.delete('/subscriptions/:id', requirePermission('subscription.manage'), subsCtrl.remove);
 
@@ -299,13 +302,16 @@ router.post('/subscriptions/:id/licenses',
     seatLabel: z.string().max(150).nullable().optional(),
   }).strict()),
   licCtrl.createLicense);
+router.get('/licenses/assignable-users',
+  requirePermission('subscription.license.manage'),
+  licCtrl.assignableUsers);
 router.post('/licenses/:id/assign',
   requirePermission('subscription.license.manage'),
   validate(z.object({ userId: z.number().int().positive() })),
   licCtrl.assignLicense);
 router.post('/licenses/:id/revoke',
   requirePermission('subscription.license.manage'),
-  validate(z.object({ reason: z.string().max(500).nullable().optional() })),
+  validate(z.object({ reason: z.string().max(500).nullable().optional(), confirmedAtVendor: z.boolean().optional() })),
   licCtrl.revokeLicense);
 router.post('/licenses/:id/idle',
   requirePermission('subscription.license.manage'),
@@ -322,11 +328,15 @@ router.post('/subscriptions/:id/invoices',
     invoiceDate: z.string(),
     amount: z.coerce.number().nonnegative(),
     taxAmount: z.coerce.number().nonnegative().optional(),
-    totalAmount: z.coerce.number().nonnegative(),
+    totalAmount: z.coerce.number().positive(),
     currency: z.string().max(8).optional(),
     jurnalReferenceId: z.string().max(190).nullable().optional(),
   })),
   invCtrl.upload);
+router.post('/invoices/:id/file',
+  requirePermission('subscription.invoice.manage'),
+  upload.single('file'),
+  invCtrl.attachFile);
 router.patch('/invoices/:id/verify',
   requirePermission('subscription.invoice.manage'),
   validate(z.object({ status: z.enum(['verified', 'void']) })),
@@ -338,12 +348,13 @@ router.post('/subscriptions/:id/payments',
   validate(z.object({
     invoiceId: z.number().int().positive().nullable().optional(),
     paidAt: z.string().nullable().optional(),
-    amount: z.number().nonnegative(),
+    amount: z.number().positive(),
     currency: z.string().max(8).optional(),
     paymentMethod: z.string().max(80).nullable().optional(),
     referenceNo: z.string().max(120).nullable().optional(),
     jurnalReferenceId: z.string().max(190).nullable().optional(),
     notes: z.string().nullable().optional(),
+    requestKey: z.string().max(64).nullable().optional(),
   })),
   payCtrl.create);
 

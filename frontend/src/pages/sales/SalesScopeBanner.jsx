@@ -62,7 +62,7 @@ export default function SalesScopeBanner() {
     return (
       <Banner tone="warning" title="Akun Anda belum terhubung ke nama sales">
         Data Sales hanya tampil untuk customer, lead dan order milik Anda. Data baru yang Anda buat langsung jadi milik Anda;
-        untuk data lama, minta Supervisor Sales memetakan nama Anda (Customers → Pemetaan sales).
+        untuk data lama, minta Supervisor Sales memetakan nama Anda (Pelanggan → Pemetaan sales).
       </Banner>
     );
   }

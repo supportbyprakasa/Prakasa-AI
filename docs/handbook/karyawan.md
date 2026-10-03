@@ -19,9 +19,10 @@ Isi panduan mengikuti peran: setiap orang hanya membaca bab untuk menu yang bisa
 11. [Finance: piutang dan utang](#finance)
 12. [People & Culture: onboarding, offboarding, dan GA](#people-culture)
 13. [IT: perangkat, langganan, dan infrastruktur](#it-aset)
-14. [Laporan: Google Analytics dan log aktivitas](#laporan)
-15. [Glosarium](#glosarium)
-16. [Kalau ada masalah](#bantuan)
+14. [Data Accurate: memeriksa dan menyetujui](#data-accurate)
+15. [Laporan: Google Analytics dan log aktivitas](#laporan)
+16. [Glosarium](#glosarium)
+17. [Kalau ada masalah](#bantuan)
 
 <a id="mulai"></a>
 
@@ -64,7 +65,7 @@ Cara paling mudah adalah memakai akun Google kantor Anda (alamat email perusahaa
 | Gagal masuk. Periksa email dan kata sandi. | Email atau kata sandi salah. Coba lagi dengan teliti. |
 | Gagal masuk dengan Google. | Akun Google yang dipilih bukan akun kantor, atau belum terdaftar. |
 
-Akun belum dibuat atau dinonaktifkan? Hubungi Super Admin atau Administrator Sistem, seperti tertulis di bawah tombol "Masuk".
+Akun belum dibuat atau dinonaktifkan? Hubungi Administrator Sistem atau Super Admin, seperti tertulis di bawah tombol "Masuk". Lupa kata sandi? Hanya Super Admin yang dapat mereset kata sandi; tidak ada reset mandiri.
 
 <a id="mulai-ganti-kata-sandi"></a>
 
@@ -364,6 +365,8 @@ Semua kebutuhan IT diajukan lewat tiket, supaya tercatat dan bisa dipantau. Cara
 
 > **Catatan:** Anda mendapat notifikasi di aplikasi setiap kali status tiket berubah atau ada tanggapan baru.
 
+> **Catatan:** Tiket juga tampil sebagai issue di project IT Project Tracker. Status issue itu hanya dapat dipindahkan oleh pengelola tiket IT, dan mengikuti status tiketnya; tiket yang ditutup atau dibatalkan tidak dibuka lagi dari papan. Bila tiket tidak ikut berubah, papan memberi tahu dan riwayat issue mencatatnya.
+
 <a id="kerja-harian-layanan-ga"></a>
 
 ### Layanan GA: ATK, perbaikan, dan pinjam ruang
@@ -383,7 +386,7 @@ Semua kebutuhan IT diajukan lewat tiket, supaya tercatat dan bisa dipantau. Cara
 3. Periksa keterangan jadwal: bila tertulis "Sudah terpakai" atau "bentrok", pilih jam lain.
 4. Klik "Pesan ruang". Bila ruang kosong, pesanan langsung terkonfirmasi.
 
-> **Catatan:** Pinjam kendaraan dilakukan lewat TrackCar (tombol "Pinjam kendaraan" membuka TrackCar di tab baru), bukan di Prakasa Workspace.
+> **Catatan:** Pinjam kendaraan dilakukan lewat TrackCar: pilihan "Pinjam kendaraan" di "Buat permintaan" membuka TrackCar di tab baru dan tidak membuat pemesanan di Prakasa Workspace. Data TrackCar tidak disinkronkan ke Workspace.
 
 **Status permintaan dan pemesanan**
 
@@ -585,7 +588,7 @@ Kondisi barang dipilih dari: Sangat baik, Baik, Cukup, Kurang, atau Rusak. Dokum
 
 ### Permintaan tanda tangan
 
-Dokumen yang perlu ditandatangani dibuka dari pratinjau dokumen atau dari notifikasi "Dokumen menunggu tanda tangan Anda" (juga dikirim lewat email).
+Buka "Permintaan tanda tangan" dari Akun saya (kartu "Tanda tangan") atau dari notifikasi "Dokumen menunggu tanda tangan Anda" (juga dikirim lewat email).
 
 1. Buka notifikasi atau kartu di Dashboard.
 2. Baca dokumen dan ringkasannya. Bila ada kartu "Cek awal tanda tangan (AI)", periksa temuannya.
@@ -601,11 +604,13 @@ Dokumen yang perlu ditandatangani dibuka dari pratinjau dokumen atau dari notifi
 
 > **Catatan:** Cek awal AI hanya saran. Hasilnya tidak menyetujui atau menolak dokumen; keputusan tetap di tangan penanda tangan.
 
+> **Catatan:** Permintaan tanda tangan baru dibuat oleh alur yang membutuhkannya. Dokumen Google yang dibuat dari Template dokumen di Drive belum bisa diajukan untuk tanda tangan dari aplikasi, dan tidak otomatis bertanda tangan.
+
 <a id="dokumen-tanda-tangan-saya"></a>
 
 ### Tanda tangan saya
 
-1. Buka "Tanda tangan saya" dari alat dokumen.
+1. Buka Akun saya, lalu di kartu "Tanda tangan" klik "Tanda tangan saya".
 2. Di "Unggah tanda tangan", pilih "File tanda tangan" (PNG atau JPEG, maksimal 500 KB). Pakai latar putih atau transparan.
 3. Klik "Simpan tanda tangan".
 
@@ -615,7 +620,7 @@ Dokumen yang perlu ditandatangani dibuka dari pratinjau dokumen atau dari notifi
 
 ### Cap surat divisi
 
-"Cap surat" adalah cap atau kop surat resmi divisi yang dipakai bersama oleh semua anggota divisi.
+"Cap surat" adalah cap atau kop surat resmi divisi yang dipakai bersama oleh semua anggota divisi. Buka dari Akun saya, kartu "Tanda tangan", lalu "Cap surat".
 
 Hanya Head divisi yang bisa mengunggah atau mengganti cap surat ("Unggah atau ganti cap surat", PNG/JPEG maksimal 500 KB, lalu "Simpan cap surat").
 
@@ -629,7 +634,10 @@ Setiap dokumen bertanda tangan punya kode atau QR verifikasi. Siapa pun yang mem
 | --- | --- |
 | Tanda tangan valid | Dokumen terdaftar dan tanda tangannya masih berlaku. |
 | Tanda tangan sudah tidak berlaku | Masa berlaku habis atau dicabut. |
-| Verifikasi tidak ditemukan | Kode salah atau dokumen tidak terdaftar. Waspadai dokumen palsu. |
+| Kode verifikasi tidak ditemukan / tidak valid | Server menjawab kodenya tidak terdaftar atau salah format. Waspadai dokumen palsu. |
+| Belum dapat memverifikasi | Layanan verifikasi tidak bisa dihubungi (koneksi, server, atau terlalu banyak permintaan). Ini bukan tanda dokumen palsu; coba lagi. |
+
+> **Catatan:** Hasil verifikasi berasal dari data pendaftaran di server. Untuk memastikan salinan yang Anda pegang sama, bandingkan hash dokumennya dengan hash di halaman verifikasi.
 
 <a id="dokumen-my-drive"></a>
 
@@ -684,7 +692,7 @@ Asisten AI di dalam aplikasi: bertanya, meringkas, membaca file, dan menyiapkan 
 2. Klik "Percakapan baru".
 3. Ketik permintaan di "Tanyakan atau minta apa saja ke Prakasa AI…", atau pilih saran seperti "Bantu susun draft dokumen".
 4. Tekan Enter untuk mengirim (Shift+Enter untuk baris baru). Klik "Hentikan jawaban" bila ingin berhenti.
-5. Klik "Salin jawaban", atau jadikan PDF / DOCX / XLSX; file tersimpan di Shared Drive dan terunduh.
+5. Klik "Salin jawaban", atau jadikan PDF / DOCX / XLSX / PPTX (file tersimpan di Shared Drive dan terunduh), atau pilih "Google" untuk Google Doc, Sheet, atau Slides yang langsung bisa diedit di Google Workspace.
 
 > **Tips**
 >
@@ -704,6 +712,20 @@ Asisten AI di dalam aplikasi: bertanya, meringkas, membaca file, dan menyiapkan 
 - Gambar atau hasil scan dibaca dengan AI vision.
 
 > **Perhatian:** Jangan melampirkan data pribadi karyawan (KTP, slip gaji, rekening) atau kata sandi.
+
+<a id="prakasa-ai-konversi-dokumen"></a>
+
+### Mengonversi dan membaca dokumen
+
+Setiap file di panel dokumen percakapan (lampiran, hasil jawaban, atau hasil konversi) bisa diubah ke format lain. Hasilnya menjadi dokumen baru di Shared Drive yang sama; file aslinya tidak berubah.
+
+1. Buka panel "Dokumen, konteks & aksi" di kanan atas percakapan, lalu pilih dokumennya.
+2. Klik "Konversi ke…" dan pilih formatnya. Pilihan mengikuti jenis file: Word, Excel, PowerPoint, dan CSV bisa menjadi Google Doc/Sheet/Slides atau PDF; Google Doc/Sheet/Slides bisa menjadi PDF atau file Office; file yang teksnya sudah terbaca bisa menjadi TXT atau Markdown.
+3. File terunduh otomatis; hasil Google Doc/Sheet/Slides dibuka lewat "Buka di Google Workspace".
+
+Prakasa AI juga bisa membaca isi dokumen yang boleh Anda buka di halaman Dokumen atau Penyimpanan divisi, misalnya "Ringkas dokumen SOP gudang" atau "Apa isi kontrak itu tentang garansi?". Dokumen panjang dibaca per bagian; AI menyebut nomor bagian saat mengutip. Dokumen divisi lain tidak bisa dibaca, dan hasil scan atau gambar belum bisa (belum ada OCR).
+
+> **Catatan:** Konversi memakai Google Drive perusahaan. Membaca isi file yang hanya tertaut dari Drive dilakukan sekali, lalu teksnya disimpan di aplikasi untuk pertanyaan berikutnya.
 
 <a id="prakasa-ai-visibilitas"></a>
 
@@ -742,7 +764,7 @@ Prakasa AI bisa membaca data di modul yang boleh Anda buka, lalu menjawab dengan
 | --- | --- |
 | Beranda dan pekerjaan harian | "Apa yang perlu saya kerjakan hari ini?" · "Tugas saya mana yang terlambat?" · "Pengajuan saya sudah sampai mana?" |
 | Persetujuan dan tanda tangan | "Pengajuan apa saja yang menunggu keputusan saya?" · "Dokumen apa yang menunggu tanda tangan saya?" |
-| Dokumen dan template | "Carikan dokumen kontrak divisi saya" · "Apa saja yang perlu saya isi untuk membuat BAST dari template?" |
+| Dokumen dan template | "Carikan dokumen kontrak divisi saya" · "Ringkas isi dokumen SOP gudang" · "Apa saja yang perlu saya isi untuk membuat BAST dari template?" |
 | Sales | "Customer dormant mana yang perlu saya hubungi minggu ini?" · "Order mana yang belum terkirim penuh?" · "Omzet bulan ini (sebelum PPN) dibanding target dan bulan lalu" |
 | Retail Commerce dan Marketing | "Pesanan marketplace mana yang belum terkirim atau terlambat?" · "Kampanye apa yang sedang berjalan?" |
 | Finance | "Pengajuan pembayaran saya sudah sampai mana?" · "Ringkas posisi piutang dan perkiraan DSO" |
@@ -894,7 +916,7 @@ Formulir yang bisa diisi AI ada di tabel di bawah, per modul. Anda hanya bisa me
 | Tambah lokasi | Perangkat | Tidak ada |
 | Ubah lokasi | Perangkat | Aktif atau nonaktif |
 | Tambah langganan | Langganan software | Harga per seat |
-| Unggah invoice langganan | Langganan software | Subtotal, Pajak, Total, File invoice |
+| Catat invoice langganan | Langganan software | Subtotal, Pajak, Total, Mata uang, File invoice (PDF) |
 | Tambah lisensi | Langganan software | Tidak ada |
 | Tambah perangkat jaringan | Infrastruktur IT | Nomor seri, Alamat IP, Status |
 | Ubah perangkat jaringan | Infrastruktur IT | Nomor seri, Alamat IP, Status |
@@ -1161,7 +1183,7 @@ Kinerja penjualan marketplace (Shopee, Tokopedia, dan lainnya) dari data Accurat
 
 <a id="retail-commerce-membaca"></a>
 
-### Membaca halaman Retail Commerce
+### Membaca halaman Kinerja marketplace
 
 | Bagian | Isinya |
 | --- | --- |
@@ -1178,6 +1200,12 @@ Kinerja penjualan marketplace (Shopee, Tokopedia, dan lainnya) dari data Accurat
 >
 > - Klik "Muat ulang" untuk angka terbaru.
 > - Pelanggan, leads, dan Data Sales kanal ritel ada di menu Sales.
+
+<a id="retail-commerce-pesanan-piutang"></a>
+
+### Pesanan & piutang
+
+Halaman "Pesanan & piutang" memuat dua daftar: tab "SO belum dikirim" (SO marketplace yang belum terkirim penuh, dari yang tertua) dan tab "Faktur belum cair" (faktur rekap marketplace yang belum dibayar, dari jatuh tempo terlama). Keduanya dari data Accurate yang sudah disetujui dan bisa diekspor.
 
 <a id="marketing"></a>
 
@@ -1232,22 +1260,21 @@ Mencatat barang masuk dan keluar dengan approval Warehouse Supervisor, melihat s
 
 **Menu:** `/warehouse`
 
-<a id="warehouse-tab"></a>
+<a id="warehouse-halaman"></a>
 
-### Tab di halaman Warehouse
+### Halaman di menu Warehouse
 
-| Tab | Isinya |
+| Halaman | Isinya |
 | --- | --- |
-| Hari ini | Ringkasan hari ini. |
+| Hari ini | Ringkasan hari ini: barang datang, SO yang harus dikirim, dan yang perlu perhatian. |
+| Pergerakan barang | Tab Barang masuk, Barang keluar, Approval Supervisor, dan Riwayat transaksi: pergerakan yang dicatat tim gudang. |
+| Stok | Tab Stok (per gudang dari Accurate), Dokumen Accurate (surat jalan, penerimaan, pindah gudang, penyesuaian), dan Cocokkan Accurate. |
 | Jadwal kirim | SO yang harus dikirim, apakah stoknya cukup. |
-| Stok | Stok dari Accurate per gudang. |
-| Dokumen Accurate | Surat jalan, penerimaan, pindah gudang, penyesuaian. |
-| Barang masuk / Barang keluar / Riwayat transaksi | Pergerakan yang dicatat tim gudang. |
-| Cocokkan Accurate | Pergerakan aplikasi dibandingkan dengan dokumen Accurate. |
-| Approval Supervisor | Pergerakan menunggu keputusan (Supervisor). |
-| Checklist / Insiden | Checklist harian dan laporan kejadian. |
+| Checklist & insiden | Checklist harian dan laporan kejadian. |
 
-> **Catatan:** Anda hanya melihat tab yang sesuai akses Anda. Bila membuka tab lain lewat tautan, aplikasi menampilkan tab yang boleh Anda buka.
+> **Catatan:** Batch stok dan dokumen gudang dari Accurate, beserta tombol "Tarik sekarang", ada di "Data Accurate" (grup Manajemen).
+
+> **Catatan:** Anda hanya melihat halaman dan tab yang sesuai akses Anda. Tautan lama ke tab di halaman Warehouse (misalnya dari notifikasi) otomatis membuka halaman barunya.
 
 <a id="warehouse-catat-pergerakan"></a>
 
@@ -1283,7 +1310,7 @@ Mencatat barang masuk dan keluar dengan approval Warehouse Supervisor, melihat s
 
 ### Stok dari Accurate
 
-Tab "Stok" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah disetujui Supervisor atau Head Warehouse.
+Halaman "Stok" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah disetujui Supervisor atau Head Warehouse. Tab "Dokumen Accurate" di halaman yang sama memuat surat jalan, penerimaan, pindah gudang, dan penyesuaian.
 
 | Status | Artinya |
 | --- | --- |
@@ -1302,7 +1329,7 @@ Tab "Stok" menampilkan angka stok Accurate per gudang, dari tarikan yang sudah d
 
 ### Cocokkan Accurate
 
-Tab "Cocokkan Accurate" membandingkan pergerakan di aplikasi dengan dokumen Accurate.
+Tab "Cocokkan Accurate" di halaman "Stok" membandingkan pergerakan di aplikasi dengan dokumen Accurate.
 
 | Status | Artinya |
 | --- | --- |
@@ -1314,6 +1341,12 @@ Tab "Cocokkan Accurate" membandingkan pergerakan di aplikasi dengan dokumen Accu
 | Menunggu data Accurate | Tarikan berikutnya belum disetujui. |
 
 > **Catatan:** Accurate hanya dibaca. Selisih diperbaiki di sumbernya: dokumen Accurate atau pergerakan di aplikasi.
+
+<a id="warehouse-jadwal-kirim"></a>
+
+### Jadwal kirim
+
+Halaman "Jadwal kirim" menampilkan SO dari Accurate yang harus dikirim hari ini atau sudah lewat, dan apakah stoknya cukup. Saring dengan chip status dan cari nomor SO.
 
 <a id="warehouse-checklist-insiden"></a>
 
@@ -1345,13 +1378,18 @@ PO, pemasok, dan barang datang dari Accurate, setelah tarikan disetujui Supervis
 
 <a id="procurement-hari-ini"></a>
 
-### Hari ini, Purchase order, dan Pemasok
+### Halaman di menu Procurement
 
-| Tab | Isinya |
+| Halaman | Isinya |
 | --- | --- |
 | Hari ini | Barang datang hari ini, dijadwalkan datang hari ini & besok, dan yang perlu perhatian. |
 | Purchase order | Semua PO dengan status penerimaan barangnya. |
-| Pemasok | Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari. |
+| Pemasok | Kinerja pemasok: PO terbuka, terlambat, fill rate dan ketepatan waktu 90 hari; tab "Harga beli" untuk yang berwenang. |
+| Saran pesan ulang | Barang yang perlu dipesan (Supervisor/Head). |
+
+> **Catatan:** Batch PO dan pemasok dari Accurate, beserta tombol "Tarik sekarang", ada di "Data Accurate" (grup Manajemen).
+
+> **Catatan:** Tautan lama ke tab di halaman Procurement (misalnya dari eskalasi) otomatis membuka halaman barunya.
 
 **Status PO**
 
@@ -1366,13 +1404,25 @@ PO, pemasok, dan barang datang dari Accurate, setelah tarikan disetujui Supervis
 
 > **Catatan:** Kontak, alamat, NPWP, dan rekening pemasok tidak diambil dari Accurate; lihat langsung di Accurate.
 
+<a id="procurement-purchase-order"></a>
+
+### Purchase order
+
+Halaman "Purchase order" memuat semua PO dengan status penerimaan barangnya. Saring dengan chip status; klik baris untuk rincian baris barang dan penerimaannya.
+
+<a id="procurement-pemasok"></a>
+
+### Pemasok
+
+Halaman "Pemasok" menampilkan kinerja tiap pemasok. Klik baris untuk PO terakhirnya; dari sini pemasok baru atau perubahan pemasok bisa diajukan ke Accurate (lihat bab Data Accurate).
+
 <a id="finance"></a>
 
 ## Finance: piutang dan utang
 
 *Bagian: Modul divisi*
 
-Piutang pelanggan dan utang ke pemasok dari faktur dan pembayaran Accurate yang sudah disetujui Supervisor/Head Finance. Pengajuan pembayaran dibahas di bab Kerja harian.
+Piutang pelanggan dari faktur dan penerimaan Accurate yang batch-nya disetujui Sales atau Retail Commerce; utang ke pemasok dari faktur dan pembayaran pembelian Accurate yang batch-nya disetujui Supervisor/Head Finance. Pengajuan pembayaran dibahas di bab Kerja harian.
 
 **Siapa yang memakai:** Tim Finance dan Management Office.
 
@@ -1390,6 +1440,8 @@ Piutang pelanggan dan utang ke pemasok dari faktur dan pembayaran Accurate yang 
 2. Buka tab "Pelanggan terlambat" untuk daftar penagihan.
 3. Buka tab "Jatuh tempo 14 hari" untuk mengingatkan pelanggan lebih awal.
 
+> **Catatan:** Sumber piutang adalah batch Data Accurate divisi Sales dan Retail Commerce. Piutang baru berubah setelah Supervisor/Head divisi penjual menyetujui batch-nya, bukan setelah persetujuan Finance. Bila piutang belum terbaru, tanyakan ke Sales atau Retail Commerce apakah batch-nya masih menunggu.
+
 <a id="finance-utang"></a>
 
 ### Utang
@@ -1400,7 +1452,7 @@ Piutang pelanggan dan utang ke pemasok dari faktur dan pembayaran Accurate yang 
 - Tab "Lewat jatuh tempo": prioritas.
 - Tab "Per pemasok": total per pemasok.
 
-> **Catatan:** Bila tertulis "Data utang belum tersedia", tarikan data Accurate Finance pertama belum disetujui Supervisor/Head Finance.
+> **Catatan:** Sumber utang adalah batch Data Accurate Finance, yang disetujui Supervisor/Head Finance. Bila tertulis "Data utang belum tersedia", tarikan pertama belum disetujui. Status pengajuan pembayaran di Workspace (Disetujui, Diproses, Dibayar) tidak mengubah utang; utang berubah saat pembayaran pembelian di Accurate masuk lewat batch berikutnya.
 
 <a id="finance-umur"></a>
 
@@ -1470,7 +1522,7 @@ Di aplikasi hanya ada "Referensi KantorKu": ID karyawan KantorKu dan tautan refe
 Setiap tugas checklist dimiliki satu tim: IT, GA, Atasan, atau People & Culture.
 
 - Tugas perangkat: "Serahkan perangkat" / "Terima kembali".
-- Tugas lisensi: "Berikan lisensi" / "Cabut lisensi".
+- Tugas lisensi: "Berikan lisensi" / "Cabut lisensi". Akses di portal vendor diberikan atau dicabut IT di luar aplikasi; tugas pencabutan baru selesai setelah IT mencentang "Akses sudah dicabut di portal vendor".
 - Tugas nomor: "Serahkan nomor" / "Terima kembali nomor".
 - Tugas lain: "Tandai selesai", "Lewati", "Tugaskan ke", atau "Buat tiket IT".
 
@@ -1483,7 +1535,10 @@ Setiap tugas checklist dimiliki satu tim: IT, GA, Atasan, atau People & Culture.
 1. Buka "Layanan GA", tab "Semua permintaan".
 2. Buka permintaan, klik "Tugaskan ke…" bila perlu.
 3. Klik "Proses" saat mulai dikerjakan, lalu "Selesaikan". Lampirkan foto/PDF bukti bila ada.
-4. Untuk ruang: "Serahkan kunci" saat dipakai dan "Terima kembali" setelahnya.
+
+Pemesanan ruang langsung terkonfirmasi bila slotnya kosong, dan pemakaiannya mengikuti jadwal: tidak ada serah terima kunci di aplikasi. GA dapat membatalkan pemesanan bila perlu.
+
+> **Catatan:** Peminjaman kendaraan baru dilakukan di TrackCar, bukan di Workspace, dan Workspace tidak menyinkronkan data TrackCar. Pemesanan kendaraan lama yang tercatat sebelum TrackCar dipakai tetap bisa dibuka sebagai riwayat; tombol "Serahkan kunci" dan "Terima kembali" hanya muncul di pemesanan kendaraan lama itu.
 
 > **Tips**
 >
@@ -1551,12 +1606,14 @@ Ringkasan karyawan di direktori, total perangkat, perangkat bermasalah, perangka
 
 ### Langganan software
 
-Daftar langganan: produk, paket, jumlah seat, harga per seat, siklus tagihan, dan tanggal perpanjangan.
+Daftar langganan: produk, paket, jumlah seat, harga per seat, siklus tagihan, dan tanggal perpanjangan. Semua yang dicatat di sini adalah register Workspace; akun di vendor, pembayaran ke vendor, dan pembukuan di Accurate dikerjakan di luar aplikasi.
 
-- "Tambah langganan" dan "Unggah invoice" (Supervisor/Head).
-- "Tambah lisensi", "Tetapkan pengguna", "Cabut lisensi", dan "Catat pembayaran" (Head).
+- "Tambah langganan" dan "Ubah langganan" (izin kelola langganan; standar Supervisor dan Head People & Culture). Setelah vendor memperpanjang, perbarui tanggal perpanjangan langganan yang sama; status Akan berakhir kembali Aktif bila tanggal baru lebih dari 30 hari lagi.
+- "Catat invoice", "Unggah PDF invoice", dan "Tandai terverifikasi" (izin kelola invoice; standar Head). Invoice tanpa PDF berstatus Menunggu file PDF; setelah PDF diunggah statusnya Menunggu verifikasi, lalu Terverifikasi.
+- "Tambah lisensi", "Catat penetapan lisensi", dan "Catat pencabutan lisensi" (izin kelola lisensi; standar Head). Beri atau cabut akses di portal vendor dulu, lalu catat di sini. Lisensi idle masih dipegang dan harus dicabut sebelum diberikan ke orang lain.
+- "Catat pembayaran" (izin kelola pembayaran; standar Head). Pembayaran sebagian membuat invoice Dibayar sebagian; invoice Lunas (tercatat) bila pembayaran yang dicatat menutup totalnya. Nomor bukti di Accurate diisi manual.
 
-> **Catatan:** Perpanjangan yang perlu diputuskan dan pembayaran yang belum dilakukan dikirim lewat notifikasi dan email. Pembayarannya diajukan lewat Pengajuan pembayaran.
+> **Catatan:** Tombol hanya muncul bagi yang punya izinnya; peran custom mengikuti izinnya, bukan nama perannya. Persetujuan perpanjangan belum tersedia di Workspace. Perpanjangan yang mendekati tanggal dikirim lewat notifikasi dan email; invoice yang belum diunggah atau diverifikasi lewat notifikasi. Pembayarannya diajukan lewat Pengajuan pembayaran.
 
 <a id="it-aset-infrastruktur"></a>
 
@@ -1569,6 +1626,74 @@ Tab: Jaringan, ISP, CCTV, Backup, Google Workspace, Telepon & HP, dan Vendor.
 - Telepon & HP: nomor milik perusahaan, pemegangnya ("Ganti pemegang"), dan BAST serah terima/pengembalian.
 
 > **Perhatian:** Hanya nomor milik perusahaan yang dicatat. Jangan mencatat nomor pribadi, PIN, PUK, atau nomor SIM.
+
+<a id="data-accurate"></a>
+
+## Data Accurate: memeriksa dan menyetujui
+
+*Bagian: Pemantauan & manajemen*
+
+Data dari Accurate ditarik otomatis setiap beberapa menit, tetapi baru dipakai di aplikasi setelah Supervisor atau Head divisinya menyetujui batch-nya. Aplikasi hanya membaca Accurate; tidak ada data Accurate yang diubah atau dihapus.
+
+**Siapa yang memakai:** Supervisor dan Head Sales, Retail Commerce, Warehouse, Procurement, dan Finance; Head Management Office memantau.
+
+**Hanya untuk divisi:** Procurement, Sales, Retail Commerce
+
+**Menu:** `/data-accurate`
+
+<a id="data-accurate-cara-kerja"></a>
+
+### Cara kerja batch Accurate
+
+1. Aplikasi menarik data dari Accurate (hanya membaca) dan menyusunnya menjadi satu batch per divisi.
+2. Batch berstatus "Menunggu persetujuan". Angka di aplikasi belum berubah.
+3. Supervisor atau Head divisi memeriksa dan memutuskan.
+4. Bila disetujui, data diterapkan dan angka di modul divisi ikut berubah.
+
+| Status batch | Artinya |
+| --- | --- |
+| Menunggu persetujuan | Belum dipakai di aplikasi. |
+| Disetujui & diterapkan | Sudah dipakai. |
+| Ditolak | Tidak dipakai. Perbaiki di Accurate; tarikan berikutnya membuat batch baru. |
+| Ditarik kembali | Dibatalkan sebelum diputuskan. |
+
+**Jenis perubahan dalam batch**
+
+| Label | Artinya |
+| --- | --- |
+| Baru | Data baru di Accurate. |
+| Berubah | Data yang berubah sejak tarikan lalu. |
+| Tidak ada lagi | Sudah tidak ada di Accurate. Hanya ditandai; tidak ada data yang dihapus. |
+
+<a id="data-accurate-perlu-dibereskan"></a>
+
+### Perlu dibereskan di Accurate
+
+Tab "Perlu dibereskan di Accurate" berisi data Accurate yang tidak lengkap atau tidak wajar (misalnya stok minus). Perbaikannya dilakukan di Accurate oleh pemilik datanya; tarikan berikutnya membawa data yang sudah benar.
+
+<a id="data-accurate-pengajuan-ke-accurate"></a>
+
+### Pengajuan ke Accurate: pelanggan dan pemasok dari aplikasi
+
+Accurate tetap sumber kebenaran. Pelanggan atau pemasok yang dibuat atau diperbaiki di aplikasi tidak langsung masuk ke Accurate: ia menjadi "Pengajuan ke Accurate" yang diputuskan Supervisor atau Head divisi, lalu menunggu di antrean kirim. Tujuannya satu: data di aplikasi dan di Accurate sama, tanpa dobel dan tanpa selisih.
+
+1. Buka pelanggan di "Pelanggan" → menu titik tiga → "Ajukan ke Accurate", atau tab "Selisih pelanggan" di "Data Accurate" → ikon kirim pada baris yang belum ada di Accurate. Pemasok: tab "Pemasok" di Procurement → "Ajukan pemasok baru" atau "Ajukan perubahan ke Accurate" di detail pemasok.
+2. Periksa kolom yang akan dikirim (nama wajib; ID boleh kosong bila Accurate yang memberi nomor), lalu klik "Ajukan".
+3. Supervisor atau Head divisi membuka notifikasinya atau "Data Accurate" → "Pengajuan ke Accurate", lalu "Setujui" atau "Tolak" dengan alasan. Pengaju tidak bisa memutuskan pengajuannya sendiri.
+4. Setelah disetujui, pengajuan berstatus "Disetujui, antre kirim". Ia terkirim saat saluran kirim ke Accurate dinyalakan pemilik, dan berstatus "Terkonfirmasi di Accurate" setelah tarikan berikutnya menampilkannya.
+
+| Status pengajuan | Artinya |
+| --- | --- |
+| Menunggu persetujuan | Belum diputuskan; belum ada yang dikirim. |
+| Disetujui, antre kirim | Disetujui; menunggu saluran kirim ke Accurate. |
+| Terkirim ke Accurate | Sudah dikirim; menunggu tarikan berikutnya sebagai bukti. |
+| Terkonfirmasi di Accurate | Accurate menampilkan data yang sama. Selesai. |
+| Ditolak / Dibatalkan | Tidak ada yang dikirim. Ajukan ulang bila perlu. |
+| Gagal dikirim | Accurate menolak; alasannya tertulis di pengajuan. |
+
+> **Perhatian:** Satu data hanya boleh punya satu pengajuan yang belum selesai, dan ID yang sudah ada di Accurate tidak bisa diajukan sebagai data baru. Dengan begitu Accurate tidak pernah menerima data dobel dari aplikasi.
+
+> **Catatan:** Pengajuan bisa dibatalkan oleh pengaju atau Supervisor/Head selama belum terkirim. Tab "Selisih pelanggan" membandingkan pelanggan di aplikasi dengan data Accurate yang disetujui, per ID pelanggan; selisih diselesaikan dengan pengajuan, bukan dengan mengubah aplikasi.
 
 <a id="laporan"></a>
 

@@ -27,7 +27,7 @@ import useOpenFromUrl from '../../components/ai/useOpenFromUrl';
 import {
   SPACE_ID_RE, VIEWS, allLabels, apiErrorMessage, apiPatch, applyIssuePatch, computeMove, debounce,
   deriveProjectKey, hasActiveFilters, isChatSpace, issueQuery, normalizeKeyInput, readTrackerParams, validateProjectKey,
-  writeTrackerParams, unwrap, enableProjectBody,
+  writeTrackerParams, unwrap, enableProjectBody, ticketSyncMessage,
 } from './trackerModel';
 import './tracker.css';
 
@@ -202,6 +202,8 @@ export default function ProjectTracker({ spaceId, spaceDisplayName, embedded = f
     try {
       const data = unwrap(await api.patch(`/tracker/issues/${issue.id}`, apiPatch(patch)));
       if (data?.issue) setIssuesState((s) => ({ ...s, issues: s.issues.map((i) => (i.id === issue.id ? { ...i, ...data.issue } : i)) }));
+      const sync = ticketSyncMessage(data?.ticketSync);
+      if (sync) toast(sync.text, sync.tone);
       scheduleRefresh();
       return data?.issue || { ...issue, ...patch };
     } catch (error) {

@@ -119,10 +119,10 @@ module.exports = [
     note: 'Harga per seat diisi pengguna.',
   },
   {
-    id: 'it-subscription-invoice', title: 'Unggah invoice langganan', route: '/it/subscriptions?form=invoice&langganan=<id langganan>', permission: 'subscription.invoice.manage',
+    id: 'it-subscription-invoice', title: 'Catat invoice langganan', route: '/it/subscriptions?form=invoice&langganan=<id langganan>', permission: 'subscription.invoice.manage',
     file: 'pages/it/SoftwareSubscriptions.jsx',
-    fields: { ai: ['invoiceNumber', 'invoiceDate', 'jurnalReferenceId'], userOnly: ['amount', 'taxAmount', 'totalAmount', 'file'] },
-    note: 'Subtotal, pajak, total, dan file invoice diisi pengguna.',
+    fields: { ai: ['invoiceNumber', 'invoiceDate', 'jurnalReferenceId'], userOnly: ['amount', 'taxAmount', 'totalAmount', 'currency', 'file'] },
+    note: 'Subtotal, pajak, total (harus subtotal + pajak), mata uang, dan file PDF diisi pengguna. Tanpa PDF, invoice tercatat "Menunggu file PDF" dan belum bisa diverifikasi. jurnalReferenceId adalah Nomor bukti di Accurate, dicatat manual; aplikasi tidak menyinkronkan Accurate.',
   },
   {
     id: 'it-license', title: 'Tambah lisensi', route: '/it/subscriptions/<id langganan>?form=lisensi', permission: 'subscription.license.manage',

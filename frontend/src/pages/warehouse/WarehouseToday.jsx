@@ -71,7 +71,7 @@ export default function WarehouseToday() {
   const notice = documentsNotice(status);
   // Today lists at most TODAY_LIMIT per type; the full list is one tap away.
   const seeAll = (type, total, shown) => (docsReady && total > shown
-    ? <Link className="pw-link" to={`/warehouse?tab=documents&type=${type}&from=${day.date}&to=${day.date}`}>Lihat semua {total}</Link>
+    ? <Link className="pw-link" to={`/warehouse/stock?tab=documents&type=${type}&from=${day.date}&to=${day.date}`}>Lihat semua {total}</Link>
     : null);
   // A count from data that is not there yet reads "—", never 0.
   const stat = (label, ready, n, unit, to) => (
@@ -95,10 +95,10 @@ export default function WarehouseToday() {
         <h2 id="wh-today-attention" className="pw-title-section">Perlu perhatian</h2>
         <div className="pw-text-helper">{dayText(day.date)} · dari Accurate, setelah disetujui Supervisor atau Head Warehouse.</div>
         <div className="wh-stats">
-          {stat('Barang stok minus', status?.ready, day.attention.stockMinus, 'barang', '/warehouse?tab=stock&status=minus')}
-          {stat('Pindah gudang dalam perjalanan', docsReady, day.attention.inTransit, 'dokumen', '/warehouse?tab=documents&type=transfer&status=in_transit')}
+          {stat('Barang stok minus', status?.ready, day.attention.stockMinus, 'barang', '/warehouse/stock?status=minus')}
+          {stat('Pindah gudang dalam perjalanan', docsReady, day.attention.inTransit, 'dokumen', '/warehouse/stock?tab=documents&type=transfer&status=in_transit')}
           {stat('Tertahan 3 hari atau lebih', docsReady, day.attention.stuckTransfers, 'dokumen')}
-          {stat('SO harus dikirim (hari ini atau lewat)', true, day.attention.soDue ?? 0, 'SO', '/warehouse?tab=shipping')}
+          {stat('SO harus dikirim (hari ini atau lewat)', true, day.attention.soDue ?? 0, 'SO', '/warehouse/shipping')}
         </div>
       </section>
       <DataGrid

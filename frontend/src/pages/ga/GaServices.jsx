@@ -116,7 +116,8 @@ export default function GaServices() {
   }, { replace: true });
 
   // A create form opens by URL too: /ga?baru=atk | facility_repair | other |
-  // room | vehicle (a link, or Prakasa AI's buka_halaman). The parameter is
+  // room (a link, or Prakasa AI's buka_halaman); vehicles are borrowed in
+  // TrackCar, so /ga?baru=vehicle opens nothing. The parameter is
   // removed once the form is open, so closing it does not reopen it. A form
   // opens once its choices (locations, rooms) have loaded.
   useOpenFromUrl('baru', (kind) => {

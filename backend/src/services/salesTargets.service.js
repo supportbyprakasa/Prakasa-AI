@@ -102,7 +102,9 @@ async function listTargets(user, month) {
       nooActual, nooTarget: nooTarget === null ? null : int(nooTarget), nooPct: pct(nooActual, nooTarget),
     };
   }).sort((a, b) => b.revenueActual - a.revenueActual || a.name.localeCompare(b.name));
-  return { month: range.month, rows, mapping: { linkedAccounts: rows.filter((x) => x.linked).length, accounts: rows.length } };
+  // What "orders" counts (revision F09): invoices when the numbers come from
+  // Accurate, sales orders in the recap mode.
+  return { month: range.month, rows, orderUnit: src.accurate ? 'faktur' : 'sales order', mapping: { linkedAccounts: rows.filter((x) => x.linked).length, accounts: rows.length } };
 }
 
 async function saveTargets(user, month, entries) {

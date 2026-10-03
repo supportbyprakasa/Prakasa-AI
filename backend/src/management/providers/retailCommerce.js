@@ -50,7 +50,7 @@ const rateOf = (r) => (num(r.gross) > 0 ? round1((num(r.returns) / num(r.gross))
 module.exports = {
   key: 'retail_commerce',
   label: 'Retail Commerce',
-  navPaths: ['/retail-commerce'],
+  navPaths: ['/retail-commerce', '/retail-commerce/pending'],
 
   metrics: [
     {

@@ -8,7 +8,7 @@ import StatusBadge from '../../components/StatusBadge';
 import DataGrid from '../../components/datagrid/DataGrid';
 import { useAuth } from '../../context/AuthContext';
 import { usePublishPrakasaAIContext } from '../../context/PrakasaAIToolContext';
-import { MOVEMENT_STATUSES, formatQuantity, movementStatusLabel } from './warehouseMovementModel';
+import { MOVEMENT_STATUSES, formatQuantity, movementItemsText, movementStatusLabel } from './warehouseMovementModel';
 import { dateOnly, dayText } from './warehouseStockModel';
 import './warehouse-movements.css';
 
@@ -32,8 +32,8 @@ export function AccurateNotice() {
   );
 }
 
-const totalQuantity = (items) => items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
-const itemsText = (row) => `${row.items.length} baris · ${formatQuantity(totalQuantity(row.items))} total`;
+// Lines, SKUs and the quantity per unit: different units are never summed.
+const itemsText = (row) => movementItemsText(row.items, formatQuantity);
 
 // One list per tab (Barang masuk, Barang keluar, Approval Supervisor, Riwayat
 // transaksi). The create button lives in the page header (WarehouseDashboard).

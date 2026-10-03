@@ -72,7 +72,7 @@ const toolResultBody = z.object({
 
 const generateArtifactBody = z.object({
   messageId: z.number().int().positive(),
-  format: z.enum(['pdf', 'docx', 'xlsx', 'txt', 'md', 'csv']),
+  format: z.enum(['pdf', 'docx', 'xlsx', 'pptx', 'txt', 'md', 'csv', 'gdoc', 'gsheet', 'gslides']),
   title: z.string().min(1).max(255).optional(),
   documentType: z.string().min(1).max(80).regex(/^[a-zA-Z0-9_-]+$/).optional(),
 });
@@ -281,6 +281,16 @@ router.post(
   validate(idParams, 'params'),
   validate(generateArtifactBody),
   ctrl.generateArtifact
+);
+// A document of the conversation converted into another format (owner, 3 Oct
+// 2026): a new file next to the source, through Google's converter.
+router.post(
+  '/sessions/:id/artifacts/:documentId/convert',
+  requirePermission('ai_command.use'),
+  requirePermission('document.create'),
+  validate(sessionDocumentParams, 'params'),
+  validate(z.object({ format: z.enum(['pdf', 'docx', 'xlsx', 'pptx', 'txt', 'md', 'gdoc', 'gsheet', 'gslides']) }).strict()),
+  ctrl.convertArtifact
 );
 router.get(
   '/sessions/:id/artifacts/:documentId',

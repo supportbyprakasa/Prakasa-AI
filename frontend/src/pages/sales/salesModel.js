@@ -18,11 +18,40 @@ export const LEAD_FILTERS = [
 export const ORDER_STATUS_FILTERS = [
   { key: '', label: 'Semua' },
   { key: 'no_do', label: 'Belum ada surat jalan' },
-  { key: 'no_invoice', label: 'Belum ditagih' },
+  { key: 'no_invoice', label: 'Belum difakturkan' },
   { key: 'unpaid', label: 'Belum lunas' },
   { key: 'overdue', label: 'Terlambat bayar' },
   { key: 'paid', label: 'Lunas' },
 ];
+
+// The billing state of a sales order (server: billingStatus). An order with
+// no invoice is never "Lunas"; one whose invoices are paid but cover only part
+// of it says so; missing amounts read as not available, never as paid.
+export const ORDER_BILLING = {
+  not_invoiced: { label: 'Belum difakturkan' },
+  unpaid: { label: 'Belum lunas' },
+  partly_billed: { label: 'Faktur lunas · SO baru ditagih sebagian' },
+  paid: { label: 'Lunas' },
+  unknown: { label: 'Data pembayaran belum tersedia' },
+};
+
+export function orderBillingStatus(order) {
+  if (order?.billingStatus && ORDER_BILLING[order.billingStatus]) return order.billingStatus;
+  // An older response without billingStatus: never infer "Lunas" from zero.
+  const hasInvoice = String(order?.invoiceNumbers || '').trim() !== '';
+  if (!hasInvoice) return 'not_invoiced';
+  if (order?.outstandingAmount === null || order?.outstandingAmount === undefined) return 'unknown';
+  return Number(order.outstandingAmount) > 0 ? 'unpaid' : 'paid';
+}
+
+// The same words on screen and in the export.
+export function orderBillingText(order) {
+  const status = orderBillingStatus(order);
+  if (status === 'partly_billed' && order?.invoiceCoverage !== null && order?.invoiceCoverage !== undefined) {
+    return `Faktur lunas · SO ditagih ${order.invoiceCoverage}%`;
+  }
+  return ORDER_BILLING[status].label;
+}
 
 // Approved Accurate invoices (Tahap B): the aging table links to the ones past due.
 export const INVOICE_STATUS_FILTERS = [
@@ -257,3 +286,13 @@ export const PRINT_DOCUMENTS = {
   invoice: 'Invoice',
   receipt: 'Kwitansi',
 };
+
+// Whose numbers the Sales figures hold, from the response's own scope
+// (revision F10): never "seluruh perusahaan" for someone who sees only theirs.
+export function salesScopeText(scope) {
+  if (!scope) return 'Cakupan data sedang dimuat.';
+  if (scope.viewAll) return 'Cakupan: seluruh perusahaan (entitas Anda), termasuk marketplace (Retail Commerce).';
+  const names = Array.isArray(scope.names) ? scope.names.filter(Boolean) : [];
+  if (names.length) return `Cakupan: data Anda saja — faktur dengan nama sales ${names.join(', ')} dan pelanggan milik Anda. Bukan omzet perusahaan.`;
+  return 'Cakupan: data Anda saja — pelanggan milik Anda. Nama sales Accurate Anda belum dipetakan, jadi faktur atas nama Anda belum terhitung. Bukan omzet perusahaan.';
+}

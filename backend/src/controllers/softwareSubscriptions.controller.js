@@ -1,6 +1,11 @@
 const pool = require('../db/pool');
 const { ok, fail } = require('../utils/response');
 const { log } = require('../services/activityLog.service');
+const billing = require('../services/subscriptionBilling.service');
+
+const LIST_LIMIT = 200;
+// The renewal notice window of the itReminders job: inside it a subscription is 'expiring'.
+const RENEWAL_NOTICE_DAYS = 30;
 
 async function list(req, res, next) {
   try {
@@ -31,9 +36,13 @@ async function list(req, res, next) {
          LEFT JOIN software_vendors v ON v.id = s.vendor_id
          LEFT JOIN users u ON u.id = s.pic_user_id
         WHERE ${where.join(' AND ')}
-        ORDER BY s.renewal_date ASC LIMIT 200`, args
+        ORDER BY s.renewal_date ASC LIMIT ${LIST_LIMIT}`, args
     );
-    return ok(res, rows);
+    // The list holds at most LIST_LIMIT rows: the total says when more exist.
+    const [[{ total }]] = await pool.query(
+      `SELECT COUNT(*) AS total FROM software_subscriptions s WHERE ${where.join(' AND ')}`, args
+    );
+    return ok(res, rows, { total: Number(total), limit: LIST_LIMIT, hasMore: Number(total) > rows.length });
   } catch (e) { next(e); }
 }
 
@@ -57,13 +66,26 @@ async function detail(req, res, next) {
          LEFT JOIN users u ON u.id = l.assigned_to
         WHERE l.subscription_id=? ORDER BY l.id ASC`, [id]
     );
-    const [invoices] = await pool.query(
-      `SELECT id, invoice_number AS invoiceNumber, invoice_date AS invoiceDate,
-              amount, currency, total_amount AS totalAmount, status,
-              document_id AS documentId, jurnal_reference_id AS jurnalReferenceId,
-              uploaded_at AS uploadedAt, verified_at AS verifiedAt
-         FROM subscription_invoices WHERE subscription_id=? ORDER BY id DESC`, [id]
+    const [invoiceRows] = await pool.query(
+      `SELECT i.id, i.invoice_number AS invoiceNumber, i.invoice_date AS invoiceDate,
+              i.amount, i.tax_amount AS taxAmount, i.currency, i.total_amount AS totalAmount, i.status,
+              i.document_id AS documentId, d.drive_file_id AS driveFileId,
+              i.jurnal_reference_id AS jurnalReferenceId,
+              i.uploaded_at AS uploadedAt, i.verified_at AS verifiedAt,
+              (SELECT COALESCE(SUM(p.amount), 0) FROM subscription_payments p
+                WHERE p.invoice_id = i.id AND p.status = 'processed') AS paidAmount
+         FROM subscription_invoices i
+         LEFT JOIN documents d ON d.id = i.document_id
+        WHERE i.subscription_id=? ORDER BY i.id DESC`, [id]
     );
+    // The PDF link is shown to who manages invoices; everyone sees whether one exists.
+    const canSeeFile = (req.user.permissions || []).includes('subscription.invoice.manage');
+    const invoices = invoiceRows.map(({ driveFileId, paidAmount, ...inv }) => ({
+      ...inv,
+      hasFile: Boolean(inv.documentId),
+      fileUrl: canSeeFile && driveFileId ? `https://drive.google.com/file/d/${encodeURIComponent(driveFileId)}/view` : null,
+      ...billing.paymentState({ status: inv.status, total_amount: inv.totalAmount }, Math.round(Number(paidAmount || 0) * 100)),
+    }));
     const [renewals] = await pool.query(
       `SELECT id, request_date AS requestDate, current_renewal_date AS currentRenewalDate,
               proposed_renewal_date AS proposedRenewalDate, proposed_seats AS proposedSeats,
@@ -71,9 +93,12 @@ async function detail(req, res, next) {
          FROM subscription_renewals WHERE subscription_id=? ORDER BY id DESC`, [id]
     );
     const [payments] = await pool.query(
-      `SELECT id, invoice_id AS invoiceId, paid_at AS paidAt, amount, currency,
-              payment_method AS paymentMethod, reference_no AS referenceNo, status
-         FROM subscription_payments WHERE subscription_id=? ORDER BY id DESC`, [id]
+      `SELECT p.id, p.invoice_id AS invoiceId, i.invoice_number AS invoiceNumber, p.paid_at AS paidAt, p.amount, p.currency,
+              p.payment_method AS paymentMethod, p.reference_no AS referenceNo,
+              p.jurnal_reference_id AS jurnalReferenceId, p.status
+         FROM subscription_payments p
+         LEFT JOIN subscription_invoices i ON i.id = p.invoice_id
+        WHERE p.subscription_id=? ORDER BY p.id DESC`, [id]
     );
 
     // The licence key itself never leaves the API — only whether one was stored (S10).
@@ -141,6 +166,25 @@ async function update(req, res, next) {
       picUserId, jurnalReferenceId, notes,
     } = req.body;
 
+    const [[current]] = await pool.query(
+      'SELECT status, renewal_date FROM software_subscriptions WHERE id=? AND entity_id=? AND deleted_at IS NULL',
+      [id, req.user.entityId]
+    );
+    if (!current) return fail(res, 'NOT_FOUND', 'Subscription tidak ditemukan', 404);
+    // After the vendor renewed, IT moves the renewal date of the same row. A
+    // subscription the reminder job had flagged 'expiring' (or one past its
+    // date) returns to 'active' once the new date is outside the notice window,
+    // unless a status was chosen explicitly. No renewal approval is implied.
+    let nextStatus = status || null;
+    if (!nextStatus && renewalDate && ['expiring', 'expired'].includes(current.status)) {
+      const days = Math.round((Date.parse(`${renewalDate}T00:00:00Z`) - Date.parse(`${billing.todayWib()}T00:00:00Z`)) / 86400000);
+      if (Number.isFinite(days) && days > RENEWAL_NOTICE_DAYS) nextStatus = 'active';
+      else if (Number.isFinite(days) && days >= 0) nextStatus = 'expiring';
+    }
+    if (renewalDate) billing.validDate(renewalDate, 'Tanggal perpanjangan');
+    if (startDate) billing.validDate(startDate, 'Tanggal mulai');
+    if (startDate && renewalDate && startDate > renewalDate) return fail(res, 'VALIDATION_ERROR', 'Tanggal mulai harus sebelum tanggal perpanjangan', 400);
+
     const [r] = await pool.query(
       `UPDATE software_subscriptions SET
          product_name=COALESCE(?,product_name), plan_name=COALESCE(?,plan_name),
@@ -155,16 +199,24 @@ async function update(req, res, next) {
        WHERE id=? AND entity_id=? AND deleted_at IS NULL`,
       [productName || null, planName || null, licenseType || null, billingCycle || null,
        totalSeats ?? null, unitPrice ?? null, currency || null, startDate || null,
-       renewalDate || null, autoRenew ?? null, status || null, picUserId ?? null,
+       renewalDate || null, autoRenew ?? null, nextStatus, picUserId ?? null,
        jurnalReferenceId || null, notes || null, id, req.user.entityId]
     );
     if (!r.affectedRows) return fail(res, 'NOT_FOUND', 'Subscription tidak ditemukan', 404);
     await log({
       entityId: req.user.entityId, userId: req.user.sub,
       action: 'subscription.update', subjectType: 'software_subscription', subjectId: Number(id),
+      metadata: {
+        fields: Object.keys(req.body),
+        ...(renewalDate ? { renewalDate: { from: current.renewal_date, to: renewalDate } } : {}),
+        ...(nextStatus && nextStatus !== current.status ? { status: { from: current.status, to: nextStatus } } : {}),
+      },
     });
-    return ok(res, { id: Number(id) });
-  } catch (e) { next(e); }
+    return ok(res, { id: Number(id), status: nextStatus || current.status });
+  } catch (e) {
+    if (e.status) return fail(res, e.code, e.message, e.status);
+    next(e);
+  }
 }
 
 async function remove(req, res, next) {

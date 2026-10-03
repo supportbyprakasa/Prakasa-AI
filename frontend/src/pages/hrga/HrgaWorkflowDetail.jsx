@@ -27,7 +27,7 @@ import {
   previewGroups, reasonLabel, taskLinkNote, taskMenuActions, taskMeta, taskPrimaryAction, workflowBadge,
 } from './hrgaModel';
 import {
-  AssignDialog, DeviceHandoverDialog, DeviceReturnTaskDialog, GoogleCompleteDialog, ItTicketDialog, LicenseAssignDialog, PhoneLineDialog,
+  AssignDialog, DeviceHandoverDialog, DeviceReturnTaskDialog, GoogleCompleteDialog, ItTicketDialog, LicenseAssignDialog, LicenseRevokeDialog, PhoneLineDialog,
 } from './TaskDialogs';
 import useOpenFromUrl from '../../components/ai/useOpenFromUrl';
 import WorkflowFormDialog from './WorkflowFormDialog';
@@ -551,19 +551,7 @@ export default function HrgaWorkflowDetail() {
           if (out) navigate(offboarding ? '/hrga/offboarding' : '/hrga/onboarding');
         }}
       />
-      <ConfirmDialog
-        open={dialog?.kind === 'license_revoke'}
-        tone="primary"
-        title="Cabut lisensi?"
-        message={`${dialog?.task?.linkedSubscriptionName || 'Lisensi'} dilepas dari ${wf.employeeName} dan kembali tersedia.`}
-        confirmLabel="Cabut lisensi"
-        loading={busy === 'revoke'}
-        onClose={close}
-        onConfirm={async () => {
-          const out = await run('revoke', () => api.post(`/hrga/workflows/${id}/tasks/${dialog.task.id}/license-revoke`, {}), 'Lisensi dicabut', 'Lisensi gagal dicabut.');
-          if (out) await done();
-        }}
-      />
+      <LicenseRevokeDialog open={dialog?.kind === 'license_revoke'} workflowId={id} task={dialog?.task} employeeName={wf.employeeName} onClose={close} onDone={done} />
       <Modal
         open={dialog?.kind === 'kantorku'}
         onClose={close}

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import api from '../../api/client';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
+import DashboardSection from '../../components/DashboardSection';
 import EmptyState, { LoadingState } from '../../components/EmptyState';
 import Icon from '../../components/Icon';
 import Page from '../../components/Page';
@@ -10,13 +11,15 @@ import Select from '../../components/Select';
 import StatCard from '../../components/StatCard';
 import StatusBadge from '../../components/StatusBadge';
 import AnimatedNumber from '../../components/charts/AnimatedNumber';
+import BarList from '../../components/charts/BarList';
 import MotionChart from '../../components/charts/MotionChart';
 import TrendChart from '../../components/charts/TrendChart';
 import { formatMetric } from '../../components/charts/chartModel';
+import DataGrid from '../../components/datagrid/DataGrid';
 import { formatDateTime, formatNumber } from '../../components/format';
 import { useAuth } from '../../context/AuthContext';
 import { allowedLink } from '../../components/navigation';
-import { headline, kpiGroups, motionSeries, trendCards } from './divisionDashboardModel';
+import { attentionItems, headline, kpiGroups, motionSeries, overdueRows, targetProgress, trendCards } from './divisionDashboardModel';
 import { NoTranslate, Translate } from '../../i18n/NoTranslate';
 import './division-dashboard.css';
 
@@ -34,11 +37,13 @@ function Delta({ head, unit }) {
   );
 }
 
-// Dashboard divisi (migration 116): one page per division from the management
-// providers — headline figures that count up, a motion chart of the last 12
-// months, a trend chart per measure (with the monthly target), and the
-// division's open escalations. Supervisor/Head see their division; management
-// picks any division or the whole company.
+// Dashboard divisi (migration 116): the one dashboard template, filled from the
+// management providers for whichever division is shown. Every division gets
+// the same six sections in the same order, with the same chart motion; a
+// section without data keeps its place with its empty state:
+//   1 Angka utama · 2 Perlu perhatian · 3 Grafik capaian bulanan ·
+//   4 Tren 12 bulan · 5 Capaian terhadap target · 6 Pekerjaan lewat tenggat.
+// Supervisor/Head see their division; management picks any or the company.
 export default function DivisionDashboard() {
   const { user } = useAuth();
   const permissions = user?.permissions || [];
@@ -82,14 +87,44 @@ export default function DivisionDashboard() {
   }
 
   const groups = kpiGroups(data.kpis);
-  const trends = trendCards(data.metrics);
+  const attention = attentionItems(data.escalations);
   const race = motionSeries(data.metrics);
+  const trends = trendCards(data.metrics);
+  const progress = targetProgress(data.metrics, data.months);
+  const rows = overdueRows(data.escalations);
   const esc = data.escalations;
+  const range = `${data.months[0].label} – ${data.months[data.months.length - 1].label}`;
+  const escalationsLink = allowedLink('/escalations', permissions);
+  const targetsLink = allowedLink('/targets', permissions);
+
+  const overdueColumns = [
+    {
+      key: 'title', header: 'Pekerjaan',
+      render: (r) => {
+        const link = allowedLink(r.link, permissions);
+        const title = <span className="pw-cell__title" data-no-translate="">{r.title}</span>;
+        return (
+          <span className="pw-cell">
+            {link ? <Link to={link}>{title}</Link> : title}
+            {r.context ? <span className="pw-cell__meta"><Translate strict>{r.context}</Translate></span> : null}
+          </span>
+        );
+      },
+      exportValue: (r) => r.title,
+    },
+    { key: 'sourceLabel', header: 'Sumber', translate: true },
+    { key: 'reference', header: 'Referensi', render: (r) => (r.reference ? <NoTranslate>{r.reference}</NoTranslate> : '—'), exportValue: (r) => r.reference || '' },
+    {
+      key: 'daysLate', header: 'Terlambat', type: 'number',
+      render: (r) => <StatusBadge status={r.severity === 'high' ? 'overdue' : 'pending'} label={`${formatNumber(r.daysLate)} hari`} />,
+      exportValue: (r) => r.daysLate,
+    },
+  ];
 
   return (
     <Page
       title={`Dashboard ${data.division.name}`}
-      description={`Angka utama, perjalanan 12 bulan, dan pekerjaan yang lewat tenggat. Diperbarui ${formatDateTime(data.generatedAt)}.`}
+      description={`Angka utama, pekerjaan yang perlu perhatian, perjalanan 12 bulan, capaian terhadap target, dan daftar kerja. Diperbarui ${formatDateTime(data.generatedAt)}.`}
       actions={(
         <div className="div-dash__actions">
           {picker}
@@ -97,107 +132,107 @@ export default function DivisionDashboard() {
         </div>
       )}
     >
-      {groups.map((g) => (
-        <section key={g.provider} className="div-dash__section" aria-label={g.label}>
-          <h2 className="pw-title-section">{g.label}</h2>
-          <div className="div-dash__kpis">
-            {g.kpis.map((k) => (
-              <StatCard
-                key={`${k.provider}.${k.key}`}
-                label={k.label}
-                value={k.value === null ? null : <AnimatedNumber value={k.value} unit={k.unit} compact={k.unit === 'rupiah'} />}
-                note={k.restricted ? k.sub : (k.error ? 'Belum bisa dihitung' : k.sub)}
-                alert={k.alert}
-                empty={k.value === null}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
-
-      <Card title="Grafik capaian bulanan" subtitle={`Perjalanan capaian ${data.months[0].label} – ${data.months[data.months.length - 1].label}`}>
-        {race.length >= 2 ? (
-          <MotionChart months={data.months} series={race} title={`Grafik capaian bulanan ${data.division.name}`} />
-        ) : (
-          <EmptyState
-            compact
-            icon="animation"
-            title="Grafik capaian bulanan menunggu data"
-            description="Grafik bergerak ini mulai berjalan setelah modul divisi mencatat pekerjaan minimal 3 bulan, misalnya tiket IT selesai, permintaan GA selesai, atau onboarding selesai."
-          />
-        )}
-      </Card>
-
-      {trends.length ? (
-        <section className="div-dash__section" aria-label="Tren 12 bulan">
-          <h2 className="pw-title-section">Tren 12 bulan</h2>
-          <div className="div-dash__trends">
-            {trends.map((m) => (
-              <Card key={`${m.provider}.${m.key}`} className="div-dash__trend">
-                <div className="div-dash__trend-head">
-                  <span className="div-dash__trend-label">{m.label}{m.averaged ? ' · rata-rata antar divisi' : ''}{m.billedMonthly ? ' · ditagih bulanan' : ''}</span>
-                  <span className="div-dash__trend-source">{m.providerLabel}</span>
-                </div>
-                {(() => {
-                  const head = headline(m, data.months);
-                  return (
-                    <>
-                      <div className="div-dash__trend-value">
-                        <AnimatedNumber value={head.value} unit={m.unit} compact={m.unit === 'rupiah'} />
-                        <Delta head={head} unit={m.unit} />
-                      </div>
-                      <div className="div-dash__trend-meta">
-                        {[head.month, head.running !== null ? `${head.runningMonth} berjalan: ${formatMetric(head.running, m.unit, { compact: true })}` : null].filter(Boolean).join(' · ')}
-                      </div>
-                    </>
-                  );
-                })()}
-                <TrendChart months={data.months} values={m.values} targets={m.targets} unit={m.unit} label={m.label} />
-              </Card>
-            ))}
-          </div>
-        </section>
-      ) : (
-        <EmptyState icon="monitoring" title="Belum ada tren bulanan" description="Tren 12 bulan muncul setelah modul divisi ini mencatat pekerjaan. Ukuran yang selama ini masih nol tidak ditampilkan." />
-      )}
-
-      <Card title="Lewat tenggat" subtitle={esc.total ? `${formatNumber(esc.total)} pekerjaan menunggu tindak lanjut` : 'Tidak ada yang lewat tenggat'}>
-        {esc.total ? (
-          <div className="div-dash__esc">
-            <ul className="div-dash__esc-sources">
-              {esc.bySource.map((s) => (
-                <li key={s.key}>
-                  <span className="div-dash__esc-label">{s.label}</span>
-                  <span className="div-dash__esc-track"><span className="div-dash__esc-fill" style={{ '--share': `${(s.count / esc.bySource[0].count) * 100}%` }} /></span>
-                  <span className="div-dash__esc-count">{formatNumber(s.count)}</span>
-                </li>
+      <DashboardSection title="Angka utama" subtitle="Posisi hari ini per modul divisi">
+        {groups.length ? groups.map((g) => (
+          <div key={g.provider} className="pw-dash-section">
+            {groups.length > 1 ? <h3 className="pw-dash-section__group">{g.label}</h3> : null}
+            <div className="pw-dash-section__kpis">
+              {g.kpis.map((k) => (
+                <StatCard
+                  key={`${k.provider}.${k.key}`}
+                  label={k.label}
+                  value={k.value === null ? null : <AnimatedNumber value={k.value} unit={k.unit} compact={k.unit === 'rupiah'} />}
+                  note={k.restricted ? k.sub : (k.error ? 'Belum bisa dihitung' : k.sub)}
+                  alert={k.alert}
+                  empty={k.value === null}
+                />
               ))}
-            </ul>
-            <ul className="div-dash__esc-items">
-              {esc.top.map((i) => {
-                const link = allowedLink(i.link, permissions);
-                const title = <span className="div-dash__esc-title" data-no-translate="">{i.title}</span>;
-                return (
-                  <li key={`${i.source}-${i.title}-${i.daysLate}`} className="div-dash__esc-item">
-                    <span className="pw-cell">
-                      {link ? <Link to={link}>{title}</Link> : title}
-                      <span className="pw-cell__meta">
-                        {[
-                          i.sourceLabel ? <span key="source">{i.sourceLabel}</span> : null,
-                          i.reference ? (i.referenceLabel ? <Translate key="reference">{i.reference}</Translate> : <NoTranslate key="reference">{i.reference}</NoTranslate>) : null,
-                          i.context ? <Translate key="context" strict>{i.context}</Translate> : null,
-                        ].filter(Boolean).flatMap((node, n) => (n ? [' · ', node] : [node]))}
-                      </span>
-                    </span>
-                    <StatusBadge status={i.severity === 'high' ? 'overdue' : 'pending'} label={`${formatNumber(i.daysLate)} hari`} />
-                  </li>
-                );
-              })}
-            </ul>
-            {allowedLink('/escalations', permissions) ? <Button variant="text" to="/escalations" icon="arrow_forward">Buka Pusat eskalasi</Button> : null}
+            </div>
           </div>
-        ) : <EmptyState compact icon="task_alt" title="Semua beres" />}
-      </Card>
+        )) : <EmptyState compact icon="monitoring" title="Belum ada angka utama" description="Modul divisi ini belum melaporkan angka ke dashboard." />}
+      </DashboardSection>
+
+      <DashboardSection
+        title="Perlu perhatian"
+        subtitle={esc.total ? `${formatNumber(esc.total)} pekerjaan lewat tenggat, per sumber` : 'Tidak ada pekerjaan yang lewat tenggat'}
+        actions={escalationsLink && esc.total ? <Button variant="text" to={escalationsLink} icon="arrow_forward">Buka Pusat eskalasi</Button> : null}
+      >
+        <Card>
+          {attention.length
+            ? <BarList items={attention} label="Pekerjaan lewat tenggat per sumber" />
+            : <EmptyState compact icon="task_alt" title="Semua beres" description="Tidak ada pekerjaan divisi yang lewat tenggat." />}
+        </Card>
+      </DashboardSection>
+
+      <DashboardSection title="Grafik capaian bulanan" subtitle={`Perjalanan capaian ${range}`}>
+        <Card variant="chart">
+          {race.length >= 2 ? (
+            <MotionChart months={data.months} series={race} title={`Grafik capaian bulanan ${data.division.name}`} />
+          ) : (
+            <EmptyState
+              compact
+              icon="animation"
+              title="Grafik capaian bulanan menunggu data"
+              description="Grafik bergerak ini mulai berjalan setelah modul divisi mencatat pekerjaan minimal 3 bulan, misalnya tiket IT selesai, permintaan GA selesai, atau onboarding selesai."
+            />
+          )}
+        </Card>
+      </DashboardSection>
+
+      <DashboardSection title="Tren 12 bulan" subtitle="Satu kartu per ukuran, dengan garis target bila ada">
+        {trends.length ? (
+          <div className="pw-dash-section__trends">
+            {trends.map((m) => {
+              const head = headline(m, data.months);
+              return (
+                <Card key={`${m.provider}.${m.key}`} className="div-dash__trend">
+                  <div className="div-dash__trend-head">
+                    <span className="div-dash__trend-label">{m.label}{m.averaged ? ' · rata-rata antar divisi' : ''}{m.billedMonthly ? ' · ditagih bulanan' : ''}</span>
+                    <span className="div-dash__trend-source">{m.providerLabel}</span>
+                  </div>
+                  <div className="div-dash__trend-value">
+                    <AnimatedNumber value={head.value} unit={m.unit} compact={m.unit === 'rupiah'} />
+                    <Delta head={head} unit={m.unit} />
+                  </div>
+                  <div className="div-dash__trend-meta">
+                    {[head.month, head.running !== null ? `${head.runningMonth} berjalan: ${formatMetric(head.running, m.unit, { compact: true })}` : null].filter(Boolean).join(' · ')}
+                  </div>
+                  <TrendChart months={data.months} values={m.values} targets={m.targets} unit={m.unit} label={m.label} />
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <Card>
+            <EmptyState compact icon="monitoring" title="Belum ada tren bulanan" description="Tren 12 bulan muncul setelah modul divisi ini mencatat pekerjaan. Ukuran yang selama ini masih nol tidak ditampilkan." />
+          </Card>
+        )}
+      </DashboardSection>
+
+      <DashboardSection
+        title="Capaian terhadap target"
+        subtitle={progress.items.length ? `Bulan ${progress.month}, bulan lengkap terakhir` : 'Belum ada target bulanan untuk divisi ini'}
+        actions={targetsLink ? <Button variant="text" to={targetsLink} icon="arrow_forward">Buka Target</Button> : null}
+      >
+        <Card>
+          {progress.items.length
+            ? <BarList items={progress.items} label={`Capaian terhadap target ${progress.month}`} max={100} />
+            : <EmptyState compact icon="flag" title="Belum ada target bulanan" description="Setelah target bulanan diisi di menu Target, capaian tiap ukuran tampil di sini sebagai persentase." />}
+        </Card>
+      </DashboardSection>
+
+      <DashboardSection title="Pekerjaan lewat tenggat" subtitle={esc.total ? `${formatNumber(rows.length)} paling lama dari ${formatNumber(esc.total)}` : 'Daftar kerja divisi'}>
+        <DataGrid
+          title="Pekerjaan lewat tenggat"
+          showTitle={false}
+          searchable={false}
+          columns={overdueColumns}
+          rows={rows}
+          exportName={`lewat-tenggat-${String(data.division.code || data.division.id || 'divisi')}`}
+          exportNote={esc.total > rows.length ? `${formatNumber(rows.length)} paling lama dari ${formatNumber(esc.total)}` : ''}
+          empty="Tidak ada pekerjaan yang lewat tenggat"
+        />
+      </DashboardSection>
     </Page>
   );
 }

@@ -27,8 +27,14 @@ test('sections with several modules become groups; single modules stay plain ite
   const byKey = Object.fromEntries(groups.map((entry) => [entry.key, entry]));
   assert.equal(byKey['/'].type, 'item');
   assert.equal(byKey['/ai-command'].type, 'item');
-  assert.equal(byKey.Divisi.type, 'group');
-  assert.deepEqual(byKey.Divisi.items.slice(0, 2).map((item) => item.to), ['/warehouse', '/procurement']);
+  // Every division is a titled group of its pages (owner, 3 Oct 2026): no shared "Divisi" group.
+  assert.equal(byKey.Divisi, undefined);
+  for (const title of ['Warehouse', 'Procurement', 'Retail Commerce']) assert.equal(byKey[title].type, 'group', title);
+  assert.deepEqual(byKey.Warehouse.items.map((item) => item.to), ['/warehouse', '/warehouse/movements', '/warehouse/stock', '/warehouse/shipping', '/warehouse/operations']);
+  assert.deepEqual(byKey.Procurement.items.map((item) => item.to), ['/procurement', '/procurement/orders', '/procurement/vendors', '/procurement/reorder']);
+  assert.deepEqual(byKey['Retail Commerce'].items.map((item) => item.to), ['/retail-commerce', '/retail-commerce/pending']);
+  const order = groups.map((entry) => entry.key);
+  assert.ok(order.indexOf('Marketing') < order.indexOf('Warehouse') && order.indexOf('Retail Commerce') < order.indexOf('People & Culture'));
   assert.equal(byKey.Komunikasi.type, 'group');
   // Work-based groups: Project Tracker is daily work, not "Google"; IT is not People & Culture.
   assert.ok(byKey['Kerja harian'].items.some((item) => item.to === '/projects'));

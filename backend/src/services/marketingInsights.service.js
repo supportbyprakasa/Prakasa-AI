@@ -162,7 +162,7 @@ function channelSeries(months, { revenueRows = [], lineRows = [], nooRows = [], 
   const byKey = new Map();
   const get = (code) => {
     const key = channelKey(code);
-    if (!byKey.has(key)) byKey.set(key, { key, label: channelLabel(key), revenue: blank(), qty: blank(), noo: blank() });
+    if (!byKey.has(key)) byKey.set(key, { key, label: channelLabel(key), revenue: blank(), units: new Map(), noo: blank() });
     return byKey.get(key);
   };
   const add = (series, field, month, value) => {
@@ -171,7 +171,18 @@ function channelSeries(months, { revenueRows = [], lineRows = [], nooRows = [], 
     series[field][i] = round2(series[field][i] + value);
   };
   for (const r of revenueRows) add(get(r.channel), 'revenue', r.month, num(r.revenue));
-  for (const r of lineRows) add(get(r.channel), 'qty', r.month, lineQty(r));
+  // Quantities per unit (revision F08): the base unit when Accurate's ratio is
+  // known, otherwise the faktur unit. Different units are never added up.
+  for (const r of lineRows) {
+    const s = get(r.channel);
+    const unit = lineUnit(r);
+    const key = unit.toLowerCase();
+    if (!s.units.has(key)) s.units.set(key, { unit, values: blank() });
+    const entry = s.units.get(key);
+    const i = index.get(r.month);
+    if (i === undefined || entry.values[i] === null) continue;
+    entry.values[i] = round2(entry.values[i] + lineQty(r));
+  }
   for (const r of nooRows) {
     // A new customer is counted whatever month the Accurate invoices reach.
     const s = get(r.channel);
@@ -180,11 +191,17 @@ function channelSeries(months, { revenueRows = [], lineRows = [], nooRows = [], 
   }
   const total = (s) => s.revenue.reduce((a, v) => a + (v || 0), 0);
   return [...byKey.values()]
-    .map((s) => ({ ...s, totalRevenue: round2(total(s)) }))
+    .map(({ units, ...s }) => {
+      const qtyByUnit = [...units.values()].map((u) => ({ unit: u.unit || null, values: u.values }));
+      // One quantity series only when the channel sells in one known unit.
+      const qty = qtyByUnit.length === 1 && qtyByUnit[0].unit ? qtyByUnit[0].values : (qtyByUnit.length ? months.map(() => null) : blank());
+      return { ...s, qty, qtyByUnit, totalRevenue: round2(total(s)) };
+    })
     .sort((a, b) => b.totalRevenue - a.totalRevenue || a.label.localeCompare(b.label));
 }
 
 const lineQty = (r) => (Number(r.has_ratio) === 1 && r.qty_base !== null && r.qty_base !== undefined ? num(r.qty_base) : num(r.qty));
+const lineUnit = (r) => String((Number(r.has_ratio) === 1 && r.base_unit ? r.base_unit : r.unit) || '').trim();
 
 /** Per product: this month and last month, the units sold, and its channels. */
 function productTotals(lineRows, month, prevMonth) {
@@ -200,7 +217,7 @@ function productTotals(lineRows, month, prevMonth) {
     if (r.item_name && it.itemName === code) it.itemName = r.item_name;
     if (r.month === month) {
       it.revenue += num(r.revenue);
-      const unit = Number(r.has_ratio) === 1 && r.base_unit ? r.base_unit : (r.unit || '');
+      const unit = lineUnit(r);
       it.units.set(unit, (it.units.get(unit) || 0) + lineQty(r));
       const ch = channelKey(r.channel);
       it.channels.set(ch, (it.channels.get(ch) || 0) + num(r.revenue));

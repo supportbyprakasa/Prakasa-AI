@@ -40,14 +40,8 @@
 .sales-progress { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .sales-progress__head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 8px; font-variant-numeric: tabular-nums; }
 
-/* Monthly revenue bars (chart card): label · bar · value on one row. */
+/* Monthly revenue bars (chart card, the shared BarList). */
 .sales-chart { padding-bottom: 24px; }
-.sales-bars { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.sales-bars__row { display: grid; grid-template-columns: 72px minmax(0, 1fr) minmax(0, 260px); align-items: center; gap: 12px; font-size: var(--pw-font-sm); }
-.sales-bars__label { color: var(--pw-text-muted); font-variant-numeric: tabular-nums; }
-.sales-bars__track { height: 12px; background: var(--pw-chart-grid); overflow: hidden; }
-.sales-bars__fill { display: block; height: 100%; min-width: 2px; background: var(--pw-chart-series); }
-.sales-bars__value { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 
 @media (max-width: 1023px) {
   .sales-line { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); }
@@ -59,9 +53,7 @@
   .sales-targets__row, .sales-target-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .sales-line { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .sales-accurate__key, .sales-accurate__change { min-width: 0; max-width: 100%; }
-  .sales-bars__row { grid-template-columns: 56px minmax(0, 1fr); gap: 4px 8px; }
-  .sales-bars__value { grid-column: 2; }
-  .sales-note { max-width: none; }
+      .sales-note { max-width: none; }
 }
 
 /* "Periksa dengan AI" on a Data Accurate batch: findings, then the AI's note. */

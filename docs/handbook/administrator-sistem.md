@@ -57,7 +57,7 @@ Cara paling mudah adalah memakai akun Google kantor Anda (alamat email perusahaa
 | Gagal masuk. Periksa email dan kata sandi. | Email atau kata sandi salah. Coba lagi dengan teliti. |
 | Gagal masuk dengan Google. | Akun Google yang dipilih bukan akun kantor, atau belum terdaftar. |
 
-Akun belum dibuat atau dinonaktifkan? Hubungi Super Admin atau Administrator Sistem, seperti tertulis di bawah tombol "Masuk".
+Akun belum dibuat atau dinonaktifkan? Hubungi Administrator Sistem atau Super Admin, seperti tertulis di bawah tombol "Masuk". Lupa kata sandi? Hanya Super Admin yang dapat mereset kata sandi; tidak ada reset mandiri.
 
 <a id="mulai-ganti-kata-sandi"></a>
 
@@ -338,6 +338,8 @@ Semua kebutuhan IT diajukan lewat tiket, supaya tercatat dan bisa dipantau. Cara
 | Ditutup / Dibatalkan | Tiket berakhir. | Buat tiket baru bila masalah muncul lagi. |
 
 > **Catatan:** Anda mendapat notifikasi di aplikasi setiap kali status tiket berubah atau ada tanggapan baru.
+
+> **Catatan:** Tiket juga tampil sebagai issue di project IT Project Tracker. Status issue itu hanya dapat dipindahkan oleh pengelola tiket IT, dan mengikuti status tiketnya; tiket yang ditutup atau dibatalkan tidak dibuka lagi dari papan. Bila tiket tidak ikut berubah, papan memberi tahu dan riwayat issue mencatatnya.
 
 <a id="kerja-harian-tugas-onboarding"></a>
 

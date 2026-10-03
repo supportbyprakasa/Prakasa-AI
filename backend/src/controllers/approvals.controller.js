@@ -468,12 +468,15 @@ async function decide(req, res, next) {
       try {
         // An Accurate batch is read on its own page (the approvals page is not open to divisions).
         const accurateBatch = approval.subject_type === 'sales_accurate_batch';
+        const accurateWrite = approval.subject_type === 'accurate_write_request';
         await notif.create({
           userId: approval.requested_by,
           entityId,
           title: accurateBatch
             ? `Data Accurate ${result.status === 'approved' ? 'disetujui & diterapkan' : 'ditolak'}`
-            : `Approval ${result.status}`,
+            : accurateWrite
+              ? `Pengajuan ke Accurate ${result.status === 'approved' ? 'disetujui, menunggu dikirim' : 'ditolak'}`
+              : `Approval ${result.status}`,
           body: approval.title,
           event: `approval.${result.status}`,
           subjectType: 'approval_request',

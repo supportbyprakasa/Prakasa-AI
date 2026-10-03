@@ -27,7 +27,7 @@ const FILES = ['work.js', 'approvals.js', 'documents.js'];
 const NAMES = [
   'tugas_saya', 'detail_tugas', 'ringkasan_papan', 'proyek_saya', 'issue_saya',
   'persetujuan_menunggu_saya', 'pengajuan_saya', 'delegasi_persetujuan_saya', 'tanda_tangan_saya',
-  'cari_dokumen', 'dokumen_divisi', 'template_dokumen',
+  'cari_dokumen', 'dokumen_divisi', 'baca_dokumen', 'template_dokumen',
 ];
 const PAGE_KEYS = ['tasks', 'projects', 'approvals', 'approval-delegations', 'signatures', 'documents', 'division-storage', 'templates', 'doc-templates'];
 const tool = (name) => agentTools.byName.get(name);
@@ -127,6 +127,7 @@ test('the work, approval and document tools exist, keep the contract and serve t
   assert.equal(perm('tanda_tangan_saya'), 'signature.view');
   assert.equal(perm('cari_dokumen'), 'document.view');
   assert.equal(perm('dokumen_divisi'), 'document.view');
+  assert.equal(perm('baca_dokumen'), 'document.view');
   assert.equal(perm('template_dokumen'), 'template.view');
   for (const t of mine) {
     for (const key of t.module.filter((m) => m !== 'general')) {
@@ -637,6 +638,27 @@ test('documents, division storage and templates: own division and company-wide o
       assert.equal(moStorage.ditemukan, false);
     }
     assert.deepEqual((await run('dokumen_divisi', p.finMember.user, { cari: mark })).dari_template.dokumen.map((x) => x.judul), [`${mark} BAST laptop Finance`]);
+
+    // The text of a document (Wave 1): what the app already read, by the same
+    // visibility rule; Drive stays untouched (every method throws here).
+    await sql.fixture(() => insert(conn, 'document_ai_content', {
+      document_id: dSales, original_name: 'kontrak-sales.docx', original_mime_type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', original_size: 10,
+      stored_name: 'kontrak-sales.docx', stored_mime_type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', stored_size: 10,
+      compression_method: 'none', extraction_status: 'ready', extracted_text: `Pasal 1. Garansi 12 bulan. ${mark}`,
+    }));
+    const body = await run('baca_dokumen', p.salesMember.user, { dokumen_id: dSales });
+    assert.equal(body.ditemukan, true);
+    assert.match(body.teks, /Garansi 12 bulan/);
+    assert.equal(body.jumlah_bagian, 1);
+    assert.equal(body.sumber_teks, 'teks yang sudah dibaca aplikasi');
+    assertSafe(body, 'baca_dokumen');
+    const hit = await run('baca_dokumen', p.salesMember.user, { dokumen_id: dSales, cari: 'garansi' });
+    assert.equal(hit.jumlah_cuplikan, 1);
+    // Another division's document: not found, nothing of it leaks.
+    const finDoc = (await run('cari_dokumen', p.finMember.user, { cari: 'Kontrak Finance' })).dokumen[0].id;
+    const blocked = await run('baca_dokumen', p.salesMember.user, { dokumen_id: finDoc });
+    assert.equal(blocked.ditemukan, false);
+    assert.ok(!JSON.stringify(blocked).includes('Finance'));
 
     // Templates.
     const names = (out) => out.template.map((x) => x.nama.replace(`${mark} `, '')).sort();

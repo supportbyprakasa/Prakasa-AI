@@ -35,6 +35,7 @@ test('an empty page explains itself before the first approved batch', () => {
   assert.equal(procurementNotice({ ready: true }), null);
   assert.match(procurementNotice({ ready: false, pending: { batchId: 12 } }).title, /menunggu persetujuan/);
   assert.match(procurementNotice({ ready: false }).title, /belum ada/);
+  assert.match(procurementNotice({ ready: false, enabled: false }).title, /belum dinyalakan/, 'a switched-off pull is not "waiting for approval"');
 });
 
 test('the approver reads the pull\'s own checks', () => {
@@ -83,8 +84,8 @@ test('the Procurement day: "Perlu dipesan" counts exactly what its link opens (e
   assert.equal(reorderTodayCount(later, 'total').text, '9 barang', 'critical + reorder + out');
   assert.equal(reorderTodayCount(later, 'critical', { timed: true }).text, '2 barang');
   const today = page('ProcurementToday.jsx');
-  assert.match(today, /reorderCount\(reorder, 'total', '\/procurement\?tab=reorder'\)/, 'the unfiltered list, counted in full');
-  assert.match(today, /reorderCount\(reorder, 'critical', '\/procurement\?tab=reorder&urgency=critical', \{ timed: true \}\)/);
+  assert.match(today, /reorderCount\(reorder, 'total', '\/procurement\/reorder'\)/, 'the unfiltered list, counted in full');
+  assert.match(today, /reorderCount\(reorder, 'critical', '\/procurement\/reorder\?urgency=critical', \{ timed: true \}\)/);
 });
 
 test('saran pesan ulang: no definite 0 before stock is approved or before the outflow can be known', () => {

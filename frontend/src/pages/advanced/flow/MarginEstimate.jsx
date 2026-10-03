@@ -122,7 +122,7 @@ export default function MarginEstimate({ preset, onPreset }) {
             empty="Tidak ada barang untuk saringan ini"
           />
           <p className="pw-text-helper mflow-note-text">
-            Perkiraan margin (harga PO). Omzet = baris faktur disesuaikan ke DPP faktur (diskon dan biaya di kepala faktur dibagi rata ke barang), tanpa faktur uang muka.
+            Perkiraan margin (harga PO). Omzet = baris faktur disesuaikan ke DPP faktur (diskon dan biaya di kepala faktur dialokasikan proporsional terhadap nilai baris), sebelum retur, tanpa faktur uang muka.
             Perkiraan HPP = jumlah dalam satuan dasar × harga beli per satuan dasar dari PO terakhir sebelum tanggal jual (sebelum PPN, setelah diskon PO, dari semua pemasok);
             bila belum ada PO sebelumnya, harga PO sesudahnya (ditandai). Margin % hanya dari omzet yang punya harga beli dan satuan yang diketahui; kode barang lama dan baru tidak dicocokkan.
             {' '}{MARGIN_CAVEAT}

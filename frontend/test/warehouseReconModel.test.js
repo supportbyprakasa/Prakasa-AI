@@ -44,7 +44,7 @@ test('quantities read in base units with a sign; age says when it will escalate'
   assert.equal(lineReason({ itemNo: null, sku: null }), 'Tanpa kode barang');
   assert.equal(lineReason({ itemNo: 'A', qtyBase: null }), 'Satuan belum dikenal');
   assert.equal(lineReason({ itemNo: 'A', qtyBase: 4 }), '');
-  assert.equal(reconUrl('inbound', 'PO 1/2'), '/warehouse?tab=recon&direction=inbound&group=PO%201%2F2');
+  assert.equal(reconUrl('inbound', 'PO 1/2'), '/warehouse/stock?tab=recon&direction=inbound&group=PO%201%2F2');
 });
 
 test('the tab explains itself until documents, movements and units are approved; never mentions prices', () => {

@@ -5,8 +5,9 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import EmptyState, { LoadingState } from '../../components/EmptyState';
 import Page from '../../components/Page';
-import ProgressBar from '../../components/ProgressBar';
 import StatCard from '../../components/StatCard';
+import AnimatedNumber from '../../components/charts/AnimatedNumber';
+import BarList from '../../components/charts/BarList';
 import StatusBadge from '../../components/StatusBadge';
 import { toast } from '../../components/Toast';
 import DataGrid from '../../components/datagrid/DataGrid';
@@ -21,25 +22,21 @@ import './it-assets.css';
 const errorMessage = (error, fallback) => error.response?.data?.error?.message || fallback;
 const count = (value) => Number(value) || 0;
 
-// A bar list for the dashboard (per status / type / location): each line links
-// to the device list with that filter.
-function BarList({ title, rows, empty }) {
-  const max = rows.reduce((n, row) => Math.max(n, row.value), 0);
+// A bar list for the dashboard (per status / type / location): the shared
+// BarList, so the bars grow the way every dashboard's bars do; each label
+// links to the device list with that filter.
+function DeviceBars({ title, rows, empty }) {
+  const items = rows.map((row) => ({
+    key: row.key,
+    label: <Link to={row.to}>{row.label}</Link>,
+    value: row.value,
+    display: formatNumber(row.value),
+    note: row.note || undefined,
+    translate: !row.data,
+  }));
   return (
     <Card variant="chart" title={title}>
-      {rows.length ? (
-        <ul className="it-bars">
-          {rows.map((row) => (
-            <li key={row.key} className="it-bars__item">
-              <div className="it-bars__head">
-                <span className="it-bars__label" data-no-translate={row.data ? '' : undefined}><Link to={row.to}>{row.label}</Link></span>
-                <span className="it-bars__value">{formatNumber(row.value)}{row.note ? ' · ' : ''}{row.note || ''}</span>
-              </div>
-              <ProgressBar value={row.value} max={max || 1} label={`${row.label}: ${formatNumber(row.value)}`} dataLabel={row.data} />
-            </li>
-          ))}
-        </ul>
-      ) : <EmptyState compact title={empty} />}
+      {rows.length ? <BarList items={items} label={title} dataLabels /> : <EmptyState compact title={empty} />}
     </Card>
   );
 }
@@ -111,38 +108,38 @@ export default function ItDashboard() {
         <div className="pw-cols-4 it-dashboard__stats">
           <StatCard
             label="Karyawan (direktori)"
-            value={formatNumber(count(people.headcount))}
+            value={<AnimatedNumber value={count(people.headcount)} />}
             note={unreviewedNote(people.unreviewedAccounts) || 'Semua akun sudah ditinjau People & Culture'}
             action={<Button variant="text" to="/people/directory">Buka direktori</Button>}
           />
           <StatCard
             label="Total perangkat"
-            value={formatNumber(count(devices.total))}
+            value={<AnimatedNumber value={count(devices.total)} />}
             note={`${formatNumber(count(byStatus.available ?? devices.available))} cadangan`}
             action={drill('')}
           />
-          <StatCard label="Aktif" value={formatNumber(count(devices.active ?? devices.assigned))} action={drill('status=assigned')} />
+          <StatCard label="Aktif" value={<AnimatedNumber value={count(devices.active ?? devices.assigned)} />} action={drill('status=assigned')} />
           <StatCard
             label="Bermasalah (Rusak + Tidak aktif)"
-            value={formatNumber(problematic)}
+            value={<AnimatedNumber value={problematic} />}
             note={`Rusak ${formatNumber(count(byStatus.damaged))} · Tidak aktif ${formatNumber(count(byStatus.retired ?? devices.retired))}`}
             alert={problematic > 0}
             action={drill('problematic=1')}
           />
         </div>
         <div className="pw-cols-4 it-dashboard__stats">
-          <StatCard label="Tanpa nomor aset" value={formatNumber(count(devices.withoutAssetCode))} action={drill('noAssetCode=1')} />
-          <StatCard label={`Garansi ≤ ${windowDays} hari`} value={formatNumber(count(devices.warrantyEnding))} action={drill(`warrantyDays=${windowDays}`)} />
+          <StatCard label="Tanpa nomor aset" value={<AnimatedNumber value={count(devices.withoutAssetCode)} />} action={drill('noAssetCode=1')} />
+          <StatCard label={`Garansi ≤ ${windowDays} hari`} value={<AnimatedNumber value={count(devices.warrantyEnding)} />} action={drill(`warrantyDays=${windowDays}`)} />
           <StatCard
             label="Di tangan karyawan resign"
-            value={formatNumber(resignedHolder)}
+            value={<AnimatedNumber value={resignedHolder} />}
             note={resignedHolder ? 'Kembalikan atau serahkan ke orang lain' : null}
             alert={resignedHolder > 0}
             action={drill('resignedHolder=1')}
           />
           <StatCard
             label="Langganan software"
-            value={formatNumber(count(subscriptions.total))}
+            value={<AnimatedNumber value={count(subscriptions.total)} />}
             note={`${formatNumber(expiring)} segera berakhir`}
             alert={expiring > 0}
             action={<Button variant="text" to="/it/subscriptions">Lihat langganan</Button>}
@@ -150,9 +147,9 @@ export default function ItDashboard() {
         </div>
 
         <div className="pw-cols-3 it-dashboard__grid">
-          <BarList title="Perangkat per status" rows={bars.byStatus} empty="Belum ada perangkat" />
-          <BarList title="Perangkat per tipe" rows={bars.byType} empty="Belum ada perangkat" />
-          <BarList title="Perangkat per lokasi" rows={bars.byLocation} empty="Belum ada perangkat" />
+          <DeviceBars title="Perangkat per status" rows={bars.byStatus} empty="Belum ada perangkat" />
+          <DeviceBars title="Perangkat per tipe" rows={bars.byType} empty="Belum ada perangkat" />
+          <DeviceBars title="Perangkat per lokasi" rows={bars.byLocation} empty="Belum ada perangkat" />
         </div>
 
         {infra.length ? (
@@ -190,6 +187,7 @@ export default function ItDashboard() {
         <DataGrid
           title="Perpanjangan langganan dalam 30 hari"
           searchable={false}
+          onRowClick={(row) => navigate(`/it/subscriptions/${row.id}`)}
           rows={data.renewalsDue || []}
           empty="Tidak ada langganan yang diperpanjang dalam 30 hari"
           columns={[
@@ -203,6 +201,7 @@ export default function ItDashboard() {
         <DataGrid
           title="Invoice menunggu"
           searchable={false}
+          onRowClick={(row) => navigate(`/it/subscriptions/${row.subscriptionId}`)}
           rows={data.pendingInvoices || []}
           empty="Tidak ada invoice yang menunggu"
           columns={[

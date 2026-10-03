@@ -12,8 +12,11 @@ const { approvalVisibilitySql } = require('./approvalEngine.service');
 // Batch 6.3: stable per-provider fetch cap. Independent of page size.
 const MAX_PER_PROVIDER_FETCH = 200;
 
+// 'document' and 'approval_request' are not searched: their pages (/documents,
+// /approvals) were retired (navigation.js BLOCKED_ROUTES), so a hit would send
+// the user to a blocked page. The rows still exist and are reached from the
+// modules that own them.
 const SUPPORTED_TYPES = [
-  'document',
   'task',
   'customer',
   'sales_order',
@@ -21,7 +24,6 @@ const SUPPORTED_TYPES = [
   'subscription',
   'finance_workflow',
   'hrga_workflow',
-  'approval_request',
   'signature_request',
 ];
 

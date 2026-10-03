@@ -238,7 +238,7 @@ test('"Belum ada PO": the escalation opens exactly the items it counts (critical
   assert.equal(placeholders(page.sql), page.args.length);
   pool.query.mock.mockImplementation(async (sql, args) => (/AS with_legacy/.test(sql) ? [[{ ...ESC_ROW, vendor_no: 'V 001/A' }]] : [[]]));
   const [item] = await escalation().list(1, { departmentId: null });
-  assert.equal(item.link, '/procurement?tab=reorder&urgency=critical&vendor=V%20001%2FA&noPo=1');
+  assert.equal(item.link, '/procurement/reorder?urgency=critical&vendor=V%20001%2FA&noPo=1');
   const url = new URL(item.link, 'http://x');
   assert.deepEqual([url.searchParams.get('urgency'), url.searchParams.get('vendor'), url.searchParams.get('noPo')], ['critical', 'V 001/A', '1']);
   const src = fs.readFileSync(path.join(__dirname, '../src/routes/procurement.routes.js'), 'utf8');

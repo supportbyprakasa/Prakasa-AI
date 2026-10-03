@@ -246,3 +246,22 @@ export function receivableStatus(row) {
 export function monthOptions(months = []) {
   return [...months].reverse().map((m) => ({ value: m.key, label: m.label }));
 }
+
+/**
+ * Section 2, "Perlu perhatian": what the marketplaces still owe the division
+ * — SOs not yet shipped (late ones first) and invoices not yet paid out, with
+ * the overdue ones. Only counts above zero are listed.
+ */
+export function attentionItems(overview, shipments, receivables) {
+  const k = overview?.kpis || {};
+  const ship = k.shipments || { open: 0, late: 0 };
+  const rec = k.receivable || { invoices: 0, overdueInvoices: 0 };
+  const open = Number(shipments?.total ?? ship.open) || 0;
+  const invoices = Number(receivables?.total ?? rec.invoices) || 0;
+  const late = Number(ship.late) || 0;
+  const overdue = Number(rec.overdueInvoices) || 0;
+  const items = [];
+  if (open > 0) items.push({ key: 'unshipped', label: 'SO belum dikirim', value: open, display: formatNumber(open), note: late ? `${formatNumber(late)} lewat batas kirim` : undefined, tone: late ? 'error' : 'warning' });
+  if (invoices > 0) items.push({ key: 'receivable', label: 'Faktur belum cair', value: invoices, display: formatNumber(invoices), note: overdue ? `${formatNumber(overdue)} lewat jatuh tempo` : undefined, tone: overdue ? 'error' : 'warning' });
+  return items;
+}

@@ -29,6 +29,10 @@ const NAV = [
       { to: '/roadmap', label: 'Peta program', symbol: 'view_timeline', permission: ['management_dashboard.view', 'management_dashboard.division'] },
       // Program 3.3: management only (division Heads with management_dashboard.division do not get it).
       { to: '/management/flow', label: 'Alur & margin', symbol: 'account_tree', permission: 'management_dashboard.view' },
+      // Every Accurate batch a person may decide (with their division's pull),
+      // and the proposals to Accurate (owner, 3 Oct 2026). A member with only
+      // proposals sees it as a plain item.
+      { to: '/data-accurate', label: 'Data Accurate', symbol: 'fact_check', permission: ['accurate.batch.view', 'sales.master.manage', 'warehouse.accurate.sync', 'procurement.accurate.sync', 'accurate.write.request'] },
     ],
   },
   {
@@ -91,15 +95,39 @@ const NAV = [
       { to: '/marketing/campaigns', label: 'Kampanye', symbol: 'campaign', permission: 'marketing.insight.view' },
     ],
   },
+  // One titled group per division with one entry per feature, like Sales
+  // (owner, 3 Oct 2026): the former single-page tabs are pages of their own.
+  // Each entry carries its old tab's permission, so a role sees exactly the
+  // pages it could open as tabs before.
   {
-    title: 'Divisi',
+    title: 'Warehouse',
     items: [
-      // Movements, or stock from Accurate only (Management Office oversight).
-      { to: '/warehouse', label: 'Warehouse', symbol: 'warehouse', permission: ['warehouse.movement.view', 'warehouse.stock.view'] },
-      { to: '/procurement', label: 'Procurement', symbol: 'assignment_turned_in', permission: 'procurement.view' },
-      // Modules still being prepared ("Segera hadir"), last.
+      // `access`: who may open the address (old /warehouse links of movement-only
+      // readers land here and are sent on to the movements); `permission`: who sees the entry.
+      { to: '/warehouse', label: 'Hari ini', symbol: 'today', permission: 'warehouse.stock.view', access: ['warehouse.stock.view', 'warehouse.movement.view'] },
+      // Movements: Procurement and Retail Commerce read them too.
+      { to: '/warehouse/movements', label: 'Pergerakan barang', symbol: 'swap_horiz', permission: 'warehouse.movement.view' },
+      // Stock from Accurate (Management Office oversight), with the reconciliation.
+      { to: '/warehouse/stock', label: 'Stok', symbol: 'inventory_2', permission: ['warehouse.stock.view', 'warehouse.recon.view'] },
+      { to: '/warehouse/shipping', label: 'Jadwal kirim', symbol: 'local_shipping', permission: 'warehouse.stock.view' },
+      { to: '/warehouse/operations', label: 'Checklist & insiden', symbol: 'checklist', permission: ['warehouse.checklist.view', 'warehouse.incident.view'] },
+    ],
+  },
+  {
+    title: 'Procurement',
+    items: [
+      { to: '/procurement', label: 'Hari ini', symbol: 'today', permission: 'procurement.view' },
+      { to: '/procurement/orders', label: 'Purchase order', symbol: 'receipt_long', permission: 'procurement.view' },
+      { to: '/procurement/vendors', label: 'Pemasok', symbol: 'local_shipping', permission: 'procurement.view' },
+      { to: '/procurement/reorder', label: 'Saran pesan ulang', symbol: 'production_quantity_limits', permission: 'procurement.reorder.view' },
+    ],
+  },
+  {
+    title: 'Retail Commerce',
+    items: [
       // Marketplace performance (migration 120).
-      { to: '/retail-commerce', label: 'Retail Commerce', symbol: 'storefront', permission: 'retail.insight.view' },
+      { to: '/retail-commerce', label: 'Kinerja marketplace', symbol: 'storefront', permission: 'retail.insight.view' },
+      { to: '/retail-commerce/pending', label: 'Pesanan & piutang', symbol: 'pending_actions', permission: 'retail.insight.view' },
     ],
   },
   {
@@ -178,25 +206,23 @@ export function hasNavPermission(permissions, required) {
 
 // What each division works in most, in the order they reach for it (role key
 // prefix → [section title, ...paths]). These entries move up, right under the
-// everyday entries; everything else keeps the order above. Divisions whose
-// module is still "Segera hadir" (Finance) only get the division dashboard: a page that
-// does nothing yet is not their priority. Management Office's work is the
+// everyday entries; everything else keeps the order above. Management Office's work is the
 // oversight toolkit; People & Culture runs onboarding/offboarding, GA and IT.
 const ROLE_FOCUS = {
   sales: [['Sales', '/division-dashboard', '/sales/pipeline', '/sales/customers', '/sales/leads', '/sales/orders']],
-  warehouse: [['Warehouse', '/division-dashboard', '/warehouse']],
-  procurement: [['Procurement', '/division-dashboard', '/procurement']],
+  warehouse: [['Warehouse', '/division-dashboard', '/warehouse', '/warehouse/movements', '/warehouse/stock', '/warehouse/shipping', '/warehouse/operations']],
+  procurement: [['Procurement', '/division-dashboard', '/procurement', '/procurement/orders', '/procurement/vendors', '/procurement/reorder']],
   people_culture: [
     ['People & Culture', '/division-dashboard', '/hrga/onboarding', '/hrga/offboarding', '/ga', '/ga/operations', '/hrga/checklist-templates'],
     ['IT', '/it/tickets', '/it/dashboard', '/it/devices', '/it/infrastructure', '/it/subscriptions'],
   ],
   management_office: [
-    ['Manajemen', '/management', '/division-dashboard', '/escalations', '/targets', '/roadmap', '/management/flow'],
+    ['Manajemen', '/management', '/division-dashboard', '/escalations', '/targets', '/roadmap', '/management/flow', '/data-accurate'],
     ['Laporan', '/analytics', '/activity-logs'],
   ],
-  retail_commerce: [['Retail Commerce', '/division-dashboard', '/retail-commerce'], ['Sales', '/sales/customers', '/sales/leads', '/sales/orders', '/sales/pipeline'], ['Warehouse', '/warehouse']],
+  retail_commerce: [['Retail Commerce', '/division-dashboard', '/retail-commerce', '/retail-commerce/pending'], ['Sales', '/sales/customers', '/sales/leads', '/sales/orders', '/sales/pipeline'], ['Warehouse', '/warehouse/movements']],
   marketing: [['Marketing', '/division-dashboard', '/marketing/insights', '/marketing/campaigns'], ['Sales', '/sales/customers', '/sales/leads']],
-  // Finance's module is still "Segera hadir"; its Supervisor/Head get the division dashboard.
+  // Finance: receivables, payables and payment requests (live modules).
   finance: [['Finance', '/division-dashboard', '/finance/receivables', '/finance/payables', '/finance/payment-requests']],
   // Administrator Sistem (role key system.admin, matched whole): no division,
   // its work is the administration groups.
@@ -274,7 +300,6 @@ const EXTRA_ROUTE_PERMISSIONS = [
   ['/tasks', 'task.view'],
   // Accurate batches of the user's own division; opened from each division's
   // module (e.g. Data Sales → Data Accurate) and from approval notifications.
-  ['/data-accurate', ['accurate.batch.view', 'sales.master.manage']],
 ].map(([to, permission]) => ({ to, permission }));
 
 // Retired from the app entirely: no menu card, and no direct access either —
@@ -293,13 +318,45 @@ export const BLOCKED_ROUTES = [
 // A feature that's hidden from the menu must also refuse to render if a role
 // reaches its URL directly (bookmark, shared link, typed by hand) — otherwise
 // "not in the menu" quietly becomes "reachable anyway", which defeats the point.
+// The former single-page divisions (Warehouse, Procurement) addressed their
+// tabs as /warehouse?tab=stock; every notification, escalation, handbook line
+// and bookmark written before 3 Oct 2026 still does. Each old tab maps to its
+// page (and, where the page keeps tabs, the tab inside it); every other query
+// parameter (status, q, baru…) travels along. Null = nothing to redirect.
+const LEGACY_TABS = {
+  '/warehouse': {
+    today: '/warehouse', shipping: '/warehouse/shipping', stock: '/warehouse/stock', accurate: '/data-accurate',
+    inbound: '/warehouse/movements?tab=inbound', outbound: '/warehouse/movements?tab=outbound',
+    approval: '/warehouse/movements?tab=approval', history: '/warehouse/movements?tab=history',
+    documents: '/warehouse/stock?tab=documents', recon: '/warehouse/stock?tab=recon',
+    checklist: '/warehouse/operations?tab=checklist', incidents: '/warehouse/operations?tab=incidents',
+  },
+  '/procurement': {
+    today: '/procurement', orders: '/procurement/orders', vendors: '/procurement/vendors', reorder: '/procurement/reorder',
+    prices: '/procurement/vendors?tab=prices', accurate: '/data-accurate',
+  },
+};
+export function legacyRedirect(pathname, search = '') {
+  const tabs = LEGACY_TABS[pathname];
+  if (!tabs) return null;
+  const params = new URLSearchParams(search);
+  const tab = params.get('tab');
+  if (!tab || !tabs[tab]) return null;
+  params.delete('tab');
+  const [path, query = ''] = tabs[tab].split('?');
+  const merged = new URLSearchParams(query);
+  for (const [key, value] of params) merged.append(key, value);
+  const text = merged.toString();
+  return text ? `${path}?${text}` : path;
+}
+
 export function hasRouteAccess(pathname, permissions) {
   if (BLOCKED_ROUTES.some((to) => pathname === to || pathname.startsWith(`${to}/`))) return false;
   const candidates = [...NAV.flatMap((section) => section.items), ...EXTRA_ROUTE_PERMISSIONS];
   const match = candidates
     .filter((item) => pathname === item.to || pathname.startsWith(`${item.to}/`))
     .sort((a, b) => b.to.length - a.to.length)[0];
-  return !match || hasNavPermission(permissions, match.permission);
+  return !match || hasNavPermission(permissions, match.access || match.permission);
 }
 
 // A link shown only when the user may open its page, by the same rule: any
@@ -319,16 +376,16 @@ export const divisions = [
   { slug: 'ai', title: 'Prakasa AI', symbol: 'auto_awesome', paths: ['/ai-command'],
     summary: 'Tanya, ringkas, dan susun draft bersama Prakasa AI.' },
   { slug: 'sales', title: 'Sales & Pelanggan', symbol: 'handshake', paths: ['/sales/pipeline', '/sales/customers', '/sales/leads', '/sales/orders'],
-    summary: 'Pipeline, pelanggan, sample request, dan kunjungan lapangan.' },
-  { slug: 'warehouse', title: 'Warehouse', symbol: 'warehouse', paths: ['/warehouse'],
+    summary: 'Pipeline, pelanggan dan leads, kunjungan lapangan, dan Data Sales.' },
+  { slug: 'warehouse', title: 'Warehouse', symbol: 'warehouse', paths: ['/warehouse', '/warehouse/movements', '/warehouse/stock', '/warehouse/shipping', '/warehouse/operations'],
     summary: 'Barang masuk dan keluar, approval Supervisor, serta operasional gudang.' },
   { slug: 'finance', title: 'Finance', symbol: 'account_balance_wallet', paths: ['/finance/receivables', '/finance/payables'],
     summary: 'Piutang dan utang dari Accurate: umur, jatuh tempo, penagihan, dan pembayaran.' },
   { slug: 'people', title: 'People & Culture', symbol: 'person_add', paths: ['/hrga/onboarding', '/hrga/offboarding', '/ga/operations', '/hrga/checklist-templates', '/it/dashboard', '/it/devices', '/it/subscriptions', '/it/infrastructure'],
     summary: 'Onboarding, offboarding, GA (operasional kantor), dan IT perusahaan.' },
-  { slug: 'procurement', title: 'Procurement', symbol: 'assignment_turned_in', paths: ['/procurement'],
+  { slug: 'procurement', title: 'Procurement', symbol: 'assignment_turned_in', paths: ['/procurement', '/procurement/orders', '/procurement/vendors', '/procurement/reorder'],
     summary: 'PO, barang datang, dan pemasok dari Accurate.' },
-  { slug: 'retail-commerce', title: 'Retail Commerce', symbol: 'shopping_bag', paths: ['/retail-commerce'],
+  { slug: 'retail-commerce', title: 'Retail Commerce', symbol: 'shopping_bag', paths: ['/retail-commerce', '/retail-commerce/pending'],
     summary: 'Kinerja marketplace: omzet, pesanan, retur, piutang, dan SO belum dikirim.' },
   { slug: 'marketing', title: 'Marketing', symbol: 'campaign', paths: ['/marketing/insights', '/marketing/campaigns'],
     summary: 'Kinerja produk & channel, kampanye dan hasilnya, serta leads per area.' },
@@ -398,52 +455,6 @@ export function visibleSections(division, sections) {
   return items.length ? [{ title: division.title, items }] : [];
 }
 
-// Sub-groups per division, so a division with many modules reads as a few
-// clear clusters on the home page instead of one long list. Divisions left
-// out default to a single, untitled group — they don't have enough items to
-// need splitting. Kept as tuples (not object literals) for the same reason
-// as EXTRA_ROUTE_PERMISSIONS above — this isn't a real NAV/sidebar entry.
-// Titles are sentence case (docs/ui-guideline.md §1.2: no all-caps text).
-const MODULE_GROUPS = {
-  google: [
-    ['Komunikasi', '/mail', '/chat', '/calendar'],
-    ['Project', '/projects'],
-    ['Dokumen', '/docs', '/sheets', '/slides'],
-    ['Organisasi', '/groups'],
-  ],
-  kerja: [
-    ['Dokumen', '/division-storage', '/my-drive', '/doc-templates'],
-    ['Dukungan', '/it/tickets', '/finance/payment-requests'],
-    ['Organisasi', '/people/directory'],
-  ],
-  people: [
-    ['Onboarding & offboarding', '/hrga/onboarding', '/hrga/offboarding', '/hrga/checklist-templates'],
-    ['GA', '/ga/operations'],
-    ['IT', '/it/dashboard', '/it/devices', '/it/subscriptions', '/it/infrastructure'],
-  ],
-  insight: [
-    ['Ringkasan', '/management', '/division-dashboard', '/escalations', '/roadmap', '/targets', '/management/flow', '/analytics'],
-    ['Audit', '/activity-logs'],
-  ],
-  admin: [
-    ['Identitas & akses', '/admin/users', '/admin/workspace-sync', '/admin/entities', '/admin/departments', '/admin/roles', '/admin/permissions'],
-    ['Aturan approval & signature', '/admin/approval-matrix', '/admin/signature-rules', '/admin/signature-precheck'],
-    ['Dokumen', '/admin/document-types', '/admin/folder-rules'],
-    ['Sistem', '/admin/integration-logs', '/admin/notification-policy', '/admin/ai-usage', '/admin/ai-provider-settings', '/admin/accurate'],
-  ],
-};
-
-// Splits a division's visible items into its named sub-groups, dropping any
-// group left empty for this role. A division with no defined sub-groups (or
-// too few items to need them) comes back as one untitled group.
-export function moduleGroupsFor(slug, items) {
-  const groups = MODULE_GROUPS[slug];
-  if (!groups) return [{ title: null, items }];
-  return groups
-    .map(([title, ...paths]) => ({ title, items: paths.map((path) => items.find((item) => item.to === path)).filter(Boolean) }))
-    .filter((group) => group.items.length);
-}
-
 // Last crumb below a module: a form to create or edit, or a record's detail.
 function subPageLabel(pathname) {
   if (/\/new$/.test(pathname)) return 'Baru';
@@ -461,7 +472,6 @@ const EXTRA_PAGES = [
   ['/signatures/asset', 'Tanda tangan saya', null, true],
   ['/signatures/letterhead', 'Cap surat', null, true],
   ['/tasks', 'Papan tugas', null, true],
-  ['/data-accurate', 'Data Accurate', null, true],
   ['/notifications', 'Notifikasi', null, true],
   // Opened from the account menu in the top bar; every signed-in user.
   ['/akun', 'Akun saya', null, true],

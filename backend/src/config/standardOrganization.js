@@ -86,6 +86,8 @@ const DIVISION_PERMISSION_SETS = Object.freeze({
       'workspace.procurement.view',
       // POs, vendors and incoming goods from Accurate — quantities and dates.
       'procurement.view',
+      // Propose a vendor to Accurate; the Supervisor or Head decides (migration 145).
+      'accurate.write.request',
     ]),
     // Purchase prices only for the Supervisor/Head (P1); pulling from Accurate is read-only.
     // Total stock and days of cover without per-gudang (D2 extended 30 Sep): Saran pesan ulang, and Prakasa AI for them.
@@ -96,6 +98,8 @@ const DIVISION_PERMISSION_SETS = Object.freeze({
     member: Object.freeze([
       'sales.customer.view', 'sales.customer.manage',
       'sales.pipeline.view', 'sales.order.view', 'sales.order.manage',
+      // Propose a customer to Accurate; the Supervisor or Head decides (migration 145).
+      'accurate.write.request',
     ]),
     // Members see the customers, leads and orders they own; supervisors see all
     // and keep the SKU list and the salesperson mapping.
@@ -156,6 +160,7 @@ const DIVISION_PERMISSION_SETS = Object.freeze({
       'warehouse.movement.view', 'workspace.retail_commerce.view', 'sales.data.view_all',
       // Marketplace performance page (migration 120).
       'retail.insight.view',
+      'accurate.write.request',
     ]),
     supervisor: Object.freeze(['sales.master.manage', 'accurate.batch.view']),
     head: Object.freeze([]),

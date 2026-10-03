@@ -1182,13 +1182,19 @@ async function licenseAssign(tx, user, workflowId, taskId, { licenseId }) {
   return { id: Number(task.id), licenseId: out.licenseId, workflowStatus };
 }
 
-async function licenseRevoke(tx, user, workflowId, taskId) {
+// Closing the offboarding licence task records the seat as released in
+// Workspace. Like the Google account tasks, the access itself is removed by IT
+// in the vendor portal, outside the app, and confirmed here before the task closes.
+async function licenseRevoke(tx, user, workflowId, taskId, body = {}) {
   const { conn } = tx;
   const { wf, task } = await loadTask(tx, user, workflowId, taskId, { categories: ['software_license'] });
   if (wf.workflow_type !== 'offboarding' || !task.linked_subscription_license_id) throw new HrgaError('WRONG_TASK', 'Aksi ini bukan untuk tugas tersebut', 409);
   if (task.status === 'completed') throw new HrgaError('CONFLICT', 'Lisensi sudah dicabut', 409);
+  if (body.confirmedAtVendor !== true) {
+    throw new HrgaError('VENDOR_CONFIRM_REQUIRED', 'Cabut akses pengguna di portal vendor dulu, lalu centang konfirmasinya. Aplikasi tidak mengubah akun di vendor.', 409);
+  }
   await licenses.revokeLicense(conn, {
-    entityId: user.entityId, licenseId: task.linked_subscription_license_id, actorId: user.sub, reason: `Offboarding ${wf.workflow_number}`,
+    entityId: user.entityId, licenseId: task.linked_subscription_license_id, actorId: user.sub, reason: `Offboarding ${wf.workflow_number}`, confirmedAtVendor: true,
   });
   const workflowStatus = await completeTask(conn, wf, task, user.sub);
   return { id: Number(task.id), workflowStatus };

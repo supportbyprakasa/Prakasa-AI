@@ -11,6 +11,10 @@ const {
   generateArtifact,
   prepareUpload,
   sanitizeFileName,
+  NATIVE_FORMATS,
+  FORMAT_MIME,
+  fileFamily,
+  conversionTargets,
 } = require('./aiDocumentArtifact.service');
 const claudeTeam = require('./ai/claudeTeamPersonal');
 const { loadUserIdentity, resolveEngineForUser } = require('./ai/aiRouting.service');
@@ -120,16 +124,16 @@ async function generateFromMessage({ session, user, messageId, format, title, do
     title: title || session.title || `Dokumen AI ${message.id}`,
     content: message.content,
   });
-  const prepared = await prepareUpload({
-    buffer: artifact.buffer,
-    fileName: artifact.fileName,
-    mimeType: artifact.mimeType,
-  });
+  // A native Google file is imported from its Office twin, uncompressed.
+  const prepared = artifact.nativeMime
+    ? uncompressedPrepared(artifact)
+    : await prepareUpload({ buffer: artifact.buffer, fileName: artifact.fileName, mimeType: artifact.mimeType });
 
   return persistPreparedDocument({
     session,
     user,
     prepared,
+    nativeMime: artifact.nativeMime || null,
     extraction: {
       status: 'ready',
       text: String(message.content || '').slice(0, 100000),
@@ -143,6 +147,99 @@ async function generateFromMessage({ session, user, messageId, format, title, do
   });
 }
 
+// A prepared record for a buffer stored as it is (Office or PDF): the shape
+// prepareUpload returns, without the gzip step.
+function uncompressedPrepared({ buffer, fileName, mimeType }) {
+  return {
+    originalName: sanitizeFileName(fileName),
+    originalMimeType: String(mimeType || 'application/octet-stream').toLowerCase(),
+    originalSize: buffer.length,
+    storedName: sanitizeFileName(fileName),
+    storedMimeType: String(mimeType || 'application/octet-stream').toLowerCase(),
+    storedSize: buffer.length,
+    storedBuffer: buffer,
+    compressionMethod: 'native',
+  };
+}
+
+// "Konversi" of a document of this conversation (uploaded or generated) into
+// another format, through Google's converter (owner, 3 Oct 2026). The result
+// is a new document in the same Shared Drive folder, linked to the
+// conversation; the source is never changed. Text targets come from what was
+// read out of the file. Anything else needs the Drive store: the local
+// development store cannot convert and says so.
+async function convertSessionDocument({ session, user, documentId, format }) {
+  const target = String(format || '').toLowerCase();
+  const [rows] = await pool.query(
+    `SELECT d.id, d.title, d.drive_file_id AS driveFileId, d.document_type AS documentType,
+            f.mime_type AS storedMime, c.original_mime_type AS originalMimeType, c.original_name AS originalName,
+            c.compression_method AS compressionMethod, c.extraction_status AS extractionStatus, c.extracted_text AS extractedText
+       FROM documents d
+       JOIN ai_context_links l ON l.context_type='document' AND l.context_id=d.id AND l.session_id=?
+       LEFT JOIN drive_files_metadata f ON f.drive_file_id=d.drive_file_id
+       LEFT JOIN document_ai_content c ON c.document_id=d.id
+      WHERE d.id=? AND d.entity_id=? AND d.deleted_at IS NULL
+      LIMIT 1`,
+    [session.id, documentId, session.entity_id]
+  );
+  const source = rows[0];
+  if (!source?.driveFileId) throw serviceError('Dokumen tidak ditemukan', 404, 'NOT_FOUND');
+  // A native Google file keeps its own mime in drive_files_metadata; an upload keeps the original's.
+  const sourceMime = String(source.storedMime || '').startsWith('application/vnd.google-apps.') ? source.storedMime : (source.originalMimeType || source.storedMime);
+  const extracted = source.extractionStatus === 'ready' && String(source.extractedText || '').trim().length > 0;
+  const targets = conversionTargets(sourceMime, { extracted });
+  if (!targets.includes(target)) {
+    throw serviceError(`Dokumen ini tidak bisa diubah menjadi ${target.toUpperCase()}. Pilihan: ${targets.length ? targets.join(', ') : 'tidak ada'}.`, 400, 'VALIDATION_ERROR');
+  }
+  const baseTitle = stripExtension(source.originalName || source.title || `dokumen-${source.id}`);
+  const ctx = { entityId: session.entity_id, userId: user.sub, subjectType: 'ai_document_convert', subjectId: source.id };
+  const persist = (prepared, extra = {}) => persistPreparedDocument({
+    session,
+    user,
+    prepared,
+    extraction: { status: extracted ? 'ready' : 'no_text', text: extracted ? String(source.extractedText).slice(0, 100000) : null, error: null },
+    title: normalizedTitle(`${baseTitle} (${NATIVE_FORMATS[target]?.label || target.toUpperCase()})`),
+    documentType: normalizeDocumentType(source.documentType || `ai_${target}`),
+    messageId: null,
+    relation: 'converted',
+    eventType: 'document_converted',
+    ...extra,
+  });
+
+  // Text: from what was read, no Google call.
+  if (target === 'txt' || target === 'md') {
+    const artifact = await generateArtifact({ format: target, title: baseTitle, content: source.extractedText });
+    const prepared = await prepareUpload({ buffer: artifact.buffer, fileName: artifact.fileName, mimeType: artifact.mimeType });
+    return { ...(await persist(prepared)), sourceDocumentId: source.id, format: target };
+  }
+  if (fileStore.storeForUpload().kind !== 'drive') {
+    throw serviceError('Konversi ke format ini memakai Google Drive. Di penyimpanan lokal (pengembangan) hanya TXT dan Markdown yang tersedia.', 409, 'GOOGLE_DRIVE_REQUIRED');
+  }
+  const { family } = fileFamily(sourceMime);
+  // A native Google file: Google exports it.
+  if (family === 'native') {
+    const buffer = await drive.exportFile(source.driveFileId, FORMAT_MIME[target], ctx);
+    const prepared = uncompressedPrepared({ buffer, fileName: `${baseTitle}.${target}`, mimeType: FORMAT_MIME[target] });
+    return { ...(await persist(prepared)), sourceDocumentId: source.id, format: target };
+  }
+  // An Office or text file: imported as its Google twin (the result itself,
+  // or a temporary one that Google then exports and that is deleted again).
+  const downloaded = await downloadSessionDocument({ session, documentId: source.id, user });
+  if (NATIVE_FORMATS[target]) {
+    const prepared = uncompressedPrepared({ buffer: downloaded.buffer, fileName: downloaded.fileName, mimeType: downloaded.mimeType });
+    return { ...(await persist(prepared, { nativeMime: NATIVE_FORMATS[target].mimeType })), sourceDocumentId: source.id, format: target };
+  }
+  const parentId = await resolveArtifactFolder({ entityId: session.entity_id, departmentId: session.department_id, documentType: source.documentType || 'ai_convert', userId: user.sub });
+  const temp = await drive.importAsNative({ name: `~konversi ${baseTitle}`, buffer: downloaded.buffer, sourceMime: downloaded.mimeType, parentId }, ctx);
+  try {
+    const buffer = await drive.exportFile(temp.id, FORMAT_MIME[target], ctx);
+    const prepared = uncompressedPrepared({ buffer, fileName: `${baseTitle}.${target}`, mimeType: FORMAT_MIME[target] });
+    return { ...(await persist(prepared)), sourceDocumentId: source.id, format: target };
+  } finally {
+    await drive.deleteFile(temp.id, ctx).catch(() => {});
+  }
+}
+
 async function persistPreparedDocument({
   session,
   user,
@@ -154,8 +251,13 @@ async function persistPreparedDocument({
   relation,
   eventType,
   readBy = null,
+  // A native Google file (Doc, Sheet, Slides): the buffer is imported through
+  // Google's converter instead of stored as it is. Only the Drive store can;
+  // the local development store keeps the Office file.
+  nativeMime = null,
 }) {
   const store = fileStore.storeForUpload();
+  const importNative = Boolean(nativeMime) && store.kind === 'drive';
   const parentId = store.kind === 'local'
     ? await store.resolveFolder()
     : await resolveArtifactFolder({
@@ -167,17 +269,21 @@ async function persistPreparedDocument({
 
   let uploaded = null;
   try {
-    uploaded = await store.upload({
-      name: prepared.storedName,
-      mimeType: prepared.storedMimeType,
-      buffer: prepared.storedBuffer,
-      parentId,
-    }, {
-      entityId: session.entity_id,
-      userId: user.sub,
-      subjectType: 'ai_session',
-      subjectId: session.id,
-    });
+    const uploadCtx = { entityId: session.entity_id, userId: user.sub, subjectType: 'ai_session', subjectId: session.id };
+    uploaded = importNative
+      ? await drive.importAsNative({
+        name: stripExtension(prepared.storedName),
+        buffer: prepared.storedBuffer,
+        sourceMime: prepared.storedMimeType,
+        targetMime: nativeMime,
+        parentId,
+      }, uploadCtx)
+      : await store.upload({
+        name: prepared.storedName,
+        mimeType: prepared.storedMimeType,
+        buffer: prepared.storedBuffer,
+        parentId,
+      }, uploadCtx);
 
     const checksum = crypto.createHash('sha256').update(prepared.storedBuffer).digest('hex');
     const conn = await pool.getConnection();
@@ -330,6 +436,8 @@ async function persistPreparedDocument({
       extractionStatus: extraction.status,
       webViewLink: uploaded.webViewLink || null,
       downloadUrl: `/ai-command/sessions/${session.id}/artifacts/${documentId}/download`,
+      native: importNative,
+      nativeMime: importNative ? nativeMime : null,
     };
   } catch (error) {
     if (uploaded?.id) {
@@ -390,7 +498,7 @@ async function downloadSessionDocument({ session, documentId, user }) {
 async function getSessionDocumentMetadata({ session, documentId }) {
   const [rows] = await pool.query(
     `SELECT d.id, d.title, d.document_type AS documentType, d.status,
-            f.web_view_link AS webViewLink,
+            f.web_view_link AS webViewLink, f.mime_type AS storedMimeType,
             c.original_name AS originalName,
             c.original_mime_type AS originalMimeType,
             c.original_size AS originalSize,
@@ -398,6 +506,7 @@ async function getSessionDocumentMetadata({ session, documentId }) {
             c.compression_method AS compressionMethod,
             c.extraction_status AS extractionStatus,
             c.extraction_error AS extractionError,
+            (c.extraction_status='ready' AND c.extracted_text IS NOT NULL AND c.extracted_text<>'') AS hasText,
             d.created_at AS createdAt
        FROM documents d
        JOIN ai_context_links l
@@ -409,7 +518,13 @@ async function getSessionDocumentMetadata({ session, documentId }) {
     [session.id, documentId, session.entity_id]
   );
   if (!rows[0]) throw serviceError('Dokumen tidak ditemukan', 404, 'NOT_FOUND');
-  return rows[0];
+  const { hasText, ...row } = rows[0];
+  // What this document can be converted into (the "Konversi ke…" menu), by
+  // the same rule convertSessionDocument applies.
+  const sourceMime = String(row.storedMimeType || '').startsWith('application/vnd.google-apps.') ? row.storedMimeType : (row.originalMimeType || row.storedMimeType);
+  const conversions = conversionTargets(sourceMime, { extracted: Boolean(Number(hasText)) })
+    .filter((format) => fileStore.storeForUpload().kind === 'drive' || format === 'txt' || format === 'md');
+  return { ...row, sourceMimeType: sourceMime || null, conversions };
 }
 
 async function resolveArtifactFolder({ entityId, departmentId, documentType, userId }) {
@@ -477,6 +592,7 @@ function serviceError(message, status, code) {
 }
 
 module.exports = {
+  convertSessionDocument,
   downloadSessionDocument,
   generateFromMessage,
   getSessionDocumentMetadata,

@@ -60,7 +60,7 @@ Arahan owner: *"jangan ada waktu dong, once head atau supervisor sudah oke langs
 
 ## Tahap masa depan: kirim data dari Prakasa Workspace ke Accurate
 
-Owner ingin data yang dikelola di Prakasa Workspace, setelah disetujui Head/Supervisor, langsung diperbarui ke Accurate. **Ini belum dikerjakan.** Tahap ini membutuhkan izin tulis Accurate (`*_save`), yang saat ini sengaja ditolak oleh `accurateReadOnly.js` dan dikunci tes (50 izin `_view`). Tahap ini perlu rancangan dan persetujuan owner tersendiri sebelum satu pun izin tulis diminta:
+Owner ingin data yang dikelola di Prakasa Workspace, setelah disetujui Head/Supervisor, langsung diperbarui ke Accurate. **Tahap 1 (pelanggan dan pemasok) dibangun 3 Oktober 2026 di sisi aplikasi** — pengajuan, persetujuan Supervisor/Head, antrean, rekonsiliasi — dengan saluran kirim ke Accurate tetap tertutup: lihat `docs/accurate-pengajuan-2026-10-03.md`. Membuka saluran itu membutuhkan izin tulis Accurate (`*_save`), yang saat ini sengaja ditolak oleh `accurateReadOnly.js` dan dikunci tes (50 izin `_view`), dan tetap menunggu keputusan owner atas:
 - dokumen apa saja yang boleh ditulis;
 - siapa yang menyetujui;
 - bagaimana mencegah data dobel dengan input langsung di Accurate;

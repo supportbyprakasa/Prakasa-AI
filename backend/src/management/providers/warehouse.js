@@ -143,7 +143,7 @@ const incidentOpen = {
       ownerName: row.owner_name,
       daysLate: row.days_late,
       since: row.since,
-      link: '/warehouse?tab=incidents',
+      link: '/warehouse/operations?tab=incidents',
     }));
   },
   async locate(id) {
@@ -191,7 +191,7 @@ const stockNegative = {
       departmentName: row.department_name,
       daysLate: row.days_late,
       since: row.since,
-      link: `/warehouse?tab=stock&status=minus&warehouseId=${row.warehouse_id}`,
+      link: `/warehouse/stock?status=minus&warehouseId=${row.warehouse_id}`,
     }));
   },
   async locate(id, { entityId } = {}) {
@@ -231,7 +231,7 @@ const transferStuck = {
       departmentName: row.department_name,
       daysLate: row.days_late,
       since: row.trans_date,
-      link: `/warehouse?tab=documents&type=transfer&status=in_transit&q=${encodeURIComponent(row.number || '')}`,
+      link: `/warehouse/stock?tab=documents&type=transfer&status=in_transit&q=${encodeURIComponent(row.number || '')}`,
     }));
   },
   async locate(id, { entityId } = {}) {
@@ -303,7 +303,7 @@ const soLate = {
       departmentName: row.department_name,
       daysLate: row.days_late,
       since: row.promised_date,
-      link: `/warehouse?tab=shipping&status=late&q=${encodeURIComponent(row.number || '')}`,
+      link: `/warehouse/shipping?status=late&q=${encodeURIComponent(row.number || '')}`,
     }));
   },
   async locate(id, { entityId } = {}) {
@@ -344,7 +344,7 @@ const checklistMissed = {
       ownerName: row.owner_name,
       daysLate: row.days_late,
       since: row.checklist_date,
-      link: '/warehouse?tab=checklist',
+      link: '/warehouse/operations?tab=checklist',
     }));
   },
   async locate(id) {
@@ -528,7 +528,7 @@ async function acrossMovements(outer, build) {
 module.exports = {
   key: 'warehouse',
   label: 'Warehouse',
-  navPaths: ['/warehouse'],
+  navPaths: ['/warehouse', '/warehouse/movements', '/warehouse/stock', '/warehouse/shipping', '/warehouse/operations'],
 
   escalations: [
     draftSource(MOVEMENTS.inbound, 'warehouse_inbound_draft', 'Draft barang masuk belum diajukan'),

@@ -25,6 +25,7 @@
     "check:batch5": "node src/scripts/checkBatch5.js",
     "check:batch6": "node src/scripts/checkBatch6.js",
     "check:ledger": "node src/scripts/checkLedger.js",
+    "report:subscriptions": "node src/scripts/reportSubscriptionReconcile.js",
     "test:db-config": "node --test test/dbConnectionConfig.test.js",
     "test:ai-documents": "node --test test/aiDocumentArtifact.test.js",
     "gateway:claude-team": "node src/scripts/claudeTeamGateway.js"
@@ -48,6 +49,7 @@
     "pdf-parse": "^1.1.1",
     "pino": "^9.4.0",
     "pino-http": "^10.3.0",
+    "pptxgenjs": "^4.0.1",
     "qrcode": "^1.5.4",
     "read-excel-file": "^9.3.10",
     "zod": "^3.23.8"
